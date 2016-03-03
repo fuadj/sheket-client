@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.test.AndroidTestCase;
 
+import com.mukera.sheket.client.contentprovider.SheketContentApi;
 import com.mukera.sheket.client.contentprovider.SheketContract.*;
 import com.mukera.sheket.client.contentprovider.SheketProvider;
 
@@ -115,35 +116,6 @@ public class TestProvider extends AndroidTestCase {
         }
         valueCursor.close();
     }
-
-    public void testUriMatcher() {
-        int trans_id = 10, category_id = 400, item_id = 500;
-
-        Uri uri = CategoryEntry.CONTENT_URI;
-        assertEquals("testUriMatcher Category Uri didn't match", m(uri), SheketProvider.CATEGORY);
-        uri = CategoryEntry.buildCategoryUri(category_id);
-        assertEquals("testUriMatcher CategoryWithId Uri didn't match", m(uri), SheketProvider.CATEGORY_WITH_ID);
-
-        uri = TransactionEntry.CONTENT_URI;
-        assertEquals("testUriMatcher Transaction Uri didn't match", m(uri), SheketProvider.TRANSACTION);
-        uri = TransactionEntry.buildTransactionUri(trans_id);
-        assertEquals("testUriMatcher TransactionWithId Uri didn't match", m(uri), SheketProvider.TRANSACTION_WITH_ID);
-
-        uri = ItemEntry.CONTENT_URI;
-        assertEquals("testUriMatcher Item Uri didn't match", m(uri), SheketProvider.ITEM);
-        uri = ItemEntry.buildItemUri(item_id);
-        assertEquals("testUriMatcher ItemWithId Uri didn't match", m(uri), SheketProvider.ITEM_WITH_ID);
-        uri = ItemEntry.buildItemWithCategoryId(category_id);
-        assertEquals("testUriMatcher ItemInCategory Uri didn't match", m(uri), SheketProvider.ITEM_IN_CATEGORY);
-
-        uri = AffectedItemEntry.CONTENT_URI;
-        assertEquals("testUriMatcher AffectedItem Uri didn't match", m(uri), SheketProvider.AFFECTED_ITEM);
-        uri = AffectedItemEntry.buildAffectedItemsWithTransactionUri(trans_id);
-        assertEquals("testUriMatcher AffectedItemWithTransactionId Uri didn't match",
-                m(uri), SheketProvider.AFFECTED_ITEM_WITH_TRANSACTION_ID);
-    }
-
-    int m(Uri uri) { return SheketProvider.match(uri); }
 
     public void deleteAllRecords() {
         mContext.getContentResolver().delete(
@@ -264,7 +236,92 @@ public class TestProvider extends AndroidTestCase {
                 AffectedItemEntry.CONTENT_URI, values);
         assertEquals(trans_id, ContentUris.parseId(uri));
         cursor = _query(AffectedItemEntry
-                    .buildAffectedItemsWithTransactionUri(trans_id));
+                .buildAffectedItemsWithTransactionUri(trans_id));
         validateCursor(cursor, values);
     }
+
+    String _type(Uri uri) {
+        return mContext.getContentResolver().getType(uri);
+    }
+
+    public void testGetType() {
+        String type = mContext.getContentResolver().getType(CategoryEntry.CONTENT_URI);
+        assertEquals(CategoryEntry.CONTENT_TYPE, type);
+
+        long testCategory = 40;
+        type = _type(CategoryEntry.buildCategoryUri(testCategory));
+        assertEquals(CategoryEntry.CONTENT_ITEM_TYPE, type);
+
+        type = _type(TransactionEntry.CONTENT_URI);
+        assertEquals(TransactionEntry.CONTENT_TYPE, type);
+
+        long testTransaction = 13;
+        type = _type(TransactionEntry.buildTransactionUri(testTransaction));
+        assertEquals(TransactionEntry.CONTENT_ITEM_TYPE, type);
+
+        type = _type(ItemEntry.CONTENT_URI);
+        assertEquals(ItemEntry.CONTENT_TYPE, type);
+
+        long testItem = 13;
+        type = _type(ItemEntry.buildItemUri(testItem));
+        assertEquals(ItemEntry.CONTENT_ITEM_TYPE, type);
+
+        type = _type(ItemEntry.buildItemWithCategoryId(testCategory));
+        assertEquals(ItemEntry.CONTENT_TYPE, type);
+
+        type = _type(AffectedItemEntry.CONTENT_URI);
+        assertEquals(AffectedItemEntry.CONTENT_TYPE, type);
+
+        type = _type(AffectedItemEntry.buildAffectedItemsWithTransactionUri(testTransaction));
+        assertEquals(AffectedItemEntry.CONTENT_TYPE, type);
+    }
+
+    Uri _insert(Uri uri, ContentValues values) {
+        return mContext.getContentResolver().insert(uri, values);
+    }
+
+    public void testDeleteRecordsAtEnd() {
+        deleteAllRecords();
+    }
+
+    public void testUpdate() {
+        ContentValues values = createCategoryValues();
+        Uri uri = _insert(CategoryEntry.CONTENT_URI, values);
+        assertTrue(ContentUris.parseId(uri) != -1);
+
+        ContentValues updatedValues = new ContentValues(values);
+        updatedValues.put(CategoryEntry.COLUMN_NAME, "Other Name");
+
+        int count = SheketContentApi.updateCategory(mContext, TEST_CATEGORY_ID, updatedValues);
+        assertEquals(count, 1);
+        Cursor cursor = mContext.getContentResolver().query(CategoryEntry.buildCategoryUri(TEST_CATEGORY_ID),
+                null, null, null, null);
+        validateCursor(cursor, updatedValues);
+
+        values = createTransactionValues();
+        uri = _insert(TransactionEntry.CONTENT_URI, values);
+        long trans_id = ContentUris.parseId(uri);
+        assertTrue(trans_id > 0);
+
+        updatedValues = new ContentValues(values);
+        updatedValues.put(TransactionEntry.COLUMN_TYPE, TransactionEntry.TRANS_TYPE_SELL);
+        updatedValues.put(TransactionEntry.COLUMN_DATE, 8596);
+
+        count = SheketContentApi.updateTransaction(mContext, trans_id, updatedValues);
+        assertEquals(count, 1);
+
+        values = createItemValues();
+        uri = _insert(ItemEntry.CONTENT_URI, values);
+        long item_id = ContentUris.parseId(uri);
+        assertTrue(item_id > 0);
+
+        updatedValues = new ContentValues(values);
+        updatedValues.put(ItemEntry.COLUMN_CODE_TYPE, ItemEntry.CODE_TYPE_MANUAL);
+        updatedValues.put(ItemEntry.COLUMN_MANUAL_CODE, "78787");
+        updatedValues.put(ItemEntry.COLUMN_QTY_REMAIN, 300);
+
+        count = SheketContentApi.updateItem(mContext, item_id, updatedValues);
+        assertEquals(count, 1);
+    }
+
 }

@@ -18,15 +18,15 @@ public class SheketProvider extends ContentProvider {
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private SheketDbHelper mDbHelper;
 
-    public static final int CATEGORY = 100;
-    public static final int CATEGORY_WITH_ID = 101;
-    public static final int TRANSACTION = 200;
-    public static final int TRANSACTION_WITH_ID = 201;
-    public static final int AFFECTED_ITEM = 300;
-    public static final int AFFECTED_ITEM_WITH_TRANSACTION_ID = 301;
-    public static final int ITEM = 400;
-    public static final int ITEM_WITH_ID = 401;
-    public static final int ITEM_IN_CATEGORY = 402;
+    private static final int CATEGORY = 100;
+    private static final int CATEGORY_WITH_ID = 101;
+    private static final int TRANSACTION = 200;
+    private static final int TRANSACTION_WITH_ID = 201;
+    private static final int AFFECTED_ITEM = 300;
+    private static final int AFFECTED_ITEM_WITH_TRANSACTION_ID = 301;
+    private static final int ITEM = 400;
+    private static final int ITEM_WITH_ID = 401;
+    private static final int ITEM_IN_CATEGORY = 402;
 
     private static final SQLiteQueryBuilder sAffectedItemsWithTransactionIdQueryBuilder;
 
@@ -70,10 +70,6 @@ public class SheketProvider extends ContentProvider {
                 AFFECTED_ITEM_WITH_TRANSACTION_ID);
 
         return matcher;
-    }
-
-    public static int match(Uri uri) {
-        return sUriMatcher.match(uri);
     }
 
     @Override
@@ -176,6 +172,7 @@ public class SheketProvider extends ContentProvider {
 
             case ITEM_WITH_ID:
                 return ItemEntry.CONTENT_ITEM_TYPE;
+            case ITEM_IN_CATEGORY:
             case ITEM:
                 return ItemEntry.CONTENT_TYPE;
 
