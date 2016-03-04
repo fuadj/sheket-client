@@ -31,10 +31,9 @@ public class SheketContract {
 
 
     public static final class CategoryEntry implements BaseColumns {
-        // This category will always exist, so if a user doesn't create
-        // any category, items will have this category id.
-        public static final int DEFAULT_CATEGORY_ID = 1;
-        public static final String DEFAULT_CATEGORY_NAME = "All Items";
+        // This is a 'virtual' category, it doesn't actually exist in the db,
+        // Just a common constant
+        public static final int DEFAULT_CATEGORY_ID = -1;
 
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_CATEGORY).build();
@@ -50,7 +49,7 @@ public class SheketContract {
             return TABLE_NAME + "." + col_name;
         }
 
-        public static final String _ID = "category_id";
+        //public static final String _ID = "category_id";
         public static final String COLUMN_NAME = "category_name";
 
         public static Uri buildCategoryUri(long id) {
@@ -58,7 +57,7 @@ public class SheketContract {
         }
     }
 
-    public static final class TransactionEntry  implements BaseColumns {
+    public static final class TransactionEntry implements BaseColumns {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_TRANSACTION).build();
 
@@ -69,7 +68,7 @@ public class SheketContract {
 
         public static final String TABLE_NAME = "transaction_table";
 
-        public static final String _ID = "transaction_id";
+        //public static final String _ID = "transaction_id";
 
         public static String _full(String col_name) {
             return TABLE_NAME + "." + col_name;
@@ -90,7 +89,7 @@ public class SheketContract {
         }
     }
 
-    public static final class AffectedItemEntry {
+    public static final class AffectedItemEntry implements BaseColumns{
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_AFFECTED_ITEMS).build();
 
@@ -131,7 +130,7 @@ public class SheketContract {
 
         public static final String TABLE_NAME = "inventory_items";
 
-        public static final String _ID = "item_id";
+        //public static final String _ID = "item_id";
 
         public static String _full(String col_name) {
             return TABLE_NAME + "." + col_name;

@@ -19,6 +19,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:label="Action"
+            android:name=".blogic.ActionActivity"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
         <provider
             android:authorities="com.mukera.sheket.client.app"
             android:name=".contentprovider.SheketProvider" />

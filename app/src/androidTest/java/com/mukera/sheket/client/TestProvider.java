@@ -26,8 +26,9 @@ import java.util.Set;
 public class TestProvider extends AndroidTestCase {
     static final int TEST_CATEGORY_ID = 3;
     static final String TEST_CATEGORY_NAME = "test category";
-    static final int TEST_CODE_TYPE = ItemEntry.CODE_TYPE_MANUAL;
+    static final String TEST_ITEM_NAME = "test item";
     static final String TEST_ITEM_CODE = "21adsfqewr-25";
+    static final int TEST_CODE_TYPE = ItemEntry.CODE_TYPE_MANUAL;
     static final long TEST_DATE = 40;
     static final String TEST_LOCATION = "a41";
     static final int TEST_QTY_REMAIN = 16;
@@ -53,6 +54,7 @@ public class TestProvider extends AndroidTestCase {
         values.put(ItemEntry.COLUMN_CATEGORY_ID, TEST_CATEGORY_ID);
         values.put(ItemEntry.COLUMN_CODE_TYPE, TEST_CODE_TYPE);
         values.put(ItemEntry.COLUMN_MANUAL_CODE, TEST_ITEM_CODE);
+        values.put(ItemEntry.COLUMN_NAME, TEST_ITEM_NAME);
         values.put(ItemEntry.COLUMN_LOCATION, TEST_LOCATION);
         values.put(ItemEntry.COLUMN_QTY_REMAIN, TEST_QTY_REMAIN);
         return values;

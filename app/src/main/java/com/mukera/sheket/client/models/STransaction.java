@@ -50,19 +50,19 @@ public class STransaction {
     // use this to retrieve next columns in a joined query
     public static final int COL_LAST = 4;
 
-    long id;
-    int type;
-    long date;
-    double total_qty;
+    public long id;
+    public int type;
+    public long date;
+    public double total_qty;
 
-    List<SAffectedItems> affectedItems;
+    public List<SAffectedItems> affectedItems;
 
     public STransaction(Cursor cursor) {
         this(cursor, 0, false);
     }
 
     public STransaction(Cursor cursor, boolean fetch_affected) {
-        this(cursor, 0, true);
+        this(cursor, 0, fetch_affected);
     }
 
     public STransaction(Cursor cursor, int offset, boolean fetch_affected) {
@@ -99,8 +99,8 @@ public class STransaction {
 
         public static final int COL_LAST = 3;
 
-        SItem item;
-        double qty;
+        public SItem item;
+        public double qty;
 
         public SAffectedItems(Cursor cursor, int offset, boolean fetch_item) {
             qty = cursor.getDouble(COL_QTY + offset);

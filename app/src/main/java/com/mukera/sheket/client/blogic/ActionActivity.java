@@ -1,4 +1,4 @@
-package com.mukera.sheket.client;
+package com.mukera.sheket.client.blogic;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -9,27 +9,46 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.mukera.sheket.client.blogic.fragments.ItemListFragment;
-import com.mukera.sheket.client.contentprovider.SheketContract;
+import com.mukera.sheket.client.R;
 
-public class MainActivity extends AppCompatActivity {
+import com.mukera.sheket.client.blogic.fragments.*;
+
+public class ActionActivity extends AppCompatActivity implements InputSelectionFragment.InputMethodSelectionListener {
+    public static final String LAUNCH_ACTION_KEY = "launch_action_key";
+
+    public static final int LAUNCH_TYPE_SEARCH = 1;
+    public static final int LAUNCH_TYPE_BUY = 2;
+    public static final int LAUNCH_TYPE_SELL = 3;
+
+    private static final String[] sTitles = {"Search", "Buy", "Sell"};
+
+    private int mCurrentSelection = InputSelectionFragment.SELECTION_NONE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_item);
 
-        ItemListFragment fragment = ItemListFragment.newInstance(SheketContract.CategoryEntry.DEFAULT_CATEGORY_ID);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment_container, fragment)
-                .commit();
+        String title = sTitles[Long.valueOf(getIntent().getStringExtra(LAUNCH_ACTION_KEY)).intValue() - 1];
+        setTitle(title);
+    }
+
+    @Override
+    public void methodSelected(int method) {
+        mCurrentSelection = method;
+        switch (method) {
+            case InputSelectionFragment.SELECTION_BARCODE:
+                break;
+            case InputSelectionFragment.SELECTION_MANUAL:
+                break;
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return false;
+        return true;
     }
 
     @Override
