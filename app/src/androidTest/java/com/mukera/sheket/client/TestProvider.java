@@ -3,10 +3,12 @@ package com.mukera.sheket.client;
 import android.annotation.TargetApi;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.mukera.sheket.client.contentprovider.SheketContentApi;
 import com.mukera.sheket.client.contentprovider.SheketContract.*;
@@ -31,14 +33,14 @@ public class TestProvider extends AndroidTestCase {
     static final int TEST_QTY_REMAIN = 16;
     static final int TEST_QTY_TRANS = 6;
 
-    static ContentValues createCategoryValues() {
+    public static ContentValues createCategoryValues() {
         ContentValues values = new ContentValues();
         values.put(CategoryEntry._ID, TEST_CATEGORY_ID);
         values.put(CategoryEntry.COLUMN_NAME, TEST_CATEGORY_NAME);
         return values;
     }
 
-    static ContentValues createTransactionValues() {
+    public static ContentValues createTransactionValues() {
         ContentValues values = new ContentValues();
         values.put(TransactionEntry.COLUMN_TYPE, TransactionEntry.TRANS_TYPE_BUY);
         values.put(TransactionEntry.COLUMN_DATE, TEST_DATE);
@@ -46,7 +48,7 @@ public class TestProvider extends AndroidTestCase {
         return values;
     }
 
-    static ContentValues createItemValues() {
+    public static ContentValues createItemValues() {
         ContentValues values = new ContentValues();
         values.put(ItemEntry.COLUMN_CATEGORY_ID, TEST_CATEGORY_ID);
         values.put(ItemEntry.COLUMN_CODE_TYPE, TEST_CODE_TYPE);
@@ -56,7 +58,7 @@ public class TestProvider extends AndroidTestCase {
         return values;
     }
 
-    static ContentValues createAffectedValues(long item_id, long trans_id) {
+    public static ContentValues createAffectedValues(long item_id, long trans_id) {
         ContentValues values = new ContentValues();
         values.put(AffectedItemEntry.COLUMN_ITEM_ID, item_id);
         values.put(AffectedItemEntry.COLUMN_TRANSACTION_ID, trans_id);
@@ -67,13 +69,13 @@ public class TestProvider extends AndroidTestCase {
     // The target api annotation is needed for the call to keySet -- we wouldn't want
     // to use this in our app, but in a test it's fine to assume a higher target.
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    void addAllContentValues(ContentValues destination, ContentValues source) {
+    public void addAllContentValues(ContentValues destination, ContentValues source) {
         for (String key : source.keySet()) {
             destination.put(key, source.getAsString(key));
         }
     }
 
-    static void validateCursor(Cursor valueCursor, ContentValues expectedValues) {
+    public static void validateCursor(Cursor valueCursor, ContentValues expectedValues) {
         assertTrue("The cursor has no values", valueCursor.moveToFirst());
 
         /**
@@ -117,29 +119,29 @@ public class TestProvider extends AndroidTestCase {
         valueCursor.close();
     }
 
-    public void deleteAllRecords() {
-        mContext.getContentResolver().delete(
+    public static void deleteAllRecords(Context context) {
+        context.getContentResolver().delete(
                 CategoryEntry.CONTENT_URI,
                 null,
                 null
         );
-        mContext.getContentResolver().delete(
+        context.getContentResolver().delete(
                 TransactionEntry.CONTENT_URI,
                 null,
                 null
         );
-        mContext.getContentResolver().delete(
+        context.getContentResolver().delete(
                 ItemEntry.CONTENT_URI,
                 null,
                 null
         );
-        mContext.getContentResolver().delete(
+        context.getContentResolver().delete(
                 AffectedItemEntry.CONTENT_URI,
                 null,
                 null
         );
 
-        Cursor cursor = mContext.getContentResolver().query(
+        Cursor cursor = context.getContentResolver().query(
                 CategoryEntry.CONTENT_URI,
                 null,
                 null,
@@ -149,7 +151,7 @@ public class TestProvider extends AndroidTestCase {
         assertEquals(0, cursor.getCount());
         cursor.close();
 
-        cursor = mContext.getContentResolver().query(
+        cursor = context.getContentResolver().query(
                 TransactionEntry.CONTENT_URI,
                 null,
                 null,
@@ -159,7 +161,7 @@ public class TestProvider extends AndroidTestCase {
         assertEquals(0, cursor.getCount());
         cursor.close();
 
-        cursor = mContext.getContentResolver().query(
+        cursor = context.getContentResolver().query(
                 ItemEntry.CONTENT_URI,
                 null,
                 null,
@@ -169,7 +171,7 @@ public class TestProvider extends AndroidTestCase {
         assertEquals(0, cursor.getCount());
         cursor.close();
 
-        cursor = mContext.getContentResolver().query(
+        cursor = context.getContentResolver().query(
                 AffectedItemEntry.CONTENT_URI,
                 null,
                 null,
@@ -180,18 +182,24 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
     }
 
+    static int counter = 0;
     @Override
     protected void setUp() throws Exception {
-        deleteAllRecords();
+        deleteAllRecords(mContext);
+        counter++;
     }
-
 
     Cursor _query(Uri uri) {
         return mContext.getContentResolver().query(uri,
                 null, null, null, null);
     }
 
+    void log(String m) {
+        Log.d("Test", m + counter);
+    }
+
     public void testInsertReadProvider() {
+        log("testInsert");
         ContentValues values = createCategoryValues();
         Uri uri = mContext.getContentResolver().insert(
                 CategoryEntry.CONTENT_URI, values);
@@ -245,6 +253,7 @@ public class TestProvider extends AndroidTestCase {
     }
 
     public void testGetType() {
+        log("testGetType");
         String type = mContext.getContentResolver().getType(CategoryEntry.CONTENT_URI);
         assertEquals(CategoryEntry.CONTENT_TYPE, type);
 
@@ -281,10 +290,12 @@ public class TestProvider extends AndroidTestCase {
     }
 
     public void testDeleteRecordsAtEnd() {
-        deleteAllRecords();
+        log("testDelete");
+        deleteAllRecords(mContext);
     }
 
     public void testUpdate() {
+        log("testUpdate");
         ContentValues values = createCategoryValues();
         Uri uri = _insert(CategoryEntry.CONTENT_URI, values);
         assertTrue(ContentUris.parseId(uri) != -1);

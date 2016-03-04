@@ -38,7 +38,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 TransactionEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 TransactionEntry.COLUMN_TYPE + " INTEGER NOT NULL, " +
                 TransactionEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
-                TransactionEntry.COLUMN_QTY_TOTAL + " INTEGER NOT NULL);";
+                // This is REAL b/c it is sum of qty of each item which is REAL
+                TransactionEntry.COLUMN_QTY_TOTAL + " REAL NOT NULL);";
 
         final String SQL_CREATE_ITEM_TABLE = "CREATE TABLE " + ItemEntry.TABLE_NAME + " (" +
                 ItemEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
