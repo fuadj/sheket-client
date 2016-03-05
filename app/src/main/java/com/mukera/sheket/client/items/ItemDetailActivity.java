@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.blogic;
+package com.mukera.sheket.client.items;
 
 import android.content.CursorLoader;
 

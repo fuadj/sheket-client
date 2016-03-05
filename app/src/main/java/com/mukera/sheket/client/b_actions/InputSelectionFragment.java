@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.blogic.fragments;
+package com.mukera.sheket.client.b_actions;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

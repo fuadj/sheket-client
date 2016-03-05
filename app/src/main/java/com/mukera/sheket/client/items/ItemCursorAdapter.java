@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.blogic.fragments;
+package com.mukera.sheket.client.items;
 
 import android.content.Context;
 import android.database.Cursor;

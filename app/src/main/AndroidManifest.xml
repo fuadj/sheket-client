@@ -21,7 +21,7 @@
 
         <activity
             android:label="Action"
-            android:name=".blogic.ActionActivity"
+            android:name=".b_actions.ActionActivity"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.blogic.fragments;
+package com.mukera.sheket.client.items;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,8 +16,7 @@ import android.widget.*;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.blogic.ActionActivity;
-import com.mukera.sheket.client.blogic.ItemDetailActivity;
+import com.mukera.sheket.client.b_actions.ActionActivity;
 import com.mukera.sheket.client.contentprovider.SheketContract.*;
 import com.mukera.sheket.client.models.SItem;
 

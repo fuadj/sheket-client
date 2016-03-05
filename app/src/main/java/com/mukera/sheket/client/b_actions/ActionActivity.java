@@ -1,17 +1,11 @@
-package com.mukera.sheket.client.blogic;
+package com.mukera.sheket.client.b_actions;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.mukera.sheket.client.R;
-
-import com.mukera.sheket.client.blogic.fragments.*;
 
 public class ActionActivity extends AppCompatActivity implements InputSelectionFragment.InputMethodSelectionListener {
     public static final String LAUNCH_ACTION_KEY = "launch_action_key";
