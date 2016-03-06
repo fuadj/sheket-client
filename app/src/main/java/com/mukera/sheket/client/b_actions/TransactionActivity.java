@@ -47,6 +47,8 @@ public class TransactionActivity extends AppCompatActivity implements
         String title = sTitles[mCurrentAction - 1];
         setTitle(title);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
         if (savedInstanceState == null) {
             mSelectedItemsList = new ArrayList<>();
 

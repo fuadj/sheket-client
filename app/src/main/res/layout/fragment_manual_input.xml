@@ -10,47 +10,64 @@
         android:layout_height="10dp"
         android:layout_gravity="center_horizontal" />
 
+    <ImageButton
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:src="@drawable/barcode"
+        android:id="@+id/btn_manual_scan"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="16dp" />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <Button
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:text="Scan"
-            android:id="@+id/btn_search_scan" />
-
         <EditText
             android:layout_width="0dp"
             android:layout_weight="2"
             android:layout_height="wrap_content"
-            android:id="@+id/edit_text_search_code" />
+            android:id="@+id/edit_text_manual_code"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="16dp" />
 
         <Button
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Search"
-            android:id="@+id/btn_search_search" />
+            android:id="@+id/btn_manual_search"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="16dp" />
     </LinearLayout>
 
     <android.support.v4.widget.Space
         android:layout_width="match_parent"
-        android:layout_height="20dp"
+        android:layout_height="5dp"
         android:layout_gravity="center_horizontal" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="5dp"
+        android:background="#0a0a0a"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:text="Search Results"
-        android:id="@+id/text_view_search_result"
-        android:textColor="#000000" />
+        android:id="@+id/text_view_manual_result_label"
+        android:textColor="#000000"
+        android:layout_marginLeft="16dp" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/list_view_search_results"
-        android:layout_gravity="center_horizontal" />
+        android:id="@+id/list_view_manual_results"
+        android:layout_gravity="center_horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp" />
 </LinearLayout>

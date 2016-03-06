@@ -53,7 +53,6 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
         if (savedInstanceState == null) {
             Bundle args = getArguments();
             mCategoryId = args.getInt(CATEGORY_ID_KEY);
-            getLoaderManager().initLoader(mCategoryId, null, this);
         }
     }
 
@@ -74,6 +73,8 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_item_list, container, false);
+
+        getLoaderManager().restartLoader(mCategoryId, null, this);
 
         AppCompatActivity act = (AppCompatActivity) getActivity();
         View v_toolbar = act.findViewById(R.id.toolbar);
@@ -139,6 +140,12 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         getLoaderManager().initLoader(mCategoryId, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getLoaderManager().restartLoader(mCategoryId, null, this);
     }
 
     @Override

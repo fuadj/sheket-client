@@ -11,8 +11,7 @@
 
     <ImageButton
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:background="@drawable/ic_action_camera_large"
         android:text="Scan"
         android:id="@+id/selection_btn_scanner"
@@ -25,8 +24,7 @@
 
     <ImageButton
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:text="Manual Entry"
         android:background="@drawable/ic_action_keyboard_large"
         android:id="@+id/selection_btn_manual"
