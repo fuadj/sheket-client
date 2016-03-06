@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.mukera.sheket.client.R;
 
@@ -25,12 +26,16 @@ public class InputSelectionFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+    public void setSelectionListener(InputMethodSelectionListener listener) {
+        mListener = listener;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_selection, container, false);
 
-        Button scannerBtn = (Button) rootView.findViewById(R.id.selection_btn_scanner);
+        ImageButton scannerBtn = (ImageButton) rootView.findViewById(R.id.selection_btn_scanner);
         scannerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -38,7 +43,7 @@ public class InputSelectionFragment extends Fragment {
                     mListener.methodSelected(SELECTION_BARCODE);
             }
         });
-        Button manualBtn = (Button) rootView.findViewById(R.id.selection_btn_manual);
+        ImageButton manualBtn = (ImageButton) rootView.findViewById(R.id.selection_btn_manual);
         manualBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

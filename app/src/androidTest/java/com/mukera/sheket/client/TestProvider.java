@@ -31,7 +31,7 @@ public class TestProvider extends AndroidTestCase {
     static final int TEST_CODE_TYPE = ItemEntry.CODE_TYPE_MANUAL;
     static final long TEST_DATE = 40;
     static final String TEST_LOCATION = "a41";
-    static final int TEST_QTY_REMAIN = 16;
+    static final double TEST_QTY_REMAIN = 16.7;
     static final int TEST_QTY_TRANS = 6;
 
     public static ContentValues createCategoryValues() {

@@ -2,5 +2,41 @@
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#4264fa</color>
+
+    <color name="text_primary">#020631</color>
+    <color name="text_secondary">#010059</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="grey">#cccccc</color>
+    <color name="grey_700">#646464</color>
+    <color name="black">#000000</color>
+
+    <color name="blue">#00abea</color>
+
+    <color name="list_text_color">#0b003e</color>
+
+    <color name="sales_list_light">#e5e5ff</color>
+    <color name="sales_list_selector">#ffffff</color>
+
+    <color name="sales_action_bar">#cf76f7b2</color>
+
+    <color name="main_list_separator">#8e8e8e</color>
+
+    <color name="section_separator_color">#f2f2f2</color>
+
+    <color name="actionbar_opacity">#33000000</color>
+    <color name="primary">#3F51B5</color>
+    <color name="primary_dark">#303F9F</color>
+    <color name="primary_light">#C5CAE9</color>
+    <color name="accent">#E040FB</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#727272</color>
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#B6B6B6</color>
+
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="viewfinder_laser">#ffcc0000</color>
+    <color name="viewfinder_border">#ffafed44</color>
+    
 </resources>

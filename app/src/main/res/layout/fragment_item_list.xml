@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout
- xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,37 +9,10 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-   >
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/main_buy_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|left"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_action_collapse"
-        app:backgroundTint="@color/colorPrimary"/>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/main_search_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_action_search"
-        app:backgroundTint="@color/colorPrimary"/>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/main_sell_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_action_expand"
-        app:backgroundTint="@color/colorPrimary"/>
+    >
 
     <ListView
-        android:id="@+id/item_list_view"
+        android:id="@+id/list_view_item_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="5dp"
@@ -48,4 +21,36 @@
         android:verticalSpacing="5dp"
         android:focusable="true"
         android:clickable="true" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/float_btn_item_list_buy"
+        android:layout_width="wrap_content"
+        android:clickable="true"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_action_collapse"
+        app:backgroundTint="@color/colorPrimary"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/float_btn_item_list_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:clickable="true"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_action_search"
+        app:backgroundTint="@color/colorPrimary"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/float_btn_item_list_sell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_action_expand"
+        app:backgroundTint="@color/colorPrimary"/>
+
+
 </android.support.design.widget.CoordinatorLayout>
