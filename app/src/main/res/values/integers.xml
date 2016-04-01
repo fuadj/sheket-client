@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="invalid_user_id">-1</integer>
+    <integer name="invalid_company_id">-1</integer>
+    <integer name="default_revision">-1</integer>
+</resources>

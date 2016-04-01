@@ -2,6 +2,9 @@
     <string name="app_name">Sheket</string>
     <string name="action_settings">Settings</string>
 
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
     <string name="scanner_activity">ZBar Scanner - Full Activity</string>
     <string name="scanner_fragment_activity">ZBar Scanner - Full Fragment Activity</string>
     <string name="simple_scanner_activity">ZBar Scanner - Simple Activity</string>
@@ -21,11 +24,63 @@
     <string name="ok_button">OK</string>
     <string name="cancel_button">Cancel</string>
 
+    <integer name="viewfinder_border_width">4</integer>
+    <integer name="viewfinder_border_length">60</integer>
+
     <string name="pref_ip_label">IP Address: </string>
     <string name="pref_ip_key">ip_address</string>
     <string name="pref_ip_default">192.168.0.103</string>
 
-    <integer name="viewfinder_border_width">4</integer>
-    <integer name="viewfinder_border_length">60</integer>
-    
+    <string name="pref_user_id">user_id</string>
+    <string name="pref_company_id">company_id</string>
+    <string name="pref_login_cookie">login_cookie</string>
+
+    <string name="pref_header_key_cookie">Cookie</string>
+    <string name="pref_header_key_company_id">company_id</string>
+
+    <string name="pref_item_revision">item_revision</string>
+    <string name="pref_branch_revision">branch_revision</string>
+    <string name="pref_branch_item_revision">branch_item_revision</string>
+    <string name="pref_transaction_revision">transaction_revision</string>
+
+    <string name="sync_json_company_id">company_id</string>
+
+    <!-- Request json parameters -->
+    <string name="sync_json_new_transactions">transactions</string>
+
+    <string name="sync_json_entity_types">types</string>
+    <string name="sync_json_entity_type_item">items</string>
+    <string name="sync_json_entity_type_branch">branches</string>
+    <string name="sync_json_entity_type_branch_item">branch_items</string>
+
+    <string name="sync_json_key_create">create</string>
+    <string name="sync_json_key_update">update</string>
+    <string name="sync_json_key_delete">delete</string>
+    <string name="sync_json_key_fields">fields</string>
+
+    <string name="sync_json_item_rev">item_rev</string>
+    <string name="sync_json_branch_rev">branch_rev</string>
+    <string name="sync_json_branch_item_rev">branch_item_rev</string>
+    <string name="sync_json_trans_rev">transaction_rev</string>
+    <!-- End Request json parameters -->
+
+    <!-- Response of Entity Sync -->
+    <string name="sync_json_updated_item_ids">updated_item_ids</string>
+    <string name="sync_json_updated_branch_ids">updated_branch_ids</string>
+
+    <string name="sync_json_sync_items">sync_items</string>
+    <string name="sync_json_sync_branches">sync_branches</string>
+    <!-- End Response of Entity Sync -->
+
+    <!-- Response of Transaction Sync -->
+    <string name="sync_json_updated_trans_ids">updated_trans_ids</string>
+
+    <string name="sync_json_sync_branch_items">sync_branch_items</string>
+    <string name="sync_json_sync_trans">sync_trans</string>
+    <!-- End Response of Transaction Sync -->
+
+    <!-- SyncAdapter related -->
+    <string name="sync_account_type">sunshine.example.com</string>
+    <string name="content_authority">com.mukera.sheket.client.app</string>
+
 </resources>

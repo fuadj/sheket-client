@@ -6,35 +6,57 @@
     android:padding="10dp"
     android:background="#f2eaea">
 
-    <android.support.v4.widget.Space
-        android:layout_width="match_parent"
-        android:layout_height="30px" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:id="@+id/dialog_text_view_item_name"
+        android:textColor="#03030c"
+        android:textSize="20dp"
+        android:layout_marginLeft="15dp"
+        android:text="Test Item Name" />
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/dialog_text_view_item_name"
-            android:textColor="#03030c"
-            android:textSize="20dp"
-            android:layout_marginLeft="15dp" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginBottom="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/dialog_text_view_item_qty"
-            android:textColor="#000c76"
-            android:textSize="18dp"
-            android:layout_marginLeft="20dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Source:"
+                android:id="@+id/textView5"
+                android:textColor="#010127"
+                android:layout_gravity="left|center_vertical" />
+
+            <android.support.v4.widget.Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Branch 1 source"
+                android:id="@+id/dialog_text_view_source_branch"
+                android:layout_gravity="center_vertical|right"
+                android:background="#e9e8e8"
+                android:textColor="#000000" />
+        </LinearLayout>
     </LinearLayout>
 
-    <android.support.v4.widget.Space
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="40px" />
+        android:layout_height="wrap_content"
+        android:text="Change Source"
+        android:id="@+id/dialog_btn_change_source" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -42,9 +64,10 @@
         android:text="Quantity"
         android:textStyle="bold"
         android:layout_marginLeft="10dp"
-        android:textColor="#000000" />
+        android:textColor="#000000"
+        android:layout_marginTop="8dp" />
 
-    <EditText android:id="@+id/edit_text_dialog_qty"
+    <EditText android:id="@+id/dialog_edit_text_dialog_qty"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:maxLength="20"
@@ -55,61 +78,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+
         <ImageButton
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:background="@drawable/ic_action_remove"
-            android:id="@+id/dialog_btn_cancel"/>
+            android:id="@+id/dialog_btn_cancel"
+            android:layout_marginLeft="32dp"
+            android:layout_gravity="center_vertical" />
 
         <android.support.v4.widget.Space
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal" />
-
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Return"
-            android:background="@drawable/ic_action_undo"
-            android:id="@+id/dialog_btn_back"/>
-
-        <android.support.v4.widget.Space
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal" />
+            android:layout_weight="1" />
 
         <ImageButton android:id="@+id/dialog_btn_done"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/ic_action_accept"
             android:text="Ok"
-            />
+            android:layout_marginRight="32dp"
+            android:layout_gravity="center_vertical" />
 
-        <android.support.v4.widget.Space
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal" />
-
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="New Button"
-            android:id="@+id/dialog_btn_continue"
-            android:background="@drawable/ic_action_next"
-            android:layout_gravity="center_horizontal" />
     </LinearLayout>
-
-    <!--
-    <android.support.v4.widget.GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:columnCount="3">
-
-    </android.support.v4.widget.GridLayout>
-    -->
 
 </LinearLayout>

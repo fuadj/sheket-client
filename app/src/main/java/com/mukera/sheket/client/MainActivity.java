@@ -8,8 +8,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageButton;
 
-import com.mukera.sheket.client.items.ItemListFragment;
-import com.mukera.sheket.client.contentprovider.SheketContract;
+import com.mukera.sheket.client.controller.items.ItemListFragment;
+import com.mukera.sheket.client.data.SheketContract;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,10 +28,8 @@ public class MainActivity extends AppCompatActivity {
         ab.setDisplayShowCustomEnabled(true); // enable overriding the default toolbar layout
         ab.setDisplayShowTitleEnabled(false); // disable the default title element here (for centered title)
 
-        ImageButton addBtn = (ImageButton) findViewById(R.id.toolbar_btn_add);
-        ItemListFragment fragment = ItemListFragment.newInstance(SheketContract.CategoryEntry.DEFAULT_CATEGORY_ID);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment_container, fragment)
+                .replace(R.id.main_fragment_container, new ItemListFragment())
                 .commit();
     }
 

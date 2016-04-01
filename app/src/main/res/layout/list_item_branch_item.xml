@@ -1,0 +1,73 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material"
+    android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_height="match_parent"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/list_item_text_view_b_item_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_marginLeft="8dp"
+            android:layout_weight="2"
+            android:text="Shell 20-50 Oil" />
+
+        <TextView
+            android:id="@+id/list_item_text_view_b_item_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:textAppearanceSmall"
+            android:layout_marginLeft="8dp"
+            android:layout_weight="1"
+            android:text="sh_20_50" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="mojo"
+        android:id="@+id/list_item_text_view_b_branch_name"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_weight="1"
+        android:layout_marginBottom="4dp" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2">
+
+        <TextView
+            android:id="@+id/list_item_text_view_b_item_qty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="8dp"
+            android:fontFamily="sans-serif-light"
+            android:textSize="32dp"
+            android:layout_gravity="center_vertical|right"
+            android:text="204.3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="A-10"
+            android:id="@+id/list_item_text_view_b_item_loc"
+            android:layout_marginRight="8dp"
+            android:layout_gravity="center_vertical|right" />
+    </LinearLayout>
+
+</LinearLayout>
