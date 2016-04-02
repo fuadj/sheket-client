@@ -1,5 +1,7 @@
 package com.mukera.sheket.client.controller.navigation;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -43,6 +45,9 @@ public abstract class NavigationDrawerFragment extends Fragment {
     private boolean mFromSavedInstanceState;
     protected boolean mUserLearnedDrawer;
 
+    private int mFragmentContainerId;
+    private int mDrawerLayoutId;
+
     public NavigationDrawerFragment() {
     }
 
@@ -75,11 +80,16 @@ public abstract class NavigationDrawerFragment extends Fragment {
      * Users of this fragment must call this method to set up the navigation drawer interactions.
      *
      * @param fragmentId   The android:id of this fragment in its activity's layout.
-     * @param drawerLayout The DrawerLayout containing this fragment's UI.
+     * @param drawerLayoutId The android:id of the DrawerLayout containing this fragment's UI.
      */
-    public void setUp(int fragmentId, DrawerLayout drawerLayout) {
-        mFragmentContainerView = getActivity().findViewById(fragmentId);
-        mDrawerLayout = drawerLayout;
+    public void setUp(int fragmentId, int drawerLayoutId) {
+        mFragmentContainerId = fragmentId;
+        mDrawerLayoutId = drawerLayoutId;
+    }
+
+    protected void setUp() {
+        mFragmentContainerView = getActivity().findViewById(mFragmentContainerId);
+        mDrawerLayout = (DrawerLayout) getActivity().findViewById(mDrawerLayoutId);
 
         // set a custom shadow that overlays the main content when the drawer opens
         //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
@@ -143,6 +153,13 @@ public abstract class NavigationDrawerFragment extends Fragment {
         });
 
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // At this point, we know the activity is attached
+        setUp();
     }
 
     @Override
