@@ -43,13 +43,8 @@ public class NewItemActivity extends AppCompatActivity {
     }
 
     public static class NewItemFragment extends Fragment {
-        public static final int SELECTION_NONE = 0;
-        public static final int SELECTION_BARCODE = 1;
-        public static final int SELECTION_MANUAL = 2;
-
         private EditText mName, mManualCode, mQty, mLocation;
-        private TextView mBarcodeLabel, mCategoryLabel;
-        private Spinner mCategorySpinner;
+        private TextView mBarcodeLabel;
         private ImageButton mBarcodeBtn;
 
         private Button mCancel, mOk;
@@ -100,12 +95,6 @@ public class NewItemActivity extends AppCompatActivity {
             mLocation = (EditText) rootView.findViewById(R.id.edit_text_new_item_location);
 
             mBarcodeLabel = (TextView) rootView.findViewById(R.id.text_view_new_item_bar_code);
-            mCategoryLabel = (TextView) rootView.findViewById(R.id.text_view_new_item_category_label);
-            mCategorySpinner = (Spinner) rootView.findViewById(R.id.spinner_new_item_category);
-
-            // TODO: add selector for categories
-            mCategoryLabel.setVisibility(View.GONE);
-            mCategorySpinner.setVisibility(View.GONE);
 
             final AppCompatActivity activity = (AppCompatActivity)getActivity();
 
@@ -128,23 +117,9 @@ public class NewItemActivity extends AppCompatActivity {
                             values.put(ItemEntry.COLUMN_MANUAL_CODE, manual_code);
                             values.put(ItemEntry.COLUMN_HAS_BAR_CODE, !bar_code.isEmpty());
 
-                            Uri uri = activity.getContentResolver().insert(
+                            activity.getContentResolver().insert(
                                     ItemEntry.CONTENT_URI, values);
-                            long item_id = ContentUris.parseId(uri);
 
-                            final SItem item;
-
-                            if (item_id != -1) {        // success
-                                // fetch it out
-                                uri = ItemEntry.buildItemUri(item_id);
-                                Cursor cursor = activity.getContentResolver().query(uri,
-                                        SItem.ITEM_COLUMNS,
-                                        null, null, null);
-                                if (cursor.moveToFirst())
-                                    item = new SItem(cursor);
-                            } else {
-                                item = null;
-                            }
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -193,17 +168,6 @@ public class NewItemActivity extends AppCompatActivity {
             setOkButtonStatus();
 
             return rootView;
-        }
-
-        static class TextWatcherAdapter implements TextWatcher {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { }
-
-            @Override
-            public void afterTextChanged(Editable s) { }
         }
 
     }

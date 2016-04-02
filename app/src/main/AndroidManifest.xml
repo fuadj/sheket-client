@@ -45,6 +45,15 @@
         </activity>
 
         <activity
+            android:label="Registration"
+            android:name=".controller.signup.RegistrationActivity"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity
             android:label="New Item"
             android:name=".controller.NewItemActivity"
             android:parentActivityName=".MainActivity" >

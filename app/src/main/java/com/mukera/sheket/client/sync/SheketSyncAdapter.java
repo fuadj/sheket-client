@@ -92,7 +92,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
                 throw new SyncException("error response");
             }
 
-            EntitySyncResponse result = parseEntitySyncResponse(response.body().toString());
+            EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
             applyEntitySync(result);
         } catch (JSONException | IOException | SyncException e) {
 
@@ -544,7 +544,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             TransactionSyncResponse result = parseTransactionSyncResponse(
-                    response.body().toString());
+                    response.body().string());
             applyTransactionSync(result);
         } catch (JSONException | IOException | SyncException e) {
         }

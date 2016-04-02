@@ -27,6 +27,7 @@
     <integer name="viewfinder_border_width">4</integer>
     <integer name="viewfinder_border_length">60</integer>
 
+    <!-- Internet related -->
     <string name="pref_ip_label">IP Address: </string>
     <string name="pref_ip_key">ip_address</string>
     <string name="pref_ip_default">192.168.0.103</string>

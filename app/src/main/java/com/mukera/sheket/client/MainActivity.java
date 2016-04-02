@@ -1,5 +1,6 @@
 package com.mukera.sheket.client;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -9,13 +10,21 @@ import android.view.MenuItem;
 import android.widget.ImageButton;
 
 import com.mukera.sheket.client.controller.items.ItemListFragment;
+import com.mukera.sheket.client.controller.signup.RegistrationActivity;
 import com.mukera.sheket.client.data.SheketContract;
+import com.mukera.sheket.client.sync.SyncUtil;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!SyncUtil.isUserSet(this)) {
+            Intent intent = new Intent(this, RegistrationActivity.class);
+            startActivity(intent);
+        }
+
         setContentView(R.layout.activity_main);
 
         Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
@@ -26,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
         ab.setDisplayShowHomeEnabled(true); // show or hide the default home button
         //ab.setDisplayHomeAsUpEnabled(true);
         ab.setDisplayShowCustomEnabled(true); // enable overriding the default toolbar layout
-        ab.setDisplayShowTitleEnabled(false); // disable the default title element here (for centered title)
+        //ab.setDisplayShowTitleEnabled(false); // disable the default title element here (for centered title)
+        ab.setTitle("Sheket");
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.main_fragment_container, new ItemListFragment())

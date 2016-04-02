@@ -114,25 +114,6 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Category"
-                    android:textColor="@color/text_primary"
-                    android:id="@+id/text_view_new_item_category_label"
-                    app:layout_rowWeight="1"
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    app:layout_column="0"
-                    app:layout_row="6" />
-
-                <Spinner
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/spinner_new_item_category"
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    app:layout_column="1"
-                    app:layout_row="6" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
                     android:id="@+id/text_view_new_item_location"
                     app:layout_rowWeight="1"
