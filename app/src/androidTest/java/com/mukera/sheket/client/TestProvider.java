@@ -12,6 +12,9 @@ import android.util.Log;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SBranchItem;
+import com.mukera.sheket.client.models.SPermission;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +28,12 @@ import java.util.Set;
 public class TestProvider extends AndroidTestCase {
     static final long TEST_COMPANY_ID = 2;
     static final String TEST_COMPANY_name = "test company";
+    static final String TEST_COMPANY_PERMISSION;
+    static {
+        SPermission p = new SPermission();
+        p.setPermissionType(SPermission.PERMISSION_TYPE_ALL_ACCESS);
+        TEST_COMPANY_PERMISSION = p.Encode();
+    }
 
     static final long TEST_BRANCH_ID = 10;
     static final String TEST_BRANCH_NAME = "test branch";
@@ -41,12 +50,13 @@ public class TestProvider extends AndroidTestCase {
     static final int TEST_QTY_TRANS = 6;
     static final int TEST_CHANGE_STATE_SYNCED = 1;
     static final int TEST_USER_ID = 10;
-    static final int TEST_TRANS_TYPE = TransItemEntry.TRANS_TYPE_SELL_FROM_CURRENT_BRANCH;
+    static final int TEST_TRANS_TYPE = TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH;
 
     public static ContentValues createCompanyValues() {
         ContentValues values = new ContentValues();
         values.put(CompanyEntry.COLUMN_ID, TEST_COMPANY_ID);
         values.put(CompanyEntry.COLUMN_NAME, TEST_COMPANY_name);
+        values.put(CompanyEntry.COLUMN_PERMISSION, TEST_COMPANY_PERMISSION);
         return values;
     }
 
@@ -96,10 +106,10 @@ public class TestProvider extends AndroidTestCase {
 
     public static ContentValues createTransactionItems(long item_id, long trans_id) {
         ContentValues values = new ContentValues();
+        values.put(TransItemEntry.COLUMN_COMPANY_ID, TEST_COMPANY_ID);
         values.put(TransItemEntry.COLUMN_ITEM_ID, item_id);
         values.put(TransItemEntry.COLUMN_TRANSACTION_ID, trans_id);
         values.put(TransItemEntry.COLUMN_QTY, TEST_QTY_TRANS);
-        values.put(TransItemEntry.COLUMN_COMPANY_ID, TEST_COMPANY_ID);
         values.put(TransItemEntry.COLUMN_TRANSACTION_TYPE, TEST_TRANS_TYPE);
         addChangeState(values);
         return values;
@@ -167,27 +177,27 @@ public class TestProvider extends AndroidTestCase {
                 null
         );
         context.getContentResolver().delete(
-                TransItemEntry.CONTENT_URI,
+                TransItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null
         );
         context.getContentResolver().delete(
-                TransactionEntry.CONTENT_URI,
+                TransactionEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null
         );
         context.getContentResolver().delete(
-                BranchItemEntry.CONTENT_URI,
+                BranchItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null
         );
         context.getContentResolver().delete(
-                ItemEntry.CONTENT_URI,
+                ItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null
         );
         context.getContentResolver().delete(
-                BranchEntry.CONTENT_URI,
+                BranchEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null
         );
@@ -203,7 +213,7 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
 
         cursor = context.getContentResolver().query(
-                BranchEntry.CONTENT_URI,
+                BranchEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null,
                 null,
@@ -213,7 +223,7 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
 
         cursor = context.getContentResolver().query(
-                BranchItemEntry.CONTENT_URI,
+                BranchItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null,
                 null,
@@ -223,7 +233,7 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
 
         cursor = context.getContentResolver().query(
-                ItemEntry.CONTENT_URI,
+                ItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null,
                 null,
@@ -233,7 +243,7 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
 
         cursor = context.getContentResolver().query(
-                TransactionEntry.CONTENT_URI,
+                TransactionEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null,
                 null,
@@ -243,7 +253,7 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
 
         cursor = context.getContentResolver().query(
-                TransItemEntry.CONTENT_URI,
+                TransItemEntry.buildBaseUri(TEST_COMPANY_ID),
                 null,
                 null,
                 null,
@@ -285,57 +295,65 @@ public class TestProvider extends AndroidTestCase {
 
         values = createBranchValues();
         uri = mContext.getContentResolver().insert(
-                BranchEntry.CONTENT_URI, values);
+                BranchEntry.buildBaseUri(TEST_COMPANY_ID), values);
         row_id = ContentUris.parseId(uri);
         assertTrue(row_id != -1);
 
-        cursor = _query(BranchEntry.CONTENT_URI);
+        cursor = _query(BranchEntry.buildBaseUri(TEST_COMPANY_ID));
         validateCursor(cursor, values);
 
-        cursor = _query(BranchEntry.buildBranchUri(row_id));
+        cursor = _query(BranchEntry.buildBranchUri(TEST_COMPANY_ID, row_id));
         validateCursor(cursor, values);
 
         values = createItemValues();
         uri = mContext.getContentResolver().insert(
-                ItemEntry.CONTENT_URI, values);
+                ItemEntry.buildBaseUri(TEST_COMPANY_ID), values);
         long item_id = ContentUris.parseId(uri);
         assertTrue(item_id != -1);
 
-        cursor = _query(ItemEntry.CONTENT_URI);
+        cursor = _query(ItemEntry.buildBaseUri(TEST_COMPANY_ID));
         validateCursor(cursor, values);
 
-        cursor = _query(ItemEntry.buildItemUri(item_id));
+        cursor = _query(ItemEntry.buildItemUri(TEST_COMPANY_ID, item_id));
         validateCursor(cursor, values);
 
         values = createBranchItemValues();
         uri = mContext.getContentResolver().insert(
-                BranchItemEntry.CONTENT_URI, values);
+                BranchItemEntry.buildBaseUri(TEST_COMPANY_ID), values);
 
-        cursor = _query(BranchItemEntry.CONTENT_URI);
+        cursor = _query(BranchItemEntry.buildBaseUri(TEST_COMPANY_ID));
         validateCursor(cursor, values);
 
         cursor = _query(uri);
         validateCursor(cursor, values);
 
+        cursor = _query(BranchItemEntry.buildBranchItemUri(TEST_COMPANY_ID, TEST_BRANCH_ID, TEST_ITEM_ID));
+        validateCursor(cursor, values);
+
+        cursor = getContext().getContentResolver().
+                query(BranchItemEntry.buildBranchItemUri(TEST_COMPANY_ID, TEST_BRANCH_ID, TEST_ITEM_ID),
+                        SBranchItem.BRANCH_ITEM_COLUMNS, null, null, null);
+        validateCursor(cursor, values);
+
         values = createTransactionValues();
         uri = mContext.getContentResolver().insert(
-                TransactionEntry.CONTENT_URI, values);
+                TransactionEntry.buildBaseUri(TEST_COMPANY_ID), values);
 
-        long trans_id = ContentUris.parseId(uri);
+        long trans_id = TransactionEntry.getTransactionId(uri);
         assertTrue(trans_id != -1);
 
-        cursor = _query(TransactionEntry.CONTENT_URI);
+        cursor = _query(TransactionEntry.buildBaseUri(TEST_COMPANY_ID));
         validateCursor(cursor, values);
-        cursor = _query(TransactionEntry.buildTransactionUri(trans_id));
+        cursor = _query(TransactionEntry.buildTransactionUri(TEST_COMPANY_ID, trans_id));
         validateCursor(cursor, values);
 
         values = createTransactionItems(item_id, trans_id);
         uri = mContext.getContentResolver().insert(
-                TransItemEntry.CONTENT_URI, values);
+                TransItemEntry.buildBaseUri(TEST_COMPANY_ID), values);
         assertEquals(trans_id, ContentUris.parseId(uri));
 
         cursor = _query(TransItemEntry.
-                buildItemsInTransactionUri(trans_id));
+                buildTransactionItemsUri(TEST_COMPANY_ID, trans_id));
         validateCursor(cursor, values);
     }
 
@@ -345,46 +363,58 @@ public class TestProvider extends AndroidTestCase {
 
     public void testGetType() {
         log("testGetType");
+        long test_company_id = 1;
+
         String type = _type(CompanyEntry.CONTENT_URI);
         assertEquals(CompanyEntry.CONTENT_TYPE, type);
 
-        type = _type(BranchEntry.CONTENT_URI);
+        type = _type(BranchEntry.buildBaseUri(test_company_id));
         assertEquals(BranchEntry.CONTENT_TYPE, type);
 
         long testBranch = 1;
-        type = _type(BranchEntry.buildBranchUri(testBranch));
+        type = _type(BranchEntry.buildBranchUri(test_company_id, testBranch));
         assertEquals(BranchEntry.CONTENT_ITEM_TYPE, type);
 
         long testItem = 13;
-        type = _type(ItemEntry.buildItemUri(testItem));
+        type = _type(ItemEntry.buildItemUri(test_company_id, testItem));
         assertEquals(ItemEntry.CONTENT_ITEM_TYPE, type);
 
-        type = _type(ItemEntry.CONTENT_URI);
+        type = _type(ItemEntry.buildBaseUri(test_company_id));
         assertEquals(ItemEntry.CONTENT_TYPE, type);
 
-        type = _type(BranchItemEntry.buildBranchItemUri(testBranch, testItem));
+        type = _type(BranchItemEntry.buildBranchItemUri(test_company_id, testBranch, testItem));
         assertEquals(BranchItemEntry.CONTENT_ITEM_TYPE, type);
 
-        type = _type(BranchItemEntry.buildItemsInBranchUri(testBranch));
+        type = _type(BranchItemEntry.buildBranchItemUri(test_company_id, testBranch, BranchItemEntry.NO_ID_SET));
         assertEquals(BranchItemEntry.CONTENT_TYPE, type);
 
-        type = _type(BranchItemEntry.buildItemsInBranchUri(testItem));
+        type = _type(BranchItemEntry.buildBranchItemUri(test_company_id, BranchItemEntry.NO_ID_SET, testItem));
         assertEquals(BranchItemEntry.CONTENT_TYPE, type);
 
-        type = _type(TransactionEntry.CONTENT_URI);
+        type = _type(BranchItemEntry.buildBranchItemUri(test_company_id,
+                BranchItemEntry.NO_ID_SET, BranchItemEntry.NO_ID_SET));
+        assertEquals(BranchItemEntry.CONTENT_TYPE, type);
+
+        type = _type(BranchItemEntry.buildAllItemsInBranchUri(test_company_id, testBranch));
+        assertEquals(BranchItemEntry.CONTENT_TYPE, type);
+
+        type = _type(BranchItemEntry.buildItemInAllBranches(test_company_id, testItem));
+        assertEquals(BranchItemEntry.CONTENT_TYPE, type);
+
+        type = _type(TransactionEntry.buildBaseUri(test_company_id));
         assertEquals(TransactionEntry.CONTENT_TYPE, type);
 
         long testTransaction = 13;
-        type = _type(TransactionEntry.buildTransactionUri(testTransaction));
+        type = _type(TransactionEntry.buildTransactionUri(test_company_id, testTransaction));
         assertEquals(TransactionEntry.CONTENT_ITEM_TYPE, type);
 
-        type = _type(ItemEntry.CONTENT_URI);
+        type = _type(ItemEntry.buildBaseUri(test_company_id));
         assertEquals(ItemEntry.CONTENT_TYPE, type);
 
-        type = _type(TransItemEntry.CONTENT_URI);
+        type = _type(TransItemEntry.buildBaseUri(test_company_id));
         assertEquals(TransItemEntry.CONTENT_TYPE, type);
 
-        type = _type(TransItemEntry.buildItemsInTransactionUri(testTransaction));
+        type = _type(TransItemEntry.buildTransactionItemsUri(test_company_id, testTransaction));
         assertEquals(TransItemEntry.CONTENT_TYPE, type);
     }
 
@@ -420,23 +450,23 @@ public class TestProvider extends AndroidTestCase {
         validateCursor(cursor, updatedValues);
 
         values = createBranchValues();
-        uri = _insert(BranchEntry.CONTENT_URI, values);
+        uri = _insert(BranchEntry.buildBaseUri(company_id), values);
         assertTrue(ContentUris.parseId(uri) != -1);
 
         values = createItemValues();
-        uri = _insert(ItemEntry.CONTENT_URI, values);
+        uri = _insert(ItemEntry.buildBaseUri(company_id), values);
         long item_id = ContentUris.parseId(uri);
         assertTrue(item_id > 0);
 
         values = createBranchItemValues();
         uri = mContext.getContentResolver().insert(
-                BranchItemEntry.CONTENT_URI, values);
+                BranchItemEntry.buildBaseUri(company_id), values);
 
         cursor = _query(uri);
         validateCursor(cursor, values);
 
         values = createTransactionValues();
-        uri = _insert(TransactionEntry.CONTENT_URI, values);
+        uri = _insert(TransactionEntry.buildBaseUri(company_id), values);
         long trans_id = ContentUris.parseId(uri);
         assertTrue(trans_id > 0);
     }

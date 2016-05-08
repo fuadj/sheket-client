@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.NumberFormatter;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
 
@@ -56,6 +57,6 @@ public class BranchItemSearchCursorAdapter  extends CursorAdapter {
             code = item.manual_code;
         }
         holder.item_code.setText(code);
-        holder.qty_remain.setText(String.format("%f", branchItem.quantity));
+        holder.qty_remain.setText(NumberFormatter.formatDoubleForDisplay(branchItem.quantity));
     }
 }

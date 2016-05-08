@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/list_item_img_btn_all_item_detail_dialog"
+        android:focusable="false"
+        android:background="@drawable/ic_action_edit"
+        android:layout_centerVertical="true"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_toRightOf="@+id/list_item_img_btn_all_item_detail_dialog"
+        android:layout_centerVertical="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Branch Name"
+            android:id="@+id/list_item_all_item_item_detail_text_view_branch_name"
+            android:textSize="18dp"
+            android:textColor="#000000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Item Location"
+            android:id="@+id/list_item_all_item_item_detail_text_view_location"
+            android:textSize="16dp"
+            android:textColor="#4d4d4d" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25.3"
+        android:id="@+id/list_item_all_item_item_detail_text_view_quantity"
+        android:layout_alignParentRight="true"
+        android:textSize="24dp"
+        android:textColor="#010321"
+        android:layout_centerVertical="true" />
+
+</RelativeLayout>

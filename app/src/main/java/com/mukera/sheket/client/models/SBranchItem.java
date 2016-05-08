@@ -13,8 +13,7 @@ import org.json.JSONObject;
  * Created by gamma on 3/27/16.
  */
 public class SBranchItem extends ChangeTraceable {
-    public static final String JSON_BRANCH_ID = "branch_id";
-    public static final String JSON_ITEM_ID = "item_id";
+    public static final String JSON_BRANCH_ITEM_ID = "branch_item_id";
     public static final String JSON_QUANTITY = "quantity";
     public static final String JSON_LOCATION = "item_location";
 
@@ -29,14 +28,14 @@ public class SBranchItem extends ChangeTraceable {
             _f(COLUMN_CHANGE_INDICATOR)
     };
 
-    public static final String[] BRANCH_ITEM_WITH_DETAIL_COLUMN;
+    public static final String[] BRANCH_ITEM_WITH_DETAIL_COLUMNS;
     static {
         int size = BRANCH_ITEM_COLUMNS.length + SItem.ITEM_COLUMNS.length;
-        BRANCH_ITEM_WITH_DETAIL_COLUMN = new String[size];
+        BRANCH_ITEM_WITH_DETAIL_COLUMNS = new String[size];
 
-        System.arraycopy(BRANCH_ITEM_COLUMNS, 0, BRANCH_ITEM_WITH_DETAIL_COLUMN,
+        System.arraycopy(BRANCH_ITEM_COLUMNS, 0, BRANCH_ITEM_WITH_DETAIL_COLUMNS,
                 0, BRANCH_ITEM_COLUMNS.length);
-        System.arraycopy(SItem.ITEM_COLUMNS, 0, BRANCH_ITEM_WITH_DETAIL_COLUMN,
+        System.arraycopy(SItem.ITEM_COLUMNS, 0, BRANCH_ITEM_WITH_DETAIL_COLUMNS,
                 BRANCH_ITEM_COLUMNS.length, SItem.ITEM_COLUMNS.length);
     }
 
@@ -68,6 +67,10 @@ public class SBranchItem extends ChangeTraceable {
         this(cursor, 0, fetch_item);
     }
 
+    public SBranchItem(Cursor cursor, int offset) {
+        this(cursor, offset, false);
+    }
+
     public SBranchItem(Cursor cursor, int offset, boolean fetch_item) {
         company_id = cursor.getLong(COL_COMPANY_ID + offset);
         branch_id = cursor.getLong(COL_BRANCH_ID + offset);
@@ -96,8 +99,7 @@ public class SBranchItem extends ChangeTraceable {
      */
     public JSONObject toJsonObject() throws JSONException {
         JSONObject result = new JSONObject();
-        result.put(JSON_BRANCH_ID, branch_id);
-        result.put(JSON_ITEM_ID, item_id);
+        result.put(JSON_BRANCH_ITEM_ID, "" + branch_id + ":" + item_id);
         result.put(JSON_QUANTITY, quantity);
         result.put(JSON_LOCATION, item_location);
         return result;

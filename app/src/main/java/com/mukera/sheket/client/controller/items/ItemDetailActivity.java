@@ -18,6 +18,7 @@ import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.utility.PrefUtil;
 
 /**
  * Created by gamma on 3/5/16.
@@ -126,7 +127,8 @@ public class ItemDetailActivity extends AppCompatActivity {
         public Loader onCreateLoader(int id, Bundle args) {
             if (mItemId == INVALID_ITEM_ID) return null;
 
-            Uri uri = SheketContract.ItemEntry.buildItemUri(mItemId);
+            long company_id = PrefUtil.getCurrentCompanyId(getContext());
+            Uri uri = SheketContract.ItemEntry.buildItemUri(company_id, mItemId);
             return new CursorLoader(getActivity(),
                     uri,
                     SItem.ITEM_COLUMNS,

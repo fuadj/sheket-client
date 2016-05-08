@@ -1,27 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#ffffffff">
 
-    <include android:id="@+id/all_items"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        layout="@layout/list_item_navigation"/>
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <include android:id="@+id/separator_1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        layout="@layout/list_item_separator"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:id="@+id/textView5"
+                android:background="#5077f4" />
 
-    <ListView
-        android:id="@+id/list_view_branches"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:choiceMode="singleChoice"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test Company Name"
+                android:id="@+id/navigation_text_view_company_name"
+                android:textSize="20dp"
+                android:textColor="#ffffff"
+                android:background="#5077f4"
+                android:paddingLeft="8dp" />
 
+            <include android:id="@+id/separator_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/list_item_separator"/>
 
-</LinearLayout>
+            <ListView
+                android:id="@+id/navigation_list_view_branches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:choiceMode="singleChoice" />
+
+            <include android:id="@+id/separator_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/list_item_separator"/>
+
+            <ListView
+                android:id="@+id/navigation_list_view_admin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:choiceMode="singleChoice" />
+
+            <include android:id="@+id/separator_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/list_item_separator"/>
+
+            <ListView
+                android:id="@+id/navigation_list_view_user"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:choiceMode="singleChoice" />
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

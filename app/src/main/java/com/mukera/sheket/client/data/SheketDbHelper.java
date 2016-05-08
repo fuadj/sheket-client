@@ -1,10 +1,17 @@
 package com.mukera.sheket.client.data;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.mukera.sheket.client.data.SheketContract.*;
+
+import java.util.ArrayList;
 
 /**
  * Created by gamma on 3/2/16.
@@ -33,18 +40,31 @@ public class SheketDbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String sql_create_company_table = "create table if not exists " + CompanyEntry.TABLE_NAME + " ( " +
-                CompanyEntry.COLUMN_ID + " integer primary key, " +
-                CompanyEntry.COLUMN_NAME + " text not null);";
+                CompanyEntry.COLUMN_ID + " integer primary key ON CONFLICT REPLACE, " +
+                CompanyEntry.COLUMN_NAME + " text not null, " +
+                CompanyEntry.COLUMN_PERMISSION + " text not null, " +
+                // This can be empty because it might be the user's first time
+                CompanyEntry.COLUMN_REVISIONS + " text);";
+
+        final String sql_create_members_table = "create table if not exists " + MemberEntry.TABLE_NAME + " ( " +
+                MemberEntry.COLUMN_COMPANY_ID + " integer not null, " +
+                MemberEntry.COLUMN_MEMBER_ID + " integer not null, " +
+                MemberEntry.COLUMN_MEMBER_NAME + " text not null, " +
+                ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+                MemberEntry.COLUMN_MEMBER_PERMISSION + " text not null, " +
+                " UNIQUE (" +
+                MemberEntry.COLUMN_COMPANY_ID + ", " + MemberEntry.COLUMN_MEMBER_ID + ") ON CONFLICT REPLACE);";
 
         final String sql_create_branch_table = "create table if not exists " + BranchEntry.TABLE_NAME + " ( " +
-                BranchEntry.COLUMN_BRANCH_ID + " integer primary key, " +
+                BranchEntry.COLUMN_BRANCH_ID + " integer primary key ON CONFLICT REPLACE, " +
                 BranchEntry.COLUMN_COMPANY_ID + " integer not null, " +
                 BranchEntry.COLUMN_NAME + " text not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+                UUIDSyncable.COLUMN_UUID + " text, " +
                 BranchEntry.COLUMN_LOCATION + " text);";
 
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
-                ItemEntry.COLUMN_ITEM_ID + " integer primary key, " +
+                ItemEntry.COLUMN_ITEM_ID + " integer primary key ON CONFLICT REPLACE, " +
                 ItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
                 ItemEntry.COLUMN_NAME + " text not null, " +
                 ItemEntry.COLUMN_MODEL_YEAR + " text, " +
@@ -52,6 +72,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 ItemEntry.COLUMN_MANUAL_CODE + " text, " +
                 ItemEntry.COLUMN_BAR_CODE + " text, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+                UUIDSyncable.COLUMN_UUID + " text, " +
                 // b/c there is not bool type in sqlite
                 ItemEntry.COLUMN_HAS_BAR_CODE + " integer not null);";
 
@@ -61,14 +82,18 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 BranchItemEntry.COLUMN_ITEM_ID + cascadeUpdate(ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID) +
                 BranchItemEntry.COLUMN_ITEM_LOCATION + " text, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
-                BranchItemEntry.COLUMN_QUANTITY + " real);";
+                BranchItemEntry.COLUMN_QUANTITY + " real, " +
+                " UNIQUE( " +
+                BranchItemEntry.COLUMN_COMPANY_ID + ", " + BranchItemEntry.COLUMN_BRANCH_ID + ", " +
+                BranchItemEntry.COLUMN_ITEM_ID + ") ON CONFLICT REPLACE);";
 
         final String sql_create_transaction_table = "create table if not exists " + TransactionEntry.TABLE_NAME + " ( " +
-                TransactionEntry.COLUMN_TRANS_ID + " integer primary key, " +
+                TransactionEntry.COLUMN_TRANS_ID + " integer primary key ON CONFLICT REPLACE, " +
                 TransactionEntry.COLUMN_COMPANY_ID + " integer not null, " +
                 TransactionEntry.COLUMN_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
                 TransactionEntry.COLUMN_USER_ID + " integer not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+                UUIDSyncable.COLUMN_UUID + " text, " +
                 TransactionEntry.COLUMN_DATE + " integer not null);";
 
         final String sql_create_transaction_items_table = "create table if not exists " + TransItemEntry.TABLE_NAME + " ( " +
@@ -77,25 +102,103 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 TransItemEntry.COLUMN_ITEM_ID + cascadeUpdate(ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID) +
                 TransItemEntry.COLUMN_TRANSACTION_TYPE + " integer not null, " +
 
-                // This can't be automatically updated on foreign key changes because
-                // Not always do transactions involve other branch, so we can't enforce a foreign key,
-                // We only set this id if another branch was affected, and that doesn't always happen
-                TransItemEntry.COLUMN_OTHER_BRANCH_ID + " integer, " +
-
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+
+                /**
+                 * This guarantees any updated branch id's are also appropriately updated here
+                 * Although a transaction might not affect another branch, this column
+                 * will always refer to an actual row in the branches table. If in-fact the transaction
+                 * doesn't affect another branch, it will point to the dummy branch.
+                 */
+                TransItemEntry.COLUMN_OTHER_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
 
                 TransItemEntry.COLUMN_QTY + " real not null);";
 
         db.execSQL(sql_create_company_table);
+        db.execSQL(sql_create_members_table);
         db.execSQL(sql_create_branch_table);
-        db.execSQL(sql_create_branch_item_table);
+
         db.execSQL(sql_create_item_table);
+
+        db.execSQL(sql_create_branch_item_table);
         db.execSQL(sql_create_transaction_table);
         db.execSQL(sql_create_transaction_items_table);
+
+        // Create the DUMMY Branch if it doesn't exist
+        Cursor cursor = db.query(BranchEntry.TABLE_NAME, new String[]{BranchEntry.COLUMN_BRANCH_ID},
+                BranchEntry.COLUMN_BRANCH_ID + " = ?",
+                new String[]{String.valueOf(BranchEntry.DUMMY_BRANCH_ID)},
+                null, null, null);
+        if (cursor != null) {
+            if (!cursor.moveToFirst()) {    // if the branch doesn't exist, create it
+                ContentValues values = new ContentValues();
+                // By Setting the company_id to 0, we can guarantee that no company
+                // will EVER see this dummy branch.
+                values.put(BranchEntry.COLUMN_COMPANY_ID, BranchEntry.DUMMY_COMPANY_ID);
+                values.put(BranchEntry.COLUMN_BRANCH_ID, BranchEntry.DUMMY_BRANCH_ID);
+                values.put(BranchEntry.COLUMN_NAME, "Dummy Branch");
+                // we don't want this to sync with the server
+                values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                        ChangeTraceable.CHANGE_STATUS_SYNCED);
+                db.insert(BranchEntry.TABLE_NAME, null, values);
+            }
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
+    }
+
+
+    /**
+     * Used by AndroidDatabaseManager
+     */
+    public ArrayList<Cursor> getData(String Query) {
+        //get writable database
+        SQLiteDatabase sqlDB = this.getWritableDatabase();
+        String[] columns = new String[]{"mesage"};
+        //an array list of cursor to save two cursors one has results from the query
+        //other cursor stores error message if any errors are triggered
+        ArrayList<Cursor> alc = new ArrayList<Cursor>(2);
+        MatrixCursor Cursor2 = new MatrixCursor(columns);
+        alc.add(null);
+        alc.add(null);
+
+
+        try {
+            String maxQuery = Query;
+            //execute the query results will be save in Cursor c
+            Cursor c = sqlDB.rawQuery(maxQuery, null);
+
+
+            //add value to cursor2
+            Cursor2.addRow(new Object[]{"Success"});
+
+            alc.set(1, Cursor2);
+            if (null != c && c.getCount() > 0) {
+
+
+                alc.set(0, c);
+                c.moveToFirst();
+
+                return alc;
+            }
+            return alc;
+        } catch (SQLException sqlEx) {
+            Log.d("printing exception", sqlEx.getMessage());
+            //if any exceptions are triggered save the error message to cursor an return the arraylist
+            Cursor2.addRow(new Object[]{"" + sqlEx.getMessage()});
+            alc.set(1, Cursor2);
+            return alc;
+        } catch (Exception ex) {
+
+            Log.d("printing exception", ex.getMessage());
+
+            //if any exceptions are triggered save the error message to cursor an return the arraylist
+            Cursor2.addRow(new Object[]{"" + ex.getMessage()});
+            alc.set(1, Cursor2);
+            return alc;
+        }
     }
 }

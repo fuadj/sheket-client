@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants">
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/member_img_btn_delete"
+        android:focusable="false"
+        android:background="@drawable/ic_action_remove"
+        android:layout_centerVertical="true"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/member_img_btn_delete"
+        android:layout_marginLeft="8dp"
+        android:layout_centerVertical="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Member Name"
+            android:id="@+id/member_text_view_name"
+            android:textSize="20dp"
+            android:textColor="#000000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2105634"
+            android:id="@+id/member_text_view_id"
+            android:textSize="16dp"
+            android:textColor="#4d4d4d" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="All Access"
+        android:id="@+id/member_text_view_permission"
+        android:layout_alignParentRight="true"
+        android:textSize="20dp"
+        android:textColor="#010321"
+        android:layout_centerVertical="true"/>
+</RelativeLayout>

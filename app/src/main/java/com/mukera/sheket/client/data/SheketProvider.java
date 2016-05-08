@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+
 import com.mukera.sheket.client.data.SheketContract.*;
 
 /**
@@ -25,9 +26,7 @@ public class SheketProvider extends ContentProvider {
     private static final int BRANCH_WITH_ID = 201;
 
     private static final int BRANCH_ITEM = 300;
-    private static final int BRANCH_ITEM_WITH_BRANCH_AND_ITEM_ID = 301;
-    private static final int BRANCH_ITEM_WITH_BRANCH_ID = 302;
-    private static final int BRANCH_ITEM_WITH_ITEM_ID = 303;
+    private static final int BRANCH_ITEM_WITH_ID = 301;
 
     private static final int ITEM = 400;
     private static final int ITEM_WITH_ID = 401;
@@ -38,31 +37,62 @@ public class SheketProvider extends ContentProvider {
     private static final int TRANSACTION_ITEM = 600;
     private static final int TRANSACTION_ITEM_WITH_TRANSACTION_ID = 601;
 
-    private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdQueryBuilder;
+    private static final int MEMBER = 700;
+    private static final int MEMBER_WITH_ID = 701;
+
+    private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
+    private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
 
     static {
-        sTransactionItemsWithTransactionIdQueryBuilder = new SQLiteQueryBuilder();
-        sTransactionItemsWithTransactionIdQueryBuilder.setTables(
-                TransItemEntry.TABLE_NAME + " INNER JOIN " + TransactionEntry.TABLE_NAME +
+        sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder = new SQLiteQueryBuilder();
+        sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder.setTables(
+                TransactionEntry.TABLE_NAME + " INNER JOIN " + TransItemEntry.TABLE_NAME +
                         " ON (" +
-                        TransItemEntry.TABLE_NAME + "." + TransItemEntry.COLUMN_TRANSACTION_ID +
+                        TransItemEntry._full(TransItemEntry.COLUMN_TRANSACTION_ID) +
                         " = " +
-                        TransactionEntry.TABLE_NAME + "." + TransactionEntry.COLUMN_TRANS_ID + ") " +
+                        TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + ") " +
                         " INNER JOIN " + ItemEntry.TABLE_NAME +
                         " ON (" +
-                        TransItemEntry.TABLE_NAME + "." + TransItemEntry.COLUMN_ITEM_ID +
+                        TransItemEntry._full(TransItemEntry.COLUMN_ITEM_ID) +
                         " = " +
-                        ItemEntry.TABLE_NAME + "." + ItemEntry.COLUMN_ITEM_ID + ")"
+                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ")"
         );
 
         sBranchItemWithItemDetailQueryBuilder = new SQLiteQueryBuilder();
         sBranchItemWithItemDetailQueryBuilder.setTables(
                 BranchItemEntry.TABLE_NAME + " inner join " + ItemEntry.TABLE_NAME +
                         " ON ( " +
-                        BranchItemEntry.TABLE_NAME + "." + BranchItemEntry.COLUMN_ITEM_ID +
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
                         " = " +
-                        ItemEntry.TABLE_NAME + "." + ItemEntry.COLUMN_ITEM_ID + ") "
+                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ") "
+        );
+
+        sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
+        // items_table LEFT JOIN
+        //      (branch_items_table INNER JOIN branches_table ON branch_id)
+        // ON (item_id)
+        /*
+        sItemWithBranchQueryBuilder.setTables(
+                ItemEntry.TABLE_NAME + " LEFT JOIN " +
+                        BranchItemEntry.TABLE_NAME + " INNER JOIN " + BranchEntry.TABLE_NAME +
+                        " ON (" +
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) +
+                        " = " +
+                        BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ) " +
+                        " ON (" +
+                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) +
+                        " = " +
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) + ")"
+        );
+        */
+        sItemWithBranchQueryBuilder.setTables(
+                ItemEntry.TABLE_NAME + " LEFT JOIN " +
+                        BranchItemEntry.TABLE_NAME + " ON (" +
+                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = " + BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) + ") " +
+                        " LEFT JOIN " +
+                        BranchEntry.TABLE_NAME + " ON ( " +
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) + " = " + BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + ")"
         );
     }
 
@@ -71,31 +101,33 @@ public class SheketProvider extends ContentProvider {
         final String authority = SheketContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, SheketContract.PATH_COMPANY, COMPANY);
-        matcher.addURI(authority, SheketContract.PATH_COMPANY + "/#", COMPANY_WITH_ID);
+        /**
+         * '#' have been replaced with '*' to allow matching -ve numbers.
+         * This might create a bug matching non-number stuff(like text)
+         */
+        matcher.addURI(authority, SheketContract.PATH_COMPANY + "/*", COMPANY_WITH_ID);
 
-        matcher.addURI(authority, SheketContract.PATH_BRANCH, BRANCH);
-        matcher.addURI(authority, SheketContract.PATH_BRANCH + "/#", BRANCH_WITH_ID);
+        /**
+         * All of the first segment of "/*" is the company id
+         */
+        matcher.addURI(authority, SheketContract.PATH_BRANCH + "/*", BRANCH);
+        matcher.addURI(authority, SheketContract.PATH_BRANCH + "/*/*", BRANCH_WITH_ID);
 
-        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM, BRANCH_ITEM);
-        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM + "/" +
-                BranchItemEntry.ITEM_PATH_SEGMENT + "/#",
-                BRANCH_ITEM_WITH_ITEM_ID);
-        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM + "/" +
-                BranchItemEntry.BRANCH_PATH_SEGMENT + "/#",
-                BRANCH_ITEM_WITH_BRANCH_ID);
-        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM + "/" +
-                BranchItemEntry.BRANCH_ITEM_PATH_SEGMENT + "/#/#",
-                BRANCH_ITEM_WITH_BRANCH_AND_ITEM_ID);
+        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM + "/*", BRANCH_ITEM);
+        matcher.addURI(authority, SheketContract.PATH_BRANCH_ITEM + "/*/*/*", BRANCH_ITEM_WITH_ID);
 
-        matcher.addURI(authority, SheketContract.PATH_ITEM, ITEM);
-        matcher.addURI(authority, SheketContract.PATH_ITEM + "/#", ITEM_WITH_ID);
+        matcher.addURI(authority, SheketContract.PATH_ITEM + "/*", ITEM);
+        matcher.addURI(authority, SheketContract.PATH_ITEM + "/*/*", ITEM_WITH_ID);
 
-        matcher.addURI(authority, SheketContract.PATH_TRANSACTION, TRANSACTION);
-        matcher.addURI(authority, SheketContract.PATH_TRANSACTION + "/#", TRANSACTION_WITH_ID);
+        matcher.addURI(authority, SheketContract.PATH_TRANSACTION + "/*", TRANSACTION);
+        matcher.addURI(authority, SheketContract.PATH_TRANSACTION + "/*/*", TRANSACTION_WITH_ID);
 
-        matcher.addURI(authority, SheketContract.PATH_TRANS_ITEMS, TRANSACTION_ITEM);
-        matcher.addURI(authority, SheketContract.PATH_TRANS_ITEMS + "/#",
+        matcher.addURI(authority, SheketContract.PATH_TRANS_ITEMS + "/*", TRANSACTION_ITEM);
+        matcher.addURI(authority, SheketContract.PATH_TRANS_ITEMS + "/*/*",
                 TRANSACTION_ITEM_WITH_TRANSACTION_ID);
+
+        matcher.addURI(authority, SheketContract.PATH_MEMBER + "/*", MEMBER);
+        matcher.addURI(authority, SheketContract.PATH_MEMBER + "/*/*", MEMBER_WITH_ID);
 
         return matcher;
     }
@@ -106,14 +138,36 @@ public class SheketProvider extends ContentProvider {
         return true;
     }
 
+    String withAppendedCompanyIdSelection(String selection, String col_company_id) {
+        return (selection != null ? (selection + " AND ") : "") +
+                col_company_id + " = ?";
+    }
+
+    String[] withAppendedCompanyIdSelectionArgs(String[] args, long company_id) {
+        if (args == null) {
+            return new String[]{Long.toString(company_id)};
+        }
+        String[] appended = new String[args.length + 1];
+        System.arraycopy(args, 0, appended, 0, args.length);
+        appended[appended.length - 1] = Long.toString(company_id);
+        return appended;
+    }
+
     @Nullable
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         Cursor result = null;
         String tableName = null;
 
-        boolean query_db = true;
+        boolean query_db = true, append_company_id = true;
         int uri_match = sUriMatcher.match(uri);
+
+        long company_id = -1;
+        if (uri_match != COMPANY) { // this is the only time a company_id won't be specified
+            company_id = CompanyBase.getCompanyId(uri);
+        }
+        String column_company_id = null;
+
         switch (uri_match) {
             case COMPANY_WITH_ID:
             case COMPANY: {
@@ -122,6 +176,18 @@ public class SheketProvider extends ContentProvider {
                     selection = CompanyEntry.COLUMN_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
                     selectionArgs = null;
                 }
+                append_company_id = false;
+                break;
+            }
+
+            case MEMBER_WITH_ID:
+            case MEMBER: {
+                tableName = MemberEntry.TABLE_NAME;
+                if (uri_match == MEMBER_WITH_ID) {
+                    selection = MemberEntry.COLUMN_MEMBER_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
+                    selectionArgs = null;
+                }
+                column_company_id = MemberEntry._full(MemberEntry.COLUMN_COMPANY_ID);
                 break;
             }
 
@@ -132,35 +198,46 @@ public class SheketProvider extends ContentProvider {
                     selection = BranchEntry.COLUMN_BRANCH_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
                     selectionArgs = null;
                 }
+                column_company_id = BranchEntry._full(BranchEntry.COLUMN_COMPANY_ID);
                 break;
             }
 
-            case BRANCH_ITEM_WITH_BRANCH_AND_ITEM_ID:
-            case BRANCH_ITEM_WITH_BRANCH_ID:
-            case BRANCH_ITEM_WITH_ITEM_ID:
+            case BRANCH_ITEM_WITH_ID:
             case BRANCH_ITEM: {
                 query_db = false;
-                if (uri_match == BRANCH_ITEM_WITH_BRANCH_AND_ITEM_ID) {
-                    selection = String.format("%s = ? AND %s = ?",
-                            BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
-                            BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                    selectionArgs = new String[]{
-                            Long.toString(BranchItemEntry.getBranchIdFromBranchItemUri(uri)),
-                            Long.toString(BranchItemEntry.getItemIdFromBranchItemUri(uri))
-                    };
-                } else if (uri_match == BRANCH_ITEM_WITH_BRANCH_ID) {
-                    selection = String.format("%s = ?",
-                            BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
-                    selectionArgs = new String[]{
-                            Long.toString(BranchItemEntry.getBranchIdFromBranchUri(uri))
-                    };
-                } else if (uri_match == BRANCH_ITEM_WITH_ITEM_ID) {
-                    selection = String.format("%s = ?",
-                            BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                    selectionArgs = new String[]{
-                            Long.toString(BranchItemEntry.getItemIdFromItemUri(uri))
-                    };
+                if (uri_match == BRANCH_ITEM_WITH_ID) {
+                    long branch_id = BranchItemEntry.getBranchId(uri);
+                    long item_id = BranchItemEntry.getItemId(uri);
+
+                    boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
+                    boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
+
+                    if (branch_set && item_set) {
+                        selection = String.format("%s = ? AND %s = ?",
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                        selectionArgs = new String[]{
+                                Long.toString(branch_id),
+                                Long.toString(item_id)
+                        };
+                    } else if (branch_set) {
+                        selection = String.format("%s = ?",
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
+                        selectionArgs = new String[]{
+                                Long.toString(branch_id)
+                        };
+                    } else if (item_set) {
+                        selection = String.format("%s = ?",
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                        selectionArgs = new String[]{
+                                Long.toString(item_id)
+                        };
+                    }
                 }
+
+                selection = withAppendedCompanyIdSelection(selection, BranchItemEntry._full(BranchItemEntry.COLUMN_COMPANY_ID));
+                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
+
                 result = sBranchItemWithItemDetailQueryBuilder.query(
                         mDbHelper.getReadableDatabase(),
                         projection,
@@ -169,13 +246,30 @@ public class SheketProvider extends ContentProvider {
                 break;
             }
 
-            case ITEM:
+            case ITEM: {
+                // should we join with the branch's list?
+                if (ItemEntry.isBranchesSpecified(uri)) {
+                    query_db = false;
+                    selection = withAppendedCompanyIdSelection(selection, ItemEntry._full(ItemEntry.COLUMN_COMPANY_ID));
+                    selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
+
+                    result = sItemWithBranchQueryBuilder.query(
+                            mDbHelper.getReadableDatabase(),
+                            projection,
+                            selection, selectionArgs,
+                            null, null, sortOrder);
+                } else {
+                    tableName = ItemEntry.TABLE_NAME;
+                    column_company_id = ItemEntry._full(ItemEntry.COLUMN_COMPANY_ID);
+                }
+                break;
+            }
+
             case ITEM_WITH_ID: {
                 tableName = ItemEntry.TABLE_NAME;
-                if (uri_match == ITEM_WITH_ID) {
-                    selection = ItemEntry.COLUMN_ITEM_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
-                    selectionArgs = null;
-                }
+                selection = ItemEntry.COLUMN_ITEM_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
+                selectionArgs = null;
+                column_company_id = ItemEntry._full(ItemEntry.COLUMN_COMPANY_ID);
                 break;
             }
 
@@ -186,18 +280,28 @@ public class SheketProvider extends ContentProvider {
                     selection = TransactionEntry.COLUMN_TRANS_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
                     selectionArgs = null;
                 }
+                column_company_id = TransactionEntry._full(TransactionEntry.COLUMN_COMPANY_ID);
                 break;
             }
 
             case TRANSACTION_ITEM:
                 tableName = TransItemEntry.TABLE_NAME;
+                column_company_id = TransItemEntry._full(TransItemEntry.COLUMN_COMPANY_ID);
                 break;
 
             case TRANSACTION_ITEM_WITH_TRANSACTION_ID: {
                 query_db = false;
-                selection = TransactionEntry.TABLE_NAME + "." + TransactionEntry.COLUMN_TRANS_ID + " = ? ";
-                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                result = sTransactionItemsWithTransactionIdQueryBuilder.query(
+                boolean transaction_selected = TransItemEntry.
+                        isTransactionIdSet(getContext(), TransItemEntry.getTransactionId(uri));
+                if (transaction_selected) {
+                    selection = TransactionEntry.TABLE_NAME + "." + TransactionEntry.COLUMN_TRANS_ID + " = ? ";
+                    selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                }
+
+                selection = withAppendedCompanyIdSelection(selection, TransItemEntry._full(TransItemEntry.COLUMN_COMPANY_ID));
+                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
+
+                result = sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder.query(
                         mDbHelper.getReadableDatabase(),
                         projection,
                         selection, selectionArgs,
@@ -210,6 +314,11 @@ public class SheketProvider extends ContentProvider {
         }
 
         if (query_db) {
+            if (append_company_id) {
+                selection = withAppendedCompanyIdSelection(selection, column_company_id);
+                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
+            }
+
             result = mDbHelper.getReadableDatabase().query(
                     tableName,
                     projection,
@@ -232,17 +341,25 @@ public class SheketProvider extends ContentProvider {
             case COMPANY:
                 return CompanyEntry.CONTENT_TYPE;
 
+            case MEMBER_WITH_ID:
+                return MemberEntry.CONTENT_ITEM_TYPE;
+            case MEMBER:
+                return MemberEntry.CONTENT_TYPE;
+
             case BRANCH_WITH_ID:
                 return BranchEntry.CONTENT_ITEM_TYPE;
             case BRANCH:
                 return BranchEntry.CONTENT_TYPE;
 
-            case BRANCH_ITEM_WITH_BRANCH_AND_ITEM_ID:
-                return BranchItemEntry.CONTENT_ITEM_TYPE;
-            case BRANCH_ITEM_WITH_ITEM_ID:
-                return BranchItemEntry.CONTENT_TYPE;
-            case BRANCH_ITEM_WITH_BRANCH_ID:
-                return BranchItemEntry.CONTENT_TYPE;
+            case BRANCH_ITEM_WITH_ID:
+                long branch_id = BranchItemEntry.getBranchId(uri);
+                long item_id = BranchItemEntry.getItemId(uri);
+                if (BranchItemEntry.isIdSpecified(getContext(), branch_id) &&
+                        BranchItemEntry.isIdSpecified(getContext(), item_id)) {
+                    return BranchItemEntry.CONTENT_ITEM_TYPE;
+                } else {
+                    return BranchItemEntry.CONTENT_TYPE;
+                }
             case BRANCH_ITEM:
                 return BranchItemEntry.CONTENT_TYPE;
 
@@ -278,12 +395,34 @@ public class SheketProvider extends ContentProvider {
         }
 
         int match = sUriMatcher.match(uri);
+
+        long company_id = -1;
+        if (match != COMPANY) {
+            company_id = CompanyBase.getCompanyId(uri);
+        }
+
         Uri returnUri = null;
+        final long insert_error = -1;
         switch (match) {
             case COMPANY: {
                 long _id = db.insert(CompanyEntry.TABLE_NAME, null, values);
-                if (_id > 0) {
+                if (_id != insert_error) {
                     returnUri = CompanyEntry.buildCompanyUri(_id);
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            }
+
+            case MEMBER: {
+                long _id;
+                if (replace) {
+                    _id = db.replace(MemberEntry.TABLE_NAME, null, values);
+                } else {
+                    _id = db.insert(MemberEntry.TABLE_NAME, null, values);
+                }
+                if (_id != insert_error) {
+                    returnUri = MemberEntry.buildMemberUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -297,8 +436,8 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(BranchEntry.TABLE_NAME, null, values);
                 }
-                if (_id > 0) {
-                    returnUri = BranchEntry.buildBranchUri(_id);
+                if (_id != insert_error) {
+                    returnUri = BranchEntry.buildBranchUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -312,10 +451,10 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(BranchItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id > 0) {
+                if (_id != insert_error) {
                     long branch_id = values.getAsLong(BranchItemEntry.COLUMN_BRANCH_ID);
                     long item_id = values.getAsLong(BranchItemEntry.COLUMN_ITEM_ID);
-                    returnUri = BranchItemEntry.buildBranchItemUri(branch_id, item_id);
+                    returnUri = BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -329,8 +468,8 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(ItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id > 0) {
-                    returnUri = ItemEntry.buildItemUri(_id);
+                if (_id != insert_error) {
+                    returnUri = ItemEntry.buildItemUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -344,8 +483,8 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(TransactionEntry.TABLE_NAME, null, values);
                 }
-                if (_id > 0) {
-                    returnUri = TransactionEntry.buildTransactionUri(_id);
+                if (_id != insert_error) {
+                    returnUri = TransactionEntry.buildTransactionUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -359,9 +498,9 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(TransItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id > 0) {
+                if (_id != insert_error) {
                     long trans_id = values.getAsLong(TransItemEntry.COLUMN_TRANSACTION_ID);
-                    returnUri = TransactionEntry.buildTransactionUri(trans_id);
+                    returnUri = TransactionEntry.buildTransactionUri(company_id, trans_id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -371,6 +510,7 @@ public class SheketProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Insert, unknown uri: " + uri);
         }
+        getContext().getContentResolver().notifyChange(uri, null);
         return returnUri;
     }
 
@@ -382,12 +522,27 @@ public class SheketProvider extends ContentProvider {
 
         String tableName;
         switch (match) {
-            case COMPANY: tableName = CompanyEntry.TABLE_NAME; break;
-            case BRANCH: tableName = BranchEntry.TABLE_NAME; break;
-            case BRANCH_ITEM: tableName = BranchItemEntry.TABLE_NAME; break;
-            case ITEM: tableName = ItemEntry.TABLE_NAME; break;
-            case TRANSACTION: tableName = TransactionEntry.TABLE_NAME; break;
-            case TRANSACTION_ITEM: tableName = TransItemEntry.TABLE_NAME; break;
+            case COMPANY:
+                tableName = CompanyEntry.TABLE_NAME;
+                break;
+            case MEMBER:
+                tableName = MemberEntry.TABLE_NAME;
+                break;
+            case BRANCH:
+                tableName = BranchEntry.TABLE_NAME;
+                break;
+            case BRANCH_ITEM:
+                tableName = BranchItemEntry.TABLE_NAME;
+                break;
+            case ITEM:
+                tableName = ItemEntry.TABLE_NAME;
+                break;
+            case TRANSACTION:
+                tableName = TransactionEntry.TABLE_NAME;
+                break;
+            case TRANSACTION_ITEM:
+                tableName = TransItemEntry.TABLE_NAME;
+                break;
 
             default:
                 throw new UnsupportedOperationException("Delete, unknown uri: " + uri);
@@ -409,12 +564,27 @@ public class SheketProvider extends ContentProvider {
 
         String tableName;
         switch (match) {
-            case COMPANY: tableName = CompanyEntry.TABLE_NAME; break;
-            case BRANCH: tableName = BranchEntry.TABLE_NAME; break;
-            case BRANCH_ITEM: tableName = BranchItemEntry.TABLE_NAME; break;
-            case ITEM: tableName = ItemEntry.TABLE_NAME; break;
-            case TRANSACTION: tableName = TransactionEntry.TABLE_NAME; break;
-            case TRANSACTION_ITEM: tableName = TransItemEntry.TABLE_NAME; break;
+            case COMPANY:
+                tableName = CompanyEntry.TABLE_NAME;
+                break;
+            case MEMBER:
+                tableName = MemberEntry.TABLE_NAME;
+                break;
+            case BRANCH:
+                tableName = BranchEntry.TABLE_NAME;
+                break;
+            case BRANCH_ITEM:
+                tableName = BranchItemEntry.TABLE_NAME;
+                break;
+            case ITEM:
+                tableName = ItemEntry.TABLE_NAME;
+                break;
+            case TRANSACTION:
+                tableName = TransactionEntry.TABLE_NAME;
+                break;
+            case TRANSACTION_ITEM:
+                tableName = TransItemEntry.TABLE_NAME;
+                break;
 
             default:
                 throw new UnsupportedOperationException("Update, unknown uri: " + uri);
@@ -433,12 +603,27 @@ public class SheketProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         String tableName;
         switch (match) {
-            case COMPANY: tableName = CompanyEntry.TABLE_NAME; break;
-            case BRANCH: tableName = BranchEntry.TABLE_NAME; break;
-            case BRANCH_ITEM: tableName = BranchItemEntry.TABLE_NAME; break;
-            case ITEM: tableName = ItemEntry.TABLE_NAME; break;
-            case TRANSACTION: tableName = TransactionEntry.TABLE_NAME; break;
-            case TRANSACTION_ITEM: tableName = TransItemEntry.TABLE_NAME; break;
+            case COMPANY:
+                tableName = CompanyEntry.TABLE_NAME;
+                break;
+            case MEMBER:
+                tableName = MemberEntry.TABLE_NAME;
+                break;
+            case BRANCH:
+                tableName = BranchEntry.TABLE_NAME;
+                break;
+            case BRANCH_ITEM:
+                tableName = BranchItemEntry.TABLE_NAME;
+                break;
+            case ITEM:
+                tableName = ItemEntry.TABLE_NAME;
+                break;
+            case TRANSACTION:
+                tableName = TransactionEntry.TABLE_NAME;
+                break;
+            case TRANSACTION_ITEM:
+                tableName = TransItemEntry.TABLE_NAME;
+                break;
 
             default:
                 return super.bulkInsert(uri, values);

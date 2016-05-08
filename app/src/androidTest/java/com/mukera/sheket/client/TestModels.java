@@ -19,8 +19,6 @@ import java.util.List;
  * Created by gamma on 3/3/16.
  */
 public class TestModels extends AndroidTestCase {
-    // because the fields are 'AUTOINCREMENT', we need to save them for query
-    private static long sCategoryId = -1;
     private static List<Long> sItemIds = null;
 
     void setupCompany() {
@@ -43,7 +41,7 @@ public class TestModels extends AndroidTestCase {
             long item_id = (long)i + 1;
             values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
             Uri uri = mContext.getContentResolver().insert(
-                    ItemEntry.CONTENT_URI, values);
+                    ItemEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID), values);
             assertEquals("Inserted and got back item not same", item_id, ContentUris.parseId(uri));
 
             sItemIds.add(item_id);
@@ -72,10 +70,10 @@ public class TestModels extends AndroidTestCase {
         long item_id = 1000;
         values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
         Uri uri = mContext.getContentResolver().insert(
-                ItemEntry.CONTENT_URI, values);
+                ItemEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID), values);
         assertEquals("Insert item error", item_id, ContentUris.parseId(uri));
 
-        Cursor cursor = _query(ItemEntry.buildItemUri(item_id), SItem.ITEM_COLUMNS);
+        Cursor cursor = _query(ItemEntry.buildItemUri(TestProvider.TEST_COMPANY_ID, item_id), SItem.ITEM_COLUMNS);
         assertTrue("No value in cursor", cursor.moveToFirst());
         SItem item = new SItem(cursor);
         assertEquals("Fetch item error", item.item_id, item_id);
@@ -87,7 +85,7 @@ public class TestModels extends AndroidTestCase {
     void checkTransactionModel() {
         ContentValues transactionValues = TestProvider.createTransactionValues();
         Uri uri = mContext.getContentResolver().insert(
-                TransactionEntry.CONTENT_URI, transactionValues);
+                TransactionEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID), transactionValues);
         long trans_id = ContentUris.parseId(uri);
         assertTrue(trans_id != -1);
 
@@ -99,11 +97,12 @@ public class TestModels extends AndroidTestCase {
 
         ContentValues[] valuesArr = new ContentValues[values.size()];
         values.toArray(valuesArr);
-        int count = mContext.getContentResolver().bulkInsert(TransItemEntry.CONTENT_URI,
+        int count = mContext.getContentResolver().bulkInsert(TransItemEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID),
                 valuesArr);
         assertEquals(count, values.size());
 
-        Cursor cursor = _query(TransItemEntry.buildItemsInTransactionUri(trans_id), STransaction.TRANSACTION_JOIN_ITEMS_COLUMNS);
+        Cursor cursor = _query(TransItemEntry.buildTransactionItemsUri(TestProvider.TEST_COMPANY_ID, trans_id),
+                STransaction.TRANSACTION_JOIN_ITEMS_COLUMNS);
         assertTrue("No items with that transaction", cursor.moveToFirst());
         STransaction transaction = new STransaction(cursor, true);
         cursor.close();

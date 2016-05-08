@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minWidth="500dp"
+    android:padding="16dp">
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dialog_all_item_list_view_branches"
+        tools:listitem="@android:layout/simple_list_item_2" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Quantity"
+        android:id="@+id/dialog_all_item_text_view_total_quantity"
+        android:layout_alignParentRight="true"
+        android:textColor="#000000"
+        android:textSize="20dp"
+        android:layout_below="@+id/dialog_all_item_list_view_branches" />
+
+</RelativeLayout>

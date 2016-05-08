@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_centerVertical="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Item Name"
+            android:id="@+id/list_item_trans_history_dialog_item_name"
+            android:textSize="18dp"
+            android:textColor="#000000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Item Location"
+            android:id="@+id/list_item_trans_history_dialog_source_detail"
+            android:textSize="16dp"
+            android:textColor="#4d4d4d" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25.3"
+        android:id="@+id/list_item_trans_history_dialog_qty"
+        android:layout_alignParentRight="true"
+        android:textSize="24dp"
+        android:textColor="#010321"
+        android:layout_centerVertical="true" />
+
+</RelativeLayout>

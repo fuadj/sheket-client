@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.mukera.sheket.client.controller.items.ItemListFragment;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 
@@ -14,8 +15,10 @@ import org.json.JSONObject;
 /**
  * Created by gamma on 3/3/16.
  */
-public class SItem extends ChangeTraceable implements Parcelable {
+public class SItem extends UUIDSyncable implements Parcelable {
     public static final String JSON_ITEM_ID = "item_id";
+    public static final String JSON_ITEM_UUID = "client_uuid";
+    public static final String JSON_ITEM_NAME = "item_name";
     public static final String JSON_MODEL_YEAR = "model_year";
     public static final String JSON_PART_NUMBER = "part_number";
     public static final String JSON_BAR_CODE = "bar_code";
@@ -37,8 +40,27 @@ public class SItem extends ChangeTraceable implements Parcelable {
             _f(ItemEntry.COLUMN_BAR_CODE),
             _f(ItemEntry.COLUMN_HAS_BAR_CODE),
             _f(ItemEntry.COLUMN_MANUAL_CODE),
-            _f(COLUMN_CHANGE_INDICATOR)
+            _f(COLUMN_CHANGE_INDICATOR),
+            _f(COLUMN_UUID)
     };
+
+    // columns of "SItem" + "SBranchItem" + "SBranch" combined!!!
+    public static final String[] ITEM_WITH_BRANCH_DETAIL_COLUMNS;
+    static {
+        int items_size = ITEM_COLUMNS.length;
+        int branch_items_size = SBranchItem.BRANCH_ITEM_COLUMNS.length;
+        int branch_size = SBranch.BRANCH_COLUMNS.length;
+
+        int total_size = items_size + branch_items_size + branch_size;
+        ITEM_WITH_BRANCH_DETAIL_COLUMNS = new String[total_size];
+
+        System.arraycopy(ITEM_COLUMNS, 0, ITEM_WITH_BRANCH_DETAIL_COLUMNS,
+                0, items_size);
+        System.arraycopy(SBranchItem.BRANCH_ITEM_COLUMNS, 0, ITEM_WITH_BRANCH_DETAIL_COLUMNS,
+                items_size, branch_items_size);
+        System.arraycopy(SBranch.BRANCH_COLUMNS, 0, ITEM_WITH_BRANCH_DETAIL_COLUMNS,
+                items_size + branch_items_size, branch_size);
+    }
 
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_ITEM_ID = 1;
@@ -49,8 +71,9 @@ public class SItem extends ChangeTraceable implements Parcelable {
     public static final int COL_HAS_BAR_CODE = 6;
     public static final int COL_MANUAL_CODE = 7;
     public static final int COL_CHANGE_INDICATOR = 8;
+    public static final int COL_CLIENT_UUID = 9;
 
-    public static final int COL_LAST = 9;
+    public static final int COL_LAST = 10;
 
     public long company_id;
     public long item_id;
@@ -78,6 +101,7 @@ public class SItem extends ChangeTraceable implements Parcelable {
         has_bar_code = SheketContract.toBool(cursor.getInt(COL_HAS_BAR_CODE + offset));
         manual_code = cursor.getString(COL_MANUAL_CODE + offset);
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
+        client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
     }
 
     private SItem(Parcel parcel) {
@@ -90,6 +114,7 @@ public class SItem extends ChangeTraceable implements Parcelable {
         has_bar_code = SheketContract.toBool(parcel.readInt());
         manual_code = parcel.readString();
         change_status = parcel.readInt();
+        client_uuid = parcel.readString();
     }
 
     public ContentValues toContentValues() {
@@ -105,17 +130,20 @@ public class SItem extends ChangeTraceable implements Parcelable {
                 SheketContract.toInt(has_bar_code));
         values.put(ItemEntry.COLUMN_MANUAL_CODE, manual_code);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
+        values.put(COLUMN_UUID, client_uuid);
         return values;
     }
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject result = new JSONObject();
         result.put(JSON_ITEM_ID, item_id);
+        result.put(JSON_ITEM_NAME, name);
         result.put(JSON_MODEL_YEAR, model_year);
         result.put(JSON_PART_NUMBER, part_number);
         result.put(JSON_BAR_CODE, bar_code);
         result.put(JSON_MANUAL_CODE, manual_code);
         result.put(JSON_HAS_BAR_CODE, has_bar_code);
+        result.put(JSON_ITEM_UUID, client_uuid);
         return result;
     }
 
@@ -130,6 +158,7 @@ public class SItem extends ChangeTraceable implements Parcelable {
         dest.writeInt(SheketContract.toInt(has_bar_code));
         dest.writeString(manual_code);
         dest.writeInt(change_status);
+        dest.writeString(client_uuid);
     }
 
     @Override

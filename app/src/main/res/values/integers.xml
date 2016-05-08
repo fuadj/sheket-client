@@ -2,5 +2,10 @@
 <resources>
     <integer name="invalid_user_id">-1</integer>
     <integer name="invalid_company_id">-1</integer>
-    <integer name="default_revision">-1</integer>
+    <integer name="pref_default_revision">0</integer>
+
+    // apparently -1 is used as an error message in database inserts
+    // we also have reserved -2 for the "DUMMY_BRANCH_ID"
+    // so we start @ -3 and go down
+    <integer name="default_local_entity_id">-3</integer>
 </resources>

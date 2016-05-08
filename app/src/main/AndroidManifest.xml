@@ -35,9 +35,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Useful Database Utility Library Activity -->
+        <activity android:name=".data.AndroidDatabaseManager"
+            android:theme="@style/Theme.AppCompat.Light"/>
+
         <activity
             android:label="Action"
-            android:name=".controller.TransactionActivity"
+            android:name=".controller.transactions.TransactionActivity"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -46,7 +50,7 @@
 
         <activity
             android:label="Registration"
-            android:name=".controller.signup.RegistrationActivity"
+            android:name=".controller.user.RegistrationActivity"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -55,7 +59,7 @@
 
         <activity
             android:label="New Item"
-            android:name=".controller.NewItemActivity"
+            android:name=".controller.items.NewItemActivity"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -71,9 +75,40 @@
                 android:value=".MainActivity" />
         </activity>
 
+        <activity
+            android:label="Settings"
+            android:name=".controller.admin.SettingsActivity"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
         <provider
             android:authorities="com.mukera.sheket.client.app"
+            android:syncable="true"
+            android:exported="false"
             android:name=".data.SheketProvider" />
+
+        <service android:name=".sync.SheketAuthenticatorService" >
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator"/>
+        </service>
+
+        <service android:name=".sync.SheketSyncService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncADapter"/>
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter"/>
+        </service>
+
+        <service android:name=".sync.SheketService"/>
+
     </application>
 
 </manifest>

@@ -11,9 +11,10 @@ import org.json.JSONObject;
 /**
  * Created by gamma on 3/27/16.
  */
-public class SBranch extends ChangeTraceable {
+public class SBranch extends UUIDSyncable {
 
     public static final String JSON_BRANCH_ID = "branch_id";
+    public static final String JSON_BRANCH_UUID = "client_uuid";
     public static final String JSON_NAME = "name";
     public static final String JSON_LOCATION = "location";
 
@@ -24,7 +25,8 @@ public class SBranch extends ChangeTraceable {
             _f(BranchEntry.COLUMN_BRANCH_ID),
             _f(BranchEntry.COLUMN_NAME),
             _f(BranchEntry.COLUMN_LOCATION),
-            _f(COLUMN_CHANGE_INDICATOR)
+            _f(COLUMN_CHANGE_INDICATOR),
+            _f(COLUMN_UUID)
     };
 
     public static final int COL_COMPANY_ID = 0;
@@ -32,8 +34,9 @@ public class SBranch extends ChangeTraceable {
     public static final int COL_NAME = 2;
     public static final int COL_LOCATION = 3;
     public static final int COL_CHANGE = 4;
+    public static final int COL_CLIENT_UUID = 5;
 
-    public static final int COL_LAST = 5;
+    public static final int COL_LAST = 6;
 
     public long company_id;
     public long branch_id;
@@ -52,6 +55,7 @@ public class SBranch extends ChangeTraceable {
         branch_name = cursor.getString(COL_NAME + offset);
         branch_location = cursor.getString(COL_LOCATION + offset);
         change_status = cursor.getInt(COL_CHANGE + offset);
+        client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
     }
 
     public ContentValues toContentValues() {
@@ -69,6 +73,7 @@ public class SBranch extends ChangeTraceable {
         result.put(JSON_BRANCH_ID, branch_id);
         result.put(JSON_NAME, branch_name);
         result.put(JSON_LOCATION, branch_location);
+        result.put(JSON_BRANCH_UUID, client_uuid);
         return result;
     }
 }

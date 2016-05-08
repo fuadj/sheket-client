@@ -1,19 +1,31 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material"
-    android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
-    android:orientation="horizontal">
+    android:descendantFocusability="blocksDescendants"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/list_item_img_btn_b_edit_location"
+        android:focusable="false"
+        android:background="@drawable/ic_action_edit"
+        android:layout_centerVertical="true"/>
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="0dp"
-        android:layout_weight="2"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="8dp"
+        android:id="@+id/layout_item_name_section"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/list_item_img_btn_b_edit_location"
+        android:layout_marginLeft="8dp">
 
         <TextView
             android:id="@+id/list_item_text_view_b_item_name"
@@ -36,20 +48,15 @@
 
     </LinearLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="mojo"
-        android:id="@+id/list_item_text_view_b_branch_name"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_weight="1"
-        android:layout_marginBottom="4dp" />
-
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="2">
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:layout_alignParentRight="true"
+        android:id="@+id/layout_branch_item_section"
+        android:layout_marginLeft="8dp"
+        android:layout_centerVertical="true">
 
         <TextView
             android:id="@+id/list_item_text_view_b_item_qty"
@@ -70,4 +77,4 @@
             android:layout_gravity="center_vertical|right" />
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

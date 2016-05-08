@@ -18,6 +18,7 @@ import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.utility.PrefUtil;
 
 /**
  * Created by gamma on 3/5/16.
@@ -90,7 +91,7 @@ public class ScanResultFragment extends Fragment implements LoaderCallbacks<Curs
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
         Uri uri;
 
-        uri = ItemEntry.CONTENT_URI;
+        uri = ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext()));
 
         return new CursorLoader(getActivity(),
                 uri,

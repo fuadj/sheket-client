@@ -16,7 +16,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.util.Pair;
+import android.util.Log;
 
+import com.mukera.sheket.client.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.BranchEntry;
@@ -29,6 +31,8 @@ import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction;
+import com.mukera.sheket.client.utility.DbUtil;
+import com.mukera.sheket.client.utility.PrefUtil;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -47,6 +51,8 @@ import java.util.List;
  * Created by gamma on 3/28/16.
  */
 public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
+    private static final String LOG_TAG = SheketSyncAdapter.class.getSimpleName();
+
     // Interval at which to sync with the weather, in milliseconds.
     // 60 seconds (1 minute) * 180 = 3 hours
     public static final int SYNC_INTERVAL = 60 * 180;
@@ -62,8 +68,82 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        int trans_number = syncEntities();
-        syncTransactions(trans_number);
+        boolean continue_sync = syncUser();
+        if (!continue_sync) {
+            return;
+        }
+        syncEntities();
+        syncTransactions();
+    }
+
+    boolean syncUser() {
+        try {
+            Log.d(LOG_TAG, "Syncing User started");
+            Request.Builder builder = new Request.Builder();
+            builder.url(ConfigData.getAddress(getContext()) + "syncuser");
+            JSONObject json = new JSONObject();
+            json.put(getContext().getString(R.string.sync_json_user_rev),
+                    PrefUtil.getUserRevision(getContext()));
+            builder.addHeader(getContext().getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(getContext()));
+            builder.post(RequestBody.create(MediaType.parse("application/json"),
+                    json.toString()));
+
+            Response response = client.newCall(builder.build()).execute();
+            if (!response.isSuccessful()) {
+                // todo: check if we need to parse out the error part!
+                throw new SyncException("error response");
+            }
+
+            JSONObject result = new JSONObject(response.body().string());
+            boolean rev_changed = result.getBoolean(
+                    getResourceString(R.string.sync_json_user_revision_changed));
+            if (!rev_changed) {
+                return true;
+            }
+
+            ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+            int new_user_rev = result.getInt(
+                    getResourceString(R.string.sync_json_user_rev));
+
+            final String USER_JSON_COMPANY_ID = "company_id";
+            final String USER_JSON_COMPANY_NAME = "company_name";
+            final String USER_JSON_COMPANY_PERMISSION = "permission";
+
+            JSONArray companyArr = result.getJSONArray(
+                    getResourceString(R.string.sync_json_companies));
+            for (int i = 0; i < companyArr.length(); i++) {
+                JSONObject companyObj = companyArr.getJSONObject(i);
+
+                long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
+                String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
+                String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
+
+                ContentValues values = new ContentValues();
+                values.put(SheketContract.CompanyEntry.COLUMN_ID, company_id);
+                values.put(SheketContract.CompanyEntry.COLUMN_NAME, company_name);
+                values.put(SheketContract.CompanyEntry.COLUMN_PERMISSION, permission);
+
+                operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
+                        withValues(DbUtil.setUpdateOnConflict(values)).build());
+            }
+
+            getContext().getContentResolver().applyBatch(
+                    SheketContract.CONTENT_AUTHORITY, operations);
+
+            PrefUtil.setUserRevision(getContext(), new_user_rev);
+        } catch (JSONException | IOException |
+                RemoteException | OperationApplicationException | SyncException e) {
+            Log.w(LOG_TAG, e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    void parseUserSyncResponse(String response) throws JSONException {
+
     }
 
     /**
@@ -71,18 +151,17 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      *
-     * @return returns the transaction number this "snapshot" of entities updated.
-     * changes since then could cause problems in data consistency.
      */
-    int syncEntities() {
+    boolean syncEntities() {
         try {
-            JSONObject json = createEntitySyncJSON();
+            Log.d(LOG_TAG, "Syncing Entity started");
             Request.Builder builder = new Request.Builder();
-            builder.url("abcd");
+            builder.url(ConfigData.getAddress(getContext()) + "v1/sync/entity");
+            JSONObject json = createEntitySyncJSON();
             builder.addHeader(getContext().getString(R.string.pref_header_key_company_id),
-                    Long.toString(SyncUtil.getCurrentCompanyId(getContext())));
-            builder.addHeader(getContext().getString(R.string.pref_header_key_cookie),
-                    SyncUtil.getLoginCookie(getContext()));
+                    Long.toString(PrefUtil.getCurrentCompanyId(getContext())));
+            builder.addHeader(getContext().getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(getContext()));
             builder.post(RequestBody.create(MediaType.parse("application/json"),
                     json.toString()));
 
@@ -95,10 +174,11 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
             EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
             applyEntitySync(result);
         } catch (JSONException | IOException | SyncException e) {
-
+            Log.w(LOG_TAG, e.getMessage());
+            return false;
         }
 
-        return 0;
+        return true;
     }
 
     ContentValues setChangeStatus(ContentValues values, int change_status) {
@@ -107,12 +187,19 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     void applyEntitySync(EntitySyncResponse response) throws SyncException {
+        long local_max_item_id = PrefUtil.getNewItemId(getContext());
+        long local_max_branch_id = PrefUtil.getNewBranchId(getContext());
+
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
         for (SyncUpdatedElement updated_item : response.updatedItemIds) {
+            if (local_max_item_id < updated_item.newId) {
+                local_max_item_id = updated_item.newId;
+            }
+
             ContentValues values = new ContentValues();
             values.put(ItemEntry.COLUMN_ITEM_ID, updated_item.newId);
             setChangeStatus(values, ChangeTraceable.CHANGE_STATUS_UPDATED);
-            operationList.add(ContentProviderOperation.newUpdate(ItemEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newUpdate(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext()))).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", ItemEntry.COLUMN_ITEM_ID),
@@ -121,10 +208,14 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         for (SyncUpdatedElement updated_branch : response.updatedBranchIds) {
+            if (local_max_branch_id < updated_branch.newId) {
+                local_max_branch_id = updated_branch.newId;
+            }
+
             ContentValues values = new ContentValues();
             values.put(BranchEntry.COLUMN_BRANCH_ID, updated_branch.newId);
             setChangeStatus(values, ChangeTraceable.CHANGE_STATUS_UPDATED);
-            operationList.add(ContentProviderOperation.newUpdate(BranchEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newUpdate(BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext()))).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", BranchEntry.COLUMN_BRANCH_ID),
@@ -133,17 +224,17 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         for (SItem sync_item : response.syncedItems) {
-            operationList.add(ContentProviderOperation.newInsert(ItemEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newInsert(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext()))).
                     withValues(
-                            setChangeStatus(setReplaceable(sync_item.toContentValues()),
+                            setChangeStatus(DbUtil.setUpdateOnConflict(sync_item.toContentValues()),
                                     ChangeTraceable.CHANGE_STATUS_SYNCED)).
                     build());
         }
 
         for (SBranch sync_branch : response.syncedBranches) {
-            operationList.add(ContentProviderOperation.newInsert(BranchEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newInsert(BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext()))).
                     withValues(
-                            setChangeStatus(setReplaceable(sync_branch.toContentValues()),
+                            setChangeStatus(DbUtil.setUpdateOnConflict(sync_branch.toContentValues()),
                                     ChangeTraceable.CHANGE_STATUS_SYNCED)).
                     build());
         }
@@ -154,15 +245,6 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         } catch (OperationApplicationException | RemoteException e) {
             throw new SyncException(e);
         }
-    }
-
-    /**
-     * Adds to the content values the option to replace the item if it already
-     * exists in the database.
-     */
-    ContentValues setReplaceable(ContentValues values) {
-        values.put(SheketContract.SQL_INSERT_OR_REPLACE, true);
-        return values;
     }
 
     String getResourceString(int resId) {
@@ -248,11 +330,11 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
 
         JSONObject syncJson = new JSONObject();
         syncJson.put(getContext().getString(R.string.sync_json_item_rev),
-                SyncUtil.getItemRevision(getContext()));
+                PrefUtil.getItemRevision(getContext()));
         syncJson.put(getContext().getString(R.string.sync_json_branch_rev),
-                SyncUtil.getBranchRevision(getContext()));
+                PrefUtil.getBranchRevision(getContext()));
         syncJson.put(getContext().getString(R.string.sync_json_branch_item_rev),
-                SyncUtil.getBranchItemRevision(getContext()));
+                PrefUtil.getBranchItemRevision(getContext()));
 
         JSONArray types = new JSONArray();
 
@@ -311,7 +393,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         String change_selector = String.format("%s != ?", ChangeTraceable.COLUMN_CHANGE_INDICATOR);
         String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
         Cursor cursor = getContext().getContentResolver().query(
-                ItemEntry.CONTENT_URI,
+                ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SItem.ITEM_COLUMNS,
                 change_selector,
                 args,
@@ -384,7 +466,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         String change_selector = String.format("%s != ?", ChangeTraceable.COLUMN_CHANGE_INDICATOR);
         String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
         Cursor cursor = getContext().getContentResolver().query(
-                BranchEntry.CONTENT_URI,
+                BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SBranch.BRANCH_COLUMNS,
                 change_selector,
                 args,
@@ -472,7 +554,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         String change_selector = String.format("%s != ?", ChangeTraceable.COLUMN_CHANGE_INDICATOR);
         String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
         Cursor cursor = getContext().getContentResolver().query(
-                BranchItemEntry.CONTENT_URI,
+                BranchItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SBranchItem.BRANCH_ITEM_COLUMNS,
                 change_selector,
                 args,
@@ -525,15 +607,15 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         return new Pair<>(Boolean.TRUE, branchesItemJson);
     }
 
-    void syncTransactions(int trans_number) {
+    void syncTransactions() {
         try {
             JSONObject json = createTransactionSyncJSON();
             Request.Builder builder = new Request.Builder();
-            builder.url("abcd");
+            builder.url(ConfigData.getAddress(getContext()) + "v1/sync/transaction");
             builder.addHeader(getContext().getString(R.string.pref_header_key_company_id),
-                    Long.toString(SyncUtil.getCurrentCompanyId(getContext())));
-            builder.addHeader(getContext().getString(R.string.pref_header_key_cookie),
-                    SyncUtil.getLoginCookie(getContext()));
+                    Long.toString(PrefUtil.getCurrentCompanyId(getContext())));
+            builder.addHeader(getContext().getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(getContext()));
             builder.post(RequestBody.create(MediaType.parse("application/json"),
                     json.toString()));
 
@@ -547,6 +629,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
                     response.body().string());
             applyTransactionSync(result);
         } catch (JSONException | IOException | SyncException e) {
+            Log.w(LOG_TAG, e.getMessage());
         }
     }
 
@@ -559,7 +642,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         // maybe create a query with "fetch items" argument.
         // then join the results
         Cursor cursor = getContext().getContentResolver().query(
-                TransactionEntry.CONTENT_URI,
+                TransactionEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 STransaction.TRANSACTION_COLUMNS,
                 change_selector,
                 args,
@@ -583,9 +666,9 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         transactionJson.put(getResourceString(R.string.sync_json_trans_rev),
-                SyncUtil.getTransactionRevision(getContext()));
+                PrefUtil.getTransactionRevision(getContext()));
         transactionJson.put(getResourceString(R.string.sync_json_branch_item_rev),
-                SyncUtil.getBranchItemRevision(getContext()));
+                PrefUtil.getBranchItemRevision(getContext()));
 
         return transactionJson;
     }
@@ -676,11 +759,12 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
 
     void applyTransactionSync(TransactionSyncResponse result) throws SyncException {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
+        long company_id = PrefUtil.getCurrentCompanyId(getContext());
         for (SyncUpdatedElement updated_trans : result.updatedTransIds) {
             ContentValues values = new ContentValues();
             values.put(TransactionEntry.COLUMN_TRANS_ID, updated_trans.newId);
             setChangeStatus(values, ChangeTraceable.CHANGE_STATUS_SYNCED);
-            operationList.add(ContentProviderOperation.newUpdate(TransactionEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newUpdate(TransactionEntry.buildBaseUri(company_id)).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", TransactionEntry.COLUMN_TRANS_ID),
@@ -688,20 +772,20 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
                     build());
         }
         for (SBranchItem sync_branch_item : result.syncedBranchItems) {
-            operationList.add(ContentProviderOperation.newInsert(BranchItemEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newInsert(BranchItemEntry.buildBaseUri(company_id)).
                     withValues(
-                            setChangeStatus(setReplaceable(sync_branch_item.toContentValues()),
+                            setChangeStatus(DbUtil.setUpdateOnConflict(sync_branch_item.toContentValues()),
                                     ChangeTraceable.CHANGE_STATUS_SYNCED)).
                     build());
         }
         for (STransaction sync_trans : result.syncedTrans) {
-            operationList.add(ContentProviderOperation.newInsert(TransactionEntry.CONTENT_URI).
+            operationList.add(ContentProviderOperation.newInsert(TransactionEntry.buildBaseUri(company_id)).
                     withValues(
                             setChangeStatus(sync_trans.toContentValues(),
                                     ChangeTraceable.CHANGE_STATUS_SYNCED)).
                     build());
             for (STransaction.STransactionItem trans_item : sync_trans.transactionItems) {
-                operationList.add(ContentProviderOperation.newInsert(TransItemEntry.CONTENT_URI).
+                operationList.add(ContentProviderOperation.newInsert(TransItemEntry.buildBaseUri(company_id)).
                         withValues(
                                 setChangeStatus(trans_item.toContentValues(),
                                         ChangeTraceable.CHANGE_STATUS_SYNCED)).
@@ -726,7 +810,9 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
             // we can enable inexact timers in our periodic sync
             SyncRequest request = new SyncRequest.Builder().
                     syncPeriodic(syncInterval, flexTime).
-                    setSyncAdapter(account, authority).build();
+                    setSyncAdapter(account, authority).
+                    setExtras(new Bundle()).
+                    build();
             ContentResolver.requestSync(request);
         } else {
             ContentResolver.addPeriodicSync(account,
@@ -777,7 +863,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private static void onAccountCreated(Account newAccount, Context context) {
-        SheketSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
+        configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
         ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
         syncImmediately(context);
     }

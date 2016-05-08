@@ -7,6 +7,7 @@ import android.os.Parcelable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,8 +17,14 @@ import java.util.List;
 /**
  * Created by gamma on 3/3/16.
  */
-public class STransaction extends ChangeTraceable implements Parcelable {
+public class STransaction extends UUIDSyncable implements Parcelable {
     private static final String LOG_TAG = STransaction.class.getSimpleName();
+
+    public static final String JSON_TRANS_KEY_TRANS_ID = "trans_id";
+    public static final String JSON_TRANS_KEY_BRANCH_ID = "branch_id";
+    public static final String JSON_TRANS_KEY_DATE = "date";
+    public static final String JSON_TRANS_KEY_ITEMS = "items";
+    public static final String JSON_TRANS_KEY_UUID = "client_uuid";
 
     static String _f(String s) {
         return TransactionEntry._full(s);
@@ -29,9 +36,11 @@ public class STransaction extends ChangeTraceable implements Parcelable {
             _f(TransactionEntry.COLUMN_USER_ID),
             _f(TransactionEntry.COLUMN_BRANCH_ID),
             _f(TransactionEntry.COLUMN_DATE),
-            _f(COLUMN_CHANGE_INDICATOR)
+            _f(COLUMN_CHANGE_INDICATOR),
+            _f(COLUMN_UUID)
     };
 
+    // columns of "STransaction" + "STransactionItem" + "SItem" combined!!!
     public static final String[] TRANSACTION_JOIN_ITEMS_COLUMNS;
     static {
         int trans_size = TRANSACTION_COLUMNS.length;
@@ -55,9 +64,10 @@ public class STransaction extends ChangeTraceable implements Parcelable {
     public static final int COL_BRANCH_ID = 3;
     public static final int COL_DATE = 4;
     public static final int COL_CHANGE = 5;
+    public static final int COL_CLIENT_UUID = 6;
 
     // use this to retrieve next columns in a joined query
-    public static final int COL_LAST = 6;
+    public static final int COL_LAST = 7;
 
     public long company_id;
     public long transaction_id;
@@ -75,8 +85,8 @@ public class STransaction extends ChangeTraceable implements Parcelable {
         this(cursor, 0, false);
     }
 
-    public STransaction(Cursor cursor, boolean fetch_items) {
-        this(cursor, 0, fetch_items);
+    public STransaction(Cursor cursor, boolean fetch_affected) {
+        this(cursor, 0, fetch_affected);
     }
 
     public STransaction(Cursor cursor, int offset, boolean fetch_affected) {
@@ -86,11 +96,17 @@ public class STransaction extends ChangeTraceable implements Parcelable {
         branch_id = cursor.getLong(COL_BRANCH_ID + offset);
         date = cursor.getLong(COL_DATE + offset);
         change_status = cursor.getInt(COL_CHANGE + offset);
+        client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
 
         transactionItems = new ArrayList<>();
 
         if (fetch_affected) {
             do {
+                long curr_trans_id = cursor.getLong(COL_TRANS_ID + offset);
+                if (curr_trans_id != transaction_id) {  // we've cross to the next transaction record, pull back
+                    cursor.moveToPrevious();
+                    break;
+                }
                 transactionItems.add(
                         new STransactionItem(cursor, offset + COL_LAST, true));
             } while (cursor.moveToNext());
@@ -118,9 +134,37 @@ public class STransaction extends ChangeTraceable implements Parcelable {
         return values;
     }
 
-    // TODo: to json
     public JSONObject toJsonObject() throws JSONException {
-        return null;
+        JSONObject result = new JSONObject();
+        result.put(JSON_TRANS_KEY_TRANS_ID, transaction_id);
+        result.put(JSON_TRANS_KEY_BRANCH_ID, branch_id);
+        result.put(JSON_TRANS_KEY_UUID, client_uuid);
+
+        // TODO: fix this, server is complaining its above int64 range
+        date = 10;
+
+        result.put(JSON_TRANS_KEY_DATE, date);
+        JSONArray itemsArr = new JSONArray();
+        for (STransactionItem transItem : transactionItems) {
+            JSONArray json_item = new JSONArray();
+            /**
+             * This is the format the server expects
+             *
+             * [a(int), b(int), c(int), d(float)]
+             * a: transaction type
+             * b: item_id
+             * c: other_branch_id
+             * d: quantity
+             */
+            json_item.put(transItem.trans_type);
+            json_item.put(transItem.item_id);
+            json_item.put(transItem.other_branch_id);
+            json_item.put(transItem.quantity);
+
+            itemsArr.put(json_item);
+        }
+        result.put(JSON_TRANS_KEY_ITEMS, itemsArr);
+        return result;
     }
 
     @Override

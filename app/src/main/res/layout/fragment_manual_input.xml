@@ -3,33 +3,66 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
-    <android.support.v4.widget.Space
+    <!--
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="10dp"
-        android:layout_gravity="center_horizontal" />
-
-    <ImageButton
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:src="@drawable/barcode"
-        android:id="@+id/btn_manual_scan"
-        android:layout_gravity="center_vertical"
-        android:layout_marginLeft="16dp" />
+        android:layout_marginTop="8dp">
+
+        <ImageButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/barcode"
+            android:id="@+id/btn_manual_scan"
+            android:layout_gravity="left|center_vertical" />
+
+        <android.support.v4.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/view2"
+            android:layout_weight="1" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Only Branch Items"
+            android:id="@+id/check_box_manual_search_only_branch_items"
+            android:layout_gravity="center_vertical|right"
+            android:textSize="20dp"
+            android:checked="true"
+            android:clickable="true" />
+    </LinearLayout>
+    -->
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Dummy item to prevent @id/edit_text_manual_code from receiving focus -->
+        <LinearLayout
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="0px"
+            android:layout_height="0px"/>
+
         <EditText
             android:layout_width="0dp"
             android:layout_weight="2"
-            android:layout_height="wrap_content"
             android:id="@+id/edit_text_manual_code"
+            android:nextFocusUp="@id/edit_text_manual_code"
+            android:nextFocusLeft="@id/edit_text_manual_code"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="16dp" />
+            android:inputType="text"
+            android:hint="Search Item .." />
 
         <Button
             android:layout_width="0dp"
@@ -38,71 +71,52 @@
             android:text="Search"
             android:id="@+id/btn_manual_search"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="16dp" />
+            android:layout_marginLeft="8dp" />
     </LinearLayout>
-
-    <android.support.v4.widget.Space
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:layout_gravity="center_horizontal" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginBottom="5dp"
-        android:background="#0a0a0a"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp" />
+        android:background="#0a0a0a" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:text="Search Results"
         android:id="@+id/text_view_manual_result_label"
-        android:textColor="#000000"
-        android:layout_marginLeft="16dp" />
+        android:textColor="#000000" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/list_view_manual_results"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="1" />
 
     <LinearLayout
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp">
 
-        <ListView
-            android:layout_width="match_parent"
+        <Button
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/list_view_manual_results"
+            android:text="Cancel"
+            android:id="@+id/btn_manual_cancel" />
+
+        <android.support.v4.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_gravity="center_horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
             android:layout_weight="1" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/abc_action_button_min_height_material"
-            android:layout_marginBottom="8dp">
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cancel"
-                android:id="@+id/btn_manual_cancel"
-                android:layout_marginLeft="16dp" />
-
-            <android.support.v4.widget.Space
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal"
-                android:layout_weight="1" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Finish"
-                android:id="@+id/btn_manual_finish"
-                android:layout_marginRight="16dp" />
-        </LinearLayout>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finish"
+            android:id="@+id/btn_manual_finish" />
     </LinearLayout>
 
 </LinearLayout>
