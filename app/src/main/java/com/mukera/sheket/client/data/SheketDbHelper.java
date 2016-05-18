@@ -63,9 +63,31 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 UUIDSyncable.COLUMN_UUID + " text, " +
                 BranchEntry.COLUMN_LOCATION + " text);";
 
+        final String sql_create_category_table = "create table if not exists " + CategoryEntry.TABLE_NAME + " ( " +
+                CategoryEntry.COLUMN_CATEGORY_ID + " integer primary key on conflict replace, " +
+                CategoryEntry.COLUMN_COMPANY_ID + " integer not null, " +
+                CategoryEntry.COLUMN_NAME + " text not null, " +
+
+                String.format("%s INTEGER DEFAULT %s REFERENCES %s(%s) ON UPDATE CASCADE ON DELETE SET DEFAULT, ",
+                        CategoryEntry.COLUMN_PARENT_ID,
+                        Long.toString(CategoryEntry.ROOT_CATEGORY_ID),
+                        CategoryEntry.TABLE_NAME,
+                        CategoryEntry.COLUMN_CATEGORY_ID) +
+
+                ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+                UUIDSyncable.COLUMN_UUID + " text);";
+
+
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
                 ItemEntry.COLUMN_ITEM_ID + " integer primary key ON CONFLICT REPLACE, " +
                 ItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
+
+                String.format("%s INTEGER DEFAULT %s REFERENCES %s(%s) ON UPDATE CASCADE ON DELETE SET DEFAULT, ",
+                        ItemEntry.COLUMN_CATEGORY_ID,
+                        Long.toString(CategoryEntry.ROOT_CATEGORY_ID),
+                        CategoryEntry.TABLE_NAME,
+                        CategoryEntry.COLUMN_CATEGORY_ID) +
+
                 ItemEntry.COLUMN_NAME + " text not null, " +
                 ItemEntry.COLUMN_MODEL_YEAR + " text, " +
                 ItemEntry.COLUMN_PART_NUMBER + " text, " +
@@ -118,30 +140,105 @@ public class SheketDbHelper extends SQLiteOpenHelper {
         db.execSQL(sql_create_members_table);
         db.execSQL(sql_create_branch_table);
 
+        db.execSQL(sql_create_category_table);
         db.execSQL(sql_create_item_table);
 
         db.execSQL(sql_create_branch_item_table);
         db.execSQL(sql_create_transaction_table);
         db.execSQL(sql_create_transaction_items_table);
 
-        // Create the DUMMY Branch if it doesn't exist
+        try {
+            createDummyBranch(db);
+            createRootCategory(db);
+        } catch (SheketDbException e) {
+            Log.e("SheketDbHelper", e.getMessage());
+        }
+    }
+
+    static class SheketDbException extends Exception {
+        public SheketDbException() { super(); }
+        public SheketDbException(String detailMessage) { super(detailMessage); }
+        public SheketDbException(String detailMessage, Throwable throwable) { super(detailMessage, throwable); }
+        public SheketDbException(Throwable throwable) { super(throwable); }
+    }
+
+    void createDummyBranch(SQLiteDatabase db) throws SheketDbException {
         Cursor cursor = db.query(BranchEntry.TABLE_NAME, new String[]{BranchEntry.COLUMN_BRANCH_ID},
                 BranchEntry.COLUMN_BRANCH_ID + " = ?",
                 new String[]{String.valueOf(BranchEntry.DUMMY_BRANCH_ID)},
                 null, null, null);
-        if (cursor != null) {
-            if (!cursor.moveToFirst()) {    // if the branch doesn't exist, create it
-                ContentValues values = new ContentValues();
-                // By Setting the company_id to 0, we can guarantee that no company
-                // will EVER see this dummy branch.
-                values.put(BranchEntry.COLUMN_COMPANY_ID, BranchEntry.DUMMY_COMPANY_ID);
-                values.put(BranchEntry.COLUMN_BRANCH_ID, BranchEntry.DUMMY_BRANCH_ID);
-                values.put(BranchEntry.COLUMN_NAME, "Dummy Branch");
-                // we don't want this to sync with the server
-                values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
-                        ChangeTraceable.CHANGE_STATUS_SYNCED);
-                db.insert(BranchEntry.TABLE_NAME, null, values);
+        if (cursor == null) {
+            throw new SheketDbException("CreateDummyBranch error");
+        }
+        if (!cursor.moveToFirst()) {    // if the branch doesn't exist, create it
+            cursor.close();
+            ContentValues values = new ContentValues();
+            // By Setting the company_id to 0, we can guarantee that no company
+            // will EVER see this dummy branch.
+            values.put(BranchEntry.COLUMN_COMPANY_ID, CompanyBase.DUMMY_COMPANY_ID);
+            values.put(BranchEntry.COLUMN_BRANCH_ID, BranchEntry.DUMMY_BRANCH_ID);
+            values.put(BranchEntry.COLUMN_NAME, "Dummy Branch");
+            // we don't want this to sync with the server
+            values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                    ChangeTraceable.CHANGE_STATUS_SYNCED);
+            db.insert(BranchEntry.TABLE_NAME, null, values);
+        } else {
+            cursor.close();
+        }
+    }
+
+    void createRootCategory(SQLiteDatabase db) throws SheketDbException {
+        Cursor cursor = db.query(CategoryEntry.TABLE_NAME, new String[]{CategoryEntry.COLUMN_CATEGORY_ID},
+                CategoryEntry.COLUMN_CATEGORY_ID + " = ?",
+                new String[]{String.valueOf(CategoryEntry.ROOT_CATEGORY_ID)},
+                null, null, null);
+        if (cursor == null)  {
+            throw new SheketDbException("CreateRootCategory query error");
+        }
+        if (!cursor.moveToFirst()) {    // the category doesn't exist
+            cursor.close();
+
+            ContentValues values = new ContentValues();
+
+            /**
+             * Since we've set the DEFAULT parent id to be {@code ROOT_CATEGORY}, it will be
+             * used if we don't specify a parent id in the ContentValues. So we first create the
+             * root's parent. It will initially have it's parent set to the {@code ROOT_CATEGORY}.
+             * We then change that to refer to itself(i.e: the root's parent will have it's parent set to itself).
+             * We finally create the root and set its parent to the parent. I know, it is confusing.
+             */
+            values.put(CategoryEntry.COLUMN_COMPANY_ID, CompanyBase.DUMMY_COMPANY_ID);
+            values.put(CategoryEntry.COLUMN_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            values.put(CategoryEntry.COLUMN_NAME, "__root's parent__");
+            values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_SYNCED);
+
+            long row_id = db.insert(CategoryEntry.TABLE_NAME, null, values);
+            if (row_id == -1) {
+                throw new SheketDbException("CreateRootCategory insert root's category parent error");
             }
+
+            // now update the root's parent to have its parent set to itself
+            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            long num_updated = db.update(CategoryEntry.TABLE_NAME, values,
+                    CategoryEntry.COLUMN_CATEGORY_ID + " = ?",
+                    new String[]{String.valueOf(CategoryEntry.ROOT_CATEGORY_PARENT_ID)});
+            if (num_updated != 1) {
+                throw new SheketDbException("CreateRootCategory update root's category parent error");
+            }
+
+            values = new ContentValues();
+            values.put(CategoryEntry.COLUMN_COMPANY_ID, CompanyBase.DUMMY_COMPANY_ID);
+            values.put(CategoryEntry.COLUMN_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_ID);
+            values.put(CategoryEntry.COLUMN_NAME, "__root category__");
+            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_SYNCED);
+
+            row_id = db.insert(CategoryEntry.TABLE_NAME, null, values);
+            if (row_id == -1) {
+                throw new SheketDbException("CreateRootCategory insert category root error");
+            }
+        } else {
+            cursor.close();
         }
     }
 
@@ -165,20 +262,16 @@ public class SheketDbHelper extends SQLiteOpenHelper {
         alc.add(null);
         alc.add(null);
 
-
         try {
             String maxQuery = Query;
             //execute the query results will be save in Cursor c
             Cursor c = sqlDB.rawQuery(maxQuery, null);
-
 
             //add value to cursor2
             Cursor2.addRow(new Object[]{"Success"});
 
             alc.set(1, Cursor2);
             if (null != c && c.getCount() > 0) {
-
-
                 alc.set(0, c);
                 c.moveToFirst();
 
@@ -192,9 +285,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
             alc.set(1, Cursor2);
             return alc;
         } catch (Exception ex) {
-
             Log.d("printing exception", ex.getMessage());
-
             //if any exceptions are triggered save the error message to cursor an return the arraylist
             Cursor2.addRow(new Object[]{"" + ex.getMessage()});
             alc.set(1, Cursor2);

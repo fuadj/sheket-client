@@ -21,6 +21,7 @@ public class SheketContract {
     public static final String PATH_MEMBER = "path_member";
     public static final String PATH_BRANCH = "path_branch";
     public static final String PATH_BRANCH_ITEM = "path_branch_item";
+    public static final String PATH_CATEGORY = "path_category";
     public static final String PATH_ITEM = "path_item";
     public static final String PATH_TRANSACTION = "path_transaction";
     public static final String PATH_TRANS_ITEMS = "path_trans_items";
@@ -70,6 +71,11 @@ public class SheketContract {
 
     public static abstract class CompanyBase {
         public static final String COLUMN_COMPANY_ID = "company_id";
+        /**
+         * By setting the dummy company to be 0, we can guarantee that it won't
+         * show up in ANY of the companies of a user because all of them have a non-zero id.
+         */
+        public static final long DUMMY_COMPANY_ID = 0;
 
         public static long getCompanyId(Uri uri) {
             return Long.parseLong(uri.getPathSegments().get(1));
@@ -142,6 +148,56 @@ public class SheketContract {
         }
     }
 
+    public static final class CategoryEntry extends CompanyBase {
+        /**
+         * This is the parent of the root category, we had to create it b/c will be filtering categories
+         * on their parent ids. And the parent id has a default of {@code ROOT_CATEGORY_ID}.
+         * This means even the root category has a parent id of "self". And this might cause
+         * the root category to be visible in searches, which is not allowed.
+         * SO, create another "dummy" category for the root to refer it to as parent,
+         * and this problem will be solved.
+         */
+        public static final long ROOT_CATEGORY_PARENT_ID = -2;
+
+        /**
+         * The root category is the parent of the "first" level categories.
+         *
+         * IMPORTANT:
+         * We can't use the "universal" -1 as the id because that is used by the database
+         * to signal error.
+         */
+        public static final long ROOT_CATEGORY_ID = -3;
+
+        private static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_CATEGORY).build();
+
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_CATEGORY;
+        public static final String CONTENT_ITEM_TYPE =
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_CATEGORY;
+
+        public static final String TABLE_NAME = "category";
+
+        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+
+        public static final String COLUMN_CATEGORY_ID = "_id";
+        public static final String COLUMN_NAME = "name";
+        public static final String COLUMN_PARENT_ID = "parent_id";
+
+        public static Uri buildBaseUri(long company_id) {
+            return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
+        }
+
+        public static Uri buildCategoryUri(long company_id, long category_id) {
+            return withBaseCompanyIdUri(CONTENT_URI, company_id).
+                    appendPath(Long.toString(category_id)).build();
+        }
+
+        public long getCategoryId(Uri uri) {
+            return Long.parseLong(uri.getPathSegments().get(2));
+        }
+    }
+
     public static final class BranchEntry extends CompanyBase {
         /**
          * This is the branch id used in transactions when the transaction
@@ -157,13 +213,12 @@ public class SheketContract {
          * This has the HUGE benefit of updating branch ids with the server ids when
          * syncing. This is only achieved when there is a foreign dependency on the
          * branch id and that has a "cascade on update" clause.
+         *
+         * IMPORTANT:
+         * We can't user the "universal" -1 as the id because that is used by the database
+         * to signal error.
          */
         public static final long DUMMY_BRANCH_ID = -2;
-        /**
-         * By setting the dummy branch's company to be 0, we can guarantee that it won't
-         * show up in ANY of the companies of a user because all of them have a non-zero id.
-         */
-        public static final long DUMMY_COMPANY_ID = 0;
 
         private static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_BRANCH).build();
@@ -281,6 +336,7 @@ public class SheketContract {
         }
 
         public static final String COLUMN_ITEM_ID = "_id";
+        public static final String COLUMN_CATEGORY_ID = "category_id";
         public static final String COLUMN_NAME = "item_name";
         public static final String COLUMN_MODEL_YEAR = "column_model_year";
         public static final String COLUMN_PART_NUMBER = "column_part_number";

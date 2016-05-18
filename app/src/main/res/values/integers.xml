@@ -4,8 +4,11 @@
     <integer name="invalid_company_id">-1</integer>
     <integer name="pref_default_revision">0</integer>
 
-    // apparently -1 is used as an error message in database inserts
-    // we also have reserved -2 for the "DUMMY_BRANCH_ID"
-    // so we start @ -3 and go down
-    <integer name="default_local_entity_id">-3</integer>
+    // We couldn't just start @ -1 for the "un-synced" entity ids,
+    // apparently -1 is used to signal error in database inserts
+    // and we might want a few "constant" ids in the database
+    // (e.g: we need a root category where the "first level" categories
+    // refer to) and there are a couple of these "special" entities
+    // so start at -10 to give us some room and go down from there
+    <integer name="default_local_entity_id">-10</integer>
 </resources>
