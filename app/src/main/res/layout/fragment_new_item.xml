@@ -16,27 +16,19 @@
                 android:layout_height="wrap_content"
                 app:columnCount="2"
                 android:paddingLeft="32dp"
-                android:paddingRight="32dp">
+                android:paddingRight="32dp"
+                android:layout_marginTop="20dp">
 
-
-                <android.support.v4.widget.Space
-                    android:layout_width="match_parent"
-                    android:layout_height="20dp"
-                    app:layout_columnSpan="2"
-                    app:layout_gravity="fill_horizontal|center"
-                    app:layout_row="0"
-                    app:layout_column="0" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Item Name:"
-                    android:id="@+id/textView4"
                     app:layout_rowWeight="1"
-                    app:layout_gravity="fill_horizontal|center_vertical"
                     android:textColor="@color/text_primary"
                     app:layout_column="0"
-                    app:layout_row="1" />
+                    app:layout_row="1"
+                    app:layout_gravity="center_vertical" />
 
                 <EditText
                     android:layout_width="wrap_content"
@@ -45,80 +37,18 @@
                     app:layout_columnWeight="1"
                     android:editable="true"
                     app:layout_column="1"
-                    app:layout_row="1" />
+                    app:layout_row="1"
+                    app:layout_gravity="fill_horizontal|center_vertical" />
 
-                <ImageButton
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/img_btn_new_item_bar_code"
-                    app:layout_gravity="center"
-                    android:src="@drawable/barcode"
+                    android:textColor="@color/text_primary"
+                    android:text="Code:"
+                    app:layout_gravity="center_vertical"
                     app:layout_rowWeight="1"
                     app:layout_column="0"
                     app:layout_row="2" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:id="@+id/text_view_new_item_bar_code"
-                    app:layout_gravity="fill_horizontal|left|center"
-                    android:background="#e2e1f0"
-                    app:layout_column="1"
-                    app:layout_row="2"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="20dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/model_year"
-                    android:textColor="@color/text_primary"
-                    app:layout_rowWeight="1"
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    android:text="Model Year:"
-                    app:layout_column="0"
-                    app:layout_row="3" />
-
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edit_text_new_item_model_year"
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    android:enabled="true"
-                    app:layout_column="1"
-                    app:layout_row="3" />
-
-                <TextView
-                    app:layout_rowWeight="1"
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    app:layout_column="0"
-                    app:layout_row="4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textView6"
-                    android:textColor="@color/text_primary"
-                    android:text="Part Number:" />
-
-                <EditText
-                    app:layout_gravity="fill_horizontal|center_vertical"
-                    app:layout_column="1"
-                    app:layout_row="4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edit_text_new_item_part_number"
-                    android:enabled="true" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_primary"
-                    android:id="@+id/editText7"
-                    android:text="Code:"
-                    app:layout_gravity="fill_horizontal|center"
-                    app:layout_rowWeight="1"
-                    app:layout_column="0"
-                    app:layout_row="5" />
 
                 <EditText
                     android:layout_width="wrap_content"
@@ -128,19 +58,167 @@
                     android:textColor="@color/text_primary"
                     app:layout_gravity="fill_horizontal|center"
                     app:layout_column="1"
-                    app:layout_row="5" />
+                    app:layout_row="2" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reorder level:"
+                    app:layout_row="3"
+                    app:layout_column="0"
+                    android:textColor="#000000"
+                    app:layout_gravity="center_vertical"
+                    app:layout_rowWeight="1" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edit_text_new_item_reorder_level"
+                    app:layout_row="3"
+                    app:layout_column="1"
+                    app:layout_gravity="fill_horizontal"
+                    android:inputType="numberDecimal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Units:"
+                    app:layout_row="4"
+                    app:layout_column="0"
+                    android:textColor="#000000"
+                    app:layout_gravity="center_vertical"
+                    app:layout_rowWeight="1" />
+
+                <Spinner
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinner_new_item_unit_selection"
+                    app:layout_row="4"
+                    app:layout_column="1"
+                    app:layout_gravity="fill_horizontal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Has Bundle:"
+                    app:layout_row="5"
+                    app:layout_column="0"
+                    app:layout_gravity="center_vertical"
+                    app:layout_rowWeight="1"
+                    android:textColor="#000000" />
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/check_box_new_item_has_bundle"
+                    app:layout_row="5"
+                    app:layout_column="1"
+                    app:layout_gravity="center_vertical" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bundle Name:"
+                    android:id="@+id/text_view_new_item_bundle_name"
+                    app:layout_row="6"
+                    app:layout_column="0"
+                    android:textColor="#000000"
+                    app:layout_rowWeight="1"
+                    app:layout_gravity="center_vertical" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edit_text_new_item_bundle_name"
+                    app:layout_row="6"
+                    app:layout_column="1"
+                    app:layout_gravity="fill_horizontal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bundle Factor:"
+                    android:id="@+id/text_view_new_item_bundle_factor"
+                    app:layout_row="7"
+                    app:layout_column="0"
+                    android:textColor="#000000"
+                    app:layout_rowWeight="1"
+                    app:layout_gravity="center_vertical" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:ems="10"
+                    android:id="@+id/edit_text_new_item_bundle_factor"
+                    app:layout_row="7"
+                    app:layout_column="1"
+                    app:layout_gravity="fill_horizontal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Formula:"
+                    app:layout_row="8"
+                    app:layout_column="0"
+                    app:layout_rowWeight="1"
+                    app:layout_gravity="center_vertical" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edt_text_new_item_formula"
+                    app:layout_row="8"
+                    app:layout_column="1"
+                    app:layout_gravity="fill_horizontal"
+                    android:textColor="#4e4e4e" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    app:layout_rowWeight="1"
+                    android:text="Model Year:"
+                    app:layout_column="0"
+                    app:layout_row="9"
+                    app:layout_gravity="center_vertical" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edit_text_new_item_model_year"
+                    android:enabled="true"
+                    app:layout_column="1"
+                    app:layout_row="9"
+                    app:layout_gravity="fill_horizontal" />
+
+                <TextView
+                    app:layout_rowWeight="1"
+                    app:layout_column="0"
+                    app:layout_row="10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Part Number:"
+                    app:layout_gravity="center_vertical" />
+
+                <EditText
+                    app:layout_column="1"
+                    app:layout_row="10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edit_text_new_item_part_number"
+                    android:enabled="true"
+                    app:layout_gravity="fill_horizontal" />
+
 
             </android.support.v7.widget.GridLayout>
-
-            <android.support.v4.widget.Space
-                android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:layout_gravity="center_horizontal" />
 
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:padding="20dp"
                 android:background="#f4f3ff">
 

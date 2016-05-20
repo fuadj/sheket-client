@@ -176,7 +176,7 @@ public class SheketContract {
         public static final String CONTENT_ITEM_TYPE =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_CATEGORY;
 
-        public static final String TABLE_NAME = "category";
+        public static final String TABLE_NAME = "category_table";
 
         public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
 
@@ -329,7 +329,7 @@ public class SheketContract {
         public static final String CONTENT_ITEM_TYPE =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_ITEM;
 
-        public static final String TABLE_NAME = "inventory_items";
+        public static final String TABLE_NAME = "inventory_table";
 
         public static String _full(String col_name) {
             return TABLE_NAME + "." + col_name;
@@ -343,6 +343,13 @@ public class SheketContract {
         public static final String COLUMN_BAR_CODE = "bar_code";
         public static final String COLUMN_HAS_BAR_CODE = "has_bar_code";
         public static final String COLUMN_MANUAL_CODE = "manual_code";
+
+        public static final String COLUMN_REORDER_LEVEL = "reorder_level";
+
+        public static final String COLUMN_UNIT_OF_MEASUREMENT = "units";
+        public static final String COLUMN_HAS_DERIVED_UNIT = "has_derived";
+        public static final String COLUMN_DERIVED_UNIT_NAME = "derived_name";
+        public static final String COLUMN_DERIVED_UNIT_FACTOR = "derived_factor";
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();

@@ -89,6 +89,15 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                         CategoryEntry.COLUMN_CATEGORY_ID) +
 
                 ItemEntry.COLUMN_NAME + " text not null, " +
+
+                ItemEntry.COLUMN_UNIT_OF_MEASUREMENT + " integer not null, " +
+                // b/c sqlite doesn't support boolean type
+                ItemEntry.COLUMN_HAS_DERIVED_UNIT + " integer not null, " +
+                ItemEntry.COLUMN_DERIVED_UNIT_NAME + " text, " +
+                ItemEntry.COLUMN_DERIVED_UNIT_FACTOR + " real, " +
+
+                ItemEntry.COLUMN_REORDER_LEVEL + " real, " +
+
                 ItemEntry.COLUMN_MODEL_YEAR + " text, " +
                 ItemEntry.COLUMN_PART_NUMBER + " text, " +
                 ItemEntry.COLUMN_MANUAL_CODE + " text, " +
