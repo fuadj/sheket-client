@@ -21,6 +21,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.UnitsOfMeasurement;
+import com.mukera.sheket.client.controller.NumberFormatter;
 import com.mukera.sheket.client.controller.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.TransItemEntry;
@@ -44,6 +46,11 @@ public class TransDialog {
         protected TransQtyDialogListener mListener;
         protected SItem mItem;
 
+        private Spinner mSpinnerUnitSelection;
+        private LinearLayout mLayoutUnitSelection;
+        private TextView mUnitExtension, mConversionFormula;
+        private EditText mQtyEdit;
+
         protected List<TransBranch> mTransBranches;
 
         public void setListener(TransQtyDialogListener listener) {
@@ -61,6 +68,105 @@ public class TransDialog {
                  mTransBranches.add(new TransBranch(branch.branch_id, branch.branch_name));
             }
         }
+
+        boolean isQuantitySet() {
+            return !mQtyEdit.getText().toString().trim().isEmpty();
+        }
+
+        void hideKeyboard() {
+            InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
+        }
+
+        void configureUnitSelection(View view) {
+            mQtyEdit = (EditText) view.findViewById(R.id.dialog_trans_qty_edit_text_qty);
+            mQtyEdit.addTextChangedListener(new TextWatcherAdapter(){
+                @Override
+                public void afterTextChanged(Editable s) {
+                    setOkBtnStatus();
+                    updateConversionRateDisplay();
+                }
+            });
+
+            mLayoutUnitSelection = (LinearLayout) view.findViewById(R.id.dialog_trans_qty_layout_units);
+            mSpinnerUnitSelection = (Spinner) view.findViewById(R.id.dialog_trans_qty_spinner_units);
+            mUnitExtension = (TextView) view.findViewById(R.id.dialog_trans_qty_text_unit_extension);
+            mConversionFormula = (TextView) view.findViewById(R.id.dialog_trans_qty_text_conversion);
+
+            if (!mItem.has_derived_unit) {
+                mLayoutUnitSelection.setVisibility(View.GONE);
+                mSpinnerUnitSelection.setVisibility(View.GONE);
+                mConversionFormula.setVisibility(View.GONE);
+
+                mUnitExtension.setVisibility(View.VISIBLE);
+                mUnitExtension.setText(UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
+            } else {
+                mLayoutUnitSelection.setVisibility(View.VISIBLE);
+                mSpinnerUnitSelection.setVisibility(View.VISIBLE);
+                mConversionFormula.setVisibility(View.VISIBLE);
+
+                mUnitExtension.setVisibility(View.VISIBLE);
+
+                List<String> units = new ArrayList<>();
+                units.add(UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
+                units.add(mItem.derived_name);
+                mSpinnerUnitSelection.setAdapter(new ArrayAdapter<>(getActivity(),
+                        android.R.layout.simple_spinner_dropdown_item,
+                        units.toArray()));
+                mSpinnerUnitSelection.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        updateConversionRateDisplay();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) { }
+                });
+            }
+        }
+
+        void updateConversionRateDisplay() {
+            if (!mItem.has_derived_unit) return;
+
+            String unit = (String)mSpinnerUnitSelection.getSelectedItem();
+            mUnitExtension.setText(String.format("  %s  ", unit));
+            if (mSpinnerUnitSelection.getSelectedItemPosition() == 0) {
+                mConversionFormula.setVisibility(View.GONE);
+            } else if (isQuantitySet()) {
+                mConversionFormula.setVisibility(View.VISIBLE);
+
+                String qty = mQtyEdit.getText().toString().trim();
+                String base_unit = UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement);
+                String derived = mItem.derived_name;
+                String factor = NumberFormatter.formatDoubleForDisplay(mItem.derived_factor);
+
+                String total = NumberFormatter.formatDoubleForDisplay(
+                        Double.valueOf(qty) * mItem.derived_factor);
+
+                mConversionFormula.setText(
+                        String.format(" %s %s = %s * (%s * %s) = %s %s ",
+                                qty, derived,
+                                qty, factor, base_unit,
+                                total, base_unit));
+            } else {
+                mConversionFormula.setVisibility(View.GONE);
+            }
+        }
+
+        double getConvertedItemQuantity() {
+            if (!isQuantitySet()) return 0;
+
+            double factor = 1;
+            boolean is_derived_selected = mItem.has_derived_unit &&
+                    mSpinnerUnitSelection.getSelectedItemPosition() == 1;
+            if (is_derived_selected) {
+                factor = mItem.derived_factor;
+            }
+
+            return factor * Double.valueOf(mQtyEdit.getText().toString().trim());
+        }
+
+        abstract void setOkBtnStatus();
     }
 
     public static QtyDialog newInstance(boolean is_buying) {
@@ -103,12 +209,12 @@ public class TransDialog {
         private Spinner mSpinnerSourceType, mSpinnerSourceBranch;
         private LinearLayout mLayoutSourceBranch;
         private Button mBtnOk;
-        private EditText mQtyEdit;
 
         SourceType getSelectedSourceType() {
             return (SourceType) mSpinnerSourceType.getSelectedItem();
         }
 
+        @Override
         void setOkBtnStatus() {
             SourceType type = getSelectedSourceType();
             if (type.type == SOURCE_TYPE_SELECT_TYPE) {
@@ -116,8 +222,7 @@ public class TransDialog {
                 return;
             }
 
-            String qty = mQtyEdit.getText().toString().trim();
-            if (qty.isEmpty()) {
+            if (!isQuantitySet()) {
                 mBtnOk.setEnabled(false);
                 return;
             }
@@ -154,7 +259,7 @@ public class TransDialog {
             mBtnOk.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    double qty = Double.parseDouble(mQtyEdit.getText().toString().trim());
+                    double qty = getConvertedItemQuantity();
                     STransactionItem transItem = new STransactionItem();
                     transItem.item = mItem;
                     transItem.item_id = mItem.item_id;
@@ -169,9 +274,7 @@ public class TransDialog {
                         transItem.other_branch_id = SheketContract.BranchEntry.DUMMY_BRANCH_ID;
                     }
 
-                    InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
-
+                    hideKeyboard();
                     mListener.dialogOk(transItem);
                 }
             });
@@ -221,13 +324,7 @@ public class TransDialog {
 
             mLayoutSourceBranch = (LinearLayout) view.findViewById(R.id.dialog_trans_buy_layout_source);
 
-            mQtyEdit = (EditText) view.findViewById(R.id.dialog_trans_qty_edit_text_qty);
-            mQtyEdit.addTextChangedListener(new TextWatcherAdapter(){
-                @Override
-                public void afterTextChanged(Editable s) {
-                    setOkBtnStatus();
-                }
-            });
+            configureUnitSelection(view);
 
             // start things off
             setOkBtnStatus();
@@ -244,12 +341,12 @@ public class TransDialog {
         private Spinner mSpinnerSourceType, mSpinnerDestBranch;
         private LinearLayout mLayoutDestBranch;
         private Button mBtnOk;
-        private EditText mQtyEdit;
 
         SourceType getSelectedSourceType() {
             return (SourceType) mSpinnerSourceType.getSelectedItem();
         }
 
+        @Override
         void setOkBtnStatus() {
             SourceType type = getSelectedSourceType();
             if (type.type == SOURCE_TYPE_SELECT_TYPE) {
@@ -257,8 +354,7 @@ public class TransDialog {
                 return;
             }
 
-            String qty = mQtyEdit.getText().toString().trim();
-            if (qty.isEmpty()) {
+            if (!isQuantitySet()) {
                 mBtnOk.setEnabled(false);
                 return;
             }
@@ -295,7 +391,7 @@ public class TransDialog {
             mBtnOk.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    double qty = Double.parseDouble(mQtyEdit.getText().toString().trim());
+                    double qty = getConvertedItemQuantity();
                     STransactionItem transItem = new STransactionItem();
                     transItem.item = mItem;
                     transItem.item_id = mItem.item_id;
@@ -310,6 +406,7 @@ public class TransDialog {
                         transItem.other_branch_id = SheketContract.BranchEntry.DUMMY_BRANCH_ID;
                     }
 
+                    hideKeyboard();
                     mListener.dialogOk(transItem);
                 }
             });
@@ -358,13 +455,7 @@ public class TransDialog {
             });
             mLayoutDestBranch = (LinearLayout) view.findViewById(R.id.dialog_trans_sell_layout_destination);
 
-            mQtyEdit = (EditText) view.findViewById(R.id.dialog_trans_qty_edit_text_qty);
-            mQtyEdit.addTextChangedListener(new TextWatcherAdapter() {
-                @Override
-                public void afterTextChanged(Editable s) {
-                    setOkBtnStatus();
-                }
-            });
+            configureUnitSelection(view);
 
             // start things off
             setOkBtnStatus();

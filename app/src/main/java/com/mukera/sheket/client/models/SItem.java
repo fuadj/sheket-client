@@ -35,6 +35,14 @@ public class SItem extends UUIDSyncable implements Parcelable {
             _f(ItemEntry.COLUMN_COMPANY_ID),
             _f(ItemEntry.COLUMN_ITEM_ID),
             _f(ItemEntry.COLUMN_NAME),
+
+            _f(ItemEntry.COLUMN_UNIT_OF_MEASUREMENT),
+            _f(ItemEntry.COLUMN_HAS_DERIVED_UNIT),
+            _f(ItemEntry.COLUMN_DERIVED_UNIT_NAME),
+            _f(ItemEntry.COLUMN_DERIVED_UNIT_FACTOR),
+
+            _f(ItemEntry.COLUMN_REORDER_LEVEL),
+
             _f(ItemEntry.COLUMN_MODEL_YEAR),
             _f(ItemEntry.COLUMN_PART_NUMBER),
             _f(ItemEntry.COLUMN_BAR_CODE),
@@ -46,6 +54,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
 
     // columns of "SItem" + "SBranchItem" + "SBranch" combined!!!
     public static final String[] ITEM_WITH_BRANCH_DETAIL_COLUMNS;
+
     static {
         int items_size = ITEM_COLUMNS.length;
         int branch_items_size = SBranchItem.BRANCH_ITEM_COLUMNS.length;
@@ -65,19 +74,33 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_ITEM_ID = 1;
     public static final int COL_NAME = 2;
-    public static final int COL_MODEL_YEAR = 3;
-    public static final int COL_PART_NUMBER = 4;
-    public static final int COL_BAR_CODE = 5;
-    public static final int COL_HAS_BAR_CODE = 6;
-    public static final int COL_MANUAL_CODE = 7;
-    public static final int COL_CHANGE_INDICATOR = 8;
-    public static final int COL_CLIENT_UUID = 9;
 
-    public static final int COL_LAST = 10;
+    public static final int COL_UNIT_OF_MEASUREMENT = 3;
+    public static final int COL_HAS_DERIVED_UNIT = 4;
+    public static final int COL_DERIVED_UNIT_NAME = 5;
+    public static final int COL_DERIVED_UNIT_FACTOR = 6;
+    public static final int COL_REORDER_LEVEL = 7;
+
+    public static final int COL_MODEL_YEAR = 8;
+    public static final int COL_PART_NUMBER = 9;
+    public static final int COL_BAR_CODE = 10;
+    public static final int COL_HAS_BAR_CODE = 11;
+    public static final int COL_MANUAL_CODE = 12;
+    public static final int COL_CHANGE_INDICATOR = 13;
+    public static final int COL_CLIENT_UUID = 14;
+
+    public static final int COL_LAST = 15;
 
     public long company_id;
     public long item_id;
     public String name;
+
+    public int unit_of_measurement;
+    public boolean has_derived_unit;
+    public String derived_name;
+    public double derived_factor;
+    public double reorder_level;
+
     public String model_year;
     public String part_number;
     public String bar_code;
@@ -95,6 +118,14 @@ public class SItem extends UUIDSyncable implements Parcelable {
         company_id = cursor.getLong(COL_COMPANY_ID + offset);
         item_id = cursor.getLong(COL_ITEM_ID + offset);
         name = cursor.getString(COL_NAME + offset);
+
+        unit_of_measurement = cursor.getInt(COL_UNIT_OF_MEASUREMENT + offset);
+        has_derived_unit = SheketContract.toBool(cursor.getInt(COL_HAS_DERIVED_UNIT + offset));
+
+        derived_name = cursor.getString(COL_DERIVED_UNIT_NAME + offset);
+        derived_factor = cursor.getDouble(COL_DERIVED_UNIT_FACTOR + offset);
+        reorder_level = cursor.getDouble(COL_REORDER_LEVEL + offset);
+
         model_year = cursor.getString(COL_MODEL_YEAR + offset);
         part_number = cursor.getString(COL_PART_NUMBER + offset);
         bar_code = cursor.getString(COL_BAR_CODE + offset);
@@ -103,6 +134,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
     }
+    // TODO: implement all the serializing stuff for EVERY field
 
     private SItem(Parcel parcel) {
         company_id = parcel.readLong();

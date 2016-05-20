@@ -338,18 +338,19 @@ public class SheketContract {
         public static final String COLUMN_ITEM_ID = "_id";
         public static final String COLUMN_CATEGORY_ID = "category_id";
         public static final String COLUMN_NAME = "item_name";
-        public static final String COLUMN_MODEL_YEAR = "column_model_year";
-        public static final String COLUMN_PART_NUMBER = "column_part_number";
-        public static final String COLUMN_BAR_CODE = "bar_code";
-        public static final String COLUMN_HAS_BAR_CODE = "has_bar_code";
-        public static final String COLUMN_MANUAL_CODE = "manual_code";
-
-        public static final String COLUMN_REORDER_LEVEL = "reorder_level";
 
         public static final String COLUMN_UNIT_OF_MEASUREMENT = "units";
         public static final String COLUMN_HAS_DERIVED_UNIT = "has_derived";
         public static final String COLUMN_DERIVED_UNIT_NAME = "derived_name";
         public static final String COLUMN_DERIVED_UNIT_FACTOR = "derived_factor";
+
+        public static final String COLUMN_REORDER_LEVEL = "reorder_level";
+
+        public static final String COLUMN_MODEL_YEAR = "column_model_year";
+        public static final String COLUMN_PART_NUMBER = "column_part_number";
+        public static final String COLUMN_BAR_CODE = "bar_code";
+        public static final String COLUMN_HAS_BAR_CODE = "has_bar_code";
+        public static final String COLUMN_MANUAL_CODE = "manual_code";
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
