@@ -18,6 +18,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final String JSON_ITEM_ID = "item_id";
     public static final String JSON_ITEM_UUID = "client_uuid";
     public static final String JSON_ITEM_NAME = "item_name";
+    public static final String JSON_ITEM_CATEGORY = "category";
 
     public static final String JSON_UNIT_OF_MEASUREMENT = "units";
     public static final String JSON_HAS_DERIVED_UNIT = "has_derived_unit";
@@ -41,6 +42,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
             _f(ItemEntry.COLUMN_COMPANY_ID),
             _f(ItemEntry.COLUMN_ITEM_ID),
             _f(ItemEntry.COLUMN_NAME),
+            _f(ItemEntry.COLUMN_CATEGORY_ID),
 
             _f(ItemEntry.COLUMN_UNIT_OF_MEASUREMENT),
             _f(ItemEntry.COLUMN_HAS_DERIVED_UNIT),
@@ -80,26 +82,28 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_ITEM_ID = 1;
     public static final int COL_NAME = 2;
+    public static final int COL_CATEGORY = 3;
 
-    public static final int COL_UNIT_OF_MEASUREMENT = 3;
-    public static final int COL_HAS_DERIVED_UNIT = 4;
-    public static final int COL_DERIVED_UNIT_NAME = 5;
-    public static final int COL_DERIVED_UNIT_FACTOR = 6;
-    public static final int COL_REORDER_LEVEL = 7;
+    public static final int COL_UNIT_OF_MEASUREMENT = 4;
+    public static final int COL_HAS_DERIVED_UNIT = 5;
+    public static final int COL_DERIVED_UNIT_NAME = 6;
+    public static final int COL_DERIVED_UNIT_FACTOR = 7;
+    public static final int COL_REORDER_LEVEL = 8;
 
-    public static final int COL_MODEL_YEAR = 8;
-    public static final int COL_PART_NUMBER = 9;
-    public static final int COL_BAR_CODE = 10;
-    public static final int COL_HAS_BAR_CODE = 11;
-    public static final int COL_MANUAL_CODE = 12;
-    public static final int COL_CHANGE_INDICATOR = 13;
-    public static final int COL_CLIENT_UUID = 14;
+    public static final int COL_MODEL_YEAR = 9;
+    public static final int COL_PART_NUMBER = 10;
+    public static final int COL_BAR_CODE = 11;
+    public static final int COL_HAS_BAR_CODE = 12;
+    public static final int COL_MANUAL_CODE = 13;
+    public static final int COL_CHANGE_INDICATOR = 14;
+    public static final int COL_CLIENT_UUID = 15;
 
-    public static final int COL_LAST = 15;
+    public static final int COL_LAST = 16;
 
     public long company_id;
     public long item_id;
     public String name;
+    public long category;
 
     public int unit_of_measurement;
     public boolean has_derived_unit;
@@ -124,6 +128,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         company_id = cursor.getLong(COL_COMPANY_ID + offset);
         item_id = cursor.getLong(COL_ITEM_ID + offset);
         name = cursor.getString(COL_NAME + offset);
+        category = cursor.getLong(COL_CATEGORY + offset);
 
         unit_of_measurement = cursor.getInt(COL_UNIT_OF_MEASUREMENT + offset);
         has_derived_unit = SheketContract.toBool(cursor.getInt(COL_HAS_DERIVED_UNIT + offset));
@@ -145,6 +150,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         company_id = parcel.readLong();
         item_id = parcel.readLong();
         name = parcel.readString();
+        category = parcel.readLong();
         unit_of_measurement = parcel.readInt();
         has_derived_unit = SheketContract.toBool(parcel.readInt());
         derived_name = parcel.readString();
@@ -164,6 +170,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         values.put(ItemEntry.COLUMN_COMPANY_ID, company_id);
         values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
         values.put(ItemEntry.COLUMN_NAME, name);
+        values.put(ItemEntry.COLUMN_CATEGORY_ID, category);
 
         values.put(ItemEntry.COLUMN_UNIT_OF_MEASUREMENT, unit_of_measurement);
         values.put(ItemEntry.COLUMN_HAS_DERIVED_UNIT,
@@ -187,6 +194,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         JSONObject result = new JSONObject();
         result.put(JSON_ITEM_ID, item_id);
         result.put(JSON_ITEM_NAME, name);
+        result.put(JSON_ITEM_CATEGORY, category);
         result.put(JSON_UNIT_OF_MEASUREMENT, unit_of_measurement);
         result.put(JSON_HAS_DERIVED_UNIT, has_derived_unit);
         result.put(JSON_DERIVED_NAME, derived_name);
@@ -206,6 +214,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         dest.writeLong(company_id);
         dest.writeLong(item_id);
         dest.writeString(name);
+        dest.writeLong(category);
         dest.writeInt(unit_of_measurement);
         dest.writeInt(SheketContract.toInt(has_derived_unit));
         dest.writeString(derived_name);

@@ -43,6 +43,8 @@ import java.util.concurrent.TimeUnit;
 public class SheketService extends IntentService {
     private final String LOG_TAG = SheketService.class.getSimpleName();
 
+    public static final int SYNC_ROOT_CATEGORY_ID = -1;
+
     public static final OkHttpClient client = new OkHttpClient();
 
     public SheketService() {
@@ -272,9 +274,21 @@ public class SheketService extends IntentService {
                 JSONObject object = itemArray.getJSONObject(i);
 
                 SItem item = new SItem();
+                item.item_id = object.getLong(SItem.JSON_ITEM_ID);
                 item.name = object.getString(SItem.JSON_ITEM_NAME);
                 item.client_uuid = object.getString(SItem.JSON_ITEM_UUID);
-                item.item_id = object.getLong(SItem.JSON_ITEM_ID);
+                long category = object.getLong(SItem.JSON_ITEM_CATEGORY);
+                if (category == SYNC_ROOT_CATEGORY_ID) {
+                    category = CategoryEntry.ROOT_CATEGORY_ID;
+                }
+                item.category = category;
+
+                item.unit_of_measurement = object.getInt(SItem.JSON_UNIT_OF_MEASUREMENT);
+                item.has_derived_unit = object.getBoolean(SItem.JSON_HAS_DERIVED_UNIT);
+                item.derived_name = object.getString(SItem.JSON_DERIVED_NAME);
+                item.derived_factor = object.getDouble(SItem.JSON_DERIVED_FACTOR);
+                item.reorder_level = object.getDouble(SItem.JSON_REORDER_LEVEL);
+
                 item.model_year = object.getString(SItem.JSON_MODEL_YEAR);
                 item.part_number = object.getString(SItem.JSON_PART_NUMBER);
                 item.bar_code = object.getString(SItem.JSON_BAR_CODE);
@@ -408,6 +422,12 @@ public class SheketService extends IntentService {
         if (cursor.moveToFirst()) {
             do {
                 SItem item = new SItem(cursor);
+                /**
+                 * Convert from the local root category id to the one the server expects
+                 */
+                if (item.category == CategoryEntry.ROOT_CATEGORY_ID) {
+                    item.category = SYNC_ROOT_CATEGORY_ID;
+                }
                 switch (item.change_status) {
                     case ChangeTraceable.CHANGE_STATUS_CREATED:
                         createdItems.add(item);
