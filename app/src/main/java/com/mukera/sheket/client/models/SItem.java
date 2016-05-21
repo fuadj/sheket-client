@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.mukera.sheket.client.controller.items.ItemListFragment;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 
@@ -19,6 +18,13 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final String JSON_ITEM_ID = "item_id";
     public static final String JSON_ITEM_UUID = "client_uuid";
     public static final String JSON_ITEM_NAME = "item_name";
+
+    public static final String JSON_UNIT_OF_MEASUREMENT = "units";
+    public static final String JSON_HAS_DERIVED_UNIT = "has_derived_unit";
+    public static final String JSON_DERIVED_NAME = "derived_name";
+    public static final String JSON_DERIVED_FACTOR = "derived_factor";
+    public static final String JSON_REORDER_LEVEL = "reorder_level";
+
     public static final String JSON_MODEL_YEAR = "model_year";
     public static final String JSON_PART_NUMBER = "part_number";
     public static final String JSON_BAR_CODE = "bar_code";
@@ -134,12 +140,16 @@ public class SItem extends UUIDSyncable implements Parcelable {
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
     }
-    // TODO: implement all the serializing stuff for EVERY field
 
     private SItem(Parcel parcel) {
         company_id = parcel.readLong();
         item_id = parcel.readLong();
         name = parcel.readString();
+        unit_of_measurement = parcel.readInt();
+        has_derived_unit = SheketContract.toBool(parcel.readInt());
+        derived_name = parcel.readString();
+        derived_factor = parcel.readDouble();
+        reorder_level = parcel.readDouble();
         model_year = parcel.readString();
         part_number = parcel.readString();
         bar_code = parcel.readString();
@@ -154,10 +164,17 @@ public class SItem extends UUIDSyncable implements Parcelable {
         values.put(ItemEntry.COLUMN_COMPANY_ID, company_id);
         values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
         values.put(ItemEntry.COLUMN_NAME, name);
+
+        values.put(ItemEntry.COLUMN_UNIT_OF_MEASUREMENT, unit_of_measurement);
+        values.put(ItemEntry.COLUMN_HAS_DERIVED_UNIT,
+                SheketContract.toInt(has_derived_unit));
+        values.put(ItemEntry.COLUMN_DERIVED_UNIT_NAME, derived_name);
+        values.put(ItemEntry.COLUMN_DERIVED_UNIT_FACTOR, derived_factor);
+        values.put(ItemEntry.COLUMN_REORDER_LEVEL, reorder_level);
+
         values.put(ItemEntry.COLUMN_MODEL_YEAR, model_year);
         values.put(ItemEntry.COLUMN_PART_NUMBER, part_number);
         values.put(ItemEntry.COLUMN_BAR_CODE, bar_code);
-        // convert to int before sending it to content provider
         values.put(ItemEntry.COLUMN_HAS_BAR_CODE,
                 SheketContract.toInt(has_bar_code));
         values.put(ItemEntry.COLUMN_MANUAL_CODE, manual_code);
@@ -170,6 +187,11 @@ public class SItem extends UUIDSyncable implements Parcelable {
         JSONObject result = new JSONObject();
         result.put(JSON_ITEM_ID, item_id);
         result.put(JSON_ITEM_NAME, name);
+        result.put(JSON_UNIT_OF_MEASUREMENT, unit_of_measurement);
+        result.put(JSON_HAS_DERIVED_UNIT, has_derived_unit);
+        result.put(JSON_DERIVED_NAME, derived_name);
+        result.put(JSON_DERIVED_FACTOR, derived_factor);
+        result.put(JSON_REORDER_LEVEL, reorder_level);
         result.put(JSON_MODEL_YEAR, model_year);
         result.put(JSON_PART_NUMBER, part_number);
         result.put(JSON_BAR_CODE, bar_code);
@@ -184,6 +206,11 @@ public class SItem extends UUIDSyncable implements Parcelable {
         dest.writeLong(company_id);
         dest.writeLong(item_id);
         dest.writeString(name);
+        dest.writeInt(unit_of_measurement);
+        dest.writeInt(SheketContract.toInt(has_derived_unit));
+        dest.writeString(derived_name);
+        dest.writeDouble(derived_factor);
+        dest.writeDouble(reorder_level);
         dest.writeString(model_year);
         dest.writeString(part_number);
         dest.writeString(bar_code);
