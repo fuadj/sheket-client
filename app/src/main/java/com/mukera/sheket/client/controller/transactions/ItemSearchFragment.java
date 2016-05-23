@@ -66,10 +66,6 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         }
     }
 
-    boolean isSearchingBranchItems() {
-        return false;
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -84,12 +80,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                 Cursor cursor = mSearchAdapter.getCursor();
                 if (cursor != null && cursor.moveToPosition(position)) {
                     SItem item;
-                    if (isSearchingBranchItems()) {
-                        SBranchItem branchItem = new SBranchItem(cursor, true);
-                        item = branchItem.item;
-                    } else {
-                        item = new SItem(cursor);
-                    }
+                    item = new SItem(cursor);
 
                     if (mListener != null)
                         mListener.itemSelected(item);
@@ -159,19 +150,11 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
 
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         CursorLoader loader;
-        if (isSearchingBranchItems()) {
-            loader = new CursorLoader(getActivity(),
-                    BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId),
-                    SBranchItem.BRANCH_ITEM_WITH_DETAIL_COLUMNS,
-                    selection, null,
-                    sortOrder);
-        } else {
-            loader = new CursorLoader(getActivity(),
-                ItemEntry.buildBaseUri(company_id),
-                SItem.ITEM_COLUMNS,
-                selection, null,
-                sortOrder);
-        }
+        loader = new CursorLoader(getActivity(),
+            ItemEntry.buildBaseUri(company_id),
+            SItem.ITEM_COLUMNS,
+            selection, null,
+            sortOrder);
 
         return loader;
     }
