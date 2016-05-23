@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.items.item_searcher;
+package com.mukera.sheket.client.controller.transactions;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -19,7 +19,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.TextWatcherAdapter;
-import com.mukera.sheket.client.controller.transactions.TransactionActivity;
+import com.mukera.sheket.client.controller.items.item_searcher.ItemSearchResultListener;
 import com.mukera.sheket.client.controller.items.item_searcher.adapters.ItemSearchCursorAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -33,11 +33,9 @@ import com.mukera.sheket.client.utility.PrefUtil;
 public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final String SEARCH_BRANCH_ID_KEY = "search_branch_id_key";
 
-    //private boolean mIsBranchSpecified;
     private long mBranchId;
 
     private ListView mSearchList;
-    //private ItemSearchCursorAdapter mSearchAdapter;
     private CursorAdapter mSearchAdapter;
 
     private EditText mSearchText;
@@ -47,9 +45,6 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
     private Button mCancel, mFinish;
 
     private ItemSearchResultListener mListener;
-
-    //private CheckBox mCheckBoxSearchOnlyBranchItems;
-    //private boolean mSearchOnlyBranchItems = true;
 
     public void setInputFragmentListener(ItemSearchResultListener listener) {
         mListener = listener;
@@ -69,11 +64,6 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
         if (savedInstanceState == null) {
             Bundle args = getArguments();
             mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, TransactionActivity.BRANCH_ID_NONE);
-            //mIsBranchSpecified = TransactionActivity.isBranchSpecified(mBranchId);
-
-            // the default is to only search the current branch
-            // only admin users can the entire item list
-            //mSearchOnlyBranchItems = true;
 
             getLoaderManager().initLoader(LoaderId.SEARCH_RESULT_LOADER, null, this);
         }
@@ -81,7 +71,6 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
 
     boolean isSearchingBranchItems() {
         return false;
-        //return mIsBranchSpecified && mSearchOnlyBranchItems;
     }
 
     @Nullable
@@ -89,44 +78,8 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_manual_input, container, false);
 
-        //int user_permission = PrefUtil.getUserPermission(getActivity());
-        int user_permission = SPermission.getSingletonPermission().getPermissionType();
-
-        /*
-        mCheckBoxSearchOnlyBranchItems = (CheckBox) rootView.findViewById(R.id.check_box_manual_search_only_branch_items);
-        if (user_permission == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            mCheckBoxSearchOnlyBranchItems.setVisibility(View.VISIBLE);
-        } else {
-            mCheckBoxSearchOnlyBranchItems.setVisibility(View.GONE);
-        }
-
-        mCheckBoxSearchOnlyBranchItems.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mSearchOnlyBranchItems = isChecked;
-                mSearchAdapter = null;
-                if (isSearchingBranchItems()) {
-                    mSearchAdapter = new BranchItemSearchCursorAdapter(getContext());
-                } else {
-                    mSearchAdapter = new ItemSearchCursorAdapter(getContext());
-                }
-                mSearchList.setAdapter(mSearchAdapter);
-                getLoaderManager().restartLoader(LoaderId.SEARCH_RESULT_LOADER,
-                        null, ManualSearchFragment.this);
-            }
-        });
-        */
-
         mSearchList = (ListView) rootView.findViewById(R.id.list_view_manual_results);
-        //mSearchAdapter = new ItemSearchCursorAdapter(getActivity());
         mSearchAdapter = new ItemSearchCursorAdapter(getContext());
-        /*
-        if (mIsBranchSpecified) {
-            mSearchAdapter = new BranchItemSearchCursorAdapter(getContext());
-        } else {
-            mSearchAdapter = new ItemSearchCursorAdapter(getContext());
-        }
-        */
         mSearchList.setAdapter(mSearchAdapter);
         mSearchList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

@@ -14,7 +14,6 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.items.item_searcher.ItemSearchResultListener;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
-import com.mukera.sheket.client.controller.items.item_searcher.ManualSearchFragment;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
@@ -66,10 +65,6 @@ public class TransactionActivity extends AppCompatActivity {
 
             displayItemSearcher();
         }
-    }
-
-    public static boolean isBranchSpecified(long branch_id) {
-        return branch_id != BRANCH_ID_NONE;
     }
 
     interface DialogDismissListener {
