@@ -68,7 +68,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_manual_input, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_item_search, container, false);
 
         mSearchList = (ListView) rootView.findViewById(R.id.item_search_list_view_search_result);
         mSearchAdapter = new ItemSearchCursorAdapter(getContext());
