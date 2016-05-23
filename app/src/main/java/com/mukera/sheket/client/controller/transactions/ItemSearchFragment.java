@@ -148,15 +148,11 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%'";
         }
 
-        long company_id = PrefUtil.getCurrentCompanyId(getContext());
-        CursorLoader loader;
-        loader = new CursorLoader(getActivity(),
-            ItemEntry.buildBaseUri(company_id),
+        return new CursorLoader(getActivity(),
+            ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
             SItem.ITEM_COLUMNS,
             selection, null,
             sortOrder);
-
-        return loader;
     }
 
     void setSearchStatus(boolean found_items) {
