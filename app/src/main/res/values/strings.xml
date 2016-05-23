@@ -112,5 +112,6 @@
     <string name="local_last_branch_id">last_branch_id</string>
     <string name="local_last_item_id">last_item_id</string>
     <string name="local_last_trans_id">last_trans_id</string>
+    <string name="local_last_category_id">last_category_id</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.items;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +10,7 @@ import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,6 +24,7 @@ import com.mukera.sheket.client.UnitsOfMeasurement;
 import com.mukera.sheket.client.controller.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
+import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utility.PrefUtil;
 
 import java.util.UUID;
@@ -37,7 +40,6 @@ public class NewItemActivity extends AppCompatActivity {
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.new_item_container, new NewItemFragment())
-                .addToBackStack(null)
                 .commit();
     }
 
@@ -48,7 +50,12 @@ public class NewItemActivity extends AppCompatActivity {
         private EditText mDerivedName, mDerivedFactor, mFormula;
         private TextView mTextBundleName, mTextBundleFactor;
 
+        private Button mCategoryBtn;
+
         private Button mCancel, mOk;
+
+        private long mSelectedCategoryId = SheketContract.CategoryEntry.ROOT_CATEGORY_ID;
+        private SCategory mSelectedCategory = null;
 
         boolean isEmpty(Editable e) {
             return e.toString().trim().isEmpty();
@@ -167,6 +174,40 @@ public class NewItemActivity extends AppCompatActivity {
 
             final AppCompatActivity activity = (AppCompatActivity)getActivity();
 
+            mCategoryBtn = (Button) rootView.findViewById(R.id.btn_new_item_category_selector);
+            if (mSelectedCategoryId == SheketContract.CategoryEntry.ROOT_CATEGORY_ID) {
+                mCategoryBtn.setText("Not Set");
+            } else {
+                mCategoryBtn.setText(mSelectedCategory.name);
+            }
+            mCategoryBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getActivity().getWindow().getDecorView().getWindowToken(), 0);
+
+                    CategorySelectionFragment fragment = CategorySelectionFragment.
+                            newInstance(mSelectedCategoryId);
+                    fragment.setListener(new CategorySelectionFragment.SelectionListener() {
+                        @Override
+                        public void okSelected(long category_id, SCategory category) {
+                            mSelectedCategoryId = category_id;
+                            mSelectedCategory = category;
+                            activity.getSupportFragmentManager().popBackStack();
+                        }
+
+                        @Override
+                        public void cancelSelected() {
+                            activity.getSupportFragmentManager().popBackStack();
+                        }
+                    });
+                    activity.getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.new_item_container, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+            });
+
             mOk = (Button) rootView.findViewById(R.id.btn_new_item_ok);
             mOk.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -180,6 +221,8 @@ public class NewItemActivity extends AppCompatActivity {
                     final int has_derived_unit = SheketContract.toInt(
                             mHasDerived.isChecked());
                     final String derived_name = t(mDerivedName.getText().toString());
+
+                    final long category_id = mSelectedCategoryId;
 
                     String factor = t(mDerivedFactor.getText().toString());
                     final double derived_factor = factor.isEmpty() ? 0 : Double.valueOf(factor);
@@ -198,6 +241,7 @@ public class NewItemActivity extends AppCompatActivity {
                             ContentValues values = new ContentValues();
                             values.put(ItemEntry.COLUMN_ITEM_ID, new_item_id);
                             values.put(ItemEntry.COLUMN_NAME, name);
+                            values.put(ItemEntry.COLUMN_CATEGORY_ID, category_id);
 
                             values.put(ItemEntry.COLUMN_UNIT_OF_MEASUREMENT, unit);
                             values.put(ItemEntry.COLUMN_HAS_DERIVED_UNIT, has_derived_unit);
@@ -223,7 +267,6 @@ public class NewItemActivity extends AppCompatActivity {
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    // TODO: notify that we created successfully
                                     activity.finish();
                                 }
                             });
@@ -236,7 +279,6 @@ public class NewItemActivity extends AppCompatActivity {
             mCancel.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // TODO: notify cancel pressed
                     activity.finish();
                 }
             });
@@ -250,4 +292,14 @@ public class NewItemActivity extends AppCompatActivity {
 
     }
 
+    /*
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+    */
 }

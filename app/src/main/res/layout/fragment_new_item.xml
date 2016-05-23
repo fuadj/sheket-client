@@ -82,8 +82,23 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Units:"
+                    android:text="Category:"
+                    android:textColor="#000000"
+                    app:layout_gravity="center_vertical" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Not Set"
+                    android:id="@+id/btn_new_item_category_selector"
                     app:layout_row="4"
+                    app:layout_column="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Units:"
+                    app:layout_row="5"
                     app:layout_column="0"
                     android:textColor="#000000"
                     app:layout_gravity="center_vertical"
@@ -93,7 +108,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/spinner_new_item_unit_selection"
-                    app:layout_row="4"
+                    app:layout_row="5"
                     app:layout_column="1"
                     app:layout_gravity="fill_horizontal" />
 
@@ -101,7 +116,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Has Bundle:"
-                    app:layout_row="5"
+                    app:layout_row="6"
                     app:layout_column="0"
                     app:layout_gravity="center_vertical"
                     app:layout_rowWeight="1"
@@ -111,7 +126,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/check_box_new_item_has_bundle"
-                    app:layout_row="5"
+                    app:layout_row="6"
                     app:layout_column="1"
                     app:layout_gravity="center_vertical" />
 
@@ -120,7 +135,7 @@
                     android:layout_height="wrap_content"
                     android:text="Bundle Name:"
                     android:id="@+id/text_view_new_item_bundle_name"
-                    app:layout_row="6"
+                    app:layout_row="7"
                     app:layout_column="0"
                     android:textColor="#000000"
                     app:layout_rowWeight="1"
@@ -130,7 +145,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/edit_text_new_item_bundle_name"
-                    app:layout_row="6"
+                    app:layout_row="7"
                     app:layout_column="1"
                     app:layout_gravity="fill_horizontal" />
 
@@ -139,7 +154,7 @@
                     android:layout_height="wrap_content"
                     android:text="Bundle Factor:"
                     android:id="@+id/text_view_new_item_bundle_factor"
-                    app:layout_row="7"
+                    app:layout_row="8"
                     app:layout_column="0"
                     android:textColor="#000000"
                     app:layout_rowWeight="1"
@@ -151,7 +166,7 @@
                     android:inputType="numberDecimal"
                     android:ems="10"
                     android:id="@+id/edit_text_new_item_bundle_factor"
-                    app:layout_row="7"
+                    app:layout_row="8"
                     app:layout_column="1"
                     app:layout_gravity="fill_horizontal" />
 
@@ -159,7 +174,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Rate:"
-                    app:layout_row="8"
+                    app:layout_row="9"
                     app:layout_column="0"
                     app:layout_rowWeight="1"
                     app:layout_gravity="center_vertical" />
@@ -168,7 +183,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/edt_text_new_item_formula"
-                    app:layout_row="8"
+                    app:layout_row="9"
                     app:layout_column="1"
                     app:layout_gravity="fill_horizontal"
                     android:textColor="#4e4e4e" />
@@ -180,7 +195,7 @@
                     app:layout_rowWeight="1"
                     android:text="Model Year:"
                     app:layout_column="0"
-                    app:layout_row="9"
+                    app:layout_row="10"
                     app:layout_gravity="center_vertical" />
 
                 <EditText
@@ -189,13 +204,13 @@
                     android:id="@+id/edit_text_new_item_model_year"
                     android:enabled="true"
                     app:layout_column="1"
-                    app:layout_row="9"
+                    app:layout_row="10"
                     app:layout_gravity="fill_horizontal" />
 
                 <TextView
                     app:layout_rowWeight="1"
                     app:layout_column="0"
-                    app:layout_row="10"
+                    app:layout_row="11"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
@@ -204,7 +219,7 @@
 
                 <EditText
                     app:layout_column="1"
-                    app:layout_row="10"
+                    app:layout_row="11"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/edit_text_new_item_part_number"
