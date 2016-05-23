@@ -20,7 +20,6 @@ import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
-import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.utility.PrefUtil;
 
@@ -71,7 +70,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_manual_input, container, false);
 
-        mSearchList = (ListView) rootView.findViewById(R.id.list_view_manual_results);
+        mSearchList = (ListView) rootView.findViewById(R.id.item_search_list_view_search_result);
         mSearchAdapter = new ItemSearchCursorAdapter(getContext());
         mSearchList.setAdapter(mSearchAdapter);
         mSearchList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -88,7 +87,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
             }
         });
 
-        mCancel = (Button) rootView.findViewById(R.id.btn_manual_cancel);
+        mCancel = (Button) rootView.findViewById(R.id.item_search_btn_cancel);
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,7 +95,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     mListener.cancelTransaction();
             }
         });
-        mFinish = (Button) rootView.findViewById(R.id.btn_manual_finish);
+        mFinish = (Button) rootView.findViewById(R.id.item_search_btn_finish);
         mFinish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,9 +103,9 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     mListener.finishTransaction();
             }
         });
-        mResultLabel = (TextView) rootView.findViewById(R.id.text_view_manual_result_label);
+        mResultLabel = (TextView) rootView.findViewById(R.id.item_search_text_view_search_result);
 
-        mSearchText = (EditText) rootView.findViewById(R.id.edit_text_manual_code);
+        mSearchText = (EditText) rootView.findViewById(R.id.item_search_edit_text_keyword);
         mSearchText.addTextChangedListener(new TextWatcherAdapter(){
             @Override
             public void afterTextChanged(Editable s) {
@@ -116,7 +115,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
             }
         });
 
-        final Button searchBtn = (Button) rootView.findViewById(R.id.btn_manual_search);
+        final Button searchBtn = (Button) rootView.findViewById(R.id.item_search_btn_search);
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
