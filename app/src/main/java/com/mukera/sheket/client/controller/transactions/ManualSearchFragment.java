@@ -19,12 +19,10 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.TextWatcherAdapter;
-import com.mukera.sheket.client.controller.items.item_searcher.ItemSearchResultListener;
-import com.mukera.sheket.client.controller.items.item_searcher.adapters.ItemSearchCursorAdapter;
+import com.mukera.sheket.client.controller.transactions.adapters.ItemSearchCursorAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
-import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utility.PrefUtil;
 
 /**
@@ -201,5 +199,15 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
     public void onLoaderReset(Loader loader) {
         mSearchAdapter.swapCursor(null);
         setSearchStatus(false);
+    }
+
+    /**
+     * Created by gamma on 3/5/16.
+     */
+    public interface ItemSearchResultListener {
+        void itemSelected(SItem item);
+
+        void finishTransaction();
+        void cancelTransaction();
     }
 }

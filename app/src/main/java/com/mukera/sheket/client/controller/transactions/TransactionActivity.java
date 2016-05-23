@@ -11,7 +11,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.items.item_searcher.ItemSearchResultListener;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -131,7 +130,7 @@ public class TransactionActivity extends AppCompatActivity {
         ManualSearchFragment fragment = ManualSearchFragment.newInstance(mBranchId);
         final AppCompatActivity activity = this;
         final String SEARCH_FRAGMENT_TAG = "search_fragment_tag";
-        fragment.setInputFragmentListener(new ItemSearchResultListener() {
+        fragment.setInputFragmentListener(new ManualSearchFragment.ItemSearchResultListener() {
             @Override
             public void itemSelected(SItem item) {
                 displayQuantityDialog(item, false, 0, null);

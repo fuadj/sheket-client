@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.items.item_searcher.adapters;
+package com.mukera.sheket.client.controller.transactions.adapters;
 
 import android.content.Context;
 import android.database.Cursor;

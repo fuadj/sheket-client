@@ -13,7 +13,8 @@ import android.view.ViewGroup;
 import android.widget.*;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
-import com.mukera.sheket.client.controller.items.item_searcher.adapters.ItemSearchCursorAdapter;
+import com.mukera.sheket.client.controller.transactions.adapters.ItemSearchCursorAdapter;
+import com.mukera.sheket.client.controller.transactions.ManualSearchFragment;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
@@ -30,7 +31,7 @@ public class ScanResultFragment extends Fragment implements LoaderCallbacks<Curs
     private ListView mResultList;
     private ItemSearchCursorAdapter mScanAdapter;
 
-    private ItemSearchResultListener mListener;
+    private ManualSearchFragment.ItemSearchResultListener mListener;
 
     public static ScanResultFragment newInstance(String barcode) {
         Bundle args = new Bundle();
@@ -42,7 +43,7 @@ public class ScanResultFragment extends Fragment implements LoaderCallbacks<Curs
         return fragment;
     }
 
-    public void setItemSelectedListener(ItemSearchResultListener listener) {
+    public void setItemSelectedListener(ManualSearchFragment.ItemSearchResultListener listener) {
         mListener = listener;
     }
 
