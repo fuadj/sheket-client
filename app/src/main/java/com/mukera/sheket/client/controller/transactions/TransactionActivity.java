@@ -16,6 +16,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.*;
 import com.mukera.sheket.client.utility.DbUtil;
 import com.mukera.sheket.client.utility.PrefUtil;
@@ -66,10 +67,6 @@ public class TransactionActivity extends AppCompatActivity {
         }
     }
 
-    interface DialogDismissListener {
-        void dialogDismissed();
-    }
-
     List<SBranch> getBranches() {
         if (mBranches == null) {
             long company_id = PrefUtil.getCurrentCompanyId(this);
@@ -92,48 +89,15 @@ public class TransactionActivity extends AppCompatActivity {
         return mBranches;
     }
 
-    void displayQuantityDialog(SItem item, final boolean is_editing, final int edit_position,
-                               final DialogDismissListener listener) {
-        FragmentManager fm = getSupportFragmentManager();
-
-        final TransDialog.QtyDialog dialog = TransDialog.newInstance(mCurrentLaunch == LAUNCH_TYPE_BUY);
-
-        dialog.setItem(item);
-        dialog.setBranches(getBranches());
-
-        dialog.setListener(new TransDialog.TransQtyDialogListener() {
-            @Override
-            public void dialogOk(STransactionItem transactionItem) {
-                dialog.dismiss();
-
-                if (!is_editing) {
-                    mTransactionItemList.add(transactionItem);
-                } else {
-                    mTransactionItemList.set(edit_position, transactionItem);
-                }
-                if (listener != null)
-                    listener.dialogDismissed();
-            }
-
-            @Override
-            public void dialogCancel() {
-                dialog.dismiss();
-                if (listener != null)
-                    listener.dialogDismissed();
-            }
-
-        });
-        dialog.show(fm, "Quantity");
-    }
-
     void displayItemSearcher() {
-        ItemSearchFragment fragment = ItemSearchFragment.newInstance(mBranchId);
+        ItemSearchFragment fragment = ItemSearchFragment.newInstance(mBranchId,
+                mCurrentLaunch == LAUNCH_TYPE_BUY);
         final AppCompatActivity activity = this;
-        final String SEARCH_FRAGMENT_TAG = "search_fragment_tag";
         fragment.setResultListener(new ItemSearchFragment.SearchResultListener() {
+
             @Override
-            public void itemSelected(SItem item) {
-                displayQuantityDialog(item, false, 0, null);
+            public void transactionItemAdded(STransactionItem transactionItem) {
+                mTransactionItemList.add(transactionItem);
             }
 
             @Override
@@ -169,16 +133,32 @@ public class TransactionActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void editItemAtPosition(List<STransactionItem> itemList, int position) {
+                    public void editItemAtPosition(List<STransactionItem> itemList, final int position) {
                         STransactionItem tranItem = itemList.get(position);
                         SItem item = tranItem.item;
-                        DialogDismissListener listener = new DialogDismissListener() {
+
+                        FragmentManager fm = getSupportFragmentManager();
+                        final TransDialog.QtyDialog dialog = TransDialog.newInstance(mCurrentLaunch == LAUNCH_TYPE_BUY);
+                        dialog.setItem(item);
+                        dialog.setBranches(getBranches());
+
+                        dialog.setListener(new TransDialog.TransQtyDialogListener() {
                             @Override
-                            public void dialogDismissed() {
+                            public void dialogOk(STransactionItem transactionItem) {
+                                dialog.dismiss();
+
+                                mTransactionItemList.set(position, transactionItem);
                                 summaryFragment.refreshAdapter();
                             }
-                        };
-                        displayQuantityDialog(item, true, position, listener);
+
+                            @Override
+                            public void dialogCancel() {
+                                dialog.dismiss();
+                                summaryFragment.refreshAdapter();
+                            }
+
+                        });
+                        dialog.show(fm, "Set Item Quantity");
                     }
 
                     @Override
@@ -190,7 +170,7 @@ public class TransactionActivity extends AppCompatActivity {
                 summaryFragment.mItemList = mTransactionItemList;
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.transaction_action_container, summaryFragment)
-                        .addToBackStack(SEARCH_FRAGMENT_TAG)
+                        .addToBackStack(null)
                         .commit();
             }
 

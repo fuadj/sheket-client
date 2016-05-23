@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.content.Loader;
@@ -20,16 +21,23 @@ import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utility.PrefUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by gamma on 3/5/16.
  */
 public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final String SEARCH_BRANCH_ID_KEY = "search_branch_id_key";
+    public static final String SEARCH_TRANS_TYPE = "trans_type";
 
     private long mBranchId;
+    private boolean mIsBuyingTransaction;
 
     private ListView mSearchList;
     private CursorAdapter mSearchAdapter;
@@ -41,15 +49,17 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     private Button mCancel, mFinish;
 
     private SearchResultListener mListener;
+    private List<SBranch> mBranches;
 
     public void setResultListener(SearchResultListener listener) {
         mListener = listener;
     }
 
-    public static ItemSearchFragment newInstance(long branch_id) {
+    public static ItemSearchFragment newInstance(long branch_id, boolean is_buying_trans) {
         ItemSearchFragment fragment = new ItemSearchFragment();
         Bundle args = new Bundle();
         args.putLong(SEARCH_BRANCH_ID_KEY, branch_id);
+        args.putBoolean(SEARCH_TRANS_TYPE, is_buying_trans);
         fragment.setArguments(args);
         return fragment;
     }
@@ -60,6 +70,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         if (savedInstanceState == null) {
             Bundle args = getArguments();
             mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, TransactionActivity.BRANCH_ID_NONE);
+            mIsBuyingTransaction = args.getBoolean(SEARCH_TRANS_TYPE, true);
 
             getLoaderManager().initLoader(LoaderId.SEARCH_RESULT_LOADER, null, this);
         }
@@ -81,8 +92,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     SItem item;
                     item = new SItem(cursor);
 
-                    if (mListener != null)
-                        mListener.itemSelected(item);
+                    displayQuantityDialog(item);
                 }
             }
         });
@@ -125,6 +135,50 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         });
 
         return rootView;
+    }
+
+    List<SBranch> getBranches() {
+        if (mBranches == null) {
+            long company_id = PrefUtil.getCurrentCompanyId(getContext());
+
+            String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
+            Cursor cursor = getActivity().getContentResolver().query(BranchEntry.buildBaseUri(company_id),
+                    SBranch.BRANCH_COLUMNS, null, null, sortOrder);
+            if (cursor != null && cursor.moveToFirst()) {
+                mBranches = new ArrayList<>();
+                do {
+                    SBranch branch = new SBranch(cursor);
+
+                    // we don't want the current branch to be in the list of "transfer branches"
+                    if (branch.branch_id != mBranchId) {
+                        mBranches.add(branch);
+                    }
+                } while (cursor.moveToNext());
+            }
+        }
+        return mBranches;
+    }
+
+    void displayQuantityDialog(SItem item) {
+        FragmentManager fm = getActivity().getSupportFragmentManager();
+
+        final TransDialog.QtyDialog dialog = TransDialog.newInstance(
+                mIsBuyingTransaction);
+        dialog.setItem(item);
+        dialog.setBranches(getBranches());
+        dialog.setListener(new TransDialog.TransQtyDialogListener() {
+            @Override
+            public void dialogCancel() {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void dialogOk(STransaction.STransactionItem transactionItem) {
+                if (mListener != null)
+                    mListener.transactionItemAdded(transactionItem);
+            }
+        });
+        dialog.show(fm, "Set Item Quantity");
     }
 
     @Override
@@ -179,7 +233,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     }
 
     public interface SearchResultListener {
-        void itemSelected(SItem item);
+        void transactionItemAdded(STransaction.STransactionItem transactionItem);
 
         void finishTransaction();
         void cancelTransaction();
