@@ -147,7 +147,7 @@ public class TransactionActivity extends AppCompatActivity {
 
                     @Override
                     public void backSelected() {
-                        activity.getSupportFragmentManager().popBackStack(SEARCH_FRAGMENT_TAG, 0);
+                        activity.getSupportFragmentManager().popBackStack();
                     }
 
                     @Override
