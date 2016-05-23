@@ -157,7 +157,7 @@ public class SheketContract {
          * SO, create another "dummy" category for the root to refer it to as parent,
          * and this problem will be solved.
          */
-        public static final long ROOT_CATEGORY_PARENT_ID = -2;
+        public static final long _ROOT_CATEGORY_PARENT_ID = -2;
 
         /**
          * The root category is the parent of the "first" level categories.
@@ -183,6 +183,7 @@ public class SheketContract {
         public static final String COLUMN_CATEGORY_ID = "_id";
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_PARENT_ID = "parent_id";
+        public static final String COLUMN_NUM_SUB_CHILDREN = "sub_children";
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();

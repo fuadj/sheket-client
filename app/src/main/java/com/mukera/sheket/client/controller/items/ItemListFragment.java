@@ -66,7 +66,7 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
             });
         }
 
-        mItemList = (ListView) rootView.findViewById(R.id.list_view_item_list);
+        mItemList = (ListView) rootView.findViewById(R.id.all_item_list_view);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemList.setAdapter(mItemDetailAdapter);
         mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

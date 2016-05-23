@@ -40,6 +40,9 @@ public class SheketProvider extends ContentProvider {
     private static final int MEMBER = 700;
     private static final int MEMBER_WITH_ID = 701;
 
+    private static final int CATEGORY = 800;
+    private static final int CATEGORY_WITH_ID = 801;
+
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
@@ -102,7 +105,7 @@ public class SheketProvider extends ContentProvider {
 
         matcher.addURI(authority, SheketContract.PATH_COMPANY, COMPANY);
         /**
-         * '#' have been replaced with '*' to allow matching -ve numbers.
+         * IMPORTANT: '#' have been replaced with '*' to allow matching -ve numbers.
          * This might create a bug matching non-number stuff(like text)
          */
         matcher.addURI(authority, SheketContract.PATH_COMPANY + "/*", COMPANY_WITH_ID);
@@ -129,6 +132,8 @@ public class SheketProvider extends ContentProvider {
         matcher.addURI(authority, SheketContract.PATH_MEMBER + "/*", MEMBER);
         matcher.addURI(authority, SheketContract.PATH_MEMBER + "/*/*", MEMBER_WITH_ID);
 
+        matcher.addURI(authority, SheketContract.PATH_CATEGORY + "/*", CATEGORY);
+        matcher.addURI(authority, SheketContract.PATH_CATEGORY + "/*/*", CATEGORY_WITH_ID);
         return matcher;
     }
 
@@ -188,6 +193,17 @@ public class SheketProvider extends ContentProvider {
                     selectionArgs = null;
                 }
                 column_company_id = MemberEntry._full(MemberEntry.COLUMN_COMPANY_ID);
+                break;
+            }
+
+            case CATEGORY_WITH_ID:
+            case CATEGORY: {
+                tableName = CategoryEntry.TABLE_NAME;
+                if (uri_match == CATEGORY_WITH_ID) {
+                    selection = CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
+                    selectionArgs = null;
+                }
+                column_company_id = CategoryEntry._full(CategoryEntry.COLUMN_COMPANY_ID);
                 break;
             }
 
@@ -346,6 +362,11 @@ public class SheketProvider extends ContentProvider {
             case MEMBER:
                 return MemberEntry.CONTENT_TYPE;
 
+            case CATEGORY_WITH_ID:
+                return CategoryEntry.CONTENT_ITEM_TYPE;
+            case CATEGORY:
+                return CategoryEntry.CONTENT_TYPE;
+
             case BRANCH_WITH_ID:
                 return BranchEntry.CONTENT_ITEM_TYPE;
             case BRANCH:
@@ -423,6 +444,21 @@ public class SheketProvider extends ContentProvider {
                 }
                 if (_id != insert_error) {
                     returnUri = MemberEntry.buildMemberUri(company_id, _id);
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            }
+
+            case CATEGORY: {
+                long _id;
+                if (replace) {
+                    _id = db.replace(CategoryEntry.TABLE_NAME, null, values);
+                } else {
+                    _id = db.insert(CategoryEntry.TABLE_NAME, null, values);
+                }
+                if (_id != insert_error) {
+                    returnUri = CategoryEntry.buildCategoryUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -528,6 +564,9 @@ public class SheketProvider extends ContentProvider {
             case MEMBER:
                 tableName = MemberEntry.TABLE_NAME;
                 break;
+            case CATEGORY:
+                tableName = CategoryEntry.TABLE_NAME;
+                break;
             case BRANCH:
                 tableName = BranchEntry.TABLE_NAME;
                 break;
@@ -566,6 +605,9 @@ public class SheketProvider extends ContentProvider {
         switch (match) {
             case COMPANY:
                 tableName = CompanyEntry.TABLE_NAME;
+                break;
+            case CATEGORY:
+                tableName = CategoryEntry.TABLE_NAME;
                 break;
             case MEMBER:
                 tableName = MemberEntry.TABLE_NAME;
@@ -608,6 +650,9 @@ public class SheketProvider extends ContentProvider {
                 break;
             case MEMBER:
                 tableName = MemberEntry.TABLE_NAME;
+                break;
+            case CATEGORY:
+                tableName = CategoryEntry.TABLE_NAME;
                 break;
             case BRANCH:
                 tableName = BranchEntry.TABLE_NAME;

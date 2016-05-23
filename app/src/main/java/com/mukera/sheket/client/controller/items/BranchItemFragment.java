@@ -1,7 +1,5 @@
 package com.mukera.sheket.client.controller.items;
 
-import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -35,8 +33,6 @@ import com.mukera.sheket.client.utility.PrefUtil;
  * Created by gamma on 3/27/16.
  */
 public class BranchItemFragment extends Fragment implements LoaderCallbacks<Cursor> {
-    final int NEW_ITEM_REQUEST = 1;
-
     private static final String BRANCH_ID_KEY = "branch_id_key";
 
     private long mBranchId;
@@ -68,13 +64,6 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
         intent.putExtra(TransactionActivity.LAUNCH_ACTION_KEY, action);
         intent.putExtra(TransactionActivity.LAUNCH_BRANCH_ID_KEY, branch_id);
         startActivity(intent);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == NEW_ITEM_REQUEST) {
-            // Loader handles the adding of new data, we don't need to request
-        }
     }
 
     int getLoaderId() {
@@ -111,7 +100,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
             }
         });
 
-        mBranchItemList = (ListView) rootView.findViewById(R.id.list_view_item_list);
+        mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view);
         mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
         final AppCompatActivity activity = (AppCompatActivity)getActivity();
         mBranchItemAdapter.setListener(new BranchItemCursorAdapter.ItemSelectionListener() {

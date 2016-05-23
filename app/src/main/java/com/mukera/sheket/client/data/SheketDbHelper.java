@@ -217,7 +217,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
              * We finally create the root and set its parent to the parent. I know, it is confusing.
              */
             values.put(CategoryEntry.COLUMN_COMPANY_ID, CompanyBase.DUMMY_COMPANY_ID);
-            values.put(CategoryEntry.COLUMN_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            values.put(CategoryEntry.COLUMN_CATEGORY_ID, CategoryEntry._ROOT_CATEGORY_PARENT_ID);
             values.put(CategoryEntry.COLUMN_NAME, "__root's parent__");
             values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_SYNCED);
 
@@ -227,10 +227,10 @@ public class SheketDbHelper extends SQLiteOpenHelper {
             }
 
             // now update the root's parent to have its parent set to itself
-            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry._ROOT_CATEGORY_PARENT_ID);
             long num_updated = db.update(CategoryEntry.TABLE_NAME, values,
                     CategoryEntry.COLUMN_CATEGORY_ID + " = ?",
-                    new String[]{String.valueOf(CategoryEntry.ROOT_CATEGORY_PARENT_ID)});
+                    new String[]{String.valueOf(CategoryEntry._ROOT_CATEGORY_PARENT_ID)});
             if (num_updated != 1) {
                 throw new SheketDbException("CreateRootCategory update root's category parent error");
             }
@@ -239,7 +239,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
             values.put(CategoryEntry.COLUMN_COMPANY_ID, CompanyBase.DUMMY_COMPANY_ID);
             values.put(CategoryEntry.COLUMN_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_ID);
             values.put(CategoryEntry.COLUMN_NAME, "__root category__");
-            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry.ROOT_CATEGORY_PARENT_ID);
+            values.put(CategoryEntry.COLUMN_PARENT_ID, CategoryEntry._ROOT_CATEGORY_PARENT_ID);
             values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_SYNCED);
 
             row_id = db.insert(CategoryEntry.TABLE_NAME, null, values);

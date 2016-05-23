@@ -61,7 +61,7 @@
             android:layout_width="?attr/actionBarSize"
             android:layout_height="?attr/actionBarSize"
             android:layout_gravity="end"
-            android:src="@drawable/ic_action_new"
+            android:src="@drawable/ic_action_new_light"
             style="@style/Widget.AppCompat.ActionButton" />
 
     </FrameLayout>

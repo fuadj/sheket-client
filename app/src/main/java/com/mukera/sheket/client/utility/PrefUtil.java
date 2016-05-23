@@ -200,7 +200,8 @@ public class PrefUtil {
      * All these ids are -ve, this is b/c we will be replacing
      * them with a globally unique id after syncing with the server.
      * So, to avoid any collisions with the local and server ids, all
-     * locally generated ids are negative.
+     * locally generated ids are negative. We add -1
+     * to get a new id for each entity.
      */
     public static long getNewBranchId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -239,6 +240,19 @@ public class PrefUtil {
 
         long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
         return prefs.getLong(context.getString(R.string.local_last_trans_id), default_id) - 1;
+    }
+
+    public static long getNewCategoryId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getLong(context.getString(R.string.local_last_category_id), default_id) - 1;
+    }
+
+    public static void setNewCategoryId(Context context, long category_id) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putLong(context.getString(R.string.local_last_category_id), category_id);
+        editor.commit();
     }
 
     public static void setIpAddress(Context context, String address) {
