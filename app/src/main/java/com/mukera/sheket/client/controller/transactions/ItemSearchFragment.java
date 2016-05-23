@@ -44,7 +44,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
 
     private ItemSearchResultListener mListener;
 
-    public void setInputFragmentListener(ItemSearchResultListener listener) {
+    public void setResultListener(ItemSearchResultListener listener) {
         mListener = listener;
     }
 
@@ -201,9 +201,6 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         setSearchStatus(false);
     }
 
-    /**
-     * Created by gamma on 3/5/16.
-     */
     public interface ItemSearchResultListener {
         void itemSelected(SItem item);
 
