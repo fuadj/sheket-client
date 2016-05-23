@@ -127,10 +127,10 @@ public class TransactionActivity extends AppCompatActivity {
     }
 
     void displayItemSearcher() {
-        ManualSearchFragment fragment = ManualSearchFragment.newInstance(mBranchId);
+        ItemSearchFragment fragment = ItemSearchFragment.newInstance(mBranchId);
         final AppCompatActivity activity = this;
         final String SEARCH_FRAGMENT_TAG = "search_fragment_tag";
-        fragment.setInputFragmentListener(new ManualSearchFragment.ItemSearchResultListener() {
+        fragment.setInputFragmentListener(new ItemSearchFragment.ItemSearchResultListener() {
             @Override
             public void itemSelected(SItem item) {
                 displayQuantityDialog(item, false, 0, null);

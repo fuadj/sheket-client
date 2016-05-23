@@ -28,7 +28,7 @@ import com.mukera.sheket.client.utility.PrefUtil;
 /**
  * Created by gamma on 3/5/16.
  */
-public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final String SEARCH_BRANCH_ID_KEY = "search_branch_id_key";
 
     private long mBranchId;
@@ -48,8 +48,8 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
         mListener = listener;
     }
 
-    public static ManualSearchFragment newInstance(long branch_id) {
-        ManualSearchFragment fragment = new ManualSearchFragment();
+    public static ItemSearchFragment newInstance(long branch_id) {
+        ItemSearchFragment fragment = new ItemSearchFragment();
         Bundle args = new Bundle();
         args.putLong(SEARCH_BRANCH_ID_KEY, branch_id);
         fragment.setArguments(args);
@@ -122,7 +122,7 @@ public class ManualSearchFragment extends Fragment implements LoaderCallbacks<Cu
             public void afterTextChanged(Editable s) {
                 mCurrSearch = s.toString().trim().toUpperCase();
                 getLoaderManager().restartLoader(LoaderId.SEARCH_RESULT_LOADER,
-                        null, ManualSearchFragment.this);
+                        null, ItemSearchFragment.this);
             }
         });
 
