@@ -9,38 +9,6 @@
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <!--
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
-
-        <ImageButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:src="@drawable/barcode"
-            android:id="@+id/btn_manual_scan"
-            android:layout_gravity="left|center_vertical" />
-
-        <android.support.v4.widget.Space
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/view2"
-            android:layout_weight="1" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Only Branch Items"
-            android:id="@+id/check_box_manual_search_only_branch_items"
-            android:layout_gravity="center_vertical|right"
-            android:textSize="20dp"
-            android:checked="true"
-            android:clickable="true" />
-    </LinearLayout>
-    -->
-
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
