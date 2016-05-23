@@ -18,7 +18,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.TextWatcherAdapter;
+import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
@@ -41,9 +41,9 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     private String mCurrSearch;
     private Button mCancel, mFinish;
 
-    private ItemSearchResultListener mListener;
+    private SearchResultListener mListener;
 
-    public void setResultListener(ItemSearchResultListener listener) {
+    public void setResultListener(SearchResultListener listener) {
         mListener = listener;
     }
 
@@ -200,7 +200,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         setSearchStatus(false);
     }
 
-    public interface ItemSearchResultListener {
+    public interface SearchResultListener {
         void itemSelected(SItem item);
 
         void finishTransaction();

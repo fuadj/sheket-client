@@ -1,6 +1,5 @@
 package com.mukera.sheket.client.controller.items;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -14,7 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import com.mukera.sheket.client.controller.TextWatcherAdapter;
+import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.models.SBranchItem;
 
 /**

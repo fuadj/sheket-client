@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import com.mukera.sheket.client.ConfigData;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.TextWatcherAdapter;
+import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.utility.PrefUtil;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;

@@ -27,7 +27,7 @@ import android.widget.*;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.NumberFormatter;
+import com.mukera.sheket.client.controller.util.NumberFormatter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;

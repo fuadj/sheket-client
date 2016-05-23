@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.UnitsOfMeasurement;
-import com.mukera.sheket.client.controller.TextWatcherAdapter;
+import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.models.SCategory;
