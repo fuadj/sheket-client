@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.item_searcher;
+package com.mukera.sheket.client.controller.items.item_searcher;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
-import com.mukera.sheket.client.controller.item_searcher.adapters.ItemSearchCursorAdapter;
+import com.mukera.sheket.client.controller.items.item_searcher.adapters.ItemSearchCursorAdapter;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;

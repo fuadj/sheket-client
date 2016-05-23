@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.item_searcher;
+package com.mukera.sheket.client.controller.items.item_searcher;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -9,7 +9,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.content.Loader;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +20,7 @@ import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.TextWatcherAdapter;
 import com.mukera.sheket.client.controller.transactions.TransactionActivity;
-import com.mukera.sheket.client.controller.item_searcher.adapters.BranchItemSearchCursorAdapter;
-import com.mukera.sheket.client.controller.item_searcher.adapters.ItemSearchCursorAdapter;
+import com.mukera.sheket.client.controller.items.item_searcher.adapters.ItemSearchCursorAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;

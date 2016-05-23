@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.item_searcher;
+package com.mukera.sheket.client.controller.items.item_searcher;
 
 import com.mukera.sheket.client.models.SItem;
 

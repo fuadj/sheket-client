@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.item_searcher;
+package com.mukera.sheket.client.controller.items.item_searcher;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

@@ -11,10 +11,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.item_searcher.ItemSearchResultListener;
+import com.mukera.sheket.client.controller.items.item_searcher.ItemSearchResultListener;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
-import com.mukera.sheket.client.controller.item_searcher.ManualSearchFragment;
+import com.mukera.sheket.client.controller.items.item_searcher.ManualSearchFragment;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
