@@ -16,18 +16,21 @@ public class UnitsOfMeasurement {
     public static final int UNIT_LITER = 5;
     public static final int UNIT_CM = 6;
     public static final int UNIT_M = 7;
+    public static final int UNIT_M_2 = 8;
+
+    public static final int NUM_UNITS = 9;
 
     public static final String[] UNIT_SYMBOLS = new String[] {
             "pcs",
             "g", "kg", "ton",
             "ml", "l",
-            "cm", "m"
+            "cm", "m",
+            "m2"
     };
 
     public static ArrayList<String> getAllUnits() {
         ArrayList<String> units = new ArrayList<>();
-        // TODO: make this more correct
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < NUM_UNITS; i++) {
             units.add(getUnitSymbol(i));
         }
         return units;
