@@ -2,34 +2,41 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="?android:attr/listPreferredItemHeight">
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:padding="16dp">
 
     <LinearLayout
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true">
+        android:layout_height="wrap_content">
 
-        <TextView
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Test Item Name"
-            android:id="@+id/list_item_item_detail_name"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-            android:layout_marginLeft="8dp"/>
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Test Item Code"
-            android:id="@+id/list_item_item_detail_code"
-            android:fontFamily="sans-serif-condensed"
-            android:textAppearance="?android:textAppearanceSmall"
-            android:layout_marginLeft="8dp"
-            android:layout_weight="1"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Test Item Name"
+                android:id="@+id/list_item_item_detail_name"
+                android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                android:layout_marginLeft="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Test Item Code"
+                android:id="@+id/list_item_item_detail_code"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_marginLeft="8dp"
+                android:layout_weight="1"/>
+        </LinearLayout>
     </LinearLayout>
 
     <TextView

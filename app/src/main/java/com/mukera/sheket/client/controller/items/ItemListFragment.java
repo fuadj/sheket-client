@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,6 +37,7 @@ import com.mukera.sheket.client.utility.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by gamma on 3/4/16.
@@ -167,6 +169,11 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
             notifyDataSetChanged();
         }
 
+        private static final int[] colors = new int[] {
+                0xffffffff,
+                0xfff2f7ff
+        };
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             SItemDetail detail = getItem(position);
@@ -191,6 +198,9 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
                 holder.item_code.setVisibility(View.GONE);
             }
             holder.total_qty.setText(NumberFormatter.formatDoubleForDisplay(detail.total_quantity));
+
+            convertView.setBackgroundColor(colors[position%2]);
+
             return convertView;
         }
 
