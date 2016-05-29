@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.transactions;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +24,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utility.PrefUtil;
@@ -46,10 +49,18 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     private TextView mResultLabel;
 
     private String mCurrSearch;
-    private Button mCancel, mFinish;
+    private Button mCancel, mFinish, mBtnCategory;
 
     private SearchResultListener mListener;
-    private List<SBranch> mBranches;
+
+    private List<SBranch> mBranches = null;     // this is lazily instantiated
+
+    // This is used to mean we are not filtering by category, just dump all the items
+    private static final long NO_CATEGORY_ID = 0;
+
+    private List<CategoryTreeGenerator.CategoryNode> mCategoryNodes = null;
+    private String[] mCategoryNames = null;
+    private int mSelectedCategroyIndex = 0;
 
     public void setResultListener(SearchResultListener listener) {
         mListener = listener;
@@ -97,6 +108,26 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
             }
         });
 
+        mBtnCategory = (Button) rootView.findViewById(R.id.item_search_btn_set_category);
+        mBtnCategory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                getCategories();
+                builder.setTitle("Select Category").setSingleChoiceItems(mCategoryNames,
+                        mSelectedCategroyIndex,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mSelectedCategroyIndex = which;
+                                mBtnCategory.setText(mCategoryNames[which]);
+                                dialog.dismiss();
+                            }
+                        }).create().show();
+            }
+        });
+
         mCancel = (Button) rootView.findViewById(R.id.item_search_btn_cancel);
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,7 +147,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         mResultLabel = (TextView) rootView.findViewById(R.id.item_search_text_view_search_result);
 
         mSearchText = (EditText) rootView.findViewById(R.id.item_search_edit_text_keyword);
-        mSearchText.addTextChangedListener(new TextWatcherAdapter(){
+        mSearchText.addTextChangedListener(new TextWatcherAdapter() {
             @Override
             public void afterTextChanged(Editable s) {
                 mCurrSearch = s.toString().trim().toUpperCase();
@@ -129,12 +160,44 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(mSearchText.getApplicationWindowToken(), 0);
             }
         });
 
         return rootView;
+    }
+
+    List<CategoryTreeGenerator.CategoryNode> getCategories() {
+        if (mCategoryNodes == null) {
+            mCategoryNodes = CategoryTreeGenerator.createFlatCategoryTree(getContext());
+
+            /*
+            CategoryTreeGenerator.CategoryNode no_category = new CategoryTreeGenerator.CategoryNode();
+            no_category.node_depth = 0;
+            no_category.category = new SCategory();
+            no_category.category.category_id = NO_CATEGORY_ID;
+            no_category.category.name = "--No Category--";
+
+            mCategoryNodes.add(0, no_category);
+            */
+
+            mCategoryNames = new String[mCategoryNodes.size()];
+            int i = 0;
+
+            for (CategoryTreeGenerator.CategoryNode elem : mCategoryNodes) {
+                if (elem.category.category_id == CategoryEntry.ROOT_CATEGORY_ID) {
+                    mCategoryNames[i++] = "--No Category--";
+                } else {
+                    String indent = "";
+                    for (int j = 1; j < elem.node_depth; j++) {
+                        indent += "\t\t\t";
+                    }
+                    mCategoryNames[i++] = indent + elem.category.name;
+                }
+            }
+        }
+        return mCategoryNodes;
     }
 
     List<SBranch> getBranches() {
@@ -174,6 +237,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
 
             @Override
             public void dialogOk(STransaction.STransactionItem transactionItem) {
+                dialog.dismiss();
                 if (mListener != null)
                     mListener.transactionItemAdded(transactionItem);
             }
@@ -202,10 +266,10 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         }
 
         return new CursorLoader(getActivity(),
-            ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
-            SItem.ITEM_COLUMNS,
-            selection, null,
-            sortOrder);
+                ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
+                SItem.ITEM_COLUMNS,
+                selection, null,
+                sortOrder);
     }
 
     void setSearchStatus(boolean found_items) {
@@ -236,6 +300,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         void transactionItemAdded(STransaction.STransactionItem transactionItem);
 
         void finishTransaction();
+
         void cancelTransaction();
     }
 

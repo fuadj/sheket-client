@@ -14,6 +14,33 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category:"
+            android:id="@+id/textView16"
+            android:layout_weight="3"
+            android:textColor="#000000" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Not Selected"
+            android:id="@+id/item_search_btn_set_category"
+            android:layout_weight="4" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="5dp"
+        android:background="#0a0a0a" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
         <!-- Dummy item to prevent @id/edit_text_manual_code from receiving focus -->
         <LinearLayout
             android:focusable="true"
@@ -40,27 +67,6 @@
             android:id="@+id/item_search_btn_search"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="8dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Category:"
-            android:id="@+id/textView16"
-            android:layout_weight="2"
-            android:textColor="#000000" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="New Button"
-            android:id="@+id/button2"
-            android:layout_weight="5" />
     </LinearLayout>
 
     <View
