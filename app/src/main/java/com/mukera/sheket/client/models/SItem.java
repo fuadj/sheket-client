@@ -18,7 +18,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final String JSON_ITEM_ID = "item_id";
     public static final String JSON_ITEM_UUID = "client_uuid";
     public static final String JSON_ITEM_NAME = "item_name";
-    public static final String JSON_ITEM_CATEGORY = "category";
+    public static final String JSON_ITEM_CATEGORY = "category_id";
 
     public static final String JSON_UNIT_OF_MEASUREMENT = "units";
     public static final String JSON_HAS_DERIVED_UNIT = "has_derived_unit";

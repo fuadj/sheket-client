@@ -26,6 +26,19 @@ public class PrefUtil {
     /**
      * Revision Tracking Block
      */
+    public static int getCategoryRevision(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        int default_rev = context.getResources().getInteger(R.integer.pref_default_revision);
+        return prefs.getInt(context.getString(R.string.pref_category_revision), default_rev);
+    }
+
+    public static void setCategoryRevision(Context context, int revision) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(context.getString(R.string.pref_category_revision), revision);
+        editor.commit();
+    }
+
     public static int getItemRevision(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 

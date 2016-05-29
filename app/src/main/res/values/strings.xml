@@ -48,6 +48,7 @@
     <string name="pref_user_rev">user_rev</string>
     <string name="pref_user_permission">pref_user_permission</string>
 
+    <string name="pref_category_revision">category_revision</string>
     <string name="pref_item_revision">item_revision</string>
     <string name="pref_branch_revision">branch_revision</string>
     <string name="pref_branch_item_revision">branch_item_revision</string>
@@ -65,16 +66,19 @@
     <string name="sync_json_new_transactions">transactions</string>
 
     <string name="sync_json_entity_types">types</string>
-    <string name="sync_json_entity_type_item">items</string>
-    <string name="sync_json_entity_type_branch">branches</string>
-    <string name="sync_json_entity_type_branch_item">branch_items</string>
-    <string name="sync_json_entity_type_member">members</string>
+
+    <string name="sync_json_entity_type_category">category</string>
+    <string name="sync_json_entity_type_item">item</string>
+    <string name="sync_json_entity_type_branch">branch</string>
+    <string name="sync_json_entity_type_branch_item">branch_item</string>
+    <string name="sync_json_entity_type_member">member</string>
 
     <string name="sync_json_key_create">create</string>
     <string name="sync_json_key_update">update</string>
     <string name="sync_json_key_delete">delete</string>
     <string name="sync_json_key_fields">fields</string>
 
+    <string name="sync_json_category_rev">category_rev</string>
     <string name="sync_json_item_rev">item_rev</string>
     <string name="sync_json_branch_rev">branch_rev</string>
     <string name="sync_json_branch_item_rev">branch_item_rev</string>
@@ -93,9 +97,11 @@
     <!-- End Response of User Sync -->
 
     <!-- Response of Entity Sync -->
+    <string name="sync_json_updated_category_ids">updated_category_ids</string>
     <string name="sync_json_updated_item_ids">updated_item_ids</string>
     <string name="sync_json_updated_branch_ids">updated_branch_ids</string>
 
+    <string name="sync_json_sync_categories">sync_categories</string>
     <string name="sync_json_sync_items">sync_items</string>
     <string name="sync_json_sync_branches">sync_branches</string>
     <string name="sync_json_sync_members">sync_members</string>
