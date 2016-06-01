@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ffffffff">
+    android:background="#ffffffff"
+    android:layout_height="match_parent">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -13,21 +14,16 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:id="@+id/textView5"
-                android:background="#5077f4" />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:background="@drawable/background_material"
+                    android:id="@+id/navigation_header_img_view" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Test Company Name"
-                android:id="@+id/navigation_text_view_company_name"
-                android:textSize="20dp"
-                android:textColor="#ffffff"
-                android:background="#5077f4"
-                android:paddingLeft="8dp" />
+            </RelativeLayout>
 
             <include android:id="@+id/separator_1"
                 android:layout_width="match_parent"
@@ -64,4 +60,4 @@
 
         </LinearLayout>
     </ScrollView>
-</RelativeLayout>
+</LinearLayout>

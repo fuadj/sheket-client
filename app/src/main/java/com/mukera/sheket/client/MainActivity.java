@@ -37,32 +37,15 @@ public class MainActivity extends AppCompatActivity implements
 
         requireLogin();
 
-        //if (savedInstanceState == null) {
-            setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
-            Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
-            setSupportActionBar(tb);
+        Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(tb);
 
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-            getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
+        //getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-            final ActionBar ab = getSupportActionBar();
-            //ab.setHomeAsUpIndicator(R.drawable.ic_menu); // set a custom icon for the default home button
-            ab.setDisplayShowHomeEnabled(true); // show or hide the default home button
-            //ab.setDisplayHomeAsUpEnabled(true);
-            ab.setDisplayShowCustomEnabled(true); // enable overriding the default toolbar layout
-            //ab.setDisplayShowTitleEnabled(false); // disable the default title element here (for centered title)
-        //}
-
-        // This is out of the if stmt because we want it to run every-time
-        // Any settings changes should be reflected
-        NavigationFragment navigationFragment = new NavigationFragment();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_navigation_container, navigationFragment)
-                .commit();
-        navigationFragment.setUp(R.id.main_navigation_container, R.id.main_drawer_layout);
-
-        hideToolBarAddBtn();
     }
 
     @Override
@@ -91,19 +74,8 @@ public class MainActivity extends AppCompatActivity implements
                 .commit();
     }
 
-    void hideToolBarAddBtn() {
-        View v_toolbar = this.findViewById(R.id.toolbar);
-        if (v_toolbar != null) {
-            Toolbar toolbar = (Toolbar) v_toolbar;
-            ImageButton addBtn = (ImageButton) toolbar.findViewById(R.id.toolbar_btn_add);
-            addBtn.setVisibility(View.GONE);
-        }
-    }
-
     @Override
     public void onElementSelected(int item) {
-        hideToolBarAddBtn();
-
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
                 replaceMainFragment(new ItemListFragment());
