@@ -2,11 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mukera.sheket.client">
 
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.CAMERA.AUTOFOCUS"/>
-    <uses-feature android:name="android.hardware.camera" />
-
-    <!-- This permission is necessary in order for Sunshine to perform network access. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Permissions required by the sync adapter -->
