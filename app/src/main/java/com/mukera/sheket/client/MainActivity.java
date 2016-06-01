@@ -3,11 +3,17 @@ package com.mukera.sheket.client;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -31,6 +37,9 @@ import com.mukera.sheket.client.utility.PrefUtil;
 public class MainActivity extends AppCompatActivity implements
         NavigationFragment.BranchSelectionCallback, SPermission.PermissionChangeListener {
 
+    private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
+    private NavigationView mNavigationView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,14 +47,21 @@ public class MainActivity extends AppCompatActivity implements
         requireLogin();
 
         setContentView(R.layout.activity_main);
-
-        Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(tb);
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         //getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        initNavigationDrawer();
+    }
+
+    void initNavigationDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.main_drawer_layout);
+        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close);
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
     @Override
@@ -61,6 +77,48 @@ public class MainActivity extends AppCompatActivity implements
             Intent intent = new Intent(this, RegistrationActivity.class);
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isNavDrawerOpen()) {
+            closeNavDrawer();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    protected boolean isNavDrawerOpen() {
+        return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START);
+    }
+
+    protected void closeNavDrawer() {
+        if (mDrawerLayout != null) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            /**
+             * IMPORTANT:
+             * home is also the "burger stack" for the navigation drawer, so without overloading the
+             * menu inflater, you can't click the navigation "burger" to slide out the drawer
+             */
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
