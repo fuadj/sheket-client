@@ -24,7 +24,6 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
-import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utility.PrefUtil;
@@ -55,12 +54,12 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
 
     private List<SBranch> mBranches = null;     // this is lazily instantiated
 
-    // This is used to mean we are not filtering by category, just dump all the items
-    private static final long NO_CATEGORY_ID = 0;
-
     private List<CategoryTreeGenerator.CategoryNode> mCategoryNodes = null;
     private String[] mCategoryNames = null;
-    private int mSelectedCategroyIndex = 0;
+    private int mSavedSelectedCategoryIndex = 0;
+
+    // setting ROOT category means you don't want to filter by category!!!
+    private long mSelectedCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
 
     public void setResultListener(SearchResultListener listener) {
         mListener = listener;
@@ -112,17 +111,20 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         mBtnCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeKeyboard();
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
                 getCategories();
                 builder.setTitle("Select Category").setSingleChoiceItems(mCategoryNames,
-                        mSelectedCategroyIndex,
+                        mSavedSelectedCategoryIndex,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mSelectedCategroyIndex = which;
+                                mSavedSelectedCategoryIndex = which;
+                                mSelectedCategoryId = mCategoryNodes.get(which).category.category_id;
                                 mBtnCategory.setText(mCategoryNames[which]);
                                 dialog.dismiss();
+                                restartLoader();
                             }
                         }).create().show();
             }
@@ -144,6 +146,9 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     mListener.finishTransaction();
             }
         });
+        // only after items are selected will it be enabled
+        mFinish.setEnabled(false);
+
         mResultLabel = (TextView) rootView.findViewById(R.id.item_search_text_view_search_result);
 
         mSearchText = (EditText) rootView.findViewById(R.id.item_search_edit_text_keyword);
@@ -151,8 +156,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
             @Override
             public void afterTextChanged(Editable s) {
                 mCurrSearch = s.toString().trim().toUpperCase();
-                getLoaderManager().restartLoader(LoaderId.SEARCH_RESULT_LOADER,
-                        null, ItemSearchFragment.this);
+                restartLoader();
             }
         });
 
@@ -160,27 +164,29 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(mSearchText.getApplicationWindowToken(), 0);
+                closeKeyboard();
             }
         });
 
         return rootView;
     }
 
+    void closeKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(mSearchText.getApplicationWindowToken(), 0);
+    }
+
+    /**
+     * When query changes, you should call this to update ui
+     */
+    void restartLoader() {
+        getLoaderManager().restartLoader(LoaderId.SEARCH_RESULT_LOADER,
+                null, ItemSearchFragment.this);
+    }
+
     List<CategoryTreeGenerator.CategoryNode> getCategories() {
         if (mCategoryNodes == null) {
             mCategoryNodes = CategoryTreeGenerator.createFlatCategoryTree(getContext());
-
-            /*
-            CategoryTreeGenerator.CategoryNode no_category = new CategoryTreeGenerator.CategoryNode();
-            no_category.node_depth = 0;
-            no_category.category = new SCategory();
-            no_category.category.category_id = NO_CATEGORY_ID;
-            no_category.category.name = "--No Category--";
-
-            mCategoryNodes.add(0, no_category);
-            */
 
             mCategoryNames = new String[mCategoryNodes.size()];
             int i = 0;
@@ -240,6 +246,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                 dialog.dismiss();
                 if (mListener != null)
                     mListener.transactionItemAdded(transactionItem);
+                mFinish.setEnabled(true);
             }
         });
         dialog.show(fm, "Set Item Quantity");
@@ -260,9 +267,17 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         String selection = null;
 
         if (mCurrSearch != null && !mCurrSearch.isEmpty()) {
-            selection = ItemEntry._full(ItemEntry.COLUMN_MANUAL_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
+            selection = "(" + ItemEntry._full(ItemEntry.COLUMN_MANUAL_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
                     ItemEntry._full(ItemEntry.COLUMN_BAR_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
-                    ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%'";
+                    ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%' ) ";
+        }
+
+        if (mSelectedCategoryId != CategoryEntry.ROOT_CATEGORY_ID) {
+            String and_clause = (selection == null) ? " " : " AND ";
+
+            if (selection == null)
+                selection = "";
+            selection += and_clause + ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = " + mSelectedCategoryId;
         }
 
         return new CursorLoader(getActivity(),
