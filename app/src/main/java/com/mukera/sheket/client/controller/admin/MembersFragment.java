@@ -103,7 +103,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
             }
         });
 
-        getLoaderManager().initLoader(LoaderId.MEMBER_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.MEMBER_LIST_LOADER, null, this);
         return rootView;
     }
 

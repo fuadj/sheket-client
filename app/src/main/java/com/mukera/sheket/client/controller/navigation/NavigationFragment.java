@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -34,7 +35,7 @@ import java.util.List;
 /**
  * Created by gamma on 3/27/16.
  */
-public class NavigationFragment extends NavigationDrawerFragment implements LoaderCallbacks<Cursor> {
+public class NavigationFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private BranchSelectionCallback mCallback;
 
     private ListView mBranchListView;
@@ -68,7 +69,6 @@ public class NavigationFragment extends NavigationDrawerFragment implements Load
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = mNavigationBranchAdapter.getCursor();
                 if (cursor != null && cursor.moveToPosition(position)) {
-                    setDrawerState(false);
                     SBranch branch = new SBranch(cursor);
                     mCallback.onBranchSelected(branch);
                 }
@@ -92,7 +92,6 @@ public class NavigationFragment extends NavigationDrawerFragment implements Load
             mAdminListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    setDrawerState(false);
                     Integer elem = mAdminAdapter.getItem(position);
                     mCallback.onElementSelected(elem);
                 }
@@ -116,7 +115,6 @@ public class NavigationFragment extends NavigationDrawerFragment implements Load
         mUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                setDrawerState(false);
                 Integer elem = mUserAdapter.getItem(position);
                 mCallback.onElementSelected(elem);
             }
@@ -125,25 +123,20 @@ public class NavigationFragment extends NavigationDrawerFragment implements Load
 
         View separator1 = rootView.findViewById(R.id.separator_1);
         mSeparator1TextView = (TextView) separator1.findViewById(R.id.text_view_separator);
-        mSeparator1TextView.setBackgroundColor(getContext().getResources().getColor(R.color.section_separator_color));
         mSeparator1TextView.setText("Branches");
 
         View separator2 = rootView.findViewById(R.id.separator_2);
         mSeparator2TextView = (TextView) separator2.findViewById(R.id.text_view_separator);
-        mSeparator2TextView.setBackgroundColor(getContext().getResources().getColor(R.color.section_separator_color));
         mSeparator2TextView.setText("Management");
         if (user_permission != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            mSeparator2TextView.setVisibility(View.GONE);
+            separator2.setVisibility(View.GONE);
         } else {
-            mSeparator2TextView.setVisibility(View.VISIBLE);
+            separator2.setVisibility(View.VISIBLE);
         }
 
         View separator3 = rootView.findViewById(R.id.separator_3);
         mSeparator3TextView = (TextView) separator3.findViewById(R.id.text_view_separator);
-        mSeparator3TextView.setBackgroundColor(getContext().getResources().getColor(R.color.section_separator_color));
         mSeparator3TextView.setText("Preferences");
-
-        setDrawerState(false);
 
         ListUtils.setDynamicHeight(mBranchListView);
         ListUtils.setDynamicHeight(mAdminListView);
@@ -176,14 +169,14 @@ public class NavigationFragment extends NavigationDrawerFragment implements Load
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.BRANCH_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        getLoaderManager().restartLoader(LoaderId.BRANCH_LIST_LOADER, null, this);
+        getLoaderManager().restartLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
     }
 
     @Override

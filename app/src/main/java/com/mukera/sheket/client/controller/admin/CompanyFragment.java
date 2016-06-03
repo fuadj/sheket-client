@@ -106,7 +106,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
             }
         });
 
-        getLoaderManager().initLoader(LoaderId.COMPANY_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
         return rootView;
     }
 

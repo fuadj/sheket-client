@@ -30,6 +30,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -79,28 +80,22 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState == null) {
-            Bundle args = getArguments();
-            mSelectedCategoryId = args.getLong(PREVIOUS_CATEGORY_ID_KEY);
+        Bundle args = getArguments();
+        mSelectedCategoryId = args.getLong(PREVIOUS_CATEGORY_ID_KEY);
 
-            // the first level category is the root
-            mCurrentParentCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-            mParentCategoryBackStack = new Stack<>();
-        }
-    }
-
-    int getLoaderId() {
-        return 1;
+        // the first level category is the root
+        mCurrentParentCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+        mParentCategoryBackStack = new Stack<>();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(getLoaderId(), null, this);
+        getLoaderManager().initLoader(LoaderId.TransactionActivity.CATEGORY_SELECTION_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
     void restartLoader() {
-        getLoaderManager().restartLoader(1, null, this);
+        getLoaderManager().restartLoader(LoaderId.TransactionActivity.CATEGORY_SELECTION_LOADER, null, this);
     }
 
     @Nullable
@@ -110,7 +105,7 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
 
         mCategoryList = (ListView) rootView.findViewById(R.id.category_selection_list_view_categories);
         mCategoryAdapter = new CategorySelectionCursorAdapter(getActivity());
-        mCategoryAdapter.mListener = new CategorySelectionCursorAdapter.CategorySelectionListener() {
+        mCategoryAdapter.mAdapterListener = new CategorySelectionCursorAdapter.AdapterSelectionListener() {
             @Override
             public void categorySelected(boolean newly_selected, long category_id, SCategory category) {
                 if (newly_selected) {
@@ -228,7 +223,7 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
     }
 
     public static class CategorySelectionCursorAdapter extends CursorAdapter {
-        public interface CategorySelectionListener {
+        public interface AdapterSelectionListener {
             void categorySelected(boolean newly_selected, long category_id, SCategory category);
         }
 
@@ -243,7 +238,7 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
             }
         }
 
-        public CategorySelectionListener mListener;
+        public AdapterSelectionListener mAdapterListener;
         public long mPreviousSelectedCategoryId;
 
         public CategorySelectionCursorAdapter(Context context) {
@@ -270,12 +265,12 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
             boolean is_selected = mPreviousSelectedCategoryId == category_id;
             holder.mSelectCategory.setChecked(is_selected);
             if (is_selected)
-                mListener.categorySelected(false, category_id, category);
+                mAdapterListener.categorySelected(false, category_id, category);
 
             holder.mSelectCategory.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListener.categorySelected(true, category_id, category);
+                    mAdapterListener.categorySelected(true, category_id, category);
                     notifyDataSetChanged();
                 }
             });

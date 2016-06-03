@@ -57,7 +57,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                 dialog.show(fm, "Create Branch");
             }
         });
-        getLoaderManager().initLoader(LoaderId.BRANCH_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
         return rootView;
     }
 

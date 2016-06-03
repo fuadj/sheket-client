@@ -32,7 +32,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.TRANSACTION_HISTORY_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 

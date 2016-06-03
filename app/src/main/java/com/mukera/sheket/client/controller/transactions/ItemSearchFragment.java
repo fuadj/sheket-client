@@ -79,10 +79,11 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
             Bundle args = getArguments();
-            mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, TransactionActivity.BRANCH_ID_NONE);
+            mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, com.mukera.sheket.client.controller.transactions.TransactionActivity.BRANCH_ID_NONE);
             mIsBuyingTransaction = args.getBoolean(SEARCH_TRANS_TYPE, true);
 
-            getLoaderManager().initLoader(LoaderId.SEARCH_RESULT_LOADER, null, this);
+            getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER,
+                    null, this);
         }
     }
 
@@ -180,7 +181,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
      * When query changes, you should call this to update ui
      */
     void restartLoader() {
-        getLoaderManager().restartLoader(LoaderId.SEARCH_RESULT_LOADER,
+        getLoaderManager().restartLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER,
                 null, ItemSearchFragment.this);
     }
 
@@ -254,7 +255,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.SEARCH_RESULT_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
