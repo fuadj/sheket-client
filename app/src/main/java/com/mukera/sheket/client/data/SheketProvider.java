@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -143,19 +144,27 @@ public class SheketProvider extends ContentProvider {
         return true;
     }
 
+    String withAppendedSelection(String prev_selection, String new_selection) {
+        return (prev_selection != null ? (prev_selection + " AND ") : "") +
+                new_selection;
+    }
+
+    String[] withAppendedSelectionArgs(String[] prev_args, String[] new_args) {
+        if (prev_args == null) return new_args;
+
+        String[] combined_args = new String[prev_args.length + new_args.length];
+        System.arraycopy(prev_args, 0, combined_args, 0, prev_args.length);
+        System.arraycopy(new_args, 0, combined_args, prev_args.length, new_args.length);
+        return combined_args;
+    }
+
     String withAppendedCompanyIdSelection(String selection, String col_company_id) {
-        return (selection != null ? (selection + " AND ") : "") +
-                col_company_id + " = ?";
+        return withAppendedSelection(selection, col_company_id + " = ?");
     }
 
     String[] withAppendedCompanyIdSelectionArgs(String[] args, long company_id) {
-        if (args == null) {
-            return new String[]{Long.toString(company_id)};
-        }
-        String[] appended = new String[args.length + 1];
-        System.arraycopy(args, 0, appended, 0, args.length);
-        appended[appended.length - 1] = Long.toString(company_id);
-        return appended;
+        String[] company_args = new String[]{Long.toString(company_id)};
+        return withAppendedSelectionArgs(args, company_args);
     }
 
     @Nullable
@@ -229,25 +238,31 @@ public class SheketProvider extends ContentProvider {
                     boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
 
                     if (branch_set && item_set) {
-                        selection = String.format("%s = ? AND %s = ?",
-                                BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
-                                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                        selectionArgs = new String[]{
-                                Long.toString(branch_id),
-                                Long.toString(item_id)
-                        };
+                        selection = withAppendedSelection(selection,
+                                String.format("%s = ? AND %s = ?",
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
+                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
+                                new String[]{
+                                        Long.toString(branch_id),
+                                        Long.toString(item_id)
+                                });
                     } else if (branch_set) {
-                        selection = String.format("%s = ?",
-                                BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
-                        selectionArgs = new String[]{
-                                Long.toString(branch_id)
-                        };
+                        selection = withAppendedSelection(selection,
+                                String.format("%s = ?",
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID)));
+                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
+                                new String[]{
+                                        Long.toString(branch_id)
+                                });
                     } else if (item_set) {
-                        selection = String.format("%s = ?",
-                                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                        selectionArgs = new String[]{
-                                Long.toString(item_id)
-                        };
+                        selection = withAppendedSelection(selection,
+                                String.format("%s = ?",
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
+                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
+                                new String[]{
+                                        Long.toString(item_id)
+                                });
                     }
                 }
 

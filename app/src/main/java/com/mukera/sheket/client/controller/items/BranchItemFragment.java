@@ -33,18 +33,21 @@ import com.mukera.sheket.client.utility.PrefUtil;
  * Created by gamma on 3/27/16.
  */
 public class BranchItemFragment extends Fragment implements LoaderCallbacks<Cursor> {
-    private static final String BRANCH_ID_KEY = "branch_id_key";
+    private static final String KEY_CATEGORY_ID = "key_category_id";
+    private static final String KEY_BRANCH_ID = "key_branch_id";
 
+    private long mCategoryId;
     private long mBranchId;
 
     private ListView mBranchItemList;
     private BranchItemCursorAdapter mBranchItemAdapter;
 
-    public static BranchItemFragment newInstance(long branch_id) {
+    public static BranchItemFragment newInstance(long category_id, long branch_id) {
         Bundle args = new Bundle();
 
         BranchItemFragment fragment = new BranchItemFragment();
-        args.putLong(BRANCH_ID_KEY, branch_id);
+        args.putLong(KEY_CATEGORY_ID, category_id);
+        args.putLong(KEY_BRANCH_ID, branch_id);
         fragment.setArguments(args);
 
         return fragment;
@@ -53,10 +56,9 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState == null) {
-            Bundle args = getArguments();
-            mBranchId = args.getLong(BRANCH_ID_KEY);
-        }
+        Bundle args = getArguments();
+        mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        mBranchId = args.getLong(KEY_BRANCH_ID);
     }
 
     void startTransactionActivity(int action, long branch_id) {
@@ -66,22 +68,10 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
         startActivity(intent);
     }
 
-    int getLoaderId() {
-        return (int)(LoaderId.BRANCH_ITEM_LIST_LOADER - mBranchId);
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_branch_item, container, false);
-
-        AppCompatActivity act = (AppCompatActivity) getActivity();
-        View v_toolbar = act.findViewById(R.id.toolbar);
-        if (v_toolbar != null) {
-            Toolbar toolbar = (Toolbar) v_toolbar;
-            ImageButton addBtn = (ImageButton) toolbar.findViewById(R.id.toolbar_btn_add);
-            addBtn.setVisibility(View.GONE);
-        }
 
         FloatingActionButton buyAction, sellAction;
 
@@ -167,7 +157,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(getLoaderId(), null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -177,7 +167,8 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId),
                 SBranchItem.BRANCH_ITEM_WITH_DETAIL_COLUMNS,
-                null, null,
+                ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
+                new String[]{String.valueOf(mCategoryId)},
                 BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) + " ASC"
         );
     }
