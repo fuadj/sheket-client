@@ -20,8 +20,19 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="190dp"
-                    android:background="@drawable/background_material"
+                    android:background="@drawable/bg_material_design"
                     android:id="@+id/navigation_header_img_view" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/navigation_text_view_company_name"
+                    android:text="test company name"
+                    android:textColor="@android:color/white"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="8dp"
+                    android:textSize="22dp"
+                    android:layout_marginLeft="16dp" />
 
             </RelativeLayout>
 

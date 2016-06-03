@@ -2,7 +2,14 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="navdrawer_image_height">192dp</dimen>
+
+    <dimen name="toolbar_elevation">4dp</dimen>
+
+    <dimen name="category_spacing">4dp</dimen>
+    <dimen name="category_content_spacing">16dp</dimen>
+    <dimen name="category_corner_radius">2dp</dimen>
+    <dimen name="category_title_textsize">24sp</dimen>
+    <dimen name="category_sub_text_textsize">14sp</dimen>
 </resources>

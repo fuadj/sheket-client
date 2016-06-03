@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,6 +20,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -37,36 +39,57 @@ import com.mukera.sheket.client.utility.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by gamma on 3/4/16.
  */
 public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor> {
-    final int NEW_ITEM_REQUEST = 1;
+    private static final String KEY_CATEGORY_ID = "key_category_id";
 
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
+
+    private long mCategoryId;
+
+    public static ItemListFragment newInstance(long cateogry_id) {
+        Bundle args = new Bundle();
+
+        ItemListFragment fragment = new ItemListFragment();
+        args.putLong(KEY_CATEGORY_ID, cateogry_id);
+        fragment.setArguments(args);
+
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.item_list_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_list_menu_add_item:
+                Intent intent = new Intent(getActivity(), NewItemActivity.class);
+                startActivity(intent);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_item_list, container, false);
-
-        AppCompatActivity act = (AppCompatActivity) getActivity();
-        View v_toolbar = act.findViewById(R.id.toolbar);
-        if (v_toolbar != null) {
-            Toolbar toolbar = (Toolbar) v_toolbar;
-            ImageButton addBtn = (ImageButton) toolbar.findViewById(R.id.toolbar_btn_add);
-            addBtn.setVisibility(View.VISIBLE);
-            addBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), NewItemActivity.class);
-                    startActivityForResult(intent, NEW_ITEM_REQUEST);
-                }
-            });
-        }
 
         mItemList = (ListView) rootView.findViewById(R.id.all_item_list_view);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
@@ -87,12 +110,12 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
     }
 
     void resetAdapter() {
-        getLoaderManager().initLoader(LoaderId.ITEM_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.ALL_ITEM_LOADER, null, this);
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.ITEM_LIST_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.ALL_ITEM_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -103,7 +126,8 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
         return new CursorLoader(getActivity(),
                 ItemEntry.buildBaseUriWithBranches(PrefUtil.getCurrentCompanyId(getContext())),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
-                null, null,
+                ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
+                new String[]{String.valueOf(mCategoryId)},
                 sortOrder
         );
     }

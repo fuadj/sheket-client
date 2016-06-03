@@ -20,6 +20,7 @@ import android.widget.ImageButton;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
+import com.mukera.sheket.client.controller.items.CategoryViewFragment;
 import com.mukera.sheket.client.controller.items.ItemListFragment;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
@@ -29,6 +30,7 @@ import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utility.PrefUtil;
@@ -39,7 +41,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    private NavigationView mNavigationView;
+    //private NavigationView mNavigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        //getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -58,10 +60,14 @@ public class MainActivity extends AppCompatActivity implements
 
     void initNavigationDrawer() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.main_drawer_layout);
-        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        //mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.main_navigation_container, new NavigationFragment()).
+                commit();
+        openNavDrawer();
     }
 
     @Override
@@ -98,10 +104,16 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    protected void openNavDrawer() {
+        if (mDrawerLayout != null) {
+            mDrawerLayout.openDrawer(GravityCompat.START);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -116,17 +128,32 @@ public class MainActivity extends AppCompatActivity implements
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onBranchSelected(SBranch branch) {
-        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id));
+    public void onBranchSelected(final SBranch branch) {
+        CategoryViewFragment fragment = new CategoryViewFragment();
+        fragment.setListener(new CategoryViewFragment.SelectionListener() {
+            @Override
+            public void onCategorySelected(SCategory category) {
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.main_fragment_container,
+                                BranchItemFragment.newInstance(category.category_id, branch.branch_id)).
+                        addToBackStack(null).commit();
+            }
+        });
+        replaceMainFragment(fragment);
+        closeNavDrawer();
     }
 
     void replaceMainFragment(Fragment fragment) {
+        FragmentManager fm = getSupportFragmentManager();
+        for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+            fm.popBackStack();
+        }
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.main_fragment_container, fragment)
                 .commit();
@@ -136,7 +163,17 @@ public class MainActivity extends AppCompatActivity implements
     public void onElementSelected(int item) {
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
-                replaceMainFragment(new ItemListFragment());
+                CategoryViewFragment fragment = new CategoryViewFragment();
+                fragment.setListener(new CategoryViewFragment.SelectionListener() {
+                    @Override
+                    public void onCategorySelected(SCategory category) {
+                        getSupportFragmentManager().beginTransaction().
+                                replace(R.id.main_fragment_container,
+                                        ItemListFragment.newInstance(category.category_id)).
+                                addToBackStack(null).commit();
+                    }
+                });
+                replaceMainFragment(fragment);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
                 replaceMainFragment(new BranchFragment());
@@ -168,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements
                 requireLogin();
                 break;
         }
+        closeNavDrawer();
     }
 
     @Override

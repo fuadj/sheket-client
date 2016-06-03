@@ -72,7 +72,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                 Bundle args = getArguments();
                 mItemId = args.getLong(ITEM_ID_KEY,
                         INVALID_ITEM_ID);
-                getLoaderManager().initLoader(LoaderId.ITEM_DETAIL_LOADER, null, this);
+                getLoaderManager().initLoader(LoaderId.MainActivity.ALL_ITEM_DETAIL_LOADER, null, this);
             }
         }
 

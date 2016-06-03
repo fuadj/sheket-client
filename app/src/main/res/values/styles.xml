@@ -1,14 +1,75 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.Sheket.Base" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <style name="Theme.Sheket" parent="Theme.Sheket.Base"/>
+
+    <style name="ThemeOverlay.Sheket.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="colorControlHighlight">#8fff</item>
+        <item name="colorControlActivated">@color/theme_accent</item>
     </style>
 
+    <style name="ThemeOverlay.Sheket.ActionBar.Popup" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Widget.Sheket.ToolBar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:theme">@style/ThemeOverlay.Sheket.ActionBar</item>
+        <item name="popupTheme">@style/ThemeOverlay.Sheket.ActionBar.Popup</item>
+        <item name="android:elevation" tools:ignore="NewApi">@dimen/toolbar_elevation</item>
+        <item name="layout_scrollFlags">scroll|enterAlways</item>
+    </style>
+
+    <style name="Widget.MaterialSheetFab.TabLayout" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:theme">@style/ThemeOverlay.Sheket.ActionBar</item>
+        <item name="android:elevation" tools:ignore="NewApi">@dimen/toolbar_elevation</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabGravity">fill</item>
+    </style>
+
+    <style name="Widget.Sheket.Category.List" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingTop">@dimen/category_spacing</item>
+        <item name="android:paddingLeft">@dimen/category_spacing</item>
+        <item name="android:paddingRight">@dimen/category_spacing</item>
+        <item name="android:paddingBottom">@dimen/category_spacing</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <style name="CardCategory">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+
+        <item name="android:layout_margin">@dimen/category_spacing</item>
+        <item name="android:foreground">?selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="contentPadding">@dimen/category_content_spacing</item>
+        <item name="cardBackgroundColor">@color/background_category</item>
+        <item name="cardCornerRadius">@dimen/category_corner_radius</item>
+        <item name="cardUseCompatPadding">true</item>
+    </style>
+
+    <style name="TextAppearance.Sheket.Category" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/text_black_87</item>
+        <item name="android:textSize">@dimen/category_sub_text_textsize</item>
+    </style>
+
+    <style name="TextAppearance.Sheket.Category.Title" parent="TextAppearance.Sheket.Category">
+        <item name="android:textSize">@dimen/category_title_textsize</item>
+    </style>
 </resources>
