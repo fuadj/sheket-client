@@ -3,26 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants"
-    android:paddingTop="16dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="16dp"
-    android:paddingLeft="16dp">
+    android:paddingRight="16dp">
 
-    <CheckBox
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:id="@+id/list_item_item_category_check_box_select"
-        android:focusable="false"
-        android:layout_centerVertical="true"
-        android:paddingLeft="16dp" />
+        android:id="@+id/check_box_container"
+        android:padding="16dp">
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:id="@+id/list_item_item_category_check_box_select"
+            android:focusable="false"
+            android:layout_centerVertical="true" />
+    </FrameLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nike"
         android:id="@+id/list_item_item_category_category_name"
-        android:layout_toRightOf="@id/list_item_item_category_check_box_select"
+        android:layout_toRightOf="@+id/check_box_container"
         android:textSize="22dp"
         android:layout_centerVertical="true"
         android:textColor="#000000" />
