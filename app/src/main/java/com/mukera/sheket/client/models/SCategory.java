@@ -5,7 +5,9 @@ import android.database.Cursor;
 import android.os.ConditionVariable;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
+import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import org.json.JSONException;
@@ -54,7 +56,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     public SCategory(Cursor cursor, int offset) {
         company_id = cursor.getLong(COL_COMPANY_ID + offset);
         category_id = cursor.getLong(COL_CATEGORY_ID + offset);
-        name = cursor.getString(COL_NAME + offset);
+        name = Utils.toTitleCase(cursor.getString(COL_NAME + offset));
         parent_id = cursor.getLong(COL_PARENT_ID + offset);
 
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);

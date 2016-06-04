@@ -291,15 +291,4 @@ public class NewItemActivity extends AppCompatActivity {
         }
 
     }
-
-    /*
-    @Override
-    public void onBackPressed() {
-        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-            getSupportFragmentManager().popBackStack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-    */
 }

@@ -53,7 +53,7 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
         mCategoryList = (RecyclerView) view.findViewById(R.id.view_category_list);
         mCategoryList.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         mCategoryAdapter = new CategoryViewAdapter(getActivity());
-        mCategoryAdapter.mAdapterListener = new CategoryViewAdapter.AdapterSelectionListener() {
+        mCategoryAdapter.setListener(new CategoryViewAdapter.AdapterSelectionListener() {
             @Override
             public void onClick(int position) {
                 Cursor cursor = mCategoryAdapter.getCursor();
@@ -62,7 +62,7 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
                     mListener.onCategorySelected(category);
                 }
             }
-        };
+        });
         mCategoryList.setAdapter(mCategoryAdapter);
 
         return view;
@@ -108,6 +108,8 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
         }
 
         public AdapterSelectionListener mAdapterListener;
+
+        public void setListener(AdapterSelectionListener listener) { mAdapterListener = listener; }
 
         public CategoryViewAdapter(Context context) {
             super(context, null);
