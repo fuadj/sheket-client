@@ -23,6 +23,8 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.ListUtils;
+import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
@@ -56,7 +58,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         View rootView = inflater.inflate(R.layout.fragment_navigation, container, false);
 
         mCompanyName = (TextView) rootView.findViewById(R.id.navigation_text_view_company_name);
-        mCompanyName.setText(PrefUtil.getCurrentCompanyName(getActivity()));
+        mCompanyName.setText(Utils.toTitleCase(PrefUtil.getCurrentCompanyName(getActivity())));
 
         SPermission.setSingletonPermission(PrefUtil.getUserPermission(getContext()));
         int user_permission = SPermission.getSingletonPermission().getPermissionType();
@@ -145,28 +147,6 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         return rootView;
     }
 
-
-    public static class ListUtils {
-        public static void setDynamicHeight(ListView mListView) {
-            ListAdapter mListAdapter = mListView.getAdapter();
-            if (mListAdapter == null) {
-                // when adapter is null
-                return;
-            }
-            int height = 0;
-            int desiredWidth = View.MeasureSpec.makeMeasureSpec(mListView.getWidth(), View.MeasureSpec.UNSPECIFIED);
-            for (int i = 0; i < mListAdapter.getCount(); i++) {
-                View listItem = mListAdapter.getView(i, null, mListView);
-                listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
-                height += listItem.getMeasuredHeight();
-            }
-            ViewGroup.LayoutParams params = mListView.getLayoutParams();
-            params.height = height + (mListView.getDividerHeight() * (mListAdapter.getCount() - 1));
-            mListView.setLayoutParams(params);
-            mListView.requestLayout();
-        }
-    }
-
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
@@ -249,7 +229,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         public void bindView(View view, Context context, Cursor cursor) {
             NavigationViewHolder holder = (NavigationViewHolder) view.getTag();
             SBranch branch = new SBranch(cursor);
-            holder.elementName.setText(branch.branch_name);
+            holder.elementName.setText(Utils.toTitleCase(branch.branch_name));
         }
     }
 

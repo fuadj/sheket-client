@@ -17,7 +17,7 @@ import android.widget.*;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.util.NumberFormatter;
+import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
@@ -143,7 +143,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             holder.trans_icon.setImageResource(
                     detail.is_buying ? R.mipmap.ic_action_download : R.mipmap.ic_action_refresh);
             holder.username.setText("Username " + position * 14);
-            holder.total_qty.setText(NumberFormatter.formatDoubleForDisplay(detail.total_quantity));
+            holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             return convertView;
         }
 
@@ -189,7 +189,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
 
             TextView total_qty = (TextView) view.findViewById(R.id.dialog_trans_history_total_qty);
-            total_qty.setText("Total Qty: " + NumberFormatter.formatDoubleForDisplay(mTransDetail.total_quantity));
+            total_qty.setText("Total Qty: " + Utils.formatDoubleForDisplay(mTransDetail.total_quantity));
             return view;
         }
 
@@ -215,7 +215,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
                 itemName.setText(transItem.item.name);
                 sourceDetail.setText(TransItemEntry.getStringForm(transItem.trans_type));
-                qty.setText(NumberFormatter.formatDoubleForDisplay(transItem.quantity));
+                qty.setText(Utils.formatDoubleForDisplay(transItem.quantity));
                 return convertView;
             }
         }

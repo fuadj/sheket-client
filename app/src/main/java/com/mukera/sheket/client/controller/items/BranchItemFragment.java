@@ -12,7 +12,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +21,7 @@ import android.widget.*;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.util.NumberFormatter;
+import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.controller.transactions.TransactionActivity;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -36,7 +35,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
     private static final String KEY_CATEGORY_ID = "key_category_id";
     private static final String KEY_BRANCH_ID = "key_branch_id";
 
-    private long mCategoryId;
+    private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     private long mBranchId;
 
     private ListView mBranchItemList;
@@ -250,7 +249,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
                     mListener.editItemLocationSelected(branchItem);
                 }
             });
-            holder.qty_remain.setText(NumberFormatter.formatDoubleForDisplay(branchItem.quantity));
+            holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
         }
     }
 }

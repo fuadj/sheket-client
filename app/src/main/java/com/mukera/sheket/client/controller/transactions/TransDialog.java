@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.UnitsOfMeasurement;
-import com.mukera.sheket.client.controller.util.NumberFormatter;
+import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.TransItemEntry;
@@ -135,9 +135,9 @@ public class TransDialog {
                 String qty = mQtyEdit.getText().toString().trim();
                 String base_unit = UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement);
                 String derived = mItem.derived_name;
-                String factor = NumberFormatter.formatDoubleForDisplay(mItem.derived_factor);
+                String factor = Utils.formatDoubleForDisplay(mItem.derived_factor);
 
-                String total = NumberFormatter.formatDoubleForDisplay(
+                String total = Utils.formatDoubleForDisplay(
                         Double.valueOf(qty) * mItem.derived_factor);
 
                 mConversionFormula.setText(
