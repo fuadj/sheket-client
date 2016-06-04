@@ -5,9 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
@@ -24,12 +22,12 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.data.SheketContract.CategoryEntry;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
-import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.utility.PrefUtil;
 
@@ -39,7 +37,7 @@ import java.util.List;
 /**
  * Created by gamma on 3/4/16.
  */
-public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ItemListFragment extends EmbeddedCategoryFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
 
     private ListView mItemList;
@@ -63,6 +61,7 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         setHasOptionsMenu(true);
+        setParentCategoryId(mCategoryId);
     }
 
     @Override
@@ -85,9 +84,9 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_item_list, container, false);
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        mItemList = (ListView) rootView.findViewById(R.id.all_item_list_view);
+        mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemList.setAdapter(mItemDetailAdapter);
         mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -105,69 +104,73 @@ public class ItemListFragment extends Fragment implements LoaderCallbacks<Cursor
         return rootView;
     }
 
-    void startLoaders() {
-        getLoaderManager().initLoader(LoaderId.MainActivity.ITEM_LIST_LOADER, null, this);
-        getLoaderManager().initLoader(LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER, null, this);
-    }
-
-    void restartLoaders() {
-        getLoaderManager().restartLoader(LoaderId.MainActivity.ITEM_LIST_LOADER, null, this);
-        getLoaderManager().restartLoader(LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER, null, this);
+    @Override
+    public void onCategorySelected(long category_id) {
+        mCategoryId = category_id;
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        startLoaders();
-        super.onActivityCreated(savedInstanceState);
+    public void onInitLoader() {
+        getLoaderManager().initLoader(LoaderId.MainActivity.ITEM_LIST_LOADER, null, this);
+    }
+
+    @Override
+    public void onRestartLoader() {
+        getLoaderManager().restartLoader(LoaderId.MainActivity.ITEM_LIST_LOADER, null, this);
+    }
+
+    @Override
+    protected int getCategoryLoaderId() {
+        return LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER;
+    }
+
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.fragment_item_list;
+    }
+
+    @Override
+    protected int getCategoryListResId() {
+        return R.id.item_list_list_view_category;
     }
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
-        long company_id = PrefUtil.getCurrentCompanyId(getContext());
-        switch (id) {
-            case LoaderId.MainActivity.ITEM_LIST_LOADER: {
-                String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
+        Loader loader = super.onCreateLoader(id, args);
 
-                return new CursorLoader(getActivity(),
-                        ItemEntry.buildBaseUriWithBranches(company_id),
-                        SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
-                        ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
-                        new String[]{String.valueOf(mCategoryId)},
-                        sortOrder
-                );
-            }
-            case LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER: {
-                String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
-
-                return new CursorLoader(getActivity(),
-                        CategoryEntry.buildBaseUri(company_id),
-                        SCategory.CATEGORY_COLUMNS,
-                        CategoryEntry._full(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
-                        new String[]{String.valueOf(mCategoryId)},
-                        sortOrder);
-            }
+        // we are only concerned about the item_list_loader
+        if (id != LoaderId.MainActivity.ITEM_LIST_LOADER) {
+            return loader;
         }
-        return null;
+
+        long company_id = PrefUtil.getCurrentCompanyId(getContext());
+        String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
+
+        return new CursorLoader(getActivity(),
+                ItemEntry.buildBaseUriWithBranches(company_id),
+                SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
+                ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
+                new String[]{String.valueOf(mCategoryId)},
+                sortOrder
+        );
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        switch (loader.getId()) {
-            case LoaderId.MainActivity.ITEM_LIST_LOADER:
-                mItemDetailAdapter.setItemCursor(data);
-                break;
-            case LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER:
+        super.onLoadFinished(loader, data);
+        if (loader.getId() == LoaderId.MainActivity.ITEM_LIST_LOADER) {
+            mItemDetailAdapter.setItemCursor(data);
         }
+        ListUtils.setDynamicHeight(mItemList);
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
-        switch (loader.getId()) {
-            case LoaderId.MainActivity.ITEM_LIST_LOADER:
-                mItemDetailAdapter.setItemCursor(null);
-                break;
-            case LoaderId.MainActivity.ITEM_LIST_CATEGORY_LOADER:
+        super.onLoaderReset(loader);
+        if (loader.getId() == LoaderId.MainActivity.ITEM_LIST_LOADER) {
+            mItemDetailAdapter.setItemCursor(null);
         }
+        ListUtils.setDynamicHeight(mItemList);
     }
 
     public static class SItemDetail {
