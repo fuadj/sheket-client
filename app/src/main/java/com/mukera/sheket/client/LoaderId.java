@@ -18,7 +18,8 @@ public class LoaderId {
     }
 
     public static class TransactionActivity {
-        public static final int ITEM_SEARCH_RESULT_LOADER = 2;
+        public static final int ITEM_SEARCH_LOADER = 1;
+        public static final int ITEM_SEARCH_CATEGORY_LOADER = 2;
         public static final int CATEGORY_SELECTION_LOADER = 3;
     }
 }

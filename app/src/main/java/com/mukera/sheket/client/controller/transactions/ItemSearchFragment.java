@@ -12,6 +12,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,8 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.ListUtils;
+import com.mukera.sheket.client.controller.items.EmbeddedCategoryFragment;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -34,7 +37,7 @@ import java.util.List;
 /**
  * Created by gamma on 3/5/16.
  */
-public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ItemSearchFragment extends EmbeddedCategoryFragment {
     public static final String SEARCH_BRANCH_ID_KEY = "search_branch_id_key";
     public static final String SEARCH_TRANS_TYPE = "trans_type";
 
@@ -77,22 +80,48 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState == null) {
-            Bundle args = getArguments();
-            mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, com.mukera.sheket.client.controller.transactions.TransactionActivity.BRANCH_ID_NONE);
-            mIsBuyingTransaction = args.getBoolean(SEARCH_TRANS_TYPE, true);
+        Bundle args = getArguments();
+        mBranchId = args.getLong(SEARCH_BRANCH_ID_KEY, com.mukera.sheket.client.controller.transactions.TransactionActivity.BRANCH_ID_NONE);
+        mIsBuyingTransaction = args.getBoolean(SEARCH_TRANS_TYPE, true);
+    }
 
-            getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER,
-                    null, this);
-        }
+    @Override
+    protected int getCategoryLoaderId() {
+        return LoaderId.TransactionActivity.ITEM_SEARCH_CATEGORY_LOADER;
+    }
+
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.fragment_item_search;
+    }
+
+    @Override
+    protected int getCategoryListResId() {
+        return R.id.item_search_list_view_categories;
+    }
+
+    @Override
+    public void onInitLoader() {
+        getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_LOADER, null, this);
+    }
+
+    @Override
+    public void onRestartLoader() {
+        getLoaderManager().restartLoader(LoaderId.TransactionActivity.ITEM_SEARCH_LOADER, null, this);
+    }
+
+    @Override
+    public void onCategorySelected(long category_id) {
+        mSelectedCategoryId = category_id;
+        //setParentCategoryId(mSelectedCategoryId);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_item_search, container, false);
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        mSearchList = (ListView) rootView.findViewById(R.id.item_search_list_view_search_result);
+        mSearchList = (ListView) rootView.findViewById(R.id.item_search_list_view_items);
         mSearchAdapter = new ItemSearchCursorAdapter(getContext());
         mSearchList.setAdapter(mSearchAdapter);
         mSearchList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -125,6 +154,9 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                                 mSelectedCategoryId = mCategoryNodes.get(which).category.category_id;
                                 mBtnCategory.setText(mCategoryNames[which]);
                                 dialog.dismiss();
+
+                                ItemSearchFragment.this.addCategoryToStack(mSelectedCategoryId);
+
                                 restartLoader();
                             }
                         }).create().show();
@@ -175,14 +207,6 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     void closeKeyboard() {
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(mSearchText.getApplicationWindowToken(), 0);
-    }
-
-    /**
-     * When query changes, you should call this to update ui
-     */
-    void restartLoader() {
-        getLoaderManager().restartLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER,
-                null, ItemSearchFragment.this);
     }
 
     List<CategoryTreeGenerator.CategoryNode> getCategories() {
@@ -254,13 +278,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_RESULT_LOADER, null, this);
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public Loader onCreateLoader(int id, Bundle args) {
+    protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
 
         if (mCurrSearch != null) mCurrSearch = mCurrSearch.trim();
@@ -273,6 +291,12 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%' ) ";
         }
 
+        String and_clause = (selection == null) ? " " : " AND ";
+
+        if (selection == null)
+            selection = "";
+        selection += and_clause + ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = " + mSelectedCategoryId;
+        /*
         if (mSelectedCategoryId != CategoryEntry.ROOT_CATEGORY_ID) {
             String and_clause = (selection == null) ? " " : " AND ";
 
@@ -280,6 +304,7 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                 selection = "";
             selection += and_clause + ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = " + mSelectedCategoryId;
         }
+        */
 
         return new CursorLoader(getActivity(),
                 ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
@@ -288,28 +313,30 @@ public class ItemSearchFragment extends Fragment implements LoaderCallbacks<Curs
                 sortOrder);
     }
 
+    @Override
+    protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mSearchAdapter.swapCursor(data);
+        ListUtils.setDynamicHeight(mSearchList);
+        setSearchStatus(!mSearchAdapter.isEmpty() || !getCategoryAdapter().isEmpty());
+    }
+
+    @Override
+    protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
+        mSearchAdapter.swapCursor(null);
+        ListUtils.setDynamicHeight(mSearchList);
+        setSearchStatus(false);
+    }
+
     void setSearchStatus(boolean found_items) {
         String str;
         if (found_items)
             str = "Search Results";
         else {
-            str = "No result found";
-            if (mCurrSearch != null)
+            str = "No Items Found";
+            if (!TextUtils.isEmpty(mCurrSearch))
                 str = String.format("No result found for: %s", mCurrSearch);
         }
         mResultLabel.setText(str);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mSearchAdapter.swapCursor(data);
-        setSearchStatus(!mSearchAdapter.isEmpty());
-    }
-
-    @Override
-    public void onLoaderReset(Loader loader) {
-        mSearchAdapter.swapCursor(null);
-        setSearchStatus(false);
     }
 
     public interface SearchResultListener {

@@ -81,29 +81,6 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         return super.onOptionsItemSelected(item);
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = super.onCreateView(inflater, container, savedInstanceState);
-
-        mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
-        mItemDetailAdapter = new ItemDetailAdapter(getActivity());
-        mItemList.setAdapter(mItemDetailAdapter);
-        mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                SItemDetail itemDetail = mItemDetailAdapter.getItem(position);
-                ItemDetailDialog dialog = new ItemDetailDialog();
-                dialog.mItemDetail = itemDetail;
-                dialog.show(fm, "Detail");
-            }
-        });
-
-        return rootView;
-    }
-
     @Override
     public void onCategorySelected(long category_id) {
         mCategoryId = category_id;
@@ -134,15 +111,31 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         return R.id.item_list_list_view_category;
     }
 
+    @Nullable
     @Override
-    public Loader onCreateLoader(int id, Bundle args) {
-        Loader loader = super.onCreateLoader(id, args);
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        // we are only concerned about the item_list_loader
-        if (id != LoaderId.MainActivity.ITEM_LIST_LOADER) {
-            return loader;
-        }
+        mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
+        mItemDetailAdapter = new ItemDetailAdapter(getActivity());
+        mItemList.setAdapter(mItemDetailAdapter);
+        mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
 
+                SItemDetail itemDetail = mItemDetailAdapter.getItem(position);
+                ItemDetailDialog dialog = new ItemDetailDialog();
+                dialog.mItemDetail = itemDetail;
+                dialog.show(fm, "Detail");
+            }
+        });
+
+        return rootView;
+    }
+
+    @Override
+    protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
 
@@ -156,21 +149,14 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        super.onLoadFinished(loader, data);
-        if (loader.getId() == LoaderId.MainActivity.ITEM_LIST_LOADER) {
-            mItemDetailAdapter.setItemCursor(data);
-        }
+    protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mItemDetailAdapter.setItemCursor(data);
         ListUtils.setDynamicHeight(mItemList);
     }
 
     @Override
-    public void onLoaderReset(Loader loader) {
-        super.onLoaderReset(loader);
-        if (loader.getId() == LoaderId.MainActivity.ITEM_LIST_LOADER) {
-            mItemDetailAdapter.setItemCursor(null);
-        }
-        ListUtils.setDynamicHeight(mItemList);
+    protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
+        mItemDetailAdapter.setItemCursor(null);
     }
 
     public static class SItemDetail {

@@ -76,17 +76,26 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
 
         // The root category is the DEFAULT
         setParentCategoryId(CategoryEntry.ROOT_CATEGORY_ID);
+        mParentCategoryBackStack = new Stack<>();
     }
 
     protected void setParentCategoryId(long category_id) {
         mCurrentParentCategoryId = category_id;
-        mParentCategoryBackStack = new Stack<>();
+    }
+
+    protected void addCategoryToStack(long category_id) {
+        mParentCategoryBackStack.push(mCurrentParentCategoryId);
+        mCurrentParentCategoryId = category_id;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         initLoader();
         super.onActivityCreated(savedInstanceState);
+    }
+
+    protected CursorAdapter getCategoryAdapter() {
+        return mAdapter;
     }
 
     @Nullable
@@ -104,8 +113,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                 if (cursor != null && cursor.moveToPosition(position)) {
                     SCategory category = new SCategory(cursor);
 
-                    mParentCategoryBackStack.push(mCurrentParentCategoryId);
-                    mCurrentParentCategoryId = category.category_id;
+                    addCategoryToStack(category.category_id);
 
                     onCategorySelected(category.category_id);
                     restartLoader();
@@ -129,7 +137,8 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                          * it should naturally do what is mostly expected which is move back to the
                          * previous fragment.
                          */
-                        getActivity().getSupportFragmentManager().popBackStack();
+                        getActivity().onBackPressed();
+                        //getActivity().getSupportFragmentManager().popBackStack();
                     } else {
                         /**
                          * If we were inside a sub-category, we should move back to the parent
@@ -149,10 +158,14 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         return rootView;
     }
 
+    protected abstract Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args);
+    protected abstract void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data);
+    protected abstract void onEmbeddedLoadReset(Loader<Cursor> loader);
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (id != getCategoryLoaderId())
-            return null;
+            return onEmbeddedCreateLoader(id, args);
 
         String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
 
@@ -166,20 +179,22 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() != getCategoryLoaderId()) {
-            return;
+        if (loader.getId() == getCategoryLoaderId()) {
+            mAdapter.swapCursor(data);
+            ListUtils.setDynamicHeight(mCategoryList);
+        } else {
+            onEmbeddedLoadFinished(loader, data);
         }
-        mAdapter.swapCursor(data);
-        ListUtils.setDynamicHeight(mCategoryList);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         if (loader.getId() != getCategoryLoaderId()) {
-            return;
+            mAdapter.swapCursor(null);
+            ListUtils.setDynamicHeight(mCategoryList);
+        } else {
+            onEmbeddedLoadReset(loader);
         }
-        mAdapter.swapCursor(null);
-        ListUtils.setDynamicHeight(mCategoryList);
     }
 
     public static class CategoryAdapter extends CursorAdapter {
