@@ -259,7 +259,7 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
 
             final long category_id = category.category_id;
             holder.mCategoryName.setText(category.name);
-            holder.mSubCategoryCount.setVisibility(View.GONE);
+            holder.mSubCategoryCount.setText("" + category.childrenCategories.size());
             boolean is_selected = mPreviousSelectedCategoryId == category_id;
             holder.mSelectCategory.setChecked(is_selected);
             if (is_selected)
