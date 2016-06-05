@@ -13,6 +13,9 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by fuad on 5/21/16.
  */
@@ -23,44 +26,99 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     public static final String JSON_NAME = "name";
     public static final String JSON_PARENT_ID = "parent_id";
 
-    static String _f(String s) { return CategoryEntry._full(s); }
+    static String _fP(String s) { return CategoryEntry._fullParent(s); }
+    static String _fC(String s) { return CategoryEntry._fullChild(s); }
+
     public static final String[] CATEGORY_COLUMNS = {
-            _f(CategoryEntry.COLUMN_COMPANY_ID),
-            _f(CategoryEntry.COLUMN_CATEGORY_ID),
-            _f(CategoryEntry.COLUMN_NAME),
-            _f(CategoryEntry.COLUMN_PARENT_ID),
-            _f(COLUMN_CHANGE_INDICATOR),
-            _f(COLUMN_UUID)
+            // Parent category columns
+            _fP(CategoryEntry.COLUMN_COMPANY_ID),
+            _fP(CategoryEntry.COLUMN_CATEGORY_ID),
+            _fP(CategoryEntry.COLUMN_NAME),
+            _fP(CategoryEntry.COLUMN_PARENT_ID),
+            _fP(COLUMN_CHANGE_INDICATOR),
+            _fP(COLUMN_UUID),
+
+            // Child category columns
+            _fC(CategoryEntry.COLUMN_COMPANY_ID),
+            _fC(CategoryEntry.COLUMN_CATEGORY_ID),
+            _fC(CategoryEntry.COLUMN_NAME),
+            _fC(CategoryEntry.COLUMN_PARENT_ID),
+            _fC(COLUMN_CHANGE_INDICATOR),
+            _fC(COLUMN_UUID),
     };
 
-    public static final int COL_COMPANY_ID = 0;
-    public static final int COL_CATEGORY_ID = 1;
-    public static final int COL_NAME = 2;
-    public static final int COL_PARENT_ID = 3;
-    public static final int COL_CHANGE_INDICATOR = 4;
-    public static final int COL_CLIENT_UUID = 5;
+    public static final int COL_P_COMPANY_ID = 0;
+    public static final int COL_P_CATEGORY_ID = 1;
+    public static final int COL_P_NAME = 2;
+    public static final int COL_P_PARENT_ID = 3;
+    public static final int COL_P_CHANGE_INDICATOR = 4;
+    public static final int COL_P_CLIENT_UUID = 5;
 
-    public static final int COL_LAST = 6;
+    public static final int COL_C_COMPANY_ID = 6;
+    public static final int COL_C_CATEGORY_ID = 7;
+    public static final int COL_C_NAME = 8;
+    public static final int COL_C_PARENT_ID = 9;
+    public static final int COL_C_CHANGE_INDICATOR = 10;
+    public static final int COL_C_CLIENT_UUID = 11;
+
+    public static final int COL_LAST = 12;
 
     public long company_id;
     public long category_id;
     public String name;
     public long parent_id;
 
+    public List<SCategory> childrenCategories;
+
     public SCategory() {}
 
     public SCategory(Cursor cursor) {
-        this(cursor, 0);
+        this(cursor, 0, true, true);
     }
 
-    public SCategory(Cursor cursor, int offset) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
-        category_id = cursor.getLong(COL_CATEGORY_ID + offset);
-        name = Utils.toTitleCase(cursor.getString(COL_NAME + offset));
-        parent_id = cursor.getLong(COL_PARENT_ID + offset);
+    private static final int NO_CATEGORY_FOUND_ID = 0;
+    public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
+        if (is_parent) {
+            company_id = cursor.getLong(COL_P_COMPANY_ID + offset);
+            category_id = cursor.getLong(COL_P_CATEGORY_ID + offset);
+            name = Utils.toTitleCase(cursor.getString(COL_P_NAME + offset));
+            parent_id = cursor.getLong(COL_P_PARENT_ID + offset);
 
-        change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
-        client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
+            change_status = cursor.getInt(COL_P_CHANGE_INDICATOR + offset);
+            client_uuid = cursor.getString(COL_P_CLIENT_UUID + offset);
+
+            childrenCategories = new ArrayList<>();
+            if (fetch_children) {
+                do {
+                    SCategory child = new SCategory(cursor, offset, false, false);
+                    if (child.category_id == NO_CATEGORY_FOUND_ID) {
+                        break;
+                    }
+
+                    // we've finished this 'parent' category and move to next, so STOP!!!
+                    if (category_id != child.parent_id) {
+                        cursor.moveToPrevious();
+                        break;
+                    }
+                    childrenCategories.add(child);
+                } while (cursor.moveToNext());
+            }
+        } else {
+            if (cursor.getType(COL_C_CATEGORY_ID) == Cursor.FIELD_TYPE_NULL) {
+                category_id = NO_CATEGORY_FOUND_ID;
+                return;
+            }
+
+            company_id = cursor.getLong(COL_C_COMPANY_ID + offset);
+            category_id = cursor.getLong(COL_C_CATEGORY_ID + offset);
+            name = Utils.toTitleCase(cursor.getString(COL_C_NAME + offset));
+            parent_id = cursor.getLong(COL_C_PARENT_ID + offset);
+
+            change_status = cursor.getInt(COL_C_CHANGE_INDICATOR + offset);
+            client_uuid = cursor.getString(COL_C_CLIENT_UUID + offset);
+
+            childrenCategories = null;
+        }
     }
 
     public ContentValues toContentValues() {
