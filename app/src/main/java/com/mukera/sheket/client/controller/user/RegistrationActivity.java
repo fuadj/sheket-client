@@ -5,6 +5,7 @@ import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.sync.SheketService;
@@ -20,10 +21,10 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        ActionBar ab = getSupportActionBar();
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        ab.setDisplayShowHomeEnabled(false); // show or hide the default home button
-        ab.setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         if (savedInstanceState == null) {
             replaceWithSingup();
