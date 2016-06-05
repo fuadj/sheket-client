@@ -2,10 +2,8 @@ package com.mukera.sheket.client.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.os.ConditionVariable;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.text.TextUtils;
 
 import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -76,7 +74,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
         this(cursor, 0, true, true);
     }
 
-    private static final int NO_CATEGORY_FOUND_ID = 0;
+    private static final int NO_CHILD_FOUND = 0;
     public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
         if (is_parent) {
             company_id = cursor.getLong(COL_P_COMPANY_ID + offset);
@@ -91,7 +89,23 @@ public class SCategory extends UUIDSyncable implements Parcelable {
             if (fetch_children) {
                 do {
                     SCategory child = new SCategory(cursor, offset, false, false);
-                    if (child.category_id == NO_CATEGORY_FOUND_ID) {
+                    if (child.category_id == NO_CHILD_FOUND) {
+                        /**
+                         * There are 2 possible states this can occur in.
+                         * 1.   A parent category doesn't have any(not even 1) children
+                         *      and this do-while loop is entered for the FIRST TIME.
+                         *      It will hit this block. So the thing to do is just finish
+                         *      as we don't have any children.
+                         *
+                         * 2.   A parent category has > 0 children, and we've added them
+                         *      to the {@code childrenCategories} list. We then TRANSITION
+                         *      to a NEW CATEGORY which doesn't have any children and this
+                         *      block is hit. So the thing to do now is backtrack the cursor
+                         *      so the category will be visited on the next round and exit.
+                         */
+                        if (childrenCategories.size() > 0) {
+                            cursor.moveToPrevious();
+                        }
                         break;
                     }
 
@@ -105,7 +119,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
             }
         } else {
             if (cursor.getType(COL_C_CATEGORY_ID) == Cursor.FIELD_TYPE_NULL) {
-                category_id = NO_CATEGORY_FOUND_ID;
+                category_id = NO_CHILD_FOUND;
                 return;
             }
 
