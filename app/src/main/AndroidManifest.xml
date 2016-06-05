@@ -61,15 +61,6 @@
         </activity>
 
         <activity
-            android:label="Item Detail"
-            android:name=".controller.items.ItemDetailActivity"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-
-        <activity
             android:label="Settings"
             android:name=".controller.admin.SettingsActivity"
             android:parentActivityName=".MainActivity" >

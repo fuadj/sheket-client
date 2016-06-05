@@ -87,8 +87,14 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
-        if (isNavDrawerOpen()) {
-            closeNavDrawer();
+        // If there are fragments, do what is normally done
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            super.onBackPressed();
+            return;
+        }
+
+        if (isNavDrawerClosed()) {
+            openNavDrawer();
         } else {
             super.onBackPressed();
         }
@@ -96,6 +102,10 @@ public class MainActivity extends AppCompatActivity implements
 
     protected boolean isNavDrawerOpen() {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START);
+    }
+
+    protected boolean isNavDrawerClosed() {
+        return mDrawerLayout != null && !mDrawerLayout.isDrawerOpen(GravityCompat.START);
     }
 
     protected void closeNavDrawer() {
@@ -207,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         closeNavDrawer();
     }
+
 
     @Override
     public void userPermissionChanged() {
