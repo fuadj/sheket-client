@@ -106,11 +106,6 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         return R.layout.fragment_item_list;
     }
 
-    @Override
-    protected int getCategoryListResId() {
-        return R.id.item_list_list_view_category;
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -157,6 +152,7 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
     @Override
     protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
         mItemDetailAdapter.setItemCursor(null);
+        ListUtils.setDynamicHeight(mItemList);
     }
 
     public static class SItemDetail {

@@ -96,11 +96,6 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    protected int getCategoryListResId() {
-        return R.id.item_search_list_view_categories;
-    }
-
-    @Override
     public void onInitLoader() {
         getLoaderManager().initLoader(LoaderId.TransactionActivity.ITEM_SEARCH_LOADER, null, this);
     }

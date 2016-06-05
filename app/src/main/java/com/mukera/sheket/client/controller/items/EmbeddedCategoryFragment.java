@@ -32,13 +32,14 @@ import java.util.Stack;
 public abstract class EmbeddedCategoryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
     protected abstract int getCategoryLoaderId();
     protected abstract int getLayoutResId();
-    protected abstract int getCategoryListResId();
 
     protected long mCurrentParentCategoryId;
     protected Stack<Long> mParentCategoryBackStack;
 
     private ListView mCategoryList;
     private CategoryAdapter mAdapter;
+
+    private View mDividerView;
 
     protected void initLoader() {
         getLoaderManager().initLoader(getCategoryLoaderId(), null, this);
@@ -103,7 +104,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
 
-        mCategoryList = (ListView) rootView.findViewById(getCategoryListResId());
+        mCategoryList = (ListView) rootView.findViewById(R.id.embedded_category_list_list_view);
         mAdapter = new CategoryAdapter(getActivity());
         mCategoryList.setAdapter(mAdapter);
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -120,6 +121,8 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                 }
             }
         });
+
+        mDividerView = rootView.findViewById(R.id.embedded_category_list_separator_divider);
 
         /**
          * This handles the "back" button key. If we are in a sub-category
@@ -182,6 +185,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         if (loader.getId() == getCategoryLoaderId()) {
             mAdapter.swapCursor(data);
             ListUtils.setDynamicHeight(mCategoryList);
+            mDividerView.setVisibility(data.getCount() > 0 ? View.VISIBLE : View.GONE);
         } else {
             onEmbeddedLoadFinished(loader, data);
         }
@@ -192,6 +196,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         if (loader.getId() != getCategoryLoaderId()) {
             mAdapter.swapCursor(null);
             ListUtils.setDynamicHeight(mCategoryList);
+            mDividerView.setVisibility(View.GONE);
         } else {
             onEmbeddedLoadReset(loader);
         }

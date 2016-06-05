@@ -83,16 +83,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ListView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/item_search_list_view_categories"/>
+            <include layout="@layout/layout_category_list" />
 
-            <!-- This will separate the two list view-->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/listDivider"/>
             <ListView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

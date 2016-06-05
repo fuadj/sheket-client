@@ -8,16 +8,30 @@
     android:padding="@dimen/activity_vertical_margin"
     >
 
-    <ListView
-        android:id="@+id/branch_item_list_view"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="5dp"
-        android:drawSelectorOnTop="true"
-        android:gravity="center"
-        android:verticalSpacing="5dp"
-        android:focusable="true"
-        android:clickable="true" />
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/layout_category_list" />
+
+            <ListView
+                android:id="@+id/branch_item_list_view_items"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:drawSelectorOnTop="true"
+                android:gravity="center"
+                android:verticalSpacing="5dp"
+                android:focusable="true"
+                android:clickable="true" />
+
+        </LinearLayout>
+    </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/float_btn_item_list_buy"

@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -16,11 +15,11 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.util.Utils;
 import com.mukera.sheket.client.controller.transactions.TransactionActivity;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -31,7 +30,7 @@ import com.mukera.sheket.client.utility.PrefUtil;
 /**
  * Created by gamma on 3/27/16.
  */
-public class BranchItemFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class BranchItemFragment extends EmbeddedCategoryFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
     private static final String KEY_BRANCH_ID = "key_branch_id";
 
@@ -58,6 +57,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         mBranchId = args.getLong(KEY_BRANCH_ID);
+        setParentCategoryId(mCategoryId);
     }
 
     void startTransactionActivity(int action, long branch_id) {
@@ -70,7 +70,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_branch_item, container, false);
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
         FloatingActionButton buyAction, sellAction;
 
@@ -89,7 +89,7 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
             }
         });
 
-        mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view);
+        mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view_items);
         mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
         final AppCompatActivity activity = (AppCompatActivity)getActivity();
         mBranchItemAdapter.setListener(new BranchItemCursorAdapter.ItemSelectionListener() {
@@ -155,13 +155,31 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this);
-        super.onActivityCreated(savedInstanceState);
+    protected int getCategoryLoaderId() {
+        return LoaderId.MainActivity.BRANCH_ITEM_CATEGORY_LOADER;
     }
 
     @Override
-    public Loader onCreateLoader(int id, Bundle args) {
+    protected int getLayoutResId() {
+        return R.layout.fragment_branch_item;
+    }
+
+    @Override
+    public void onInitLoader() {
+        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this); }
+
+    @Override
+    public void onRestartLoader() {
+        getLoaderManager().restartLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this);
+    }
+
+    @Override
+    public void onCategorySelected(long category_id) {
+        mCategoryId = category_id;
+    }
+
+    @Override
+    protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId),
@@ -173,13 +191,15 @@ public class BranchItemFragment extends Fragment implements LoaderCallbacks<Curs
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
         mBranchItemAdapter.swapCursor(data);
+        ListUtils.setDynamicHeight(mBranchItemList);
     }
 
     @Override
-    public void onLoaderReset(Loader loader) {
+    protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
         mBranchItemAdapter.swapCursor(null);
+        ListUtils.setDynamicHeight(mBranchItemList);
     }
 
     public static class BranchItemCursorAdapter extends android.support.v4.widget.CursorAdapter {
