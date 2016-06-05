@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.base_adapters.ArrayRecyclerAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utility.PrefUtil;
@@ -56,11 +57,8 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
         mCategoryAdapter.setListener(new CategoryViewAdapter.AdapterSelectionListener() {
             @Override
             public void onClick(int position) {
-                Cursor cursor = mCategoryAdapter.getCursor();
-                if (cursor != null && cursor.moveToPosition(position)) {
-                    SCategory category = new SCategory(cursor);
-                    mListener.onCategorySelected(category);
-                }
+                SCategory category = mCategoryAdapter.getItem(position);
+                mListener.onCategorySelected(category);
             }
         });
         mCategoryList.setAdapter(mCategoryAdapter);
@@ -83,15 +81,15 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mCategoryAdapter.swapCursor(data);
+        mCategoryAdapter.setCategoryCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mCategoryAdapter.swapCursor(null);
+        mCategoryAdapter.setCategoryCursor(null);
     }
 
-    private static class CategoryViewAdapter extends CursorRecyclerViewAdapter<CategoryViewAdapter.ViewHolder> {
+    private static class CategoryViewAdapter extends ArrayRecyclerAdapter<SCategory, CategoryViewAdapter.ViewHolder> {
 
         static final int[] CATEGORY_COLORS = {
                 0xff039BE5,
@@ -112,7 +110,22 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
         public void setListener(AdapterSelectionListener listener) { mAdapterListener = listener; }
 
         public CategoryViewAdapter(Context context) {
-            super(context, null);
+            super(context);
+        }
+
+        public void setCategoryCursor(Cursor cursor) {
+            setNotifyOnChange(false);
+
+            clear();
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    SCategory parent_category = new SCategory(cursor);
+                    add(parent_category);
+                } while (cursor.moveToNext());
+            }
+
+            setNotifyOnChange(true);
+            notifyDataSetChanged();
         }
 
         @Override
@@ -123,11 +136,22 @@ public class CategoryViewFragment extends Fragment implements LoaderManager.Load
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor, int position) {
-            SCategory category = new SCategory(cursor);
-            viewHolder.titleTextView.setText(category.name);
-            viewHolder.bodyTextView.setText("Test Category");
-            viewHolder.card.setCardBackgroundColor(CATEGORY_COLORS[position % CATEGORY_COLORS.length]);
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            SCategory category = getItem(position);
+            holder.titleTextView.setText(category.name);
+            if (category.childrenCategories.isEmpty()) {
+                holder.bodyTextView.setVisibility(View.GONE);
+            } else {
+                holder.bodyTextView.setVisibility(View.VISIBLE);
+                StringBuilder s = new StringBuilder();
+                for (int i = 0; i < category.childrenCategories.size(); i++) {
+                    if (i != 0) s.append("\n");
+                    s.append("\t" + category.childrenCategories.get(i).name);
+                }
+                holder.bodyTextView.setText(s.toString());
+            }
+            int n = (int)Math.ceil(Math.random() * (CATEGORY_COLORS.length + 1));
+            holder.card.setCardBackgroundColor(CATEGORY_COLORS[n % CATEGORY_COLORS.length]);
         }
 
         public static class ViewHolder extends RecyclerView.ViewHolder {
