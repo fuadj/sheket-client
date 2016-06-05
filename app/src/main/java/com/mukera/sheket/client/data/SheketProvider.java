@@ -47,6 +47,7 @@ public class SheketProvider extends ContentProvider {
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
+    private static final SQLiteQueryBuilder sCategoryWithChildrenQueryBuilder;
 
     static {
         sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder = new SQLiteQueryBuilder();
@@ -73,23 +74,6 @@ public class SheketProvider extends ContentProvider {
         );
 
         sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
-        // items_table LEFT JOIN
-        //      (branch_items_table INNER JOIN branches_table ON branch_id)
-        // ON (item_id)
-        /*
-        sItemWithBranchQueryBuilder.setTables(
-                ItemEntry.TABLE_NAME + " LEFT JOIN " +
-                        BranchItemEntry.TABLE_NAME + " INNER JOIN " + BranchEntry.TABLE_NAME +
-                        " ON (" +
-                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) +
-                        " = " +
-                        BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ) " +
-                        " ON (" +
-                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) +
-                        " = " +
-                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) + ")"
-        );
-        */
         sItemWithBranchQueryBuilder.setTables(
                 ItemEntry.TABLE_NAME + " LEFT JOIN " +
                         BranchItemEntry.TABLE_NAME + " ON (" +
@@ -97,6 +81,16 @@ public class SheketProvider extends ContentProvider {
                         " LEFT JOIN " +
                         BranchEntry.TABLE_NAME + " ON ( " +
                         BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) + " = " + BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + ")"
+        );
+        sCategoryWithChildrenQueryBuilder = new SQLiteQueryBuilder();
+        sCategoryWithChildrenQueryBuilder.setTables(
+                String.format("%s %s LEFT JOIN %s %s ON %s = %s",
+                        CategoryEntry.TABLE_NAME,
+                        CategoryEntry.PART_PARENT,
+                        CategoryEntry.TABLE_NAME,
+                        CategoryEntry.PART_CHILD,
+                        CategoryEntry._fullChild(CategoryEntry.COLUMN_PARENT_ID),
+                        CategoryEntry._fullParent(CategoryEntry.COLUMN_CATEGORY_ID))
         );
     }
 
@@ -150,6 +144,7 @@ public class SheketProvider extends ContentProvider {
     }
 
     String[] withAppendedSelectionArgs(String[] prev_args, String[] new_args) {
+        if (new_args == null) return prev_args;
         if (prev_args == null) return new_args;
 
         String[] combined_args = new String[prev_args.length + new_args.length];
@@ -207,12 +202,24 @@ public class SheketProvider extends ContentProvider {
 
             case CATEGORY_WITH_ID:
             case CATEGORY: {
+                query_db = false;
                 tableName = CategoryEntry.TABLE_NAME;
                 if (uri_match == CATEGORY_WITH_ID) {
-                    selection = CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
-                    selectionArgs = null;
+                    selection = withAppendedSelection(selection,
+                            CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ");
+                    selectionArgs = withAppendedSelectionArgs(selectionArgs, null);
                 }
-                column_company_id = CategoryEntry._full(CategoryEntry.COLUMN_COMPANY_ID);
+
+                selection = withAppendedCompanyIdSelection(selection,
+                        CategoryEntry._fullParent(CategoryEntry.COLUMN_COMPANY_ID));
+                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs,
+                        company_id);
+
+                result = sCategoryWithChildrenQueryBuilder.query(
+                        mDbHelper.getReadableDatabase(),
+                        projection,
+                        selection, selectionArgs,
+                        null, null, sortOrder);
                 break;
             }
 

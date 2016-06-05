@@ -178,12 +178,16 @@ public class SheketContract {
 
         public static final String TABLE_NAME = "category_table";
 
+        public static final String PART_PARENT = "parent";
+        public static final String PART_CHILD = "child";
+
         public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+        public static String _fullParent(String col_name) { return PART_PARENT + "." + col_name; }
+        public static String _fullChild(String col_name) { return PART_CHILD + "." + col_name; }
 
         public static final String COLUMN_CATEGORY_ID = "_id";
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_PARENT_ID = "parent_id";
-        public static final String COLUMN_NUM_SUB_CHILDREN = "sub_children";
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
