@@ -8,17 +8,18 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.CursorAdapter;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.BaseCategoryChildrenAdapter;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -95,7 +96,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         super.onActivityCreated(savedInstanceState);
     }
 
-    protected CursorAdapter getCategoryAdapter() {
+    protected BaseAdapter getCategoryAdapter() {
         return mAdapter;
     }
 
@@ -110,15 +111,12 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor = mAdapter.getCursor();
-                if (cursor != null && cursor.moveToPosition(position)) {
-                    SCategory category = new SCategory(cursor);
+                SCategory category = mAdapter.getItem(position);
 
-                    addCategoryToStack(category.category_id);
+                addCategoryToStack(category.category_id);
 
-                    onCategorySelected(category.category_id);
-                    restartLoader();
-                }
+                onCategorySelected(category.category_id);
+                restartLoader();
             }
         });
 
@@ -183,7 +181,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
-            mAdapter.swapCursor(data);
+            mAdapter.setCategoryCursor(data);
             ListUtils.setDynamicHeight(mCategoryList);
             mDividerView.setVisibility(data.getCount() > 0 ? View.VISIBLE : View.GONE);
         } else {
@@ -194,7 +192,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         if (loader.getId() != getCategoryLoaderId()) {
-            mAdapter.swapCursor(null);
+            mAdapter.setCategoryCursor(null);
             ListUtils.setDynamicHeight(mCategoryList);
             mDividerView.setVisibility(View.GONE);
         } else {
@@ -202,9 +200,9 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         }
     }
 
-    public static class CategoryAdapter extends CursorAdapter {
+    public static class CategoryAdapter extends BaseCategoryChildrenAdapter {
         public CategoryAdapter(Context context) {
-            super(context, null);
+            super(context);
         }
 
         private static class ViewHolder {
@@ -217,20 +215,22 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         }
 
         @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.list_item_select_category, parent, false);
-            ViewHolder holder = new ViewHolder(view);
+        public View getView(int position, View convertView, ViewGroup parent) {
+            SCategory category = getItem(position);
 
-            view.setTag(holder);
-            return view;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            ViewHolder holder = (ViewHolder) view.getTag();
-            final SCategory category = new SCategory(cursor);
+            ViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                convertView = inflater.inflate(R.layout.list_item_select_category, parent, false);
+                holder = new ViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
 
             holder.categoryName.setText(category.name);
+            holder.childrenCount.setText("" + category.childrenCategories.size());
+            return convertView;
         }
     }
 }
