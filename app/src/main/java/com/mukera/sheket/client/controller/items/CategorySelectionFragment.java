@@ -32,6 +32,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.base_adapters.BaseCategoryChildrenAdapter;
 import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -132,13 +133,10 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor = mCategoryAdapter.getCursor();
-                if (cursor != null && cursor.moveToPosition(position)) {
-                    SCategory category = new SCategory(cursor);
-                    mParentCategoryBackStack.push(mCurrentParentCategoryId);
-                    mCurrentParentCategoryId = category.category_id;
-                    restartLoader();
-                }
+                SCategory category = mCategoryAdapter.getItem(position);
+                mParentCategoryBackStack.push(mCurrentParentCategoryId);
+                mCurrentParentCategoryId = category.category_id;
+                restartLoader();
             }
         });
 
@@ -214,15 +212,15 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mCategoryAdapter.swapCursor(data);
+        mCategoryAdapter.setCategoryCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
-        mCategoryAdapter.swapCursor(null);
+        mCategoryAdapter.setCategoryCursor(null);
     }
 
-    public static class CategorySelectionCursorAdapter extends CursorAdapter {
+    public static class CategorySelectionCursorAdapter extends BaseCategoryChildrenAdapter {
         public interface AdapterSelectionListener {
             void categorySelected(boolean newly_selected, long category_id, SCategory category);
         }
@@ -242,22 +240,22 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
         public long mPreviousSelectedCategoryId;
 
         public CategorySelectionCursorAdapter(Context context) {
-            super(context, null);
+            super(context);
         }
 
         @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.list_item_item_category_selection, parent, false);
-            ViewHolder holder = new ViewHolder(view);
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final SCategory category = getItem(position);
 
-            view.setTag(holder);
-            return view;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            ViewHolder holder = (ViewHolder) view.getTag();
-            final SCategory category = new SCategory(cursor);
+            ViewHolder holder;
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).
+                        inflate(R.layout.list_item_item_category_selection, parent, false);
+                holder = new ViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
 
             final long category_id = category.category_id;
             holder.mCategoryName.setText(category.name);
@@ -274,6 +272,8 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
                     notifyDataSetChanged();
                 }
             });
+
+            return convertView;
         }
     }
 
