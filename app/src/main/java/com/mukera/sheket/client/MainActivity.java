@@ -1,22 +1,20 @@
 package com.mukera.sheket.client;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ImageButton;
 
+import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
@@ -35,9 +33,13 @@ import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utility.PrefUtil;
 
+import java.io.File;
+
 
 public class MainActivity extends AppCompatActivity implements
         NavigationFragment.BranchSelectionCallback, SPermission.PermissionChangeListener {
+
+    private static final int REQUEST_FILE_CHOOSER = 1234;
 
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -68,14 +70,6 @@ public class MainActivity extends AppCompatActivity implements
                 replace(R.id.main_navigation_container, new NavigationFragment()).
                 commit();
         openNavDrawer();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            recreate();
-        }
     }
 
     void requireLogin() {
@@ -161,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements
 
     void replaceMainFragment(Fragment fragment) {
         FragmentManager fm = getSupportFragmentManager();
-        for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+        for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
             fm.popBackStack();
         }
         getSupportFragmentManager().beginTransaction()
@@ -185,6 +179,14 @@ public class MainActivity extends AppCompatActivity implements
                 });
                 replaceMainFragment(fragment);
                 break;
+            case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
+                // Create the ACTION_GET_CONTENT Intent
+                Intent getContentIntent = FileUtils.createGetContentIntent();
+
+                Intent intent = Intent.createChooser(getContentIntent, "Select a file");
+                startActivityForResult(intent, REQUEST_FILE_CHOOSER);
+                break;
+            }
             case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
                 replaceMainFragment(new BranchFragment());
                 break;
@@ -197,10 +199,11 @@ public class MainActivity extends AppCompatActivity implements
             case NavigationFragment.StaticNavigationAdapter.ENTITY_MEMBERS:
                 replaceMainFragment(new MembersFragment());
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC:
+            case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC: {
                 Intent intent = new Intent(this, SheketService.class);
                 startService(intent);
                 break;
+            }
             case NavigationFragment.StaticNavigationAdapter.ENTITY_SETTINGS:
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
@@ -216,6 +219,30 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
         closeNavDrawer();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            recreate();
+        }
+
+        switch (requestCode) {
+            case REQUEST_FILE_CHOOSER:
+                if (resultCode == RESULT_OK) {
+                    final Uri uri = data.getData();
+
+                    // Get the File path from the Uri
+                    String path = FileUtils.getPath(this, uri);
+
+                    // Alternatively, use FileUtils.getFile(Context, Uri)
+                    if (path != null && FileUtils.isLocal(path)) {
+                        File file = new File(path);
+                    }
+                }
+                break;
+        }
     }
 
 

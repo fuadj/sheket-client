@@ -84,6 +84,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             List<Integer> adminCategories = new ArrayList<>();
             if (user_permission == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
                 adminCategories.add(StaticNavigationAdapter.ENTITY_ALL_ITEMS);
+                adminCategories.add(StaticNavigationAdapter.ENTITY_IMPORT);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_HISTORY);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_BRANCHES);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_MEMBERS);
@@ -244,6 +245,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         public static final int ENTITY_DEBUG = 7;
         public static final int ENTITY_LOG_OUT = 8;
         public static final int ENTITY_HISTORY = 9;
+        public static final int ENTITY_IMPORT = 10;
 
         public static final HashMap<Integer,
                 Pair<String, Integer>> sEntityAndIcon;
@@ -252,6 +254,8 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             sEntityAndIcon = new HashMap<>();
             sEntityAndIcon.put(ENTITY_ALL_ITEMS,
                     new Pair<>("All Items", R.mipmap.ic_action_home));
+            sEntityAndIcon.put(ENTITY_IMPORT,
+                    new Pair<>("Import", R.drawable.ic_action_download));
             sEntityAndIcon.put(ENTITY_SYNC,
                     new Pair<>("Sync Now", R.mipmap.ic_action_refresh));
             sEntityAndIcon.put(ENTITY_BRANCHES,

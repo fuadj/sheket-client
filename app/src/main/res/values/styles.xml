@@ -72,4 +72,15 @@
     <style name="TextAppearance.Sheket.Category.Title" parent="TextAppearance.Sheket.Category">
         <item name="android:textSize">@dimen/category_title_textsize</item>
     </style>
+
+    <style name="fileChooserName">
+        <item name="android:drawablePadding">16dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+    </style>
+
 </resources>
