@@ -21,7 +21,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.base_adapters.ArrayRecyclerAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 /**
  * Created by fuad on 6/2/16.

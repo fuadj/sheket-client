@@ -19,14 +19,14 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.UnitsOfMeasurement;
-import com.mukera.sheket.client.controller.util.Utils;
-import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
+import com.mukera.sheket.client.utils.Utils;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.TransItemEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction.*;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 /**
  * Created by gamma on 4/3/16.

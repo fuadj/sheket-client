@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.util;
+package com.mukera.sheket.client.utils;
 
 import java.text.DecimalFormat;
 

@@ -17,11 +17,11 @@ import android.widget.*;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.util.Utils;
+import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;

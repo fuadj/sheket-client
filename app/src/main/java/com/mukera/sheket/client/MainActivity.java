@@ -31,7 +31,7 @@ import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.sync.SheketService;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
 

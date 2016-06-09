@@ -20,12 +20,12 @@ import android.widget.*;
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
-import com.mukera.sheket.client.controller.util.Utils;
+import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.controller.transactions.TransactionActivity;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 /**
  * Created by gamma on 3/27/16.

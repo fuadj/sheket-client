@@ -2,11 +2,10 @@ package com.mukera.sheket.client.controller.transactions;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,7 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 /**
  * Created by fuad on 5/24/16.

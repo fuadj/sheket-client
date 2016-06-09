@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
@@ -18,18 +17,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 
 import com.mukera.sheket.client.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.items.EmbeddedCategoryFragment;
-import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;

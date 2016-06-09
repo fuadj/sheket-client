@@ -16,10 +16,9 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
-import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.*;
-import com.mukera.sheket.client.utility.DbUtil;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.DbUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;

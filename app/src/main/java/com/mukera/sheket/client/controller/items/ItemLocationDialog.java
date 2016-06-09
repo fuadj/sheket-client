@@ -13,7 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import com.mukera.sheket.client.controller.util.TextWatcherAdapter;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.models.SBranchItem;
 
 /**

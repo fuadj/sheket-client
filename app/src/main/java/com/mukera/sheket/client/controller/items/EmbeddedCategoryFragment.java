@@ -22,7 +22,7 @@ import com.mukera.sheket.client.controller.base_adapters.BaseCategoryChildrenAda
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
-import com.mukera.sheket.client.utility.PrefUtil;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.Stack;
 

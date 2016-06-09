@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.utility;
+package com.mukera.sheket.client.utils;
 
 import android.content.ContentValues;
 

@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.mukera.sheket.client.controller.util.Utils;
+import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import org.json.JSONException;

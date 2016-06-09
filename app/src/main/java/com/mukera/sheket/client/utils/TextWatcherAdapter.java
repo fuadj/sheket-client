@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.util;
+package com.mukera.sheket.client.utils;
 
 import android.text.Editable;
 import android.text.TextWatcher;
