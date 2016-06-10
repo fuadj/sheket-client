@@ -105,7 +105,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +
                 // b/c there is not bool type in sqlite
-                ItemEntry.COLUMN_HAS_BAR_CODE + " integer not null);";
+                ItemEntry.COLUMN_HAS_BAR_CODE + " integer null);";
 
         final String sql_create_branch_item_table = "create table if not exists " + BranchItemEntry.TABLE_NAME + " ( " +
                 BranchItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
