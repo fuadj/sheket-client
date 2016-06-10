@@ -18,7 +18,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
-import com.mukera.sheket.client.LoaderId;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.items.EmbeddedCategoryFragment;
@@ -279,25 +279,17 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
         String selection = null;
 
         if (mCurrSearch != null && !mCurrSearch.isEmpty()) {
-            selection = "(" + ItemEntry._full(ItemEntry.COLUMN_MANUAL_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
+            selection = "(" + ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
                     ItemEntry._full(ItemEntry.COLUMN_BAR_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%' ) ";
         }
 
-        String and_clause = (selection == null) ? " " : " AND ";
-
-        if (selection == null)
-            selection = "";
-        selection += and_clause + ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = " + mSelectedCategoryId;
-        /*
         if (mSelectedCategoryId != CategoryEntry.ROOT_CATEGORY_ID) {
             String and_clause = (selection == null) ? " " : " AND ";
-
             if (selection == null)
                 selection = "";
             selection += and_clause + ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = " + mSelectedCategoryId;
         }
-        */
 
         return new CursorLoader(getActivity(),
                 ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
@@ -374,7 +366,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
             if (item.has_bar_code) {
                 code = item.bar_code;
             } else {
-                code = item.manual_code;
+                code = item.item_code;
             }
             holder.item_code.setText(code);
         }

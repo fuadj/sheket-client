@@ -253,7 +253,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
             if (item.has_bar_code) {
                 code = item.bar_code;
             } else {
-                code = item.manual_code;
+                code = item.item_code;
             }
             holder.item_code.setText(code);
             if (branchItem.item_location == null ||

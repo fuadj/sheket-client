@@ -281,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements
                 SheketContract.BranchEntry.COLUMN_BRANCH_ID + " != ' " + SheketContract.BranchEntry.DUMMY_BRANCH_ID + " ' ",
                 null
         );
+        PrefUtil.resetAllRevisionNumbers(this);
     }
 
     @Override
@@ -341,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements
 
     void showImportingStuff() {
         if (mErrorOccurred) {
+            mImporting = false;
             mErrorOccurred = false;
 
             if (mImportProgress != null)
@@ -373,6 +375,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         } else if (mImportSuccessful) {
             mImportSuccessful = false;
+            mImporting = false;
             if (mImportProgress != null)
                 mImportProgress.dismiss();
         }
@@ -398,6 +401,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void showImportOptionsDialog(SimpleCSVReader reader) {
+        mImporting = true;
         mReader = reader;
         mShowImportOptionsDialog = true;
         if (mDidResume) {
@@ -407,6 +411,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void importSuccessful() {
+        mImporting = true;
         mImportSuccessful = true;
         if (mDidResume) {
             showImportingStuff();

@@ -88,7 +88,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                         CategoryEntry.TABLE_NAME,
                         CategoryEntry.COLUMN_CATEGORY_ID) +
 
-                ItemEntry.COLUMN_NAME + " text not null, " +
+                ItemEntry.COLUMN_ITEM_CODE + " text not null, " +
+                ItemEntry.COLUMN_NAME + " text, " +
 
                 ItemEntry.COLUMN_UNIT_OF_MEASUREMENT + " integer not null, " +
                 // b/c sqlite doesn't support boolean type
@@ -100,7 +101,6 @@ public class SheketDbHelper extends SQLiteOpenHelper {
 
                 ItemEntry.COLUMN_MODEL_YEAR + " text, " +
                 ItemEntry.COLUMN_PART_NUMBER + " text, " +
-                ItemEntry.COLUMN_MANUAL_CODE + " text, " +
                 ItemEntry.COLUMN_BAR_CODE + " text, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +

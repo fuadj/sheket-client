@@ -290,7 +290,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
                 item.model_year = object.getString(SItem.JSON_MODEL_YEAR);
                 item.part_number = object.getString(SItem.JSON_PART_NUMBER);
                 item.bar_code = object.getString(SItem.JSON_BAR_CODE);
-                item.manual_code = object.getString(SItem.JSON_MANUAL_CODE);
+                item.item_code = object.getString(SItem.JSON_ITEM_CODE);
                 item.has_bar_code = object.getBoolean(SItem.JSON_HAS_BAR_CODE);
                 item.company_id = result.company_id;
 

@@ -114,6 +114,16 @@ public class PrefUtil {
         int default_rev = context.getResources().getInteger(R.integer.pref_default_revision);
         return prefs.getInt(context.getString(R.string.pref_user_rev), default_rev);
     }
+
+    public static void resetAllRevisionNumbers(Context context) {
+        int default_rev = context.getResources().getInteger(R.integer.pref_default_revision);
+        setBranchRevision(context, default_rev);
+        setItemRevision(context, default_rev);
+        setBranchItemRevision(context, default_rev);
+        setTransactionRevision(context, default_rev);
+        setCategoryRevision(context, default_rev);
+    }
+
     /**
      * End-Revision Tracking Block
      */

@@ -88,7 +88,8 @@ public class ImporterDialog extends DialogFragment {
         mBalanceSpinner = (Spinner) view.findViewById(R.id.dialog_import_balance_spinner);
 
         Vector<String> options = new Vector<>(mReader.getHeaders());
-        options.add(0, "--Not Set--");
+        // The tabs at both ends will increase the width
+        options.add(0, "\t--Not Set--\t");
 
         ArrayAdapter adapter = new ArrayAdapter(getActivity(),
                 android.R.layout.simple_spinner_dropdown_item, options.toArray());

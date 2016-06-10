@@ -35,7 +35,7 @@ public class TestModels extends AndroidTestCase {
         for (int i = 0; i < 100; i++) {
             ContentValues values = TestProvider.createItemValues();
             values.put(ItemEntry.COLUMN_HAS_BAR_CODE, SheketContract.toInt(i % 2 == 0));
-            values.put(ItemEntry.COLUMN_MANUAL_CODE,
+            values.put(ItemEntry.COLUMN_ITEM_CODE,
                     codeArr[((i*13) + 3)%codeArr.length]);      // a bit if "randomness"
 
             long item_id = (long)i + 1;

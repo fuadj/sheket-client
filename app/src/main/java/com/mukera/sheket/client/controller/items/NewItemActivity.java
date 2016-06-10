@@ -251,7 +251,7 @@ public class NewItemActivity extends AppCompatActivity {
                             values.put(ItemEntry.COLUMN_REORDER_LEVEL, reorder_level);
 
                             values.put(ItemEntry.COLUMN_BAR_CODE, bar_code);
-                            values.put(ItemEntry.COLUMN_MANUAL_CODE, code);
+                            values.put(ItemEntry.COLUMN_ITEM_CODE, code);
                             values.put(ItemEntry.COLUMN_HAS_BAR_CODE, !bar_code.isEmpty());
                             values.put(ItemEntry.COLUMN_MODEL_YEAR, model_year);
                             values.put(ItemEntry.COLUMN_PART_NUMBER, part_number);

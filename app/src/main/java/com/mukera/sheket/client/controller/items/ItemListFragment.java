@@ -221,11 +221,11 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
             }
 
             holder.item_name.setText(detail.item.name);
-            boolean has_code = detail.item.has_bar_code || !detail.item.manual_code.isEmpty();
+            boolean has_code = detail.item.has_bar_code || !detail.item.item_code.isEmpty();
             if (has_code) {
                 holder.item_code.setVisibility(View.VISIBLE);
                 holder.item_code.setText(
-                        detail.item.has_bar_code ? detail.item.bar_code : detail.item.manual_code);
+                        detail.item.has_bar_code ? detail.item.bar_code : detail.item.item_code);
             } else {
                 holder.item_code.setVisibility(View.GONE);
             }

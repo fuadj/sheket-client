@@ -12,7 +12,6 @@ import android.util.Log;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
-import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SPermission;
 
@@ -86,7 +85,7 @@ public class TestProvider extends AndroidTestCase {
 
     public static ContentValues createItemValues() {
         ContentValues values = new ContentValues();
-        values.put(ItemEntry.COLUMN_MANUAL_CODE, TEST_ITEM_CODE);
+        values.put(ItemEntry.COLUMN_ITEM_CODE, TEST_ITEM_CODE);
         values.put(ItemEntry.COLUMN_COMPANY_ID, TEST_COMPANY_ID);
         values.put(ItemEntry.COLUMN_NAME, TEST_ITEM_NAME);
         values.put(ItemEntry.COLUMN_HAS_BAR_CODE, TEST_HAS_BARCODE);

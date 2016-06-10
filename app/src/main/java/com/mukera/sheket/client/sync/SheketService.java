@@ -333,6 +333,7 @@ public class SheketService extends IntentService {
 
                 item.item_id = object.getLong(SItem.JSON_ITEM_ID);
                 item.name = object.getString(SItem.JSON_ITEM_NAME);
+                item.item_code = object.getString(SItem.JSON_ITEM_CODE);
                 item.client_uuid = object.getString(SItem.JSON_ITEM_UUID);
 
                 long category = object.getLong(SItem.JSON_ITEM_CATEGORY);
@@ -350,7 +351,6 @@ public class SheketService extends IntentService {
                 item.model_year = object.getString(SItem.JSON_MODEL_YEAR);
                 item.part_number = object.getString(SItem.JSON_PART_NUMBER);
                 item.bar_code = object.getString(SItem.JSON_BAR_CODE);
-                item.manual_code = object.getString(SItem.JSON_MANUAL_CODE);
                 item.has_bar_code = object.getBoolean(SItem.JSON_HAS_BAR_CODE);
 
                 result.syncedItems.add(item);

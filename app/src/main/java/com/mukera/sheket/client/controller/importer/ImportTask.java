@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -184,8 +185,11 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
             for (int i = 0; i < mReader.getNumRows(); i++) {
                 String name = mReader.getRowAt(i).get(category_col);
 
-                if (importData.mCategoryIds.get(_to_key(name)) != null) {
-                    continue;       // we've already seen it
+                // if the category name is empty, ignore it
+                // AND if we've already added it, don't add it again
+                if (TextUtils.isEmpty(name) ||
+                        importData.mCategoryIds.get(_to_key(name)) != null) {
+                    continue;
                 }
 
                 // this is a new category, add it
@@ -225,7 +229,7 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
                     _i.is_new = false;
                     _i.previousItem = item;
 
-                    importData.mItemIds.put(_to_key(item.manual_code), _i);
+                    importData.mItemIds.put(_to_key(item.item_code), _i);
                 } while (cursor.moveToNext());
             }
             if (cursor != null)
@@ -250,7 +254,7 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
 
             for (int i = 0; i < mReader.getNumRows(); i++) {
                 String code = mReader.getRowAt(i).get(item_code_col);
-                String name;
+                String name = "";
 
                 if (importData.mItemIds.get(_to_key(code)) != null) {
                     continue;
@@ -258,9 +262,6 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
 
                 if (has_item_name) {
                     name = mReader.getRowAt(i).get(item_name_col);
-                } else {
-                    name = code;
-                    code = "";
                 }
 
                 long new_item_id = PrefUtil.getNewItemId(mActivity);
@@ -274,16 +275,19 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
                 ContentValues values = new ContentValues();
                 values.put(ItemEntry.COLUMN_ITEM_ID, new_item_id);
                 values.put(ItemEntry.COLUMN_NAME, name);
-                values.put(ItemEntry.COLUMN_MANUAL_CODE, code);
+                values.put(ItemEntry.COLUMN_ITEM_CODE, code);
 
                 long category_id = CategoryEntry.ROOT_CATEGORY_ID;
                 if (has_categories) {
                     String category_name = mReader.getRowAt(i).get(col_categories);
-                    _import_category _c = importData.mCategoryIds.get(_to_key(category_name));
-                    if (_c.is_new) {
-                        category_id = _c.new_id;
-                    } else {
-                        category_id = _c.previousCategory.category_id;
+                    // if the category was empty, just add it to the ROOT
+                    if (!TextUtils.isEmpty(category_name)) {
+                        _import_category _c = importData.mCategoryIds.get(_to_key(category_name));
+                        if (_c.is_new) {
+                            category_id = _c.new_id;
+                        } else {
+                            category_id = _c.previousCategory.category_id;
+                        }
                     }
                 }
                 values.put(ItemEntry.COLUMN_CATEGORY_ID, category_id);
