@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.importer;
+package com.mukera.sheket.client.controller.importer;
 
 import android.text.TextUtils;
 
@@ -18,6 +18,7 @@ public class SimpleCSVReader {
     private File mFile;
     private Vector<String> mHeaders;
     private Vector<Vector<String>> mData;
+    private String mErrorMsg = null;
 
     public SimpleCSVReader(File file) {
         mFile = file;
@@ -32,6 +33,10 @@ public class SimpleCSVReader {
             result.add(s.trim());
         }
         return result;
+    }
+
+    public String getErrorMessage() {
+        return mErrorMsg;
     }
 
     public void parseCSV() {
@@ -76,18 +81,25 @@ public class SimpleCSVReader {
                 mData.add(row);
             }
             reader.close();
+            mErrorMsg = "";
         } catch (IOException | CSVReaderException e) {
             // clear the data
             mHeaders = new Vector<>();
             mData = new Vector<>();
+            mErrorMsg = e.getMessage();
         }
+    }
+
+    public boolean parsingSuccess() {
+        return !mHeaders.isEmpty() &&
+                !mData.isEmpty();
     }
 
     public Vector<String> getHeaders() {
         return mHeaders;
     }
 
-    public int getNumLines() {
+    public int getNumRows() {
         return mData.size();
     }
 
