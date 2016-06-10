@@ -20,7 +20,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.mukera.sheket.client.LoaderId;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.utils.Utils;
@@ -84,6 +84,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             if (user_permission == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
                 adminCategories.add(StaticNavigationAdapter.ENTITY_ALL_ITEMS);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_IMPORT);
+                adminCategories.add(StaticNavigationAdapter.ENTITY_DELETE);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_HISTORY);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_BRANCHES);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_MEMBERS);
@@ -245,6 +246,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         public static final int ENTITY_LOG_OUT = 8;
         public static final int ENTITY_HISTORY = 9;
         public static final int ENTITY_IMPORT = 10;
+        public static final int ENTITY_DELETE = 11;
 
         public static final HashMap<Integer,
                 Pair<String, Integer>> sEntityAndIcon;
@@ -271,6 +273,8 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
                     new Pair<>("Settings", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(ENTITY_DEBUG,
                     new Pair<>("Debug", R.mipmap.ic_action_settings));
+            sEntityAndIcon.put(ENTITY_DELETE,
+                    new Pair<>("Delete", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(ENTITY_LOG_OUT,
                     new Pair<>("Logout", R.drawable.ic_action_warning));
         }

@@ -1,8 +1,10 @@
-package com.mukera.sheket.client;
+package com.mukera.sheket.client.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+
+import com.mukera.sheket.client.R;
 
 /**
  * Created by gamma on 4/2/16.

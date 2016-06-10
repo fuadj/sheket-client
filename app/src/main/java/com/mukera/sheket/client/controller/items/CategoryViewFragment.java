@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.mukera.sheket.client.LoaderId;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.base_adapters.ArrayRecyclerAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;

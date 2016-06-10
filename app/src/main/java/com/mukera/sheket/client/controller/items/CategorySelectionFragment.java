@@ -29,7 +29,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.mukera.sheket.client.LoaderId;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.base_adapters.BaseCategoryChildrenAdapter;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;

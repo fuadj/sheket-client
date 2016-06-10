@@ -25,8 +25,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
-import com.mukera.sheket.client.ConfigData;
-import com.mukera.sheket.client.LoaderId;
+import com.mukera.sheket.client.utils.ConfigData;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;

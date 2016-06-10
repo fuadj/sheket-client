@@ -15,7 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mukera.sheket.client.ConfigData;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.PrefUtil;

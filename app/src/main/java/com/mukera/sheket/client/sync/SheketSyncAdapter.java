@@ -18,7 +18,7 @@ import android.os.RemoteException;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
-import com.mukera.sheket.client.ConfigData;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.BranchEntry;

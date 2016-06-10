@@ -1,4 +1,4 @@
-package com.mukera.sheket.client;
+package com.mukera.sheket.client.utils;
 
 /**
  * Created by gamma on 3/5/16.

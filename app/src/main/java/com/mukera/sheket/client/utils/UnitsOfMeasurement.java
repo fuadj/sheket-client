@@ -1,4 +1,4 @@
-package com.mukera.sheket.client;
+package com.mukera.sheket.client.utils;
 
 import android.widget.ArrayAdapter;
 
