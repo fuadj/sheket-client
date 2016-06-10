@@ -11,17 +11,17 @@
         android:layout_centerVertical="true">
 
         <TextView
-            android:id="@+id/list_item_text_view_item_name"
+            android:id="@+id/list_item_text_view_item_code"
             android:layout_width="wrap_content"
-            android:text="Search Item Name"
+            android:text="Search Item Code"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
             android:layout_gravity="center_vertical" />
 
         <TextView
-            android:id="@+id/list_item_text_view_item_code"
+            android:id="@+id/list_item_text_view_item_name"
             android:layout_width="wrap_content"
-            android:text="Search Item Code"
+            android:text="Search Item Name"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:textAppearanceSmall" />

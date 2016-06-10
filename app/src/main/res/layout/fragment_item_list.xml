@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <include layout="@layout/layout_category_list" />
+            <include layout="@layout/embed_category_list" />
 
             <ListView
                 android:id="@+id/item_list_list_view_items"

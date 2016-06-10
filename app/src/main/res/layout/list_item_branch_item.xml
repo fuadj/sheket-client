@@ -28,23 +28,23 @@
         android:layout_marginLeft="8dp">
 
         <TextView
-            android:id="@+id/list_item_text_view_b_item_name"
+            android:id="@+id/list_item_text_view_b_item_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
             android:layout_marginLeft="8dp"
             android:layout_weight="2"
-            android:text="Shell 20-50 Oil" />
+            android:text="sh_20_50" />
 
         <TextView
-            android:id="@+id/list_item_text_view_b_item_code"
+            android:id="@+id/list_item_text_view_b_item_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:textAppearanceSmall"
             android:layout_marginLeft="8dp"
             android:layout_weight="1"
-            android:text="sh_20_50" />
+            android:text="Shell 20-50 Oil" />
 
     </LinearLayout>
 

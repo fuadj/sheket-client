@@ -103,7 +103,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             View view = LayoutInflater.from(context).inflate(
-                    R.layout.list_item_banch, parent, false);
+                    R.layout.list_item_branch, parent, false);
             BranchViewHolder holder = new BranchViewHolder(view);
             view.setTag(holder);
 

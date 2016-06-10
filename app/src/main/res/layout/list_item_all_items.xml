@@ -22,16 +22,16 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Test Item Name"
-                android:id="@+id/list_item_item_detail_name"
+                android:text="Test Item Code"
+                android:id="@+id/list_item_item_detail_code"
                 android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
                 android:layout_marginLeft="8dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Test Item Code"
-                android:id="@+id/list_item_item_detail_code"
+                android:text="Test Item Name"
+                android:id="@+id/list_item_item_detail_name"
                 android:fontFamily="sans-serif-condensed"
                 android:textAppearance="?android:textAppearanceSmall"
                 android:layout_marginLeft="8dp"
