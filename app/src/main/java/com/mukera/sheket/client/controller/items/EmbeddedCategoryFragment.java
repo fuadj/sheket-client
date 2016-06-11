@@ -8,12 +8,16 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,6 +42,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
 
     private ListView mCategoryList;
     private CategoryAdapter mAdapter;
+    private SwitchCompat mToggleCategoryView;
 
     private View mDividerView;
 
@@ -99,11 +104,44 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         return mAdapter;
     }
 
+    public boolean isShowingCategoryTree() {
+        return PrefUtil.showCategoryTree(getActivity());
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
 
+        ActionBar actionBar = ((AppCompatActivity)getActivity()).
+                getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayShowCustomEnabled(true);
+
+            LayoutInflater toggleInfaltor = (LayoutInflater)getActivity().
+                    getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View v = toggleInfaltor.inflate(R.layout.action_bar_category_toggle, null);
+            actionBar.setCustomView(v);
+            mToggleCategoryView = (SwitchCompat) v.findViewById(R.id.action_bar_toggle_category_layout);
+
+            // set the current preference
+            mToggleCategoryView.setChecked(PrefUtil.showCategoryTree(getActivity()));
+            mToggleCategoryView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    PrefUtil.setShowCategoryTree(getActivity(), isChecked);
+                    setCategoryListVisibility(isChecked);
+                    long category_id;
+                    if (!isChecked) {
+                        category_id = CategoryEntry.ROOT_CATEGORY_ID;
+                    } else {
+                        category_id = mCurrentParentCategoryId;
+                    }
+                    onCategorySelected(category_id);
+                    onRestartLoader();
+                }
+            });
+        }
         mCategoryList = (ListView) rootView.findViewById(R.id.embedded_category_list_list_view);
         mAdapter = new CategoryAdapter(getActivity());
         mCategoryList.setAdapter(mAdapter);
@@ -137,6 +175,13 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                          * it should naturally do what is mostly expected which is move back to the
                          * previous fragment.
                          */
+                        // invalidate the action-bar stuff added by this
+
+                        ActionBar actionBar = ((AppCompatActivity)getActivity()).
+                                getSupportActionBar();
+                        if (actionBar != null && (actionBar.getCustomView() != null))
+                            actionBar.getCustomView().setVisibility(View.GONE);
+                        getActivity().invalidateOptionsMenu();
                         getActivity().onBackPressed();
                         //getActivity().getSupportFragmentManager().popBackStack();
                     } else {
@@ -181,8 +226,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
             mAdapter.setCategoryCursor(data);
-            ListUtils.setDynamicHeight(mCategoryList);
-            mDividerView.setVisibility(data.getCount() > 0 ? View.VISIBLE : View.GONE);
+            setCategoryListVisibility(true);
         } else {
             onEmbeddedLoadFinished(loader, data);
         }
@@ -196,6 +240,17 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
             mDividerView.setVisibility(View.GONE);
         } else {
             onEmbeddedLoadReset(loader);
+        }
+    }
+
+    void setCategoryListVisibility(boolean show_list) {
+        if (show_list) {
+            mCategoryList.setVisibility(View.VISIBLE);
+            ListUtils.setDynamicHeight(mCategoryList);
+            mDividerView.setVisibility(mCategoryList.getAdapter().getCount() > 0 ? View.VISIBLE : View.GONE);
+        } else {
+            mCategoryList.setVisibility(View.GONE);
+            mDividerView.setVisibility(View.GONE);
         }
     }
 

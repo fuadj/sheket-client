@@ -12,6 +12,9 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -26,24 +29,50 @@ import com.mukera.sheket.client.utils.PrefUtil;
 /**
  * Created by fuad on 6/2/16.
  */
-public class CategoryViewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class CategoryCardViewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private RecyclerView mCategoryList;
     private CategoryViewAdapter mCategoryAdapter;
 
     private SelectionListener mListener;
+    private CardViewToggleListener mCardListener;
 
     public interface SelectionListener {
         void onCategorySelected(SCategory category);
     }
 
-    public void setListener(SelectionListener listener) {
+    public void setSelectionListener(SelectionListener listener) {
         mListener = listener;
+    }
+
+    public void setCardListener(CardViewToggleListener listener) {
+        mCardListener = listener;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         getLoaderManager().initLoader(LoaderId.MainActivity.CATEGORY_VIEW_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.categroy_cards, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.category_card_view_disable) {
+            mCardListener.onCardOptionSelected(false);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Nullable

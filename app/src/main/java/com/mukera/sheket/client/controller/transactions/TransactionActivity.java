@@ -57,13 +57,11 @@ public class TransactionActivity extends AppCompatActivity {
 
         //getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
-        if (savedInstanceState == null) {
-            mTransactionItemList = new ArrayList<>();
+        mTransactionItemList = new ArrayList<>();
 
-            mBranchId = getIntent().getLongExtra(LAUNCH_BRANCH_ID_KEY, BRANCH_ID_NONE);
+        mBranchId = getIntent().getLongExtra(LAUNCH_BRANCH_ID_KEY, BRANCH_ID_NONE);
 
-            displayItemSearcher();
-        }
+        displayItemSearcher();
     }
 
     List<SBranch> getBranches() {

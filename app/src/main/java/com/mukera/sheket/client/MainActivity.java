@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
@@ -28,7 +30,8 @@ import com.mukera.sheket.client.controller.importer.ImportTask;
 import com.mukera.sheket.client.controller.importer.ImporterDialog;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
-import com.mukera.sheket.client.controller.items.CategoryViewFragment;
+import com.mukera.sheket.client.controller.items.CardViewToggleListener;
+import com.mukera.sheket.client.controller.items.CategoryCardViewFragment;
 import com.mukera.sheket.client.controller.items.ItemListFragment;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
@@ -37,7 +40,7 @@ import com.mukera.sheket.client.controller.admin.SettingsActivity;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
-import com.mukera.sheket.client.data.SheketContract;
+import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SPermission;
@@ -46,7 +49,6 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
 import java.util.Map;
-import java.util.concurrent.RunnableFuture;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -66,6 +68,10 @@ public class MainActivity extends AppCompatActivity implements
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+
+    private boolean mIsBranchSelected = false;
+    private long mSelectedBranchId;
+    private boolean mIsAllItemsSelected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,18 +167,89 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBranchSelected(final SBranch branch) {
-        CategoryViewFragment fragment = new CategoryViewFragment();
-        fragment.setListener(new CategoryViewFragment.SelectionListener() {
+        mIsBranchSelected = true;
+        mSelectedBranchId = branch.branch_id;
+        mIsAllItemsSelected = false;
+        displayItemsORBranchFragment();
+        closeNavDrawer();
+    }
+
+    void displayItemsORBranchFragment() {
+        removeCustomActionBarViews();
+        boolean show_category_card = PrefUtil.showCategoryCards(this);
+        if (mIsBranchSelected) {
+            if (show_category_card) {
+                CategoryCardViewFragment fragment = new CategoryCardViewFragment();
+                fragment.setSelectionListener(new CategoryCardViewFragment.SelectionListener() {
+                    @Override
+                    public void onCategorySelected(SCategory category) {
+                        getSupportFragmentManager().beginTransaction().
+                                replace(R.id.main_fragment_container,
+                                        BranchItemFragment.newInstance(category.category_id,
+                                                mSelectedBranchId, false)).
+                                addToBackStack(null).commit();
+                    }
+                });
+                fragment.setCardListener(new CardViewToggleListener() {
+                    @Override
+                    public void onCardOptionSelected(boolean enable_card_view) {
+                        PrefUtil.setCategoryCardShow(MainActivity.this, false);
+                        showBranchItemsWithoutCardView();
+                    }
+                });
+                replaceMainFragment(fragment);
+            } else {
+                showBranchItemsWithoutCardView();
+            }
+        } else if (mIsAllItemsSelected) {
+            if (show_category_card) {
+                CategoryCardViewFragment fragment = new CategoryCardViewFragment();
+                fragment.setSelectionListener(new CategoryCardViewFragment.SelectionListener() {
+                    @Override
+                    public void onCategorySelected(SCategory category) {
+                        getSupportFragmentManager().beginTransaction().
+                                replace(R.id.main_fragment_container,
+                                        ItemListFragment.newInstance(category.category_id, false)).
+                                addToBackStack(null).commit();
+                    }
+                });
+                fragment.setCardListener(new CardViewToggleListener() {
+                    @Override
+                    public void onCardOptionSelected(boolean enable_card_view) {
+                        PrefUtil.setCategoryCardShow(MainActivity.this, false);
+                        showAllItemsWithoutCardView();
+                    }
+                });
+                replaceMainFragment(fragment);
+            } else {
+                showAllItemsWithoutCardView();
+            }
+        }
+    }
+
+    void showBranchItemsWithoutCardView() {
+        BranchItemFragment fragment = BranchItemFragment.newInstance(
+                        CategoryEntry.ROOT_CATEGORY_ID, mSelectedBranchId, true);
+        fragment.setCardListener(new CardViewToggleListener() {
             @Override
-            public void onCategorySelected(SCategory category) {
-                getSupportFragmentManager().beginTransaction().
-                        replace(R.id.main_fragment_container,
-                                BranchItemFragment.newInstance(category.category_id, branch.branch_id)).
-                        addToBackStack(null).commit();
+            public void onCardOptionSelected(boolean enable_card_view) {
+                PrefUtil.setCategoryCardShow(MainActivity.this, true);
+                displayItemsORBranchFragment();
             }
         });
         replaceMainFragment(fragment);
-        closeNavDrawer();
+    }
+
+    void showAllItemsWithoutCardView() {
+        ItemListFragment fragment = ItemListFragment.newInstance(CategoryEntry.ROOT_CATEGORY_ID, true);
+        fragment.setCardListener(new CardViewToggleListener() {
+            @Override
+            public void onCardOptionSelected(boolean enable_card_view) {
+                PrefUtil.setCategoryCardShow(MainActivity.this, true);
+                displayItemsORBranchFragment();
+            }
+        });
+        replaceMainFragment(fragment);
     }
 
     void replaceMainFragment(Fragment fragment) {
@@ -185,21 +262,21 @@ public class MainActivity extends AppCompatActivity implements
                 .commit();
     }
 
+    void removeCustomActionBarViews() {
+        ActionBar actionBar = ((AppCompatActivity)this).getSupportActionBar();
+        if (actionBar != null && (actionBar.getCustomView() != null))
+            actionBar.getCustomView().setVisibility(View.GONE);
+        invalidateOptionsMenu();
+    }
+
     @Override
     public void onElementSelected(int item) {
+        removeCustomActionBarViews();
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
-                CategoryViewFragment fragment = new CategoryViewFragment();
-                fragment.setListener(new CategoryViewFragment.SelectionListener() {
-                    @Override
-                    public void onCategorySelected(SCategory category) {
-                        getSupportFragmentManager().beginTransaction().
-                                replace(R.id.main_fragment_container,
-                                        ItemListFragment.newInstance(category.category_id)).
-                                addToBackStack(null).commit();
-                    }
-                });
-                replaceMainFragment(fragment);
+                mIsAllItemsSelected = true;
+                mIsBranchSelected = false;
+                displayItemsORBranchFragment();
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
                 // Create the ACTION_GET_CONTENT Intent
@@ -250,35 +327,35 @@ public class MainActivity extends AppCompatActivity implements
     void deleteAllRecords() {
         long company_id = PrefUtil.getCurrentCompanyId(this);
         getContentResolver().delete(
-                SheketContract.TransItemEntry.buildBaseUri(company_id),
+                TransItemEntry.buildBaseUri(company_id),
                 null,
                 null
         );
         getContentResolver().delete(
-                SheketContract.TransactionEntry.buildBaseUri(company_id),
+                TransactionEntry.buildBaseUri(company_id),
                 null,
                 null
         );
         getContentResolver().delete(
-                SheketContract.BranchItemEntry.buildBaseUri(company_id),
+                BranchItemEntry.buildBaseUri(company_id),
                 null,
                 null
         );
         getContentResolver().delete(
-                SheketContract.CategoryEntry.buildBaseUri(company_id),
-                SheketContract.CategoryEntry.COLUMN_CATEGORY_ID + " != '" + SheketContract.CategoryEntry.ROOT_CATEGORY_ID +
+                CategoryEntry.buildBaseUri(company_id),
+                CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry.ROOT_CATEGORY_ID +
                 "' AND  " +
-                        SheketContract.CategoryEntry.COLUMN_CATEGORY_ID + " != '" + SheketContract.CategoryEntry._ROOT_CATEGORY_PARENT_ID + "' ",
+                        CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry._ROOT_CATEGORY_PARENT_ID + "' ",
                 null
         );
         getContentResolver().delete(
-                SheketContract.ItemEntry.buildBaseUri(company_id),
+                ItemEntry.buildBaseUri(company_id),
                 null,
                 null
         );
         getContentResolver().delete(
-                SheketContract.BranchEntry.buildBaseUri(company_id),
-                SheketContract.BranchEntry.COLUMN_BRANCH_ID + " != ' " + SheketContract.BranchEntry.DUMMY_BRANCH_ID + " ' ",
+                BranchEntry.buildBaseUri(company_id),
+                BranchEntry.COLUMN_BRANCH_ID + " != ' " + BranchEntry.DUMMY_BRANCH_ID + " ' ",
                 null
         );
         PrefUtil.resetAllRevisionNumbers(this);

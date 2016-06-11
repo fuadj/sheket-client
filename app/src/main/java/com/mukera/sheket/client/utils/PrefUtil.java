@@ -281,4 +281,29 @@ public class PrefUtil {
         editor.putString(context.getString(R.string.pref_ip_key), address);
         editor.commit();
     }
+
+    private static final String KEY_SHOW_CATEGORY_CARD = "key_show_category_card";
+    private static final String KEY_SHOW_CATEGORY_TREE = "key_show_category_tree";
+
+    public static boolean showCategoryCards(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(KEY_SHOW_CATEGORY_CARD, false);
+    }
+
+    public static void setCategoryCardShow(Context context, boolean show_cards) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(KEY_SHOW_CATEGORY_CARD, show_cards);
+        editor.commit();
+    }
+
+    public static boolean showCategoryTree(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(KEY_SHOW_CATEGORY_TREE, false);
+    }
+
+    public static void setShowCategoryTree(Context context, boolean show_tree) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(KEY_SHOW_CATEGORY_TREE, show_tree);
+        editor.commit();
+    }
 }

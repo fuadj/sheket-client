@@ -61,6 +61,8 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
 
     // setting ROOT category means you don't want to filter by category!!!
     private long mSelectedCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+    // whether the category came from the category selection dialog?
+    private boolean mIsCategoryDialogSelected = false;
 
     public void setResultListener(SearchResultListener listener) {
         mListener = listener;
@@ -106,6 +108,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
     @Override
     public void onCategorySelected(long category_id) {
         mSelectedCategoryId = category_id;
+        mIsCategoryDialogSelected = false;
         //setParentCategoryId(mSelectedCategoryId);
     }
 
@@ -145,6 +148,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 mSavedSelectedCategoryIndex = which;
                                 mSelectedCategoryId = mCategoryNodes.get(which).category.category_id;
+                                mIsCategoryDialogSelected = true;
                                 mBtnCategory.setText(mCategoryNames[which]);
                                 dialog.dismiss();
 
@@ -284,7 +288,12 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%' ) ";
         }
 
-        if (mSelectedCategoryId != CategoryEntry.ROOT_CATEGORY_ID) {
+        /**
+         * We either need to have selected a category from the category dialog
+         * OR from the tree and it better not be the root category!!!
+         */
+        if ((mIsCategoryDialogSelected || super.isShowingCategoryTree())
+                && (mSelectedCategoryId != CategoryEntry.ROOT_CATEGORY_ID)) {
             String and_clause = (selection == null) ? " " : " AND ";
             if (selection == null)
                 selection = "";

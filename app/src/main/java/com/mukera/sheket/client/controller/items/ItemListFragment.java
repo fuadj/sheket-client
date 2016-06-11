@@ -39,17 +39,26 @@ import java.util.List;
  */
 public class ItemListFragment extends EmbeddedCategoryFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
+    private static final String KEY_SHOW_CARD_TOGGLE_MENU = "key_show_card_toggle_menu";
+
+    private CardViewToggleListener mCardListener;
 
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+    private boolean mShowCardToggleMenu;
 
-    public static ItemListFragment newInstance(long category_id) {
+    public void setCardListener(CardViewToggleListener listener) {
+        mCardListener = listener;
+    }
+
+    public static ItemListFragment newInstance(long category_id, boolean show_toggle_menu) {
         Bundle args = new Bundle();
 
         ItemListFragment fragment = new ItemListFragment();
         args.putLong(KEY_CATEGORY_ID, category_id);
+        args.putBoolean(KEY_SHOW_CARD_TOGGLE_MENU, show_toggle_menu);
         fragment.setArguments(args);
 
         return fragment;
@@ -60,23 +69,32 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        mShowCardToggleMenu = args.getBoolean(KEY_SHOW_CARD_TOGGLE_MENU);
         setHasOptionsMenu(true);
         setParentCategoryId(mCategoryId);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.item_list_menu, menu);
+        inflater.inflate(R.menu.all_items, menu);
         super.onCreateOptionsMenu(menu, inflater);
+
+        MenuItem toggleCardView = menu.findItem(R.id.all_items_menu_toggle_card_view);
+        if (!mShowCardToggleMenu) {
+            toggleCardView.setVisible(false);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.item_list_menu_add_item:
+            case R.id.all_items_menu_add_item:
                 Intent intent = new Intent(getActivity(), NewItemActivity.class);
                 startActivity(intent);
-                break;
+                return true;
+            case R.id.all_items_menu_toggle_card_view:
+                mCardListener.onCardOptionSelected(true);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -134,11 +152,19 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
 
+        String selection = null;
+        String[] selectionArgs = null;
+
+        if (super.isShowingCategoryTree()) {
+            selection = ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?";
+            selectionArgs = new String[]{String.valueOf(mCategoryId)};
+        }
+
         return new CursorLoader(getActivity(),
                 ItemEntry.buildBaseUriWithBranches(company_id),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
-                ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
-                new String[]{String.valueOf(mCategoryId)},
+                selection,
+                selectionArgs,
                 sortOrder
         );
     }
