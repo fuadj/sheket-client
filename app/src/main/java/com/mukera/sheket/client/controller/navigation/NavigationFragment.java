@@ -106,7 +106,6 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             if (user_permission == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
                 adminCategories.add(StaticNavigationAdapter.ENTITY_ALL_ITEMS);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_IMPORT);
-                adminCategories.add(StaticNavigationAdapter.ENTITY_DELETE);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_HISTORY);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_BRANCHES);
                 adminCategories.add(StaticNavigationAdapter.ENTITY_MEMBERS);
@@ -132,6 +131,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         userCategories.add(StaticNavigationAdapter.ENTITY_COMPANIES);
         userCategories.add(StaticNavigationAdapter.ENTITY_SETTINGS);
         userCategories.add(StaticNavigationAdapter.ENTITY_DEBUG);
+        userCategories.add(StaticNavigationAdapter.ENTITY_DELETE);
         userCategories.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
         for (Integer _i : userCategories) {
             mUserAdapter.add(_i);

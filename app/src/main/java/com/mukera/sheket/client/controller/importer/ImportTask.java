@@ -380,6 +380,12 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
             long company_id = importData.company_id;
             long user_id = PrefUtil.getUserId(mActivity);
 
+            /**
+             * We want to group imports pertaining to a specific branch into a single transactions.
+             * This is done by only creating a new transaction for unseen(new) branches.
+             */
+            Map<Long, Long> seenBranches = new HashMap<>();
+
             for (int i = 0; i < mReader.getNumRows(); i++) {
                 long item_id, branch_id;
 
@@ -402,31 +408,38 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
                     quantity = Double.parseDouble(matcher.group(0));
                 }
 
-                long new_trans_id = PrefUtil.getNewTransId(mActivity);
-                PrefUtil.setNewTransId(mActivity, new_trans_id);
+                long transaction_id;
+                if (seenBranches.containsKey(branch_id)) {
+                    transaction_id = seenBranches.get(branch_id);
+                } else {
+                    transaction_id = PrefUtil.getNewTransId(mActivity);
+                    PrefUtil.setNewTransId(mActivity, transaction_id);
 
-                ContentValues values = new ContentValues();
-                values.put(TransactionEntry.COLUMN_TRANS_ID, new_trans_id);
-                values.put(TransactionEntry.COLUMN_BRANCH_ID, branch_id);
-                values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
-                values.put(TransactionEntry.COLUMN_COMPANY_ID, company_id);
-                values.put(TransactionEntry.COLUMN_USER_ID, user_id);
-                values.put(TransactionEntry.COLUMN_DATE, System.currentTimeMillis());
+                    seenBranches.put(branch_id, transaction_id);
 
-                values.put(UUIDSyncable.COLUMN_UUID, UUID.randomUUID().toString());
-                values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
-                        ChangeTraceable.CHANGE_STATUS_CREATED);
+                    ContentValues values = new ContentValues();
+                    values.put(TransactionEntry.COLUMN_TRANS_ID, transaction_id);
+                    values.put(TransactionEntry.COLUMN_BRANCH_ID, branch_id);
+                    values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
+                    values.put(TransactionEntry.COLUMN_COMPANY_ID, company_id);
+                    values.put(TransactionEntry.COLUMN_USER_ID, user_id);
+                    values.put(TransactionEntry.COLUMN_DATE, System.currentTimeMillis());
 
-                importData.operationsList.add(
-                        ContentProviderOperation.newInsert(TransactionEntry.buildBaseUri(importData.company_id)).
-                                withValues(values).build());
+                    values.put(UUIDSyncable.COLUMN_UUID, UUID.randomUUID().toString());
+                    values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                            ChangeTraceable.CHANGE_STATUS_CREATED);
+
+                    importData.operationsList.add(
+                            ContentProviderOperation.newInsert(TransactionEntry.buildBaseUri(importData.company_id)).
+                                    withValues(values).build());
+                }
 
                 ContentValues transItemValues = new ContentValues();
                 transItemValues.put(TransItemEntry.COLUMN_COMPANY_ID, company_id);
                 transItemValues.put(TransItemEntry.COLUMN_ITEM_ID, item_id);
                 transItemValues.put(TransItemEntry.COLUMN_OTHER_BRANCH_ID, BranchEntry.DUMMY_BRANCH_ID);
                 transItemValues.put(TransItemEntry.COLUMN_QTY, quantity);
-                transItemValues.put(TransItemEntry.COLUMN_TRANSACTION_ID, new_trans_id);
+                transItemValues.put(TransItemEntry.COLUMN_TRANSACTION_ID, transaction_id);
                 transItemValues.put(TransItemEntry.COLUMN_TRANSACTION_TYPE, TransItemEntry.TYPE_INCREASE_PURCHASE);
                 transItemValues.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
                         ChangeTraceable.CHANGE_STATUS_CREATED);
