@@ -26,7 +26,7 @@ import android.view.View;
 
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
-import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
+import com.mukera.sheket.client.controller.admin.SyncedTransactionFragment;
 import com.mukera.sheket.client.controller.importer.ImportTask;
 import com.mukera.sheket.client.controller.importer.ImporterDialog;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
@@ -38,6 +38,7 @@ import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.admin.SettingsActivity;
+import com.mukera.sheket.client.controller.transactions.UnsyncedTranactionFragment;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
@@ -301,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new CompanyFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_HISTORY:
-                replaceMainFragment(new TransactionHistoryFragment(), false);
+                replaceMainFragment(new SyncedTransactionFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_MEMBERS:
                 replaceMainFragment(new MembersFragment(), false);
@@ -311,6 +312,9 @@ public class MainActivity extends AppCompatActivity implements
                 startService(intent);
                 break;
             }
+            case NavigationFragment.StaticNavigationAdapter.ENTITY_TRANSACTIONS:
+                replaceMainFragment(new UnsyncedTranactionFragment(), false);
+                break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_SETTINGS:
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;

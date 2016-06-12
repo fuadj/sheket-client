@@ -11,6 +11,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.ListViewAutoScrollHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,14 +41,17 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
     private BranchSelectionCallback mCallback;
 
     private ListView mBranchListView;
+    private ListView mSyncingListView;
     private ListView mAdminListView;
     private ListView mUserListView;
 
     private NavigationBranchAdapter mNavigationBranchAdapter;
-    private StaticNavigationAdapter mAdminAdapter, mUserAdapter;
+    private StaticNavigationAdapter mAdminAdapter, mSyncAdapter, mUserAdapter;
+
     private TextView mSeparator1TextView;
     private TextView mSeparator2TextView;
     private TextView mSeparator3TextView;
+    private TextView lSeparator4TextView;
 
     private TextView mCompanyName;
 
@@ -73,6 +77,24 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
                     SBranch branch = new SBranch(cursor);
                     mCallback.onBranchSelected(branch);
                 }
+            }
+        });
+
+        mSyncingListView = (ListView) rootView.findViewById(R.id.navigation_list_view_syncing);
+        mSyncAdapter = new StaticNavigationAdapter(getContext());
+        mSyncingListView.setAdapter(mSyncAdapter);
+
+        List<Integer> syncCategories = new ArrayList<>();
+        syncCategories.add(StaticNavigationAdapter.ENTITY_TRANSACTIONS);
+        syncCategories.add(StaticNavigationAdapter.ENTITY_SYNC);
+        for (Integer i : syncCategories) {
+            mSyncAdapter.add(i);
+        }
+        mSyncingListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Integer i = mSyncAdapter.getItem(position);
+                mCallback.onElementSelected(i);
             }
         });
 
@@ -106,7 +128,6 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         mUserListView.setAdapter(mUserAdapter);
 
         List<Integer> userCategories = new ArrayList<>();
-        userCategories.add(StaticNavigationAdapter.ENTITY_SYNC);
         userCategories.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
         userCategories.add(StaticNavigationAdapter.ENTITY_COMPANIES);
         userCategories.add(StaticNavigationAdapter.ENTITY_SETTINGS);
@@ -130,18 +151,23 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
 
         View separator2 = rootView.findViewById(R.id.separator_2);
         mSeparator2TextView = (TextView) separator2.findViewById(R.id.text_view_separator);
-        mSeparator2TextView.setText("Management");
-        if (user_permission != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            separator2.setVisibility(View.GONE);
-        } else {
-            separator2.setVisibility(View.VISIBLE);
-        }
+        mSeparator2TextView.setText("Syncing");
 
         View separator3 = rootView.findViewById(R.id.separator_3);
         mSeparator3TextView = (TextView) separator3.findViewById(R.id.text_view_separator);
-        mSeparator3TextView.setText("Preferences");
+        mSeparator3TextView.setText("Management");
+        if (user_permission != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+            separator3.setVisibility(View.GONE);
+        } else {
+            separator3.setVisibility(View.VISIBLE);
+        }
+
+        View separator4 = rootView.findViewById(R.id.separator_4);
+        lSeparator4TextView = (TextView) separator4.findViewById(R.id.text_view_separator);
+        lSeparator4TextView.setText("Preferences");
 
         ListUtils.setDynamicHeight(mBranchListView);
+        ListUtils.setDynamicHeight(mSyncingListView);
         ListUtils.setDynamicHeight(mAdminListView);
         ListUtils.setDynamicHeight(mUserListView);
 
@@ -247,6 +273,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         public static final int ENTITY_HISTORY = 9;
         public static final int ENTITY_IMPORT = 10;
         public static final int ENTITY_DELETE = 11;
+        public static final int ENTITY_TRANSACTIONS = 12;
 
         public static final HashMap<Integer,
                 Pair<String, Integer>> sEntityAndIcon;
@@ -259,6 +286,8 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
                     new Pair<>("Import", R.drawable.ic_action_download));
             sEntityAndIcon.put(ENTITY_SYNC,
                     new Pair<>("Sync Now", R.mipmap.ic_action_refresh));
+            sEntityAndIcon.put(ENTITY_TRANSACTIONS,
+                    new Pair<>("Transactions", R.drawable.ic_action_history));
             sEntityAndIcon.put(ENTITY_BRANCHES,
                     new Pair<>("Branches", R.drawable.ic_action_place));
             sEntityAndIcon.put(ENTITY_COMPANIES,

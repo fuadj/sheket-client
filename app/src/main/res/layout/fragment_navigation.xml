@@ -53,12 +53,23 @@
                 layout="@layout/list_item_separator"/>
 
             <ListView
-                android:id="@+id/navigation_list_view_admin"
+                android:id="@+id/navigation_list_view_syncing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:choiceMode="singleChoice" />
 
             <include android:id="@+id/separator_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/list_item_separator"/>
+
+            <ListView
+                android:id="@+id/navigation_list_view_admin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:choiceMode="singleChoice" />
+
+            <include android:id="@+id/separator_4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 layout="@layout/list_item_separator"/>

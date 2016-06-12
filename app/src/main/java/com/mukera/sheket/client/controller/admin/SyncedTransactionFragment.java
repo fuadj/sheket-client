@@ -1,14 +1,17 @@
 package com.mukera.sheket.client.controller.admin;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +29,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionHistoryFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class SyncedTransactionFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private ListView mTransList;
     private TransDetailAdapter mTransDetailAdapter;
 
@@ -36,13 +39,17 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         super.onActivityCreated(savedInstanceState);
     }
 
+    protected boolean displayUserName() {
+        return false;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_trans_history, container, false);
 
         mTransList = (ListView) rootView.findViewById(R.id.list_view_trans_history);
-        mTransDetailAdapter = new TransDetailAdapter(getContext());
+        mTransDetailAdapter = new TransDetailAdapter(getContext(), displayUserName());
         mTransList.setAdapter(mTransDetailAdapter);
         mTransList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -51,6 +58,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
                 STransactionDetail detail = mTransDetailAdapter.getItem(position);
                 TransDetailDialog dialog = new TransDetailDialog();
+                dialog.setDisplayUsername(displayUserName());
                 dialog.mTransDetail = detail;
                 dialog.show(fm, "Detail");
             }
@@ -67,7 +75,9 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                         PrefUtil.getCurrentCompanyId(getContext()),
                         TransItemEntry.NO_TRANS_ID_SET),
                 STransaction.TRANSACTION_JOIN_ITEMS_COLUMNS,
-                null, null,
+                // only display the positive(the synced) transactions
+                TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " > 0",
+                null,
                 sortOrder);
     }
 
@@ -89,8 +99,10 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
     }
 
     public static class TransDetailAdapter extends ArrayAdapter<STransactionDetail> {
-        public TransDetailAdapter(Context context) {
+        private boolean mDisplayUsername;
+        public TransDetailAdapter(Context context, boolean display_username) {
             super(context, 0);
+            mDisplayUsername = display_username;
         }
 
         public void setTransCursor(Cursor cursor) {
@@ -142,7 +154,12 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
             holder.trans_icon.setImageResource(
                     detail.is_buying ? R.mipmap.ic_action_download : R.mipmap.ic_action_refresh);
-            holder.username.setText("Username " + position * 14);
+            if (mDisplayUsername) {
+                holder.username.setVisibility(View.VISIBLE);
+                holder.username.setText("Username " + position * 14);
+            } else {
+                holder.username.setVisibility(View.GONE);
+            }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             return convertView;
         }
@@ -162,17 +179,22 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     public static class TransDetailDialog extends DialogFragment {
         public STransactionDetail mTransDetail;
+        private boolean mDisplayUsername = true;
 
         public TransDetailDialog() {
             super();
         }
 
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.dialog_trans_history, container);
+        public void setDisplayUsername(boolean display_username) {
+            mDisplayUsername = display_username;
+        }
 
-            TextView user_name = (TextView) view.findViewById(R.id.dialog_trans_history_user_name);
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            LayoutInflater inflater = getActivity().getLayoutInflater();
+
+            View view = inflater.inflate(R.layout.dialog_trans_history, null);
 
             View layout = view.findViewById(R.id.dialog_trans_history_layout_details);
             if (!mTransDetail.affected_items.isEmpty()) {
@@ -190,7 +212,12 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
             TextView total_qty = (TextView) view.findViewById(R.id.dialog_trans_history_total_qty);
             total_qty.setText("Total Qty: " + Utils.formatDoubleForDisplay(mTransDetail.total_quantity));
-            return view;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setView(view);
+            if (mDisplayUsername)
+                builder.setTitle("Text User");
+            return builder.create();
         }
 
         public static class TransDetailAdapter extends ArrayAdapter<STransactionItem> {
