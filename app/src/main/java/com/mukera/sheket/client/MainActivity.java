@@ -446,8 +446,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     @Override
                     public void onCancelSelected() {
-                        mErrorOccurred = true;
-                        mErrorMsg = "Options Dialog Canceled";
+                        importError("Options Dialog Canceled");
                     }
                 });
                 dialog.show(getSupportFragmentManager(), "Import");
