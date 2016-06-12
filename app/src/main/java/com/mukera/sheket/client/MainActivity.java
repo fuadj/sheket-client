@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -71,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private boolean mIsBranchSelected = false;
     private long mSelectedBranchId;
-    private boolean mIsAllItemsSelected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +169,6 @@ public class MainActivity extends AppCompatActivity implements
     public void onBranchSelected(final SBranch branch) {
         mIsBranchSelected = true;
         mSelectedBranchId = branch.branch_id;
-        mIsAllItemsSelected = false;
         displayItemsORBranchFragment();
         closeNavDrawer();
     }
@@ -177,93 +176,99 @@ public class MainActivity extends AppCompatActivity implements
     void displayItemsORBranchFragment() {
         removeCustomActionBarViews();
         boolean show_category_card = PrefUtil.showCategoryCards(this);
-        if (mIsBranchSelected) {
-            if (show_category_card) {
-                CategoryCardViewFragment fragment = new CategoryCardViewFragment();
-                fragment.setSelectionListener(new CategoryCardViewFragment.SelectionListener() {
-                    @Override
-                    public void onCategorySelected(SCategory category) {
-                        getSupportFragmentManager().beginTransaction().
-                                replace(R.id.main_fragment_container,
-                                        BranchItemFragment.newInstance(category.category_id,
-                                                mSelectedBranchId, false)).
-                                addToBackStack(null).commit();
+
+        if (show_category_card) {
+            CategoryCardViewFragment fragment = new CategoryCardViewFragment();
+            fragment.setCategorySelectionListener(new CategoryCardViewFragment.SelectionListener() {
+                @Override
+                public void onCategorySelected(SCategory category) {
+                    CardViewToggleListener listener = new CardViewToggleListener() {
+                        @Override
+                        public void onCardOptionSelected(boolean enable_card_view) {
+                            displayItemsORBranchFragment();
+                        }
+                    };
+                    Fragment fragment;
+                    if (mIsBranchSelected) {
+                        fragment = BranchItemFragment.
+                                newInstance(category.category_id, mSelectedBranchId, false).
+                                setCardViewToggleListener(listener);
+                    } else {
+                        fragment = ItemListFragment.
+                                newInstance(category.category_id, false).
+                                setCardViewToggleListener(listener);
                     }
-                });
-                fragment.setCardListener(new CardViewToggleListener() {
-                    @Override
-                    public void onCardOptionSelected(boolean enable_card_view) {
-                        PrefUtil.setCategoryCardShow(MainActivity.this, false);
-                        showBranchItemsWithoutCardView();
+                    replaceMainFragment(fragment, true);
+                }
+            }).setCardViewToggleListener(new CardViewToggleListener() {
+                @Override
+                public void onCardOptionSelected(boolean enable_card_view) {
+                    PrefUtil.setCategoryCardShow(MainActivity.this,
+                            false);
+                    CardViewToggleListener listener = new CardViewToggleListener() {
+                        @Override
+                        public void onCardOptionSelected(boolean enable_card_view) {
+                            PrefUtil.setCategoryCardShow(MainActivity.this,
+                                    true);
+                            displayItemsORBranchFragment();
+                        }
+                    };
+                    Fragment fragment;
+                    if (mIsBranchSelected) {
+                        fragment = BranchItemFragment.
+                                newInstance(CategoryEntry.ROOT_CATEGORY_ID,
+                                        mSelectedBranchId, true).setCardViewToggleListener(listener);
+                    } else {
+                        fragment = ItemListFragment.
+                                newInstance(CategoryEntry.ROOT_CATEGORY_ID,
+                                        true).setCardViewToggleListener(listener);
                     }
-                });
-                replaceMainFragment(fragment);
+                    replaceMainFragment(fragment, false);
+                }
+            });
+            replaceMainFragment(fragment, false);
+        } else {
+            CardViewToggleListener listener = new CardViewToggleListener() {
+                @Override
+                public void onCardOptionSelected(boolean enable_card_view) {
+                    PrefUtil.setCategoryCardShow(MainActivity.this,
+                            enable_card_view);
+                    displayItemsORBranchFragment();
+                }
+            };
+            Fragment fragment;
+            if (mIsBranchSelected) {
+                fragment = BranchItemFragment.
+                        newInstance(CategoryEntry.ROOT_CATEGORY_ID,
+                                mSelectedBranchId, true).
+                        setCardViewToggleListener(listener);
             } else {
-                showBranchItemsWithoutCardView();
+                fragment = ItemListFragment.
+                        newInstance(CategoryEntry.ROOT_CATEGORY_ID, true).
+                        setCardViewToggleListener(listener);
             }
-        } else if (mIsAllItemsSelected) {
-            if (show_category_card) {
-                CategoryCardViewFragment fragment = new CategoryCardViewFragment();
-                fragment.setSelectionListener(new CategoryCardViewFragment.SelectionListener() {
-                    @Override
-                    public void onCategorySelected(SCategory category) {
-                        getSupportFragmentManager().beginTransaction().
-                                replace(R.id.main_fragment_container,
-                                        ItemListFragment.newInstance(category.category_id, false)).
-                                addToBackStack(null).commit();
-                    }
-                });
-                fragment.setCardListener(new CardViewToggleListener() {
-                    @Override
-                    public void onCardOptionSelected(boolean enable_card_view) {
-                        PrefUtil.setCategoryCardShow(MainActivity.this, false);
-                        showAllItemsWithoutCardView();
-                    }
-                });
-                replaceMainFragment(fragment);
-            } else {
-                showAllItemsWithoutCardView();
-            }
+            replaceMainFragment(fragment, false);
         }
     }
 
-    void showBranchItemsWithoutCardView() {
-        BranchItemFragment fragment = BranchItemFragment.newInstance(
-                        CategoryEntry.ROOT_CATEGORY_ID, mSelectedBranchId, true);
-        fragment.setCardListener(new CardViewToggleListener() {
-            @Override
-            public void onCardOptionSelected(boolean enable_card_view) {
-                PrefUtil.setCategoryCardShow(MainActivity.this, true);
-                displayItemsORBranchFragment();
-            }
-        });
-        replaceMainFragment(fragment);
-    }
+    void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
+        removeCustomActionBarViews();
 
-    void showAllItemsWithoutCardView() {
-        ItemListFragment fragment = ItemListFragment.newInstance(CategoryEntry.ROOT_CATEGORY_ID, true);
-        fragment.setCardListener(new CardViewToggleListener() {
-            @Override
-            public void onCardOptionSelected(boolean enable_card_view) {
-                PrefUtil.setCategoryCardShow(MainActivity.this, true);
-                displayItemsORBranchFragment();
-            }
-        });
-        replaceMainFragment(fragment);
-    }
-
-    void replaceMainFragment(Fragment fragment) {
         FragmentManager fm = getSupportFragmentManager();
         for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
             fm.popBackStack();
         }
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment_container, fragment)
-                .commit();
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().
+                replace(R.id.main_fragment_container, fragment);
+        if (add_to_back_stack) {
+            transaction.addToBackStack(null);
+        }
+        transaction.commit();
     }
 
     void removeCustomActionBarViews() {
-        ActionBar actionBar = ((AppCompatActivity)this).getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null && (actionBar.getCustomView() != null))
             actionBar.getCustomView().setVisibility(View.GONE);
         invalidateOptionsMenu();
@@ -274,7 +279,6 @@ public class MainActivity extends AppCompatActivity implements
         removeCustomActionBarViews();
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
-                mIsAllItemsSelected = true;
                 mIsBranchSelected = false;
                 displayItemsORBranchFragment();
                 break;
@@ -291,16 +295,16 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
             case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
-                replaceMainFragment(new BranchFragment());
+                replaceMainFragment(new BranchFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_COMPANIES:
-                replaceMainFragment(new CompanyFragment());
+                replaceMainFragment(new CompanyFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_HISTORY:
-                replaceMainFragment(new TransactionHistoryFragment());
+                replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_MEMBERS:
-                replaceMainFragment(new MembersFragment());
+                replaceMainFragment(new MembersFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC: {
                 Intent intent = new Intent(this, SheketService.class);
@@ -314,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements
                 startActivity(new Intent(this, AndroidDatabaseManager.class));
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_USER_PROFILE:
-                replaceMainFragment(new ProfileFragment());
+                replaceMainFragment(new ProfileFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_LOG_OUT:
                 PrefUtil.logoutUser(this);
@@ -344,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements
         getContentResolver().delete(
                 CategoryEntry.buildBaseUri(company_id),
                 CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry.ROOT_CATEGORY_ID +
-                "' AND  " +
+                        "' AND  " +
                         CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry._ROOT_CATEGORY_PARENT_ID + "' ",
                 null
         );
@@ -512,8 +516,7 @@ public class MainActivity extends AppCompatActivity implements
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
-                    {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                         finish();
                         startActivity(getIntent());
                     } else {

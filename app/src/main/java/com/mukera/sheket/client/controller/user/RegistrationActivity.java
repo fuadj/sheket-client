@@ -26,9 +26,7 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
-        if (savedInstanceState == null) {
-            replaceWithSingup();
-        }
+        replaceWithSingup();
     }
 
     void replaceWithSingup() {

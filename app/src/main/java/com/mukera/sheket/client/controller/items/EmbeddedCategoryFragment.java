@@ -108,6 +108,9 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         return PrefUtil.showCategoryTree(getActivity());
     }
 
+    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -126,19 +129,36 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
 
             // set the current preference
             mToggleCategoryView.setChecked(PrefUtil.showCategoryTree(getActivity()));
+
             mToggleCategoryView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     PrefUtil.setShowCategoryTree(getActivity(), isChecked);
-                    setCategoryListVisibility(isChecked);
-                    long category_id;
+
                     if (!isChecked) {
-                        category_id = CategoryEntry.ROOT_CATEGORY_ID;
-                    } else {
-                        category_id = mCurrentParentCategoryId;
+                        // If we choose to disable the tree view, we should
+                        // also disable the cardview. It doesn't make any sense
+                        // to select a category from the card view and see
+                        // all items dumped because we disabled the tree view.
+                        // So, if we disable the tree view we are also disabling
+                        // card view.
+                        PrefUtil.setCategoryCardShow(getActivity(), false);
                     }
-                    onCategorySelected(category_id);
-                    onRestartLoader();
+
+                    onCategoryTreeViewToggled(isChecked);
+
+                    if (isChecked) {
+                        onCategorySelected(mCurrentParentCategoryId);
+                        onRestartLoader();
+                        setCategoryListVisibility(true);
+                    } else {
+                        /**
+                         * Don't do any thing with the loader, don't waste any resources
+                         * loading shit that won't be displayed anyway
+                         */
+                        onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID);
+                        setCategoryListVisibility(false);
+                    }
                 }
             });
         }
@@ -212,7 +232,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         if (id != getCategoryLoaderId())
             return onEmbeddedCreateLoader(id, args);
 
-        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
+        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_NAME) + " ASC";
 
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
@@ -226,7 +246,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
             mAdapter.setCategoryCursor(data);
-            setCategoryListVisibility(true);
+            setCategoryListVisibility(isShowingCategoryTree());
         } else {
             onEmbeddedLoadFinished(loader, data);
         }
@@ -283,7 +303,12 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
             }
 
             holder.categoryName.setText(category.name);
-            holder.childrenCount.setText("" + category.childrenCategories.size());
+            if (category.childrenCategories.isEmpty()) {
+                holder.childrenCount.setVisibility(View.GONE);
+            } else {
+                holder.childrenCount.setVisibility(View.VISIBLE);
+                holder.childrenCount.setText("" + category.childrenCategories.size());
+            }
             return convertView;
         }
     }

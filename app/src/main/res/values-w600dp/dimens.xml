@@ -6,4 +6,5 @@
 
   <dimen name="notification_large_icon_default">48dp</dimen>
   <dimen name="forecast_detail_horizontal_padding">32dp</dimen>
+  <dimen name="navdrawer_width">320dp</dimen>
 </resources>

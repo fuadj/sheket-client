@@ -1,10 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.Sheket.Base" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.Sheket.Base" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="Theme.Sheket" parent="Theme.Sheket.Base"/>

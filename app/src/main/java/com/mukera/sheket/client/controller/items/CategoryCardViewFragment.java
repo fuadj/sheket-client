@@ -40,12 +40,14 @@ public class CategoryCardViewFragment extends Fragment implements LoaderManager.
         void onCategorySelected(SCategory category);
     }
 
-    public void setSelectionListener(SelectionListener listener) {
+    public CategoryCardViewFragment setCategorySelectionListener(SelectionListener listener) {
         mListener = listener;
+        return this;
     }
 
-    public void setCardListener(CardViewToggleListener listener) {
+    public CategoryCardViewFragment setCardViewToggleListener(CardViewToggleListener listener) {
         mCardListener = listener;
+        return this;
     }
 
     @Override
@@ -97,7 +99,7 @@ public class CategoryCardViewFragment extends Fragment implements LoaderManager.
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
+        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_NAME) + " ASC";
 
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         return new CursorLoader(getActivity(),

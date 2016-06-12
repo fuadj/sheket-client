@@ -47,8 +47,9 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     private ListView mBranchItemList;
     private BranchItemCursorAdapter mBranchItemAdapter;
 
-    public void setCardListener(CardViewToggleListener listener) {
+    public BranchItemFragment setCardViewToggleListener(CardViewToggleListener listener) {
         mCardListener = listener;
+        return this;
     }
 
     public static BranchItemFragment newInstance(long category_id, long branch_id, boolean show_toggle_menu) {
@@ -191,6 +192,12 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
+    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
+        if (!show_tree_view)
+            mCardListener.onCardOptionSelected(false);
+    }
+
+    @Override
     protected int getCategoryLoaderId() {
         return LoaderId.MainActivity.BRANCH_ITEM_CATEGORY_LOADER;
     }
@@ -231,7 +238,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
                 SBranchItem.BRANCH_ITEM_WITH_DETAIL_COLUMNS,
                 selection,
                 selectionArgs,
-                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) + " ASC"
+                ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC"
         );
     }
 

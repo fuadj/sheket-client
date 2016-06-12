@@ -49,8 +49,9 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     private boolean mShowCardToggleMenu;
 
-    public void setCardListener(CardViewToggleListener listener) {
+    public ItemListFragment setCardViewToggleListener(CardViewToggleListener listener) {
         mCardListener = listener;
+        return this;
     }
 
     public static ItemListFragment newInstance(long category_id, boolean show_toggle_menu) {
@@ -148,9 +149,15 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
+    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
+        if (!show_tree_view)
+            mCardListener.onCardOptionSelected(false);
+    }
+
+    @Override
     protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
-        String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
+        String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
 
         String selection = null;
         String[] selectionArgs = null;

@@ -5,6 +5,8 @@
 
     <dimen name="navdrawer_image_height">192dp</dimen>
 
+    <dimen name="navdrawer_width">240dp</dimen>
+
     <dimen name="toolbar_elevation">4dp</dimen>
 
     <dimen name="category_spacing">4dp</dimen>

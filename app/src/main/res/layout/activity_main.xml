@@ -40,7 +40,7 @@
 
     <FrameLayout
         android:id="@+id/main_navigation_container"
-        android:layout_width="320dp"
+        android:layout_width="@dimen/navdrawer_width"
         android:layout_height="match_parent"
         android:layout_gravity="start" />
 
