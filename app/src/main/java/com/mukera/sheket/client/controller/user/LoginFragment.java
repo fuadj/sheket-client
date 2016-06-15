@@ -74,6 +74,7 @@ public class LoginFragment extends Fragment {
             }
         });
 
+        /*
         EditText ip_address = (EditText) rootView.findViewById(R.id.login_edit_ip_address);
         ip_address.addTextChangedListener(new TextWatcherAdapter(){
             @Override
@@ -84,6 +85,7 @@ public class LoginFragment extends Fragment {
                 PrefUtil.setIpAddress(getContext(), address);
             }
         });
+        */
 
         TextWatcherAdapter loginBtnStatusSetter = new TextWatcherAdapter() {
             @Override
@@ -149,7 +151,7 @@ public class LoginFragment extends Fragment {
                 json.put(USER_LOGIN_KEY_PASSWORD, mPassword);
 
                 Request.Builder builder = new Request.Builder();
-                builder.url(ConfigData.getAddress(getActivity()) + "signin");
+                builder.url(ConfigData.getAddress(getActivity()) + "v1/signin");
                 builder.post(RequestBody.create(MediaType.parse("application/json"),
                         json.toString()));
                 Response response = client.newCall(builder.build()).execute();

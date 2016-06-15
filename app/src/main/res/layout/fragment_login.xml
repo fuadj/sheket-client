@@ -56,11 +56,13 @@
                 android:textColor="#080cf1"
                 android:enabled="true" />
 
+            <!--
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Ip Address:"
                 android:id="@+id/login_edit_ip_address" />
+                -->
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

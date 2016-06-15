@@ -81,6 +81,7 @@ public class SignupFragment extends Fragment {
             }
         };
 
+        /*
         EditText ip_address = (EditText) rootView.findViewById(R.id.signup_edit_ip_address);
         ip_address.addTextChangedListener(new TextWatcherAdapter(){
             @Override
@@ -91,6 +92,7 @@ public class SignupFragment extends Fragment {
                 PrefUtil.setIpAddress(getContext(), address);
             }
         });
+        */
 
         mLoginChoice = (TextView) rootView.findViewById(R.id.signup_text_view_login);
         mLoginChoice.setOnClickListener(new View.OnClickListener() {
@@ -172,7 +174,7 @@ public class SignupFragment extends Fragment {
                 json.put(USER_SIGNUP_KEY_PASSWORD, mPassword);
 
                 Request.Builder builder = new Request.Builder();
-                builder.url(ConfigData.getAddress(getActivity()) + "signup");
+                builder.url(ConfigData.getAddress(getActivity()) + "v1/signup");
                 builder.post(RequestBody.create(MediaType.parse("application/json"),
                         json.toString()));
                 Response response = client.newCall(builder.build()).execute();
