@@ -5,13 +5,16 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -74,6 +77,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     public long user_id;
     public long branch_id;
     public long date;
+    public String decodedDate;
 
     public List<STransactionItem> transactionItems;
 
@@ -89,12 +93,19 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         this(cursor, 0, fetch_affected);
     }
 
+    private static SimpleDateFormat sDateFormatter;
+    static {
+        sDateFormatter = new SimpleDateFormat("dd/MMM/yyyy");
+    }
+
     public STransaction(Cursor cursor, int offset, boolean fetch_affected) {
         company_id = cursor.getLong(COL_COMPANY_ID + offset);
         transaction_id = cursor.getLong(COL_TRANS_ID + offset);
         user_id = cursor.getLong(COL_USER_ID + offset);
         branch_id = cursor.getLong(COL_BRANCH_ID + offset);
         date = cursor.getLong(COL_DATE + offset);
+        Date d = SheketContract.getDateFromDb(date);
+        decodedDate = sDateFormatter.format(d);
         change_status = cursor.getInt(COL_CHANGE + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
 
@@ -139,9 +150,6 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         result.put(JSON_TRANS_KEY_TRANS_ID, transaction_id);
         result.put(JSON_TRANS_KEY_BRANCH_ID, branch_id);
         result.put(JSON_TRANS_KEY_UUID, client_uuid);
-
-        // TODO: fix this, server is complaining its above int64 range
-        date = 10;
 
         result.put(JSON_TRANS_KEY_DATE, date);
         JSONArray itemsArr = new JSONArray();

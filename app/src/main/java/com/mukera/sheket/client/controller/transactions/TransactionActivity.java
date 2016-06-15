@@ -21,6 +21,7 @@ import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -195,8 +196,7 @@ public class TransactionActivity extends AppCompatActivity {
 
         values.put(UUIDSyncable.COLUMN_UUID, UUID.randomUUID().toString());
 
-        // TODO: figure out a better way to store time
-        values.put(TransactionEntry.COLUMN_DATE, System.currentTimeMillis());
+        values.put(TransactionEntry.COLUMN_DATE, SheketContract.getDbDateInteger(new Date()));
 
         long company_id = PrefUtil.getCurrentCompanyId(this);
         operations.add(

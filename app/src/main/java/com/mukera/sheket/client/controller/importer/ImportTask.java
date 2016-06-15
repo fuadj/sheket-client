@@ -21,6 +21,7 @@ import com.mukera.sheket.client.utils.UnitsOfMeasurement;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -423,7 +424,7 @@ public class ImportTask extends AsyncTask<Void, Void, SimpleCSVReader> {
                     values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
                     values.put(TransactionEntry.COLUMN_COMPANY_ID, company_id);
                     values.put(TransactionEntry.COLUMN_USER_ID, user_id);
-                    values.put(TransactionEntry.COLUMN_DATE, System.currentTimeMillis());
+                    values.put(TransactionEntry.COLUMN_DATE, SheketContract.getDbDateInteger(new Date()));
 
                     values.put(UUIDSyncable.COLUMN_UUID, UUID.randomUUID().toString());
                     values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,

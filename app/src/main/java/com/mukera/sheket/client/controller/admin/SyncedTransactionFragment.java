@@ -161,6 +161,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                 holder.username.setVisibility(View.GONE);
             }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
+            holder.date.setText(detail.trans.decodedDate);
             return convertView;
         }
 
@@ -168,11 +169,13 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
             ImageView trans_icon;
             TextView username;
             TextView total_qty;
+            TextView date;
 
             public TransDetailViewHolder(View view) {
                 trans_icon = (ImageView) view.findViewById(R.id.list_item_trans_history_icon);
                 username = (TextView) view.findViewById(R.id.list_item_trans_history_user_name);
                 total_qty = (TextView) view.findViewById(R.id.list_item_trans_history_qty);
+                date = (TextView) view.findViewById(R.id.list_item_trans_history_date);
             }
         }
     }

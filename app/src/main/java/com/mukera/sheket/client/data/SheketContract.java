@@ -7,6 +7,8 @@ import android.net.Uri;
 import com.mukera.sheket.client.R;
 
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -38,14 +40,36 @@ public class SheketContract {
         return (val ? TRUE : FALSE);
     }
 
-    public static String formatDate(long dateInMilliseconds) {
-        Date date = new Date(dateInMilliseconds);
-        return DateFormat.getDateInstance().format(date);
-    }
-
     // Format used for storing dates in the database.  ALso used for converting those strings
     // back into date objects for comparison/processing.
     public static final String DATE_FORMAT = "yyyyMMdd";
+
+    /**
+     * Converts Date class to a integer representation, used for easy comparison and database lookup.
+     * @param date The input date
+     * @return a DB-friendly representation of the date, using the format defined in DATE_FORMAT.
+     */
+    public static int getDbDateInteger(Date date){
+        // Because the API returns a unix timestamp (measured in seconds),
+        // it must be converted to milliseconds in order to be converted to valid date.
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        return Integer.parseInt(sdf.format(date));
+    }
+
+    /**
+     * Converts a dateText to a long Unix time representation
+     * @param dateInt the input date integer
+     * @return the Date object
+     */
+    public static Date getDateFromDb(long dateInt) {
+        SimpleDateFormat dbDateFormat = new SimpleDateFormat(DATE_FORMAT);
+        try {
+            return dbDateFormat.parse("" + dateInt);
+        } catch ( ParseException e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     // add this to contentvalues and set it to true if you want the insert to replace existing stuff.
     public static final String SQL_INSERT_OR_REPLACE = "__sql_insert_or_replace__";
