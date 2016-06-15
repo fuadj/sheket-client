@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -56,7 +57,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements
         NavigationFragment.BranchSelectionCallback,
         SPermission.PermissionChangeListener,
-        ImportTask.ImportListener {
+        ImportTask.ImportListener,
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int REQUEST_FILE_CHOOSER = 1234;
 
@@ -73,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private boolean mIsBranchSelected = false;
     private long mSelectedBranchId;
+
+    private String mImportPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -383,19 +387,37 @@ public class MainActivity extends AppCompatActivity implements
 
                 if (path == null || !FileUtils.isLocal(path)) return;
 
-                verityStoragePermissions();
+                mImportPath = path;
 
-                mImportProgress = ProgressDialog.show(this,
-                        "Importing Data", "Please Wait...", true);
-                ImportTask importTask = new ImportTask(new File(path), this);
-                importTask.setListener(this);
-                importTask.execute();
+                if (verityStoragePermissions()) {
+                    startImporterTask();
+                }
+
                 break;
             }
         }
     }
 
-    private void verityStoragePermissions() {
+    void startImporterTask() {
+        mImportProgress = ProgressDialog.show(this,
+                "Importing Data", "Please Wait...", true);
+        ImportTask importTask = new ImportTask(new File(mImportPath), this);
+        importTask.setListener(this);
+        importTask.execute();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_EXTERNAL_STORAGE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startImporterTask();
+                }
+                break;
+        }
+    }
+
+    private boolean verityStoragePermissions() {
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
@@ -406,7 +428,9 @@ public class MainActivity extends AppCompatActivity implements
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
+            return false;
         }
+        return true;
     }
 
     private boolean mShowImportOptionsDialog = false;
@@ -504,6 +528,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void importError(String msg) {
+        mImporting = true;
         mErrorOccurred = true;
         mErrorMsg = msg;
         if (mDidResume) {
