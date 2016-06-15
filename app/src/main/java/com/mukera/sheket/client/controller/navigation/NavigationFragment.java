@@ -11,12 +11,13 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.CursorAdapter;
-import android.support.v4.widget.ListViewAutoScrollHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -43,10 +44,11 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
     private ListView mBranchListView;
     private ListView mSyncingListView;
     private ListView mAdminListView;
-    private ListView mUserListView;
+    private ExpandableListView mSettingsListView;
 
     private NavigationBranchAdapter mNavigationBranchAdapter;
-    private StaticNavigationAdapter mAdminAdapter, mSyncAdapter, mUserAdapter;
+    private StaticNavigationAdapter mAdminAdapter, mSyncAdapter;
+    private StaticExpandableListAdapter mSettingsAdapter;
 
     private TextView mSeparator1TextView;
     private TextView mSeparator2TextView;
@@ -122,28 +124,47 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             });
         }
 
-        mUserListView = (ListView) rootView.findViewById(R.id.navigation_list_view_user);
-        mUserAdapter = new StaticNavigationAdapter(getContext());
-        mUserListView.setAdapter(mUserAdapter);
+        mSettingsListView = (ExpandableListView) rootView.findViewById(R.id.navigation_list_view_settings);
+        mSettingsAdapter = new StaticExpandableListAdapter(getContext());
+        mSettingsListView.setAdapter(mSettingsAdapter);
 
-        List<Integer> userCategories = new ArrayList<>();
-        userCategories.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
-        userCategories.add(StaticNavigationAdapter.ENTITY_COMPANIES);
-        userCategories.add(StaticNavigationAdapter.ENTITY_SETTINGS);
-        userCategories.add(StaticNavigationAdapter.ENTITY_DEBUG);
-        userCategories.add(StaticNavigationAdapter.ENTITY_DELETE);
-        userCategories.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
-        for (Integer _i : userCategories) {
-            mUserAdapter.add(_i);
-        }
-        mUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        List<Integer> settingsChildren = new ArrayList<>();
+        settingsChildren.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
+        settingsChildren.add(StaticNavigationAdapter.ENTITY_COMPANIES);
+        settingsChildren.add(StaticNavigationAdapter.ENTITY_DEBUG);
+        settingsChildren.add(StaticNavigationAdapter.ENTITY_DELETE);
+        settingsChildren.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
+
+        Pair<Integer, List<Integer>> settingsCategory =
+                new Pair<>(StaticNavigationAdapter.ENTITY_SETTINGS, settingsChildren);
+
+        List<Pair<Integer, List<Integer>>> listData = new ArrayList<>();
+        listData.add(settingsCategory);
+
+        mSettingsAdapter.setData(listData);
+
+        mSettingsListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Integer elem = mUserAdapter.getItem(position);
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                Integer elem = (Integer)mSettingsAdapter.getChild(groupPosition, childPosition);
                 mCallback.onElementSelected(elem);
+                return true;
             }
         });
 
+        mSettingsListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+            @Override
+            public void onGroupCollapse(int groupPosition) {
+                ListUtils.setDynamicHeight(mSettingsListView);
+            }
+        });
+
+        mSettingsListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+            @Override
+            public void onGroupExpand(int groupPosition) {
+                ListUtils.setDynamicHeight(mSettingsListView);
+            }
+        });
 
         View separator1 = rootView.findViewById(R.id.separator_1);
         mSeparator1TextView = (TextView) separator1.findViewById(R.id.text_view_separator);
@@ -169,7 +190,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         ListUtils.setDynamicHeight(mBranchListView);
         ListUtils.setDynamicHeight(mSyncingListView);
         ListUtils.setDynamicHeight(mAdminListView);
-        ListUtils.setDynamicHeight(mUserListView);
+        ListUtils.setDynamicHeight(mSettingsListView);
 
         return rootView;
     }
@@ -337,13 +358,117 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         public static class StaticNavViewHolder {
             ImageView elemImage;
             TextView elemName;
+            View indentationView;
+            ImageView expandImgView, collapseImgView;
 
             public StaticNavViewHolder(View view) {
                 elemImage = (ImageView) view.findViewById(R.id.list_item_static_nav_icon);
                 elemName = (TextView) view.findViewById(R.id.list_item_static_nav_name);
+
+                indentationView = view.findViewById(R.id.list_item_static_indentation_view);
+                expandImgView = (ImageView) view.findViewById(R.id.list_item_static_img_expand);
+                collapseImgView = (ImageView) view.findViewById(R.id.list_item_static_img_collapse);
             }
         }
+    }
 
+    public static class StaticExpandableListAdapter extends BaseExpandableListAdapter {
+        private Context mContext;
+        private List<Pair<Integer, List<Integer>>> mData;
+        public StaticExpandableListAdapter(Context context) {
+            super();
+            mContext = context;
+            mData = new ArrayList<>();
+        }
 
+        public void setData(List<Pair<Integer, List<Integer>>> data) {
+            mData = data;
+            if (mData == null)
+                mData = new ArrayList<>();
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public int getGroupCount() {
+            return mData.size();
+        }
+
+        @Override
+        public int getChildrenCount(int groupPosition) {
+            return mData.get(groupPosition).second.size();
+        }
+
+        @Override
+        public Object getGroup(int groupPosition) {
+            return mData.get(groupPosition).first;
+        }
+
+        @Override
+        public Object getChild(int groupPosition, int childPosition) {
+            return mData.get(groupPosition).second.get(childPosition);
+        }
+
+        @Override
+        public long getGroupId(int groupPosition) {
+            return groupPosition;
+        }
+
+        @Override
+        public long getChildId(int groupPosition, int childPosition) {
+            return childPosition;
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return false;
+        }
+
+        @Override
+        public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+            Integer item = (Integer)getGroup(groupPosition);
+
+            StaticNavigationAdapter.StaticNavViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(mContext);
+                convertView = inflater.inflate(R.layout.list_item_static_navigation, parent, false);
+                holder = new StaticNavigationAdapter.StaticNavViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (StaticNavigationAdapter.StaticNavViewHolder) convertView.getTag();
+            }
+            holder.elemName.setText(StaticNavigationAdapter.sEntityAndIcon.get(item).first);
+            holder.elemImage.setImageResource(StaticNavigationAdapter.sEntityAndIcon.get(item).second);
+
+            holder.collapseImgView.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
+            holder.expandImgView.setVisibility(isExpanded ? View.GONE : View.VISIBLE);
+
+            return convertView;
+        }
+
+        @Override
+        public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+            Integer item = (Integer)getChild(groupPosition, childPosition);
+
+            StaticNavigationAdapter.StaticNavViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(mContext);
+                convertView = inflater.inflate(R.layout.list_item_static_navigation, parent, false);
+                holder = new StaticNavigationAdapter.StaticNavViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (StaticNavigationAdapter.StaticNavViewHolder) convertView.getTag();
+            }
+
+            holder.elemName.setText(StaticNavigationAdapter.sEntityAndIcon.get(item).first);
+            holder.elemImage.setImageResource(StaticNavigationAdapter.sEntityAndIcon.get(item).second);
+            holder.indentationView.setVisibility(View.VISIBLE);
+
+            return convertView;
+        }
+
+        @Override
+        public boolean isChildSelectable(int groupPosition, int childPosition) {
+            return true;
+        }
     }
 }

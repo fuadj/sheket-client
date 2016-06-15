@@ -1,39 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/list_item_nav"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:gravity="center_vertical|fill_vertical">
 
-    <FrameLayout
-        android:layout_marginLeft="15dp"
-        android:layout_width="40dp"
-        android:layout_height="40dp">
+    <View
+        android:layout_width="20dp"
+        android:layout_height="match_parent"
+        android:id="@+id/list_item_static_indentation_view"
+        android:visibility="gone"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true" />
 
-        <ImageView
-            android:id="@+id/list_item_static_nav_icon"
-            android:layout_gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
-    </FrameLayout>
-
-    <LinearLayout
-        android:layout_marginLeft="15dp"
+    <ImageView
+        android:id="@+id/list_item_static_nav_icon"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_width="0dp"
-        android:layout_weight="7"
-        android:orientation="vertical">
+        android:layout_toRightOf="@+id/list_item_static_indentation_view"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="15dp" />
 
-        <TextView
-            android:id="@+id/list_item_static_nav_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-condensed"
-            android:textSize="14sp"/>
+    <TextView
+        android:layout_marginLeft="15dp"
+        android:id="@+id/list_item_static_nav_name"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="14sp"
+        android:layout_toRightOf="@+id/list_item_static_nav_icon" />
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/list_item_static_img_expand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_action_expand"
+        android:visibility="gone"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/list_item_static_img_collapse"
+        android:layout_width="25dp"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_action_collapse"
+        android:visibility="gone"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp" />
+
+</RelativeLayout>
