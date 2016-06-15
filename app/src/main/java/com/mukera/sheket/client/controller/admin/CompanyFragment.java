@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.admin;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.text.Editable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -179,6 +181,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
         private EditText mCompanyName;
         public CompanyFragment fragment;
         private Button mBtnCreate;
+        private ProgressDialog mProgressDialog;
 
         void setButtonStatus() {
             mBtnCreate.setEnabled(!mCompanyName.getText().toString().trim().isEmpty());
@@ -211,6 +214,8 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                 public void onClick(View v) {
                     final Activity activity = getActivity();
                     final String company_name = mCompanyName.getText().toString();
+                    mProgressDialog = ProgressDialog.show(
+                            getActivity(), "Creating Company", "Please Wait...", true);
                     Thread t = new Thread() {
                         @Override
                         public void run() {
@@ -218,6 +223,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    mProgressDialog.dismiss();
                                     getDialog().dismiss();
                                     if (fragment.mListener != null) {
                                         fragment.mListener.userPermissionChanged();
@@ -277,7 +283,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                 SPermission.setSingletonPermission(user_permission);
             } catch (JSONException | IOException | CompanyCreateException e) {
-
+                Log.e("CompanyFragment", e.getMessage());
             }
         }
 

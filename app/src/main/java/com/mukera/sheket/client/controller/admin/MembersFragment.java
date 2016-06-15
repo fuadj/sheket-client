@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.admin;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -216,6 +217,8 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
 
         private List<SBranch> mBranches;
 
+        private ProgressDialog mProgressDialog;
+
         static class PermType {
             public int type;
             public String name;
@@ -368,6 +371,8 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
                         member.member_id = Long.valueOf(mEditMemberId.getText().toString().trim());
+                        mProgressDialog = ProgressDialog.show(getActivity(),
+                                "Adding Member", "Please wait...", true);
                     } else {
                         member = new SMember(mMember);
                     }
@@ -396,6 +401,8 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                                 updateMember(activity, member);
                             } else {
                                 addMember(activity, member);
+                                if (mProgressDialog != null)
+                                    mProgressDialog.dismiss();
                             }
                             activity.runOnUiThread(new Runnable() {
                                 @Override
