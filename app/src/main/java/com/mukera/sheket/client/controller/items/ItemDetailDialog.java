@@ -43,6 +43,7 @@ public class ItemDetailDialog extends DialogFragment {
 
         ListView branchesList = (ListView) view.findViewById(R.id.dialog_all_item_list_view_branches);
         DetailDialogAdapter adapter = new DetailDialogAdapter(getActivity());
+        /*
         adapter.setListener(new DetailDialogAdapter.BranchItemSelectionListener() {
             @Override
             public void editItemLocationSelected(final SBranchItem branchItem) {
@@ -73,7 +74,7 @@ public class ItemDetailDialog extends DialogFragment {
                                  * If the branch item was in created state, we don't want to change it until
                                  * we sync with server. If we change it to updated state, it will create problems
                                  * as the server still doesn't know about it and the update will fail.
-                                 */
+                                 *\/
                                 if (branchItem.change_status != ChangeTraceable.CHANGE_STATUS_CREATED) {
                                     values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_UPDATED);
                                 }
@@ -101,6 +102,7 @@ public class ItemDetailDialog extends DialogFragment {
                 dialog.show(fm, "Set Location");
             }
         });
+        */
         for (Pair<SBranch, SBranchItem> pair : mItemDetail.available_branches) {
             adapter.add(pair);
         }
@@ -153,6 +155,7 @@ public class ItemDetailDialog extends DialogFragment {
                 itemLoc.setVisibility(View.GONE);
             }
 
+            /*
             ImageButton imgLocation = (ImageButton) convertView.findViewById(R.id.list_item_img_btn_all_item_detail_dialog);
             imgLocation.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -160,6 +163,7 @@ public class ItemDetailDialog extends DialogFragment {
                     mListener.editItemLocationSelected(pair.second);
                 }
             });
+            */
 
             return convertView;
         }

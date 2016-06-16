@@ -4,6 +4,7 @@
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:layout_height="wrap_content">
 
+    <!--
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -12,13 +13,14 @@
         android:focusable="false"
         android:background="@drawable/ic_action_edit"
         android:layout_centerVertical="true"/>
+        -->
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_toRightOf="@+id/list_item_img_btn_all_item_detail_dialog"
+        android:layout_alignParentLeft="true"
         android:layout_centerVertical="true">
 
         <TextView
