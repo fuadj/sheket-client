@@ -210,25 +210,7 @@ public class MainActivity extends AppCompatActivity implements
                 public void onCardOptionSelected(boolean enable_card_view) {
                     PrefUtil.setCategoryCardShow(MainActivity.this,
                             false);
-                    CardViewToggleListener listener = new CardViewToggleListener() {
-                        @Override
-                        public void onCardOptionSelected(boolean enable_card_view) {
-                            PrefUtil.setCategoryCardShow(MainActivity.this,
-                                    true);
-                            displayItemsORBranchFragment();
-                        }
-                    };
-                    Fragment fragment;
-                    if (mIsBranchSelected) {
-                        fragment = BranchItemFragment.
-                                newInstance(CategoryEntry.ROOT_CATEGORY_ID,
-                                        mSelectedBranchId, true).setCardViewToggleListener(listener);
-                    } else {
-                        fragment = ItemListFragment.
-                                newInstance(CategoryEntry.ROOT_CATEGORY_ID,
-                                        true).setCardViewToggleListener(listener);
-                    }
-                    replaceMainFragment(fragment, false);
+                    displayItemsORBranchFragment();
                 }
             });
             replaceMainFragment(fragment, false);
