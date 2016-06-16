@@ -20,6 +20,7 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.utils.LoaderId;
@@ -57,10 +58,14 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
 
     private TextView mCompanyName;
 
+    private ScrollView mContainerView;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_navigation, container, false);
+
+        mContainerView = (ScrollView) rootView.findViewById(R.id.navigation_scroll_view_container);
 
         mCompanyName = (TextView) rootView.findViewById(R.id.navigation_text_view_company_name);
         mCompanyName.setText(Utils.toTitleCase(PrefUtil.getCurrentCompanyName(getActivity())));
@@ -131,8 +136,8 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         List<Integer> settingsChildren = new ArrayList<>();
         settingsChildren.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
         settingsChildren.add(StaticNavigationAdapter.ENTITY_COMPANIES);
-        /*
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DEBUG);
+        /*
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DELETE);
         */
         settingsChildren.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
@@ -163,8 +168,14 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
 
         mSettingsListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
-            public void onGroupExpand(int groupPosition) {
+            public void onGroupExpand(final int groupPosition) {
                 ListUtils.setDynamicHeight(mSettingsListView);
+                mContainerView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mContainerView.fullScroll(View.FOCUS_DOWN);
+                    }
+                });
             }
         });
 
