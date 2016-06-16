@@ -131,8 +131,10 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         List<Integer> settingsChildren = new ArrayList<>();
         settingsChildren.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
         settingsChildren.add(StaticNavigationAdapter.ENTITY_COMPANIES);
+        /*
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DEBUG);
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DELETE);
+        */
         settingsChildren.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
 
         Pair<Integer, List<Integer>> settingsCategory =
@@ -302,23 +304,23 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         static {
             sEntityAndIcon = new HashMap<>();
             sEntityAndIcon.put(ENTITY_ALL_ITEMS,
-                    new Pair<>("All Items", R.mipmap.ic_action_home));
+                    new Pair<>("All Items", R.mipmap.ic_action_all_items));
             sEntityAndIcon.put(ENTITY_IMPORT,
-                    new Pair<>("Import", R.drawable.ic_action_download));
+                    new Pair<>("Import", R.mipmap.ic_action_import));
             sEntityAndIcon.put(ENTITY_SYNC,
-                    new Pair<>("Sync Now", R.mipmap.ic_action_refresh));
+                    new Pair<>("Sync Now", R.mipmap.ic_action_sync));
             sEntityAndIcon.put(ENTITY_TRANSACTIONS,
-                    new Pair<>("Transactions", R.drawable.ic_action_history));
+                    new Pair<>("Transactions", R.mipmap.ic_action_transaction));
             sEntityAndIcon.put(ENTITY_BRANCHES,
-                    new Pair<>("Branches", R.drawable.ic_action_place));
+                    new Pair<>("Branches", R.mipmap.ic_action_branches));
             sEntityAndIcon.put(ENTITY_COMPANIES,
                     new Pair<>("Companies", R.mipmap.ic_company));
             sEntityAndIcon.put(ENTITY_MEMBERS,
-                    new Pair<>("Members", R.drawable.ic_action_group));
+                    new Pair<>("Members", R.mipmap.ic_action_members));
             sEntityAndIcon.put(ENTITY_HISTORY,
-                    new Pair<>("History", R.drawable.ic_action_history));
+                    new Pair<>("History", R.mipmap.ic_action_history));
             sEntityAndIcon.put(ENTITY_USER_PROFILE,
-                    new Pair<>("User Profile", R.drawable.ic_action_person));
+                    new Pair<>("User Profile", R.mipmap.ic_action_profile));
             sEntityAndIcon.put(ENTITY_SETTINGS,
                     new Pair<>("Settings", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(ENTITY_DEBUG,
@@ -326,7 +328,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
             sEntityAndIcon.put(ENTITY_DELETE,
                     new Pair<>("Delete", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(ENTITY_LOG_OUT,
-                    new Pair<>("Logout", R.drawable.ic_action_warning));
+                    new Pair<>("Logout", R.mipmap.ic_action_logout));
         }
 
         private Context mContext;
