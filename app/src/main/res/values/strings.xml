@@ -43,7 +43,9 @@
     <string name="pref_company_name_default">No Company Selected</string>
     <string name="pref_login_cookie">login_cookie</string>
 
-    <string name="pref_header_key_company_id">company_id</string>
+    // This can't be "company_id" b/c the '_' underscore isn't a proper
+    // header byte, only used alphabets and hyphen(-). Otherwise, it is a BUG.
+    <string name="pref_header_key_company_id">company-id</string>
 
     <string name="pref_user_rev">user_rev</string>
     <string name="pref_user_permission">pref_user_permission</string>
@@ -54,8 +56,6 @@
     <string name="pref_branch_item_revision">branch_item_revision</string>
     <string name="pref_transaction_revision">transaction_revision</string>
     <string name="pref_member_revision">member_revision</string>
-
-    <string name="sync_json_company_id">company_id</string>
 
     <!-- Request json parameters -->
     <string name="pref_response_key_cookie">Set-Cookie</string>

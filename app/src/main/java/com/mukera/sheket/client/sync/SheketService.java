@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.os.RemoteException;
 import android.support.v4.util.Pair;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
@@ -55,18 +56,30 @@ public class SheketService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         client.setConnectTimeout(0, TimeUnit.MILLISECONDS);
-        boolean continue_sync = syncUser();
-        if (!continue_sync) {
-            return;
+        try {
+            syncUser();
+            if (!PrefUtil.isCompanySet(this)) {
+                return;     // can't sync anything without a company
+            }
+            syncEntities();
+            syncTransactions();
+        } catch (SyncException e) {
+            Log.e(LOG_TAG, "Sync Error", e);
+            //Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
-        if (!PrefUtil.isCompanySet(this)) {
-            return;     // can't sync anything without a company
-        }
-        syncEntities();
-        syncTransactions();
     }
 
-    boolean syncUser() {
+    String getErrorMessage(Response response) {
+        final String JSON_ERROR_MSG = "error_message";
+        try {
+            JSONObject object = new JSONObject(response.body().string());
+            return object.getString(JSON_ERROR_MSG);
+        } catch (JSONException | IOException e) {
+        }
+        return "";
+    }
+
+    void syncUser() throws SyncException {
         try {
             Log.d(LOG_TAG, "Syncing User started");
             Request.Builder builder = new Request.Builder();
@@ -81,27 +94,14 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                // todo: check if we need to parse out the error part!
-                throw new SyncException("error response");
+                throw new SyncException(getErrorMessage(response));
             }
 
             JSONObject result = new JSONObject(response.body().string());
-            /*
-            boolean rev_changed = result.getBoolean(
-                    getResourceString(R.string.sync_json_user_revision_changed));
-            if (!rev_changed) {
-                return true;
-            }
-            */
 
             ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
-            /*
-            long new_user_rev = result.getLong(
-                    getResourceString(R.string.sync_json_user_rev));
-            */
-
-            final String USER_JSON_COMPANY_ID = "company_id";
+            final String USER_JSON_COMPANY_ID = this.getString(R.string.pref_header_key_company_id);
             final String USER_JSON_COMPANY_NAME = "company_name";
             final String USER_JSON_COMPANY_PERMISSION = "user_permission";
 
@@ -126,14 +126,10 @@ public class SheketService extends IntentService {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operations);
 
-            //PrefUtil.setUserRevision(this, new_user_rev);
         } catch (JSONException | IOException |
                 RemoteException | OperationApplicationException | SyncException e) {
-            Log.w(LOG_TAG, e.getMessage());
-            return false;
+            throw new SyncException(e);
         }
-
-        return true;
     }
 
     /**
@@ -141,7 +137,7 @@ public class SheketService extends IntentService {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      */
-    boolean syncEntities() {
+    void syncEntities() throws SyncException {
         try {
             Log.d(LOG_TAG, "Syncing Entity started");
             Request.Builder builder = new Request.Builder();
@@ -156,19 +152,14 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                // todo: check if we need to parse out the error part!
-                throw new SyncException("error response");
+                throw new SyncException(getErrorMessage(response));
             }
 
             EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
             applyEntitySync(result);
         } catch (JSONException | IOException | SyncException e) {
-            //Log.w(LOG_TAG, e.getMessage());
-            Log.w(LOG_TAG, "SyncEntity Error" + e.getMessage());
-            return false;
+            throw new SyncException(e);
         }
-
-        return true;
     }
 
     ContentValues setStatusSynced(ContentValues values) {
@@ -263,7 +254,7 @@ public class SheketService extends IntentService {
         EntitySyncResponse result = new EntitySyncResponse();
         JSONObject rootJson = new JSONObject(server_response);
 
-        result.company_id = rootJson.getLong(getResourceString(R.string.sync_json_company_id));
+        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
 
         result.latest_category_rev = rootJson.getInt(getResourceString(R.string.sync_json_category_rev));
         result.latest_item_rev = rootJson.getInt(getResourceString(R.string.sync_json_item_rev));
@@ -838,7 +829,7 @@ public class SheketService extends IntentService {
         return new Pair<>(Boolean.TRUE, memberJson);
     }
 
-    void syncTransactions() {
+    void syncTransactions() throws SyncException {
         try {
             JSONObject json = createTransactionSyncJSON();
             Request.Builder builder = new Request.Builder();
@@ -852,15 +843,14 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                // todo: check if we need to parse out the error part!
-                throw new SyncException("error response");
+                throw new SyncException(getErrorMessage(response));
             }
 
             TransactionSyncResponse result = parseTransactionSyncResponse(
                     response.body().string());
             applyTransactionSync(result);
         } catch (JSONException | IOException | SyncException e) {
-            Log.w(LOG_TAG, "Sync Transaction Error:" + e.getMessage());
+            throw new SyncException(e);
         }
     }
 
@@ -906,7 +896,7 @@ public class SheketService extends IntentService {
         TransactionSyncResponse result = new TransactionSyncResponse();
         JSONObject rootJson = new JSONObject(server_response);
 
-        result.company_id = rootJson.getLong(getResourceString(R.string.sync_json_company_id));
+        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
         result.latest_branch_item_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_item_rev));
         result.latest_transaction_rev = rootJson.getInt(getResourceString(R.string.sync_json_trans_rev));
 

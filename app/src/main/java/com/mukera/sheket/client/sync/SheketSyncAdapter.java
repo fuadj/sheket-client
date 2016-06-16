@@ -255,7 +255,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         EntitySyncResponse result = new EntitySyncResponse();
         JSONObject rootJson = new JSONObject(server_response);
 
-        result.company_id = rootJson.getLong(getResourceString(R.string.sync_json_company_id));
+        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
         result.latest_item_rev = rootJson.getLong(getResourceString(R.string.sync_json_item_rev));
         result.latest_branch_rev = rootJson.getLong(getResourceString(R.string.sync_json_branch_rev));
 
@@ -677,7 +677,7 @@ public class SheketSyncAdapter extends AbstractThreadedSyncAdapter {
         TransactionSyncResponse result = new TransactionSyncResponse();
         JSONObject rootJson = new JSONObject(server_response);
 
-        result.company_id = rootJson.getLong(getResourceString(R.string.sync_json_company_id));
+        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
         result.latest_branch_item_rev = rootJson.getLong(getResourceString(R.string.sync_json_branch_item_rev));
         result.latest_transaction_rev = rootJson.getLong(getResourceString(R.string.sync_json_trans_rev));
 
