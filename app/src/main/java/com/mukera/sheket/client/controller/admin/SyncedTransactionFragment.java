@@ -135,6 +135,9 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                 if (detail != null)
                     super.add(detail);
             }
+            if (cursor != null) {
+                cursor.close();
+            }
             notifyDataSetChanged();
         }
 
