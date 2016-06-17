@@ -243,7 +243,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
         void createCompany(Activity activity, String company_name) {
             final String JSON_COMPANY_NAME = "company_name";
-            final String JSON_COMPANY_ID = "company_id";
+            final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
             final String JSON_USER_PERMISSION = "user_permission";
             try {
                 JSONObject jsonObject = new JSONObject();
