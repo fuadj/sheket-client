@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
+import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.Utils;
@@ -27,11 +28,14 @@ import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SyncedTransactionFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private ListView mTransList;
     private TransDetailAdapter mTransDetailAdapter;
+    private Map<Long, SMember> mMembers = null;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -41,6 +45,31 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
 
     protected boolean displayUserName() {
         return false;
+    }
+
+    Map<Long, SMember> getMembers() {
+        if (mMembers == null) {
+            long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+
+            String sortOrder = MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID);
+            Cursor cursor = getActivity().getContentResolver().query(MemberEntry.buildBaseUri(company_id),
+                    SMember.MEMBER_COLUMNS, null, null, sortOrder);
+            if (cursor != null && cursor.moveToFirst()) {
+                mMembers = new HashMap<>();
+                do {
+                    SMember member = new SMember();
+                    mMembers.put(member.member_id, member);
+                } while (cursor.moveToNext());
+            }
+
+            // Add self to the map
+            SMember self = new SMember();
+            self.member_id = PrefUtil.getUserId(getActivity());
+            self.member_name = PrefUtil.getUsername(getActivity());
+
+            mMembers.put(self.member_id, self);
+        }
+        return mMembers;
     }
 
     @Nullable
@@ -98,7 +127,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
         public List<STransactionItem> affected_items;
     }
 
-    public static class TransDetailAdapter extends ArrayAdapter<STransactionDetail> {
+    public class TransDetailAdapter extends ArrayAdapter<STransactionDetail> {
         private boolean mDisplayUsername;
         public TransDetailAdapter(Context context, boolean display_username) {
             super(context, 0);
@@ -159,7 +188,14 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                     detail.is_buying ? R.mipmap.ic_action_download : R.mipmap.ic_action_refresh);
             if (mDisplayUsername) {
                 holder.username.setVisibility(View.VISIBLE);
-                holder.username.setText("Username " + position * 14);
+                String username;
+                if (getMembers().containsKey(detail.trans.user_id)) {
+                    username = getMembers().get(detail.trans.user_id).member_name;
+                } else {
+                    // If it doesn't exist in member list, it must be the boss
+                    username = "Boss";
+                }
+                holder.username.setText(username);
             } else {
                 holder.username.setVisibility(View.GONE);
             }
@@ -168,7 +204,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
             return convertView;
         }
 
-        private static class TransDetailViewHolder {
+        private class TransDetailViewHolder {
             ImageView trans_icon;
             TextView username;
             TextView total_qty;
@@ -226,7 +262,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
             return builder.create();
         }
 
-        public static class TransDetailAdapter extends ArrayAdapter<STransactionItem> {
+        public class TransDetailAdapter extends ArrayAdapter<STransactionItem> {
             public TransDetailAdapter(Context context) {
                 super(context, 0);
             }
