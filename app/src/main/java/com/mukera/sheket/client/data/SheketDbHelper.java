@@ -143,7 +143,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                  */
                 TransItemEntry.COLUMN_OTHER_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
 
-                TransItemEntry.COLUMN_QTY + " real not null);";
+                TransItemEntry.COLUMN_QTY + " real not null, " +
+                TransItemEntry.COLUMN_TRANSACTION_NOTE + " text);";
 
         db.execSQL(sql_create_company_table);
         db.execSQL(sql_create_members_table);

@@ -487,6 +487,7 @@ public class SheketContract {
         public static final String COLUMN_ITEM_ID = "column_item_id";
         public static final String COLUMN_OTHER_BRANCH_ID = "column_other_branch_id";
         public static final String COLUMN_QTY = "quantity";
+        public static final String COLUMN_TRANSACTION_NOTE = "transaction_note";
 
         /**
          * Transaction Types
