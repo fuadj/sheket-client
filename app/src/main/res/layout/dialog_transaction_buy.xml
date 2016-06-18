@@ -52,5 +52,5 @@
 
     </LinearLayout>
 
-    <include layout="@layout/embed_trans_qty" />
+    <include layout="@layout/embed_trans_qty_and_note" />
 </LinearLayout>

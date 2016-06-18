@@ -117,7 +117,8 @@ public class TransactionActivity extends AppCompatActivity {
                         Thread t = new Thread() {
                             @Override
                             public void run() {
-                                createTransactionWithItems(activity, itemList);
+                                if (!itemList.isEmpty())
+                                    createTransactionWithItems(activity, itemList);
 
                                 activity.runOnUiThread(new Runnable() {
                                     @Override

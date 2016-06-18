@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
-import com.mukera.sheket.client.controller.admin.SyncedTransactionFragment;
+import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -13,7 +13,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
 /**
  * Created by fuad on 6/12/16.
  */
-public class UnsyncedTranactionFragment extends SyncedTransactionFragment {
+public class UnsyncedTranactionHistoryFragment extends TransactionHistoryFragment {
     /**
      * Since we are displaying un-synced transactions, they are
      * transaction that were created by us, no need to display username

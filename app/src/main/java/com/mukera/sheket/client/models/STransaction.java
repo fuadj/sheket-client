@@ -158,16 +158,18 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             /**
              * This is the format the server expects
              *
-             * [a(int), b(int), c(int), d(float)]
+             * [a(int), b(int), c(int), d(float), e(string)]
              * a: transaction type
              * b: item_id
              * c: other_branch_id
              * d: quantity
+             * e: transaction note
              */
             json_item.put(transItem.trans_type);
             json_item.put(transItem.item_id);
             json_item.put(transItem.other_branch_id);
             json_item.put(transItem.quantity);
+            json_item.put(transItem.trans_note);
 
             itemsArr.put(json_item);
         }
@@ -213,6 +215,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
                 _f(TransItemEntry.COLUMN_ITEM_ID),
                 _f(TransItemEntry.COLUMN_OTHER_BRANCH_ID),
                 _f(TransItemEntry.COLUMN_QTY),
+                _f(TransItemEntry.COLUMN_TRANSACTION_NOTE),
                 _f(COLUMN_CHANGE_INDICATOR),
         };
 
@@ -222,9 +225,10 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         public static final int COL_ITEM_ID = 3;
         public static final int COL_OTHER_BRANCH_ID = 4;
         public static final int COL_QTY = 5;
-        public static final int COL_CHANGE = 6;
+        public static final int COL_TRANS_NOTE = 6;
+        public static final int COL_CHANGE = 7;
 
-        public static final int COL_LAST = 7;
+        public static final int COL_LAST = 8;
 
         public long company_id;
         public long trans_id;
@@ -232,6 +236,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         public long item_id;
         public long other_branch_id;
         public double quantity;
+        public String trans_note;
 
         public SItem item;
 
@@ -245,6 +250,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             item_id = cursor.getInt(COL_ITEM_ID + offset);
             other_branch_id = cursor.getLong(COL_OTHER_BRANCH_ID + offset);
             quantity = cursor.getDouble(COL_QTY + offset);
+            trans_note = cursor.getString(COL_TRANS_NOTE + offset);
             change_status = cursor.getInt(COL_CHANGE + offset);
             if (fetch_item) {
                 item = new SItem(cursor, offset + COL_LAST);
@@ -259,6 +265,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             values.put(TransItemEntry.COLUMN_ITEM_ID, item_id);
             values.put(TransItemEntry.COLUMN_OTHER_BRANCH_ID, other_branch_id);
             values.put(TransItemEntry.COLUMN_QTY, quantity);
+            values.put(TransItemEntry.COLUMN_TRANSACTION_NOTE, trans_note);
             values.put(COLUMN_CHANGE_INDICATOR, change_status);
             return values;
         }
@@ -270,6 +277,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             item_id = parcel.readLong();
             other_branch_id = parcel.readLong();
             quantity = parcel.readDouble();
+            trans_note = parcel.readString();
             change_status = parcel.readInt();
         }
 
@@ -286,6 +294,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             dest.writeLong(item_id);
             dest.writeLong(other_branch_id);
             dest.writeDouble(quantity);
+            dest.writeString(trans_note);
             dest.writeInt(change_status);
         }
 

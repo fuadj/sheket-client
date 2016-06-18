@@ -28,14 +28,34 @@
             android:textColor="#4d4d4d" />
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
+        android:layout_alignParentRight="true"
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="25.3"
-        android:id="@+id/list_item_trans_history_dialog_qty"
-        android:layout_alignParentRight="true"
-        android:textSize="24dp"
-        android:textColor="#010321"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        android:layout_marginRight="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="25.3"
+            android:id="@+id/list_item_trans_history_dialog_qty"
+            android:textSize="24dp"
+            android:layout_gravity="center_vertical|right"
+            android:textColor="#010321"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test transaction note"
+            android:id="@+id/list_item_trans_history_dialog_trans_note"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:textAppearanceSmall"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_vertical|right" />
+
+    </LinearLayout>
 
 </RelativeLayout>

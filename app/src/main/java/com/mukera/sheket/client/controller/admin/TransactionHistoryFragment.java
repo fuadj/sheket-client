@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SyncedTransactionFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class TransactionHistoryFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private ListView mTransList;
     private TransDetailAdapter mTransDetailAdapter;
     private Map<Long, SMember> mMembers = null;
@@ -72,6 +73,17 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
         return mMembers;
     }
 
+    String getMemberName(long member_id) {
+        String username;
+        if (getMembers().containsKey(member_id)) {
+            username = getMembers().get(member_id).member_name;
+        } else {
+            // If it doesn't exist in member list, it must be the boss
+            username = "Owner";
+        }
+        return username;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -88,6 +100,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                 STransactionDetail detail = mTransDetailAdapter.getItem(position);
                 TransDetailDialog dialog = new TransDetailDialog();
                 dialog.setDisplayUsername(displayUserName());
+                dialog.setTransUsername(getMemberName(detail.trans.user_id));
                 dialog.mTransDetail = detail;
                 dialog.show(fm, "Detail");
             }
@@ -188,19 +201,13 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                     detail.is_buying ? R.mipmap.ic_action_download : R.mipmap.ic_action_refresh);
             if (mDisplayUsername) {
                 holder.username.setVisibility(View.VISIBLE);
-                String username;
-                if (getMembers().containsKey(detail.trans.user_id)) {
-                    username = getMembers().get(detail.trans.user_id).member_name;
-                } else {
-                    // If it doesn't exist in member list, it must be the boss
-                    username = "Boss";
-                }
-                holder.username.setText(username);
+                holder.username.setText(getMemberName(detail.trans.user_id));
             } else {
                 holder.username.setVisibility(View.GONE);
             }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             holder.date.setText(detail.trans.decodedDate);
+
             return convertView;
         }
 
@@ -222,6 +229,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
     public static class TransDetailDialog extends DialogFragment {
         public STransactionDetail mTransDetail;
         private boolean mDisplayUsername = true;
+        private String mUsername;
 
         public TransDetailDialog() {
             super();
@@ -229,6 +237,10 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
 
         public void setDisplayUsername(boolean display_username) {
             mDisplayUsername = display_username;
+        }
+
+        public void setTransUsername(String username) {
+            mUsername = username;
         }
 
         @NonNull
@@ -258,7 +270,7 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
             builder.setView(view);
             if (mDisplayUsername)
-                builder.setTitle("Text User");
+                builder.setTitle(mUsername);
             return builder.create();
         }
 
@@ -276,15 +288,22 @@ public class SyncedTransactionFragment extends Fragment implements LoaderCallbac
                     convertView = inflater.inflate(R.layout.list_item_trans_history_dialog, parent, false);
                 }
 
-                TextView itemName, sourceDetail, qty;
+                TextView itemName, sourceDetail, qty, transNote;
 
                 itemName = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_item_name);
                 sourceDetail = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_source_detail);
                 qty = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_qty);
+                transNote = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_trans_note);
 
                 itemName.setText(transItem.item.name);
                 sourceDetail.setText(TransItemEntry.getStringForm(transItem.trans_type));
                 qty.setText(Utils.formatDoubleForDisplay(transItem.quantity));
+                if (!TextUtils.isEmpty(transItem.trans_note)) {
+                    transNote.setVisibility(View.VISIBLE);
+                    transNote.setText(transItem.trans_note);
+                } else {
+                    transNote.setVisibility(View.GONE);
+                }
                 return convertView;
             }
         }
