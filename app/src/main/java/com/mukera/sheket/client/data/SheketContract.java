@@ -529,8 +529,14 @@ public class SheketContract {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
+        public static final long NO_TRANS_ID_SET = -1;
+
         /**
-         * pass in a -ve trans_id to search all transactions with corresponding items
+         * pass in {@code NO_TRANS_ID_SET} as trans_id to search all transactions
+         * in a company.
+         * @param company_id
+         * @param trans_id
+         * @return
          */
         public static Uri buildTransactionItemsUri(long company_id, long trans_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
@@ -540,8 +546,6 @@ public class SheketContract {
         public static long getTransactionId(Uri uri) {
             return Long.parseLong(uri.getPathSegments().get(2));
         }
-
-        public static final long NO_TRANS_ID_SET = -1;
 
         /**
          * Use this to check is an id was set
