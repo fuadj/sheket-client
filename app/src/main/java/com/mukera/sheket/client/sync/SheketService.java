@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.RemoteException;
+import android.support.annotation.IntDef;
 import android.support.v4.util.Pair;
 import android.util.Log;
 import android.widget.Toast;
@@ -35,6 +36,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +51,15 @@ public class SheketService extends IntentService {
     public static final int SYNC_ROOT_CATEGORY_ID = -1;
 
     public static final OkHttpClient client = new OkHttpClient();
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({SYNC_STATUS_SYNCED, SYNC_STATUS_SYNCING, SYNC_STATUS_ERROR, SYNC_STATUS_SUCCESSFUL})
+    public @interface SyncStatus {}
+
+    public static final int SYNC_STATUS_SYNCED = 0;
+    public static final int SYNC_STATUS_SYNCING = 1;
+    public static final int SYNC_STATUS_ERROR = 2;
+    public static final int SYNC_STATUS_SUCCESSFUL = 3;
 
     public SheketService() {
         super("Sheket");
@@ -63,9 +75,11 @@ public class SheketService extends IntentService {
             }
             syncEntities();
             syncTransactions();
+            PrefUtil.setSyncStatus(this, SYNC_STATUS_SUCCESSFUL);
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
-            //Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            PrefUtil.setSyncError(this, e.getMessage());
+            PrefUtil.setSyncStatus(this, SYNC_STATUS_ERROR);
         }
     }
 
@@ -105,6 +119,11 @@ public class SheketService extends IntentService {
             final String USER_JSON_COMPANY_NAME = "company_name";
             final String USER_JSON_COMPANY_PERMISSION = "user_permission";
 
+            final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
+            if (!result.has(USER_JSON_COMPANIES) ||
+                    result.get(USER_JSON_COMPANIES) == null) {
+                return;
+            }
             JSONArray companyArr = result.getJSONArray(
                     getResourceString(R.string.sync_json_companies));
             for (int i = 0; i < companyArr.length(); i++) {
@@ -946,6 +965,8 @@ public class SheketService extends IntentService {
             final String TRANS_ITEM_JSON_ITEM_ID = "item_id";
             final String TRANS_ITEM_JSON_OTHER_BRANCH_ID = "other_branch";
             final String TRANS_ITEM_JSON_QUANTITY = "quantity";
+            final String TRANS_ITEM_JSON_TRANS_NOTE = "trans_note";
+
             for (int i = 0; i < transArray.length(); i++) {
                 JSONObject transObject = transArray.getJSONObject(i);
                 STransaction transaction = new STransaction();
@@ -969,6 +990,7 @@ public class SheketService extends IntentService {
                     transactionItem.item_id = itemObject.getInt(TRANS_ITEM_JSON_ITEM_ID);
                     transactionItem.other_branch_id = itemObject.getInt(TRANS_ITEM_JSON_OTHER_BRANCH_ID);
                     transactionItem.quantity = itemObject.getInt(TRANS_ITEM_JSON_QUANTITY);
+                    transactionItem.trans_note = itemObject.getString(TRANS_ITEM_JSON_TRANS_NOTE);
 
                     transaction.transactionItems.add(transactionItem);
                 }

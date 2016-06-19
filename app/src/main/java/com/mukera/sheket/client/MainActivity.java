@@ -3,11 +3,13 @@ package com.mukera.sheket.client;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -58,7 +60,8 @@ public class MainActivity extends AppCompatActivity implements
         NavigationFragment.BranchSelectionCallback,
         SPermission.PermissionChangeListener,
         ImportTask.ImportListener,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+        ActivityCompat.OnRequestPermissionsResultCallback,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final int REQUEST_FILE_CHOOSER = 1234;
 
@@ -77,6 +80,18 @@ public class MainActivity extends AppCompatActivity implements
     private long mSelectedBranchId;
 
     private String mImportPath;
+
+    private boolean mShowImportOptionsDialog = false;
+    private SimpleCSVReader mReader = null;
+    private boolean mErrorOccurred = false;
+    private boolean mImportSuccessful = false;
+    private ProgressDialog mImportProgress = null;
+    private String mErrorMsg = null;
+    private boolean mImporting = false;
+
+    private boolean mDidResume = false;
+
+    private ProgressDialog mSyncingProgress = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -294,6 +309,9 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new MembersFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC: {
+                mSyncingProgress = ProgressDialog.show(this,
+                        "Syncing", "Please Wait...", true);
+                PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCING);
                 Intent intent = new Intent(this, SheketService.class);
                 startService(intent);
                 break;
@@ -415,18 +433,17 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-    private boolean mShowImportOptionsDialog = false;
-    private SimpleCSVReader mReader = null;
-    private boolean mErrorOccurred = false;
-    private boolean mImportSuccessful = false;
-    private ProgressDialog mImportProgress = null;
-    private String mErrorMsg = null;
-    private boolean mImporting = false;
-
-    private boolean mDidResume = false;
+    @Override
+    protected void onResume() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.registerOnSharedPreferenceChangeListener(this);
+        super.onResume();
+    }
 
     @Override
     protected void onPause() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.unregisterOnSharedPreferenceChangeListener(this);
         super.onPause();
         mDidResume = false;
     }
@@ -520,20 +537,34 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void userPermissionChanged() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        finish();
-                        startActivity(getIntent());
-                    } else {
-                        recreate();
-                    }
+        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    finish();
+                    startActivity(getIntent());
+                } else {
+                    recreate();
                 }
-            }, 1);
+            }
+        }, 1);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(getString(R.string.sync_status)) &&
+                PrefUtil.getSyncStatus(this) != SheketService.SYNC_STATUS_SYNCING) {
+            if (mSyncingProgress != null)
+                mSyncingProgress.dismiss();;
+            if (PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_ERROR) {
+                new AlertDialog.Builder(this).
+                        setTitle("Sync Error, try again").
+                        setMessage(PrefUtil.getSyncError(this)).
+                        show();
+            }
+            PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
         }
     }
 }

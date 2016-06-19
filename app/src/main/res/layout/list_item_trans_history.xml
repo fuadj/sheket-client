@@ -11,7 +11,6 @@
         android:layout_alignParentLeft="true"
         android:id="@+id/list_item_trans_history_icon"
         android:focusable="false"
-        android:background="@drawable/ic_action_collapse"
         android:layout_centerVertical="true"
         android:maxWidth="40dp"
         android:maxHeight="40dp" />

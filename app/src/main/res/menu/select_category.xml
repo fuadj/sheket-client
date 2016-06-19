@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/category_view_add_category"
-        android:icon="@drawable/ic_action_new_light"
+        android:icon="@drawable/ic_action_add_light"
         android:title="New Category"
         app:showAsAction="ifRoom" />
 

@@ -127,4 +127,8 @@
     <string name="internal_storage">Internal storage</string>
     <string name="chooser_title">Choose item list file</string>
 
+    <!-- Sync Status -->
+    <string name="sync_status">key_sync_status</string>
+    <string name="sync_error">key_sync_error</string>
+    <!-- End Sync Status -->
 </resources>

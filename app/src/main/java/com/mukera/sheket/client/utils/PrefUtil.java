@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.sync.SheketService;
 
 /**
  * Created by gamma on 3/28/16.
@@ -312,5 +313,32 @@ public class PrefUtil {
         if (!show_tree) {
             setCategoryCardShow(context, false);
         }
+    }
+
+    /**
+     * Sync status
+     */
+
+    public static void setSyncStatus(Context c, @SheketService.SyncStatus int sync_status) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(c).edit();
+        editor.putInt(c.getString(R.string.sync_status), sync_status);
+        editor.commit();
+    }
+
+    @SuppressWarnings("ResourceType")
+    static public @SheketService.SyncStatus int getSyncStatus(Context c) {
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
+        return p.getInt(c.getString(R.string.sync_status), SheketService.SYNC_STATUS_SYNCED);
+    }
+
+    public static void setSyncError(Context c, String err) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(c).edit();
+        editor.putString(c.getString(R.string.sync_error), err);
+        editor.commit();
+    }
+
+    public static String getSyncError(Context c) {
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
+        return p.getString(c.getString(R.string.sync_error), "");
     }
 }
