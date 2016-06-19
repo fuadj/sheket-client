@@ -19,8 +19,8 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_registration);
 
+        setContentView(R.layout.activity_registration);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);

@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     Map<Long, SMember> getMembers() {
         if (mMembers == null) {
+            mMembers = new HashMap<>();
+
             long company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
             String sortOrder = MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID);
@@ -198,7 +201,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
 
             holder.trans_icon.setImageResource(
-                    detail.is_buying ? R.mipmap.ic_action_download : R.mipmap.ic_action_refresh);
+                    detail.is_buying ? R.drawable.ic_action_add_dark : R.drawable.ic_action_minus_dark);
             if (mDisplayUsername) {
                 holder.username.setVisibility(View.VISIBLE);
                 holder.username.setText(getMemberName(detail.trans.user_id));
@@ -267,7 +270,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             TextView total_qty = (TextView) view.findViewById(R.id.dialog_trans_history_total_qty);
             total_qty.setText("Total Qty: " + Utils.formatDoubleForDisplay(mTransDetail.total_quantity));
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setView(view);
             if (mDisplayUsername)
                 builder.setTitle(mUsername);
