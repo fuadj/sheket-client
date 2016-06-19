@@ -169,7 +169,8 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             json_item.put(transItem.item_id);
             json_item.put(transItem.other_branch_id);
             json_item.put(transItem.quantity);
-            json_item.put(transItem.trans_note);
+            json_item.put(transItem.trans_note == null ? "" :
+                    transItem.trans_note);
 
             itemsArr.put(json_item);
         }

@@ -84,6 +84,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                     String company_name = cursor.getString(COL_NAME);
                     String permission = cursor.getString(COL_PERMISSION);
                     // TODO: update the revisions
+                    // TODO: parse out the revisions for the different entities and set them
 
                     PrefUtil.setCurrentCompanyId(getActivity(), company_id);
                     PrefUtil.setCurrentCompanyName(getActivity(), company_name);
