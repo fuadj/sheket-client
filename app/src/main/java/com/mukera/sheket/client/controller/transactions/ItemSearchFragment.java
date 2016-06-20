@@ -46,7 +46,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
     private CursorAdapter mSearchAdapter;
 
     private EditText mSearchText;
-    private TextView mResultLabel;
+    private TextView mResultLabel, mNumItems;
 
     private String mCurrSearch;
     private Button mCancel, mFinish, mBtnCategory;
@@ -176,10 +176,11 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
                     mListener.finishTransaction();
             }
         });
-        // only after items are selected will it be enabled
-        mFinish.setEnabled(false);
+        mFinish.setEnabled(mListener.numItemsInTransaction() > 0);
 
         mResultLabel = (TextView) rootView.findViewById(R.id.item_search_text_view_search_result);
+        mNumItems = (TextView) rootView.findViewById(R.id.item_search_text_view_num_items);
+        adjustNumItemsCounterVisibility();
 
         mSearchText = (EditText) rootView.findViewById(R.id.item_search_edit_text_keyword);
         mSearchText.addTextChangedListener(new TextWatcherAdapter() {
@@ -199,6 +200,14 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
         });
 
         return rootView;
+    }
+
+    void adjustNumItemsCounterVisibility() {
+        if (mListener.numItemsInTransaction() > 0) {
+            mNumItems.setVisibility(View.VISIBLE);
+            mNumItems.setText(String.format("%d items", mListener.numItemsInTransaction()));
+        } else
+            mNumItems.setVisibility(View.GONE);
     }
 
     void closeKeyboard() {
@@ -269,6 +278,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
                 if (mListener != null)
                     mListener.transactionItemAdded(transactionItem);
                 mFinish.setEnabled(true);
+                adjustNumItemsCounterVisibility();
             }
         });
         dialog.show(fm, "Set Item Quantity");
@@ -339,6 +349,8 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
         void finishTransaction();
 
         void cancelTransaction();
+
+        int numItemsInTransaction();
     }
 
     public static class ItemSearchCursorAdapter extends CursorAdapter {

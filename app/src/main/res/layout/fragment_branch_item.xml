@@ -40,7 +40,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|left"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_action_collapse"
+        android:src="@drawable/ic_action_add_light"
         app:backgroundTint="@color/colorPrimary"/>
 
     <android.support.design.widget.FloatingActionButton
@@ -50,7 +50,7 @@
         android:clickable="true"
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_action_expand"
+        android:src="@drawable/ic_action_minus_light"
         app:backgroundTint="@color/colorPrimary"/>
 
 </android.support.design.widget.CoordinatorLayout>

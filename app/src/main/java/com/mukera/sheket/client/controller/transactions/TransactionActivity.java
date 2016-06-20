@@ -8,8 +8,10 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -90,11 +92,26 @@ public class TransactionActivity extends AppCompatActivity {
         return mBranches;
     }
 
+
+    void setActionbarVisibility(boolean visible) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null && (actionBar.getCustomView() != null))
+            actionBar.getCustomView().setVisibility(visible ?
+                    View.VISIBLE : View.GONE);
+        invalidateOptionsMenu();
+    }
+
     void displayItemSearcher() {
+        setActionbarVisibility(true);
         ItemSearchFragment fragment = ItemSearchFragment.newInstance(mBranchId,
                 mCurrentLaunch == LAUNCH_TYPE_BUY);
         final AppCompatActivity activity = this;
         fragment.setResultListener(new ItemSearchFragment.SearchResultListener() {
+
+            @Override
+            public int numItemsInTransaction() {
+                return mTransactionItemList.size();
+            }
 
             @Override
             public void transactionItemAdded(STransactionItem transactionItem) {
@@ -103,6 +120,7 @@ public class TransactionActivity extends AppCompatActivity {
 
             @Override
             public void finishTransaction() {
+                setActionbarVisibility(false);
                 final SummaryFragment summaryFragment = new SummaryFragment();
                 summaryFragment.setListener(new SummaryFragment.SummaryListener() {
                     @Override
@@ -113,6 +131,7 @@ public class TransactionActivity extends AppCompatActivity {
                     @Override
                     public void backSelected() {
                         activity.getSupportFragmentManager().popBackStack();
+                        setActionbarVisibility(true);
                     }
 
                     @Override

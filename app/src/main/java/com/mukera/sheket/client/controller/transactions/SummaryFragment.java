@@ -19,7 +19,6 @@ import java.util.List;
  */
 public class SummaryFragment extends Fragment {
     public SummaryListener mListener;
-    private TextView mHeaderLabel;
     private ListView mListViewItems;
     private Button mCancel, mBack, mOk;
 
@@ -37,7 +36,6 @@ public class SummaryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_summary, container, false);
 
-        mHeaderLabel = (TextView) rootView.findViewById(R.id.summary_header_label);
         mOk = (Button) rootView.findViewById(R.id.summary_btn_ok);
         mOk.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,9 +84,6 @@ public class SummaryFragment extends Fragment {
             mAdapter.add(item);
         }
         mAdapter.notifyDataSetChanged();
-        String header = String.format("%d item%s selected.", mItemList.size(),
-                (mItemList.size() == 1 ? "" : "s"));
-        mHeaderLabel.setText(header);
     }
 
     public class SummaryListAdapter extends ArrayAdapter<STransactionItem> {
