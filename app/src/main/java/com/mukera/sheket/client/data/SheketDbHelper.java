@@ -37,6 +37,11 @@ public class SheketDbHelper extends SQLiteOpenHelper {
         return String.format(" integer REFERENCES %s(%s) ON UPDATE CASCADE, ", table_name, col_name);
     }
 
+    String cascadeUpdateAndDelete(String table_name, String col_name) {
+        return String.format(" integer REFERENCES %s(%s) ON UPDATE CASCADE ON DELETE CASCADE, ", table_name,
+                col_name);
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String sql_create_company_table = "create table if not exists " + CompanyEntry.TABLE_NAME + " ( " +
@@ -129,7 +134,9 @@ public class SheketDbHelper extends SQLiteOpenHelper {
 
         final String sql_create_transaction_items_table = "create table if not exists " + TransItemEntry.TABLE_NAME + " ( " +
                 TransItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
-                TransItemEntry.COLUMN_TRANSACTION_ID + cascadeUpdate(TransactionEntry.TABLE_NAME, TransactionEntry.COLUMN_TRANS_ID) +
+
+                TransItemEntry.COLUMN_TRANSACTION_ID + cascadeUpdateAndDelete(TransactionEntry.TABLE_NAME, TransactionEntry.COLUMN_TRANS_ID) +
+
                 TransItemEntry.COLUMN_ITEM_ID + cascadeUpdate(ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID) +
                 TransItemEntry.COLUMN_TRANSACTION_TYPE + " integer not null, " +
 
