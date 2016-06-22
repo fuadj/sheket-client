@@ -46,7 +46,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
     }
 
     protected boolean displayUserName() {
-        return false;
+        return true;
     }
 
     Map<Long, SMember> getMembers() {
@@ -102,8 +102,10 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
                 STransactionDetail detail = mTransDetailAdapter.getItem(position);
                 TransDetailDialog dialog = new TransDetailDialog();
-                dialog.setDisplayUsername(displayUserName());
-                dialog.setTransUsername(getMemberName(detail.trans.user_id));
+                boolean display = displayUserName();
+                dialog.setDisplayUsername(display);
+                if (display)
+                    dialog.setTransUsername(getMemberName(detail.trans.user_id));
                 dialog.mTransDetail = detail;
                 dialog.show(fm, "Detail");
             }
