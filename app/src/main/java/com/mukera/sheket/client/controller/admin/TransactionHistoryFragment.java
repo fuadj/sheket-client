@@ -1,7 +1,9 @@
 package com.mukera.sheket.client.controller.admin;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,7 +14,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ import android.view.ViewGroup;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
+import com.mukera.sheket.client.controller.transactions.TransactionUtil;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
@@ -41,8 +43,16 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
+        startLoader();
         super.onActivityCreated(savedInstanceState);
+    }
+
+    void startLoader() {
+        getLoaderManager().initLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
+    }
+
+    void restartLoader() {
+        getLoaderManager().restartLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
     }
 
     protected boolean displayUserName() {
@@ -97,7 +107,37 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         View rootView = inflater.inflate(R.layout.fragment_trans_history, container, false);
 
         mTransList = (ListView) rootView.findViewById(R.id.list_view_trans_history);
-        mTransDetailAdapter = new TransDetailAdapter(getContext(), displayUserName());
+        mTransDetailAdapter = new TransDetailAdapter(getContext(), displayUserName(), displayDeleteButton());
+        mTransDetailAdapter.setListener(new TransactionDeleteListener() {
+            @Override
+            public void deleteTransaction(final STransactionDetail transactionDetail) {
+                final Activity activity = getActivity();
+                new AlertDialog.Builder(getContext()).
+                        setTitle("Delete Transaction").
+                        setMessage("This will undo the transaction, Are You Sure?").
+                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Thread t = new Thread() {
+                                    @Override
+                                    public void run() {
+                                        TransactionUtil.reverseTransactionWithItems(activity,
+                                                transactionDetail.trans,
+                                                transactionDetail.affected_items);
+                                        activity.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                // this will make the view be the correct one after a deletion
+                                                restartLoader();
+                                            }
+                                        });
+                                    }
+                                };
+                                t.start();
+                            }
+                        }).setNegativeButton("No", null).show();
+            }
+        });
         mTransList.setAdapter(mTransDetailAdapter);
         mTransList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -158,6 +198,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         private boolean mDisplayDeleteBtn;
 
         private TransactionDeleteListener mListener;
+
         public void setListener(TransactionDeleteListener listener) {
             mListener = listener;
         }
@@ -197,9 +238,6 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 } while (cursor.moveToNext());
                 if (detail != null)
                     super.add(detail);
-            }
-            if (cursor != null) {
-                cursor.close();
             }
             notifyDataSetChanged();
         }
@@ -292,7 +330,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 layout.setVisibility(View.VISIBLE);
 
                 ListView itemList = (ListView) layout.findViewById(R.id.dialog_trans_history_list);
-                TransDetailAdapter adapter = new TransDetailAdapter(getContext());
+                TransDetailDialogAdapter adapter = new TransDetailDialogAdapter(getContext());
                 for (STransactionItem transItem : mTransDetail.affected_items) {
                     adapter.add(transItem);
                 }
@@ -311,8 +349,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             return builder.create();
         }
 
-        public class TransDetailAdapter extends ArrayAdapter<STransactionItem> {
-            public TransDetailAdapter(Context context) {
+        public class TransDetailDialogAdapter extends ArrayAdapter<STransactionItem> {
+            public TransDetailDialogAdapter(Context context) {
                 super(context, 0);
             }
 

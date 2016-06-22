@@ -10,7 +10,6 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:id="@+id/dialog_trans_history_layout_details">
 
         <ListView
@@ -19,19 +18,14 @@
             android:id="@+id/dialog_trans_history_list"/>
     </LinearLayout>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Total Quantity"
-            android:id="@+id/dialog_trans_history_total_qty"
-            android:layout_alignParentRight="true"
-            android:textColor="#000000"
-            android:textSize="20dp" />
-
-    </RelativeLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Quantity"
+        android:id="@+id/dialog_trans_history_total_qty"
+        android:layout_alignParentRight="true"
+        android:textColor="#000000"
+        android:textSize="20dp"
+        android:layout_gravity="right" />
 
 </LinearLayout>

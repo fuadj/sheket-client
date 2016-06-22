@@ -25,6 +25,11 @@ public class UnsyncedTranactionHistoryFragment extends TransactionHistoryFragmen
     }
 
     @Override
+    protected boolean displayDeleteButton() {
+        return true;
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // we are sorting by descending order because these are un-synced transactions
         // that are negative and go down.

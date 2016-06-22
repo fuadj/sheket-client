@@ -13,8 +13,9 @@
         android:layout_alignParentLeft="true"
         android:id="@+id/list_item_img_btn_b_edit_location"
         android:focusable="false"
-        android:background="@drawable/ic_action_edit"
-        android:layout_centerVertical="true"/>
+        android:background="@drawable/ic_action_location_2"
+        android:layout_centerVertical="true"
+        android:padding="8dp" />
 
     <LinearLayout
         android:orientation="vertical"
