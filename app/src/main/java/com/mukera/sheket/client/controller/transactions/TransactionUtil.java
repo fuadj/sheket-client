@@ -24,8 +24,22 @@ import java.util.UUID;
  * Created by fuad on 6/22/16.
  */
 public class TransactionUtil {
-    public static void createTransactionWithItems(Context context, List<STransaction.STransactionItem> itemList, long branch_id) {
-        if (itemList.isEmpty()) return;
+    public static void reverseTransactionWithItems(Context context, STransaction transaction,
+                                                   List<STransaction.STransactionItem> itemList) {
+        long company_id = PrefUtil.getCurrentCompanyId(context);
+
+        // because there is a foreign dependency on the transaction items, deleting the
+        // transaction also deletes the items involved in it.
+        context.getContentResolver().delete(
+                TransactionEntry.buildBaseUri(company_id),
+                TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " = ?",
+                new String[]{Long.toString(transaction.transaction_id)});
+    }
+
+    public static boolean createTransactionWithItems(Context context, List<STransaction.STransactionItem> itemList, long branch_id) {
+        if (itemList.isEmpty())
+            // it is false b/c we didn't create any transactions
+            return false;
 
         ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
@@ -63,82 +77,26 @@ public class TransactionUtil {
 
             updateBranchItemsInTransactions(context, itemList, branch_id);
 
+            return true;
+
         } catch (RemoteException e) {
-            // some error handling
         } catch (OperationApplicationException e) {
-            // some error handling
         }
-    }
-
-    static class KeyBranchItem {
-        long branch_id, item_id;
-
-        public KeyBranchItem(long b_id, long i_id) {
-            branch_id = b_id;
-            item_id = i_id;
-        }
-    }
-
-    private static SBranchItem getBranchItem(Context context, HashMap<KeyBranchItem, SBranchItem> seenBranchItems,
-                              long branch_id, long item_id) {
-        KeyBranchItem key = new KeyBranchItem(branch_id, item_id);
-
-        if (seenBranchItems.containsKey(key)) {
-            return seenBranchItems.get(key);
-        }
-
-        long company_id = PrefUtil.getCurrentCompanyId(context);
-
-        Cursor cursor = context.getContentResolver().
-                query(BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id),
-                        SBranchItem.BRANCH_ITEM_COLUMNS,
-                        null, null, null);
-        SBranchItem item;
-        if (cursor != null && cursor.moveToFirst()) {
-            item = new SBranchItem(cursor);
-
-            // we haven't still synced the 'created' item, so don't change flag to update
-            if (item.change_status != ChangeTraceable.CHANGE_STATUS_CREATED)
-                item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
-
-            cursor.close();
-        } else {
-            // the item doesn't exist in the branch, create a new item
-            item = new SBranchItem();
-            item.company_id = company_id;
-            item.branch_id = branch_id;
-            item.item_id = item_id;
-            item.quantity = 0;
-            item.change_status = ChangeTraceable.CHANGE_STATUS_CREATED;
-        }
-
-        seenBranchItems.put(key, item);
-        return item;
-    }
-
-    static void setBranchItem(Context context, HashMap<KeyBranchItem, SBranchItem> seenBranchItems,
-                       SBranchItem branchItem) {
-        long company_id = PrefUtil.getCurrentCompanyId(context);
-
-        context.getContentResolver().insert(BranchItemEntry.buildBaseUri(company_id),
-                DbUtil.setUpdateOnConflict(branchItem.toContentValues()));
-
-        // update the cache
-        seenBranchItems.put(new KeyBranchItem(branchItem.branch_id, branchItem.item_id),
-                branchItem);
+        return false;
     }
 
     public static void updateBranchItemsInTransactions(Context context, List<STransaction.STransactionItem> transItemList,
                                                        long branch_id) {
         HashMap<KeyBranchItem, SBranchItem> seenBranchItems = new HashMap<>();
+        long company_id = PrefUtil.getCurrentCompanyId(context);
 
         for (STransaction.STransactionItem transItem : transItemList) {
             switch (transItem.trans_type) {
                 case TransItemEntry.TYPE_INCREASE_PURCHASE:
                 case TransItemEntry.TYPE_INCREASE_RETURN_ITEM: {
-                    SBranchItem branchItem = getBranchItem(context, seenBranchItems, branch_id, transItem.item_id);
+                    SBranchItem branchItem = getBranchItem(context, company_id, seenBranchItems, branch_id, transItem.item_id);
                     branchItem.quantity = branchItem.quantity + transItem.quantity;
-                    setBranchItem(context, seenBranchItems, branchItem);
+                    setBranchItem(context, company_id, seenBranchItems, branchItem);
                     // increase branch item
                     break;
                 }
@@ -153,24 +111,80 @@ public class TransactionUtil {
                         source_branch = branch_id;
                         dest_branch = transItem.other_branch_id;
                     }
-                    SBranchItem sourceItem = getBranchItem(context, seenBranchItems, source_branch, transItem.item_id);
-                    SBranchItem destItem = getBranchItem(context, seenBranchItems, dest_branch, transItem.item_id);
+                    SBranchItem sourceItem = getBranchItem(context, company_id, seenBranchItems, source_branch, transItem.item_id);
+                    SBranchItem destItem = getBranchItem(context, company_id, seenBranchItems, dest_branch, transItem.item_id);
 
                     sourceItem.quantity = sourceItem.quantity - transItem.quantity;
                     destItem.quantity = destItem.quantity + transItem.quantity;
 
-                    setBranchItem(context, seenBranchItems, sourceItem);
-                    setBranchItem(context, seenBranchItems, destItem);
+                    setBranchItem(context, company_id, seenBranchItems, sourceItem);
+                    setBranchItem(context, company_id, seenBranchItems, destItem);
 
                     break;
                 }
 
                 case TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH: {
-                    SBranchItem branchItem = getBranchItem(context, seenBranchItems, branch_id, transItem.item_id);
+                    SBranchItem branchItem = getBranchItem(context, company_id, seenBranchItems, branch_id, transItem.item_id);
                     branchItem.quantity = branchItem.quantity - transItem.quantity;
-                    setBranchItem(context, seenBranchItems, branchItem);
+                    setBranchItem(context, company_id, seenBranchItems, branchItem);
                 }
             }
+        }
+    }
+
+    private static SBranchItem getBranchItem(Context context, long company_id,
+                                             HashMap<KeyBranchItem, SBranchItem> seenBranchItems,
+                                             long branch_id, long item_id) {
+        KeyBranchItem key = new KeyBranchItem(branch_id, item_id);
+
+        if (seenBranchItems.containsKey(key)) {
+            return seenBranchItems.get(key);
+        }
+
+        Cursor cursor = context.getContentResolver().
+                query(BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id),
+                        SBranchItem.BRANCH_ITEM_COLUMNS,
+                        null, null, null);
+        SBranchItem item;
+        if (cursor != null && cursor.moveToFirst()) {
+            item = new SBranchItem(cursor);
+
+            // we haven't still synced the 'created' item, so don't change flag to update
+            if (item.change_status != ChangeTraceable.CHANGE_STATUS_CREATED)
+                item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
+        } else {
+            // the item doesn't exist in the branch, create a new item
+            item = new SBranchItem();
+            item.company_id = company_id;
+            item.branch_id = branch_id;
+            item.item_id = item_id;
+            item.quantity = 0;
+            item.change_status = ChangeTraceable.CHANGE_STATUS_CREATED;
+        }
+
+        if (cursor != null)
+            cursor.close();
+
+        seenBranchItems.put(key, item);
+        return item;
+    }
+
+    static void setBranchItem(Context context, long company_id,
+                              HashMap<KeyBranchItem, SBranchItem> seenBranchItems, SBranchItem branchItem) {
+        context.getContentResolver().insert(BranchItemEntry.buildBaseUri(company_id),
+                DbUtil.setUpdateOnConflict(branchItem.toContentValues()));
+
+        // update the cache
+        seenBranchItems.put(new KeyBranchItem(branchItem.branch_id, branchItem.item_id),
+                branchItem);
+    }
+
+    static class KeyBranchItem {
+        long branch_id, item_id;
+
+        public KeyBranchItem(long b_id, long i_id) {
+            branch_id = b_id;
+            item_id = i_id;
         }
     }
 }
