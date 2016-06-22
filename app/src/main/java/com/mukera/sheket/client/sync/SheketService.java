@@ -71,6 +71,7 @@ public class SheketService extends IntentService {
         try {
             syncUser();
             if (!PrefUtil.isCompanySet(this)) {
+                PrefUtil.setSyncStatus(this, SYNC_STATUS_SUCCESSFUL);
                 return;     // can't sync anything without a company
             }
             syncEntities();
@@ -120,12 +121,8 @@ public class SheketService extends IntentService {
             final String USER_JSON_COMPANY_PERMISSION = "user_permission";
 
             final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
-            if (!result.has(USER_JSON_COMPANIES) ||
-                    result.get(USER_JSON_COMPANIES) == null) {
-                return;
-            }
-            JSONArray companyArr = result.getJSONArray(
-                    getResourceString(R.string.sync_json_companies));
+            JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
+
             for (int i = 0; i < companyArr.length(); i++) {
                 JSONObject companyObj = companyArr.getJSONObject(i);
 
@@ -142,8 +139,9 @@ public class SheketService extends IntentService {
                         withValues(DbUtil.setUpdateOnConflict(values)).build());
             }
 
-            this.getContentResolver().applyBatch(
-                    SheketContract.CONTENT_AUTHORITY, operations);
+            if (!operations.isEmpty())
+                this.getContentResolver().applyBatch(
+                        SheketContract.CONTENT_AUTHORITY, operations);
 
         } catch (JSONException | IOException |
                 RemoteException | OperationApplicationException | SyncException e) {

@@ -49,6 +49,10 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         return true;
     }
 
+    protected boolean displayDeleteButton() {
+        return false;
+    }
+
     Map<Long, SMember> getMembers() {
         if (mMembers == null) {
             mMembers = new HashMap<>();
@@ -145,11 +149,23 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         public List<STransactionItem> affected_items;
     }
 
+    public interface TransactionDeleteListener {
+        void deleteTransaction(STransactionDetail transactionDetail);
+    }
+
     public class TransDetailAdapter extends ArrayAdapter<STransactionDetail> {
         private boolean mDisplayUsername;
-        public TransDetailAdapter(Context context, boolean display_username) {
+        private boolean mDisplayDeleteBtn;
+
+        private TransactionDeleteListener mListener;
+        public void setListener(TransactionDeleteListener listener) {
+            mListener = listener;
+        }
+
+        public TransDetailAdapter(Context context, boolean display_username, boolean display_delete) {
             super(context, 0);
             mDisplayUsername = display_username;
+            mDisplayDeleteBtn = display_delete;
         }
 
         public void setTransCursor(Cursor cursor) {
@@ -190,7 +206,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            STransactionDetail detail = getItem(position);
+            final STransactionDetail detail = getItem(position);
 
             TransDetailViewHolder holder;
             if (convertView == null) {
@@ -212,17 +228,33 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             holder.date.setText(detail.trans.decodedDate);
+            if (mDisplayDeleteBtn) {
+                holder.deleteTrans.setVisibility(View.VISIBLE);
+                holder.deleteTrans.setImageResource(R.drawable.ic_action_remove);
+                if (mListener != null) {
+                    holder.deleteTrans.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mListener.deleteTransaction(detail);
+                        }
+                    });
+                }
+            } else {
+                holder.deleteTrans.setVisibility(View.GONE);
+            }
 
             return convertView;
         }
 
         private class TransDetailViewHolder {
+            ImageView deleteTrans;
             ImageView trans_icon;
             TextView username;
             TextView total_qty;
             TextView date;
 
             public TransDetailViewHolder(View view) {
+                deleteTrans = (ImageView) view.findViewById(R.id.list_item_trans_history_delete);
                 trans_icon = (ImageView) view.findViewById(R.id.list_item_trans_history_icon);
                 username = (TextView) view.findViewById(R.id.list_item_trans_history_user_name);
                 total_qty = (TextView) view.findViewById(R.id.list_item_trans_history_qty);

@@ -8,20 +8,23 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:id="@+id/list_item_trans_history_icon"
+        android:id="@+id/list_item_trans_history_delete"
         android:focusable="false"
         android:layout_centerVertical="true"
         android:maxWidth="40dp"
-        android:maxHeight="40dp" />
+        android:maxHeight="40dp"
+        android:layout_alignParentLeft="true"
+        android:padding="8dp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/list_item_trans_history_icon"
         android:layout_marginLeft="8dp"
-        android:layout_centerVertical="true">
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="false"
+        android:layout_toRightOf="@+id/list_item_trans_history_delete">
 
         <TextView
             android:layout_width="wrap_content"
@@ -45,9 +48,20 @@
         android:layout_height="wrap_content"
         android:text="25.3"
         android:id="@+id/list_item_trans_history_qty"
-        android:layout_alignParentRight="true"
         android:textSize="24dp"
         android:textColor="#010321"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/list_item_trans_history_icon" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/list_item_trans_history_icon"
+        android:focusable="false"
+        android:layout_centerVertical="true"
+        android:maxWidth="40dp"
+        android:maxHeight="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="4dp" />
 
 </RelativeLayout>
