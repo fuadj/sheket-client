@@ -34,6 +34,8 @@ public class TransactionUtil {
                 TransactionEntry.buildBaseUri(company_id),
                 TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " = ?",
                 new String[]{Long.toString(transaction.transaction_id)});
+
+        updateBranchItemsInTransactions(context, itemList, transaction.branch_id, true);
     }
 
     public static boolean createTransactionWithItems(Context context, List<STransaction.STransactionItem> itemList, long branch_id) {
@@ -75,7 +77,7 @@ public class TransactionUtil {
             // if all goes well, update the local transaction counter
             PrefUtil.setNewTransId(context, new_trans_id);
 
-            updateBranchItemsInTransactions(context, itemList, branch_id);
+            updateBranchItemsInTransactions(context, itemList, branch_id, false);
 
             return true;
 
@@ -86,7 +88,7 @@ public class TransactionUtil {
     }
 
     public static void updateBranchItemsInTransactions(Context context, List<STransaction.STransactionItem> transItemList,
-                                                       long branch_id) {
+                                                       long branch_id, boolean reverse_transaction) {
         HashMap<KeyBranchItem, SBranchItem> seenBranchItems = new HashMap<>();
         long company_id = PrefUtil.getCurrentCompanyId(context);
 
@@ -95,7 +97,10 @@ public class TransactionUtil {
                 case TransItemEntry.TYPE_INCREASE_PURCHASE:
                 case TransItemEntry.TYPE_INCREASE_RETURN_ITEM: {
                     SBranchItem branchItem = getBranchItem(context, company_id, seenBranchItems, branch_id, transItem.item_id);
-                    branchItem.quantity = branchItem.quantity + transItem.quantity;
+                    if (reverse_transaction)
+                        branchItem.quantity = branchItem.quantity - transItem.quantity;
+                    else
+                        branchItem.quantity = branchItem.quantity + transItem.quantity;
                     setBranchItem(context, company_id, seenBranchItems, branchItem);
                     // increase branch item
                     break;
@@ -104,7 +109,8 @@ public class TransactionUtil {
                 case TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
                 case TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER: {
                     long source_branch, dest_branch;
-                    if (transItem.trans_type == TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH) {
+                    if (reverse_transaction &&
+                            transItem.trans_type == TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER) {
                         source_branch = transItem.other_branch_id;
                         dest_branch = branch_id;
                     } else {
@@ -125,7 +131,10 @@ public class TransactionUtil {
 
                 case TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH: {
                     SBranchItem branchItem = getBranchItem(context, company_id, seenBranchItems, branch_id, transItem.item_id);
-                    branchItem.quantity = branchItem.quantity - transItem.quantity;
+                    if (reverse_transaction)
+                        branchItem.quantity = branchItem.quantity + transItem.quantity;
+                    else
+                        branchItem.quantity = branchItem.quantity - transItem.quantity;
                     setBranchItem(context, company_id, seenBranchItems, branchItem);
                 }
             }
