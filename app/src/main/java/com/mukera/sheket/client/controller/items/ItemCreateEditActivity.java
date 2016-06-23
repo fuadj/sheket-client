@@ -23,7 +23,6 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SItem;
-import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.UnitsOfMeasurement;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract;
@@ -114,7 +113,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
         }
 
         void setOkButtonStatus() {
-            if (isEmpty(mName.getText())) {
+            if (isEmpty(mCode.getText())) {
                 mOk.setEnabled(false);
                 return;
             }
@@ -168,6 +167,8 @@ public class ItemCreateEditActivity extends AppCompatActivity {
          * Use the editing item to setup the UI. Only called if it is editing.
          */
         void setPreviousValuesAsInitialValues() {
+            mCode.setText(non_null(mEditingItem.item_code));
+
             mName.setText(non_null(mEditingItem.name));
             mUnitsSpinner.setSelection(mEditingItem.unit_of_measurement);
             if (mEditingItem.has_derived_unit) {
@@ -181,7 +182,6 @@ public class ItemCreateEditActivity extends AppCompatActivity {
                 // we don't need to do any other thing, {@code updateDerivedUnitDisplay} will take care of it
             }
 
-            mCode.setText(non_null(mEditingItem.item_code));
             mReorderLevel.setText(non_null(Utils.formatDoubleForDisplay(mEditingItem.reorder_level)));
             mModelYear.setText(non_null(mEditingItem.model_year));
             mPartNumber.setText(non_null((mEditingItem.part_number)));
@@ -194,7 +194,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_new_item, container, false);
 
-            mName = (EditText) rootView.findViewById(R.id.edit_text_new_item_name);
+            mName = (EditText) rootView.findViewById(R.id.edit_text_new_item_description);
 
             mUnitsSpinner = (Spinner) rootView.findViewById(R.id.spinner_new_item_unit_selection);
             mUnitsSpinner.setAdapter(new ArrayAdapter(getActivity(),
