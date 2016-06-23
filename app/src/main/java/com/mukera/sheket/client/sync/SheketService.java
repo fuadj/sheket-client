@@ -67,7 +67,7 @@ public class SheketService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        client.setConnectTimeout(0, TimeUnit.MILLISECONDS);
+        client.setConnectTimeout(10, TimeUnit.SECONDS);
         try {
             syncUser();
             if (!PrefUtil.isCompanySet(this)) {
