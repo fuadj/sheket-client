@@ -7,13 +7,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_alignParentTop="true">
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/linearLayout">
 
         <ListView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:id="@+id/category_selection_list_view_categories"
-            android:footerDividersEnabled="true" />
+            android:footerDividersEnabled="true"
+            android:layout_weight="1" />
 
         <View
             android:layout_width="wrap_content"
@@ -58,7 +60,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="20dp"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:id="@+id/linearLayout">
 
         <Button
             android:layout_width="wrap_content"
