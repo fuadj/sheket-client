@@ -104,8 +104,10 @@ public class ItemCreateEditActivity extends AppCompatActivity {
 
             Bundle args = getArguments();
             mIsEditing = args.getBoolean(KEY_IS_EDITING_ITEM);
-            if (mIsEditing)
+            if (mIsEditing) {
                 mEditingItem = args.getParcelable(KEY_EDITING_ITEM_PARCEL);
+                mSelectedCategoryId = mEditingItem.category;
+            }
         }
 
         boolean isEmpty(Editable e) {
@@ -185,8 +187,6 @@ public class ItemCreateEditActivity extends AppCompatActivity {
             mReorderLevel.setText(non_null(Utils.formatDoubleForDisplay(mEditingItem.reorder_level)));
             mModelYear.setText(non_null(mEditingItem.model_year));
             mPartNumber.setText(non_null((mEditingItem.part_number)));
-
-            mSelectedCategoryId = mEditingItem.category;
         }
 
         @Nullable
@@ -266,7 +266,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
             final AppCompatActivity activity = (AppCompatActivity) getActivity();
 
             if (mSelectedCategoryId == SheketContract.CategoryEntry.ROOT_CATEGORY_ID ||
-                    mIsEditing) {
+                    mSelectedCategory == null) {
                 mCategoryBtn.setText("Not Set");
             } else {
                 mCategoryBtn.setText(mSelectedCategory.name);
