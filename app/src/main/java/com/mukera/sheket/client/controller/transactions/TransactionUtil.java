@@ -109,14 +109,20 @@ public class TransactionUtil {
                 case TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
                 case TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER: {
                     long source_branch, dest_branch;
-                    if (reverse_transaction &&
-                            transItem.trans_type == TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER) {
+                    if (transItem.trans_type == TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH) {
                         source_branch = transItem.other_branch_id;
                         dest_branch = branch_id;
                     } else {
                         source_branch = branch_id;
                         dest_branch = transItem.other_branch_id;
                     }
+
+                    if (reverse_transaction) {
+                        long temp_branch = source_branch;
+                        source_branch = dest_branch;
+                        dest_branch = temp_branch;
+                    }
+
                     SBranchItem sourceItem = getBranchItem(context, company_id, seenBranchItems, source_branch, transItem.item_id);
                     SBranchItem destItem = getBranchItem(context, company_id, seenBranchItems, dest_branch, transItem.item_id);
 
