@@ -160,7 +160,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " ASC";
+        // more recent transactions appear on the top
+        String sortOrder = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " DESC";
         return new CursorLoader(getActivity(),
                 TransItemEntry.buildTransactionItemsUri(
                         PrefUtil.getCurrentCompanyId(getContext()),

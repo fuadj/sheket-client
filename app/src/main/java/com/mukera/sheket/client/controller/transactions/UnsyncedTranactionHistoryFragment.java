@@ -33,7 +33,7 @@ public class UnsyncedTranactionHistoryFragment extends TransactionHistoryFragmen
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // we are sorting by descending order because these are un-synced transactions
         // that are negative and go down.
-        String sortOrder = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " DESC";
+        String sortOrder = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " ASC";
         return new CursorLoader(getActivity(),
                 TransItemEntry.buildTransactionItemsUri(
                         PrefUtil.getCurrentCompanyId(getContext()),
