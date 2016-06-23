@@ -1,6 +1,8 @@
 package com.mukera.sheket.client.controller.items;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -90,8 +94,7 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.all_items_menu_add_item:
-                Intent intent = new Intent(getActivity(), NewItemActivity.class);
-                startActivity(intent);
+                startActivity(ItemCreateEditActivity.createIntent(getActivity(), false, null));
                 return true;
             case R.id.all_items_menu_toggle_card_view:
                 mCardListener.onCardOptionSelected(true);
@@ -125,6 +128,19 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
         return R.layout.fragment_item_list;
     }
 
+    void displayOptionToEditItem(final SItemDetail itemDetail) {
+        final Activity activity = getActivity();
+        new AlertDialog.Builder(activity).
+                setTitle("Edit Item").
+                setMessage("Do you want to edit item attributes?").
+                setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, itemDetail.item));
+                    }
+                }).setNegativeButton("No", null).show();
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -132,6 +148,12 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
 
         mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
+        mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
+            @Override
+            public void itemInfoSelected(SItemDetail itemDetail) {
+                displayOptionToEditItem(itemDetail);
+            }
+        });
         mItemList.setAdapter(mItemDetailAdapter);
         mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -199,6 +221,15 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
             super(context, 0);
         }
 
+        public interface ItemDetailSelectionListener {
+            void itemInfoSelected(SItemDetail itemDetail);
+        }
+
+        private ItemDetailSelectionListener mListener;
+        public void setListener(ItemDetailSelectionListener listener) {
+            mListener = listener;
+        }
+
         /**
          * This assumes the items are in ascending order by item id,
          * that is how is differentiates where one item ends and another starts.
@@ -241,7 +272,7 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            SItemDetail detail = getItem(position);
+            final SItemDetail detail = getItem(position);
 
             ItemViewHolder holder;
             if (convertView == null) {
@@ -263,16 +294,24 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
                 holder.item_code.setVisibility(View.GONE);
             }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
+            holder.item_info.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.itemInfoSelected(detail);
+                }
+            });
 
             return convertView;
         }
 
         private static class ItemViewHolder {
+            ImageView item_info;
             TextView item_name;
             TextView item_code;
             TextView total_qty;
 
             public ItemViewHolder(View view) {
+                item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
                 item_name = (TextView) view.findViewById(R.id.list_item_item_detail_name);
                 item_code = (TextView) view.findViewById(R.id.list_item_item_detail_code);
                 total_qty = (TextView) view.findViewById(R.id.list_item_item_detail_total_qty);

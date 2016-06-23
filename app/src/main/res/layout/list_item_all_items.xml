@@ -3,12 +3,26 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="16dp">
+    android:descendantFocusability="blocksDescendants"
+    android:padding="8dp">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_action_info"
+        android:id="@+id/list_item_item_detail_info"
+        android:layout_alignParentRight="false"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="4dp"
+        android:padding="16dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginRight="8dp" />
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/list_item_item_detail_info">
 
         <LinearLayout
             android:orientation="vertical"

@@ -71,7 +71,7 @@
 
         <activity
             android:label="New Item"
-            android:name=".controller.items.NewItemActivity"
+            android:name=".controller.items.ItemCreateEditActivity"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
