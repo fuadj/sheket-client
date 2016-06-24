@@ -498,8 +498,8 @@ public class SheketContract {
         public static final int TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH = 3;
 
         // These are for decreasing stock
-        public static final int TYPE_DECREASE_CURRENT_BRANCH = 10;
-        public static final int TYPE_DECREASE_TRANSFER_TO_OTHER = 11;
+        public static final int TYPE_DECREASE_CURRENT_BRANCH = 11;
+        public static final int TYPE_DECREASE_TRANSFER_TO_OTHER = 12;
 
         public static boolean isIncrease(int trans_type) {
             switch (trans_type) {
