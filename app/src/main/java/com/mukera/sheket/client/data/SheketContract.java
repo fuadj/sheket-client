@@ -499,8 +499,7 @@ public class SheketContract {
 
         // These are for decreasing stock
         public static final int TYPE_DECREASE_CURRENT_BRANCH = 10;
-        public static final int TYPE_DECREASE_DIRECT_PURCHASE = 11;
-        public static final int TYPE_DECREASE_TRANSFER_TO_OTHER = 12;
+        public static final int TYPE_DECREASE_TRANSFER_TO_OTHER = 11;
 
         public static boolean isIncrease(int trans_type) {
             switch (trans_type) {
@@ -517,11 +516,10 @@ public class SheketContract {
             switch (trans_type) {
                 case TYPE_INCREASE_PURCHASE: return "Purchase";
                 case TYPE_INCREASE_RETURN_ITEM: return "Returned";
-                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Transfer";
+                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Receive From Branch";
 
-                case TYPE_DECREASE_CURRENT_BRANCH: return "Sell Branch Item";
-                case TYPE_DECREASE_DIRECT_PURCHASE: return "Sell Direct Purchase";
-                case TYPE_DECREASE_TRANSFER_TO_OTHER: return "Transfer";
+                case TYPE_DECREASE_CURRENT_BRANCH: return "Sell";
+                case TYPE_DECREASE_TRANSFER_TO_OTHER: return "Send To Branch";
             }
             return "Undefined TransType";
         }

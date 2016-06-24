@@ -195,18 +195,16 @@ public class TransDialog {
                 new SourceType(SOURCE_TYPE_SELECT_TYPE, "--Select Source--"));
 
         sTransTypesHashMap.put(TransItemEntry.TYPE_INCREASE_PURCHASE,
-                new SourceType(TransItemEntry.TYPE_INCREASE_PURCHASE, "Purchase Inventory"));
+                new SourceType(TransItemEntry.TYPE_INCREASE_PURCHASE, "Purchase"));
         sTransTypesHashMap.put(TransItemEntry.TYPE_INCREASE_RETURN_ITEM,
-                new SourceType(TransItemEntry.TYPE_INCREASE_RETURN_ITEM, "Return Inventory"));
+                new SourceType(TransItemEntry.TYPE_INCREASE_RETURN_ITEM, "Returned"));
         sTransTypesHashMap.put(TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH,
-                new SourceType(TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH, "Transfer From Other"));
+                new SourceType(TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH, "Receive From Other Branch"));
 
         sTransTypesHashMap.put(TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH,
-                new SourceType(TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH, "Current Branch"));
-        sTransTypesHashMap.put(TransItemEntry.TYPE_DECREASE_DIRECT_PURCHASE,
-                new SourceType(TransItemEntry.TYPE_DECREASE_DIRECT_PURCHASE, "Direct Sale"));
+                new SourceType(TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH, "Sell"));
         sTransTypesHashMap.put(TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER,
-                new SourceType(TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER, "Transfer To Other"));
+                new SourceType(TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER, "Send To Other Branch"));
     }
 
     public static class BuyQtyDialog extends QtyDialog {
@@ -420,7 +418,6 @@ public class TransDialog {
             List<SourceType> sources = new ArrayList<>();
             sources.add(sTransTypesHashMap.get(SOURCE_TYPE_SELECT_TYPE));
             sources.add(sTransTypesHashMap.get(TransItemEntry.TYPE_DECREASE_CURRENT_BRANCH));
-            sources.add(sTransTypesHashMap.get(TransItemEntry.TYPE_DECREASE_DIRECT_PURCHASE));
             sources.add(sTransTypesHashMap.get(TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER));
 
             ArrayAdapter adapter = new ArrayAdapter(getActivity(),
