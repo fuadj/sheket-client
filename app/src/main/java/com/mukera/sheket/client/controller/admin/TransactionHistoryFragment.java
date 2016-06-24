@@ -75,9 +75,12 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             if (cursor != null && cursor.moveToFirst()) {
                 mMembers = new HashMap<>();
                 do {
-                    SMember member = new SMember();
+                    SMember member = new SMember(cursor);
                     mMembers.put(member.member_id, member);
                 } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
             }
 
             // Add self to the map
