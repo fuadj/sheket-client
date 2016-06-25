@@ -142,6 +142,7 @@ public class TransactionUtil {
                     else
                         branchItem.quantity = branchItem.quantity - transItem.quantity;
                     setBranchItem(context, company_id, seenBranchItems, branchItem);
+                    break;
                 }
             }
         }
@@ -164,7 +165,11 @@ public class TransactionUtil {
         if (cursor != null && cursor.moveToFirst()) {
             item = new SBranchItem(cursor);
 
-            // we haven't still synced the 'created' item, so don't change flag to update
+            /**
+             * IMPORTANT: we haven't still synced the 'created' item, so don't change flag to update.
+             * It will create sync problems if we try to send a "create" item as an "update", the
+             * server will reply with an error.
+             */
             if (item.change_status != ChangeTraceable.CHANGE_STATUS_CREATED)
                 item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
         } else {

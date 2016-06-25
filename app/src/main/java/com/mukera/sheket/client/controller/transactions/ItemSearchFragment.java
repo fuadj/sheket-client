@@ -288,11 +288,13 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
     protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " ASC";
 
-        if (mCurrSearch != null) mCurrSearch = mCurrSearch.trim();
+        if (mCurrSearch == null)
+            mCurrSearch = "";
+        mCurrSearch = mCurrSearch.trim();
 
         String selection = null;
 
-        if (mCurrSearch != null && !mCurrSearch.isEmpty()) {
+        if (!mCurrSearch.isEmpty()) {
             selection = "(" + ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
                     ItemEntry._full(ItemEntry.COLUMN_BAR_CODE) + " LIKE '%" + mCurrSearch + "%' OR " +
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + mCurrSearch + "%' ) ";
@@ -321,7 +323,7 @@ public class ItemSearchFragment extends EmbeddedCategoryFragment {
     protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
         mSearchAdapter.swapCursor(data);
         ListUtils.setDynamicHeight(mSearchList);
-        setSearchStatus(!mSearchAdapter.isEmpty() || !getCategoryAdapter().isEmpty());
+        setSearchStatus(mCurrSearch.isEmpty() || !mSearchAdapter.isEmpty());
     }
 
     @Override
