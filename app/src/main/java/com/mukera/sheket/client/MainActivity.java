@@ -31,7 +31,7 @@ import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.ImportTask;
-import com.mukera.sheket.client.controller.importer.ImporterDialog;
+import com.mukera.sheket.client.controller.importer.ImporterDataMappingDialog;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.CardViewToggleListener;
@@ -488,8 +488,8 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             case IMPORT_STATE_DISPLAY_OPTIONS:
                 if (mReader.parsingSuccess()) {
-                    final ImporterDialog dialog = ImporterDialog.newInstance(mReader);
-                    dialog.setListener(new ImporterDialog.OnClickListener() {
+                    final ImporterDataMappingDialog dialog = ImporterDataMappingDialog.newInstance(mReader);
+                    dialog.setListener(new ImporterDataMappingDialog.OnClickListener() {
                         @Override
                         public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
                             dialog.dismiss();
