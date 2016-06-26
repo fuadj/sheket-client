@@ -41,16 +41,15 @@ public class TestUtils extends AndroidTestCase {
         String[] word_list = {
                 "test   ", "  this    is a test ",
                 "       this    is a tsst       ",
-                "     tset  "
+                "     tset  ",
+                "abcd", "abcd"
         };
 
         Set<String> words = new HashSet<>();
-        for (String w : word_list) {
-            words.add(w);
-        }
+        Collections.addAll(words, word_list);
 
         Vector<Vector<String>> duplicates = DuplicateFinder.findDuplicates(words,
                 DuplicateFinder.DISTANCE_2_COMPARATOR);
-        assertEquals(duplicates.size(), 2);
+        assertEquals(duplicates.size(), 3);
     }
 }
