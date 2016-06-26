@@ -81,14 +81,29 @@ public class MainActivity extends AppCompatActivity implements
 
     private String mImportPath;
 
-    private boolean mShowImportOptionsDialog = false;
+    static final int IMPORT_STATE_NONE = 0;
+    static final int IMPORT_STATE_SUCCESS = 1;
+    static final int IMPORT_STATE_DISPLAY_OPTIONS = 2;
+    static final int IMPORT_STATE_ERROR = 3;
+
+    private int mImportState = IMPORT_STATE_NONE;
+
     private SimpleCSVReader mReader = null;
-    private boolean mErrorOccurred = false;
-    private boolean mImportSuccessful = false;
     private ProgressDialog mImportProgress = null;
     private String mErrorMsg = null;
-    private boolean mImporting = false;
 
+    /**
+     * When importing, parsing is done on a AsyncTask and we can't
+     * issue UI update from a worker thread. We could have posted
+     * a {@code Runnable} on UI thread's LoopHandler to display results.
+     * But because of AsyncTasks's behaviour, this will cause the app to crash
+     * due to the activity not being on a resumed state. To prevent that, we only post to the
+     * UI thread if the activity has resumed. So we have {@code mDidResume} for that.
+     * If the activity wasn't resumed when we finished parsing, we need
+     * to tell it to update the UI after it resumes, so we set {@code mImporting}
+     * to true and it will check that to know if it needs to update UI when it wakes up.
+     */
+    private boolean mImporting = false;
     private boolean mDidResume = false;
 
     private ProgressDialog mSyncingProgress = null;
@@ -399,6 +414,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     void startImporterTask() {
+        mImporting = true;
         mImportProgress = ProgressDialog.show(this,
                 "Importing Data", "Please Wait...", true);
         ImportTask importTask = new ImportTask(new File(mImportPath), this);
@@ -448,43 +464,48 @@ public class MainActivity extends AppCompatActivity implements
         mDidResume = false;
     }
 
-    void showImportingStuff() {
-        if (mErrorOccurred) {
-            mImporting = false;
-            mErrorOccurred = false;
+    void stopImporting(String err_msg) {
+        mImporting = false;
 
-            if (mImportProgress != null)
-                mImportProgress.dismiss();
+        if (mImportProgress != null)
+            mImportProgress.dismiss();
 
-            displayErrorDialog(mErrorMsg);
-            return;
+        if (err_msg != null) {
+            new AlertDialog.Builder(MainActivity.this).
+                    setTitle("Import Error").
+                    setMessage(err_msg).show();
+            Log.e("Sheket MainActivity", err_msg);
         }
+    }
 
-        if (mShowImportOptionsDialog) {
-            mShowImportOptionsDialog = false;
-            if (mReader.parsingSuccess()) {
-                final ImporterDialog dialog = ImporterDialog.newInstance(mReader);
-                dialog.setListener(new ImporterDialog.OnClickListener() {
-                    @Override
-                    public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
-                        dialog.dismiss();
-                        new ImportTask.ImportDataTask(reader, dataMapping, MainActivity.this, MainActivity.this).execute();
-                    }
+    void showImportUpdates() {
+        switch (mImportState) {
+            case IMPORT_STATE_SUCCESS:
+                stopImporting(null);
+                break;
+            case IMPORT_STATE_DISPLAY_OPTIONS:
+                if (mReader.parsingSuccess()) {
+                    final ImporterDialog dialog = ImporterDialog.newInstance(mReader);
+                    dialog.setListener(new ImporterDialog.OnClickListener() {
+                        @Override
+                        public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
+                            dialog.dismiss();
+                            new ImportTask.ImportDataTask(reader, dataMapping, MainActivity.this, MainActivity.this).execute();
+                        }
 
-                    @Override
-                    public void onCancelSelected() {
-                        importError("Options Dialog Canceled");
-                    }
-                });
-                dialog.show(getSupportFragmentManager(), "Import");
-            } else {
-                displayErrorDialog("Parsing Error " + mErrorMsg);
-            }
-        } else if (mImportSuccessful) {
-            mImportSuccessful = false;
-            mImporting = false;
-            if (mImportProgress != null)
-                mImportProgress.dismiss();
+                        @Override
+                        public void onCancelSelected() {
+                            stopImporting("Import Dialog Canceled");
+                        }
+                    });
+                    dialog.show(getSupportFragmentManager(), "Import");
+                } else {
+                    stopImporting("Parsing Error " + mErrorMsg);
+                }
+                break;
+            case IMPORT_STATE_ERROR:
+                stopImporting(mErrorMsg);
+                break;
         }
     }
 
@@ -493,45 +514,33 @@ public class MainActivity extends AppCompatActivity implements
         super.onPostResume();
         mDidResume = true;
         if (mImporting) {
-            showImportingStuff();
+            showImportUpdates();
         }
-    }
-
-    void displayErrorDialog(String err_msg) {
-        if (err_msg != null) {
-            new AlertDialog.Builder(MainActivity.this).
-                    setTitle("Import Error").
-                    setMessage(err_msg).show();
-        }
-        Log.e("Sheket MainActivity", (err_msg != null) ? err_msg : "");
     }
 
     @Override
     public void showImportOptionsDialog(SimpleCSVReader reader) {
-        mImporting = true;
         mReader = reader;
-        mShowImportOptionsDialog = true;
+        mImportState = IMPORT_STATE_DISPLAY_OPTIONS;
         if (mDidResume) {
-            showImportingStuff();
+            showImportUpdates();
         }
     }
 
     @Override
     public void importSuccessful() {
-        mImporting = true;
-        mImportSuccessful = true;
+        mImportState = IMPORT_STATE_SUCCESS;
         if (mDidResume) {
-            showImportingStuff();
+            showImportUpdates();
         }
     }
 
     @Override
     public void importError(String msg) {
-        mImporting = true;
-        mErrorOccurred = true;
         mErrorMsg = msg;
+        mImportState = IMPORT_STATE_ERROR;
         if (mDidResume) {
-            showImportingStuff();
+            showImportUpdates();
         }
     }
 
