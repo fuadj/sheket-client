@@ -30,8 +30,13 @@ import android.view.View;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
-import com.mukera.sheket.client.controller.importer.ImportTask;
-import com.mukera.sheket.client.controller.importer.ImporterDataMappingDialog;
+import com.mukera.sheket.client.controller.importer.DuplicateEntities;
+import com.mukera.sheket.client.controller.importer.DuplicateReplacementDialog;
+import com.mukera.sheket.client.controller.importer.DuplicateFinderTask;
+import com.mukera.sheket.client.controller.importer.ImportDataMappingDialog;
+import com.mukera.sheket.client.controller.importer.ImportDataTask;
+import com.mukera.sheket.client.controller.importer.ImportListener;
+import com.mukera.sheket.client.controller.importer.ParseFileTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.CardViewToggleListener;
@@ -54,12 +59,14 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity implements
         NavigationFragment.BranchSelectionCallback,
         SPermission.PermissionChangeListener,
-        ImportTask.ImportListener,
+        ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -83,12 +90,17 @@ public class MainActivity extends AppCompatActivity implements
 
     static final int IMPORT_STATE_NONE = 0;
     static final int IMPORT_STATE_SUCCESS = 1;
-    static final int IMPORT_STATE_DISPLAY_OPTIONS = 2;
-    static final int IMPORT_STATE_ERROR = 3;
+    static final int IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG = 2;
+    static final int IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG = 3;
+    static final int IMPORT_STATE_ERROR = 4;
 
     private int mImportState = IMPORT_STATE_NONE;
 
     private SimpleCSVReader mReader = null;
+
+    private Map<Integer, Integer> mImportDataMapping = null;
+    private DuplicateEntities mDuplicateEntities = null;
+
     private ProgressDialog mImportProgress = null;
     private String mErrorMsg = null;
 
@@ -417,9 +429,9 @@ public class MainActivity extends AppCompatActivity implements
         mImporting = true;
         mImportProgress = ProgressDialog.show(this,
                 "Importing Data", "Please Wait...", true);
-        ImportTask importTask = new ImportTask(new File(mImportPath), this);
-        importTask.setListener(this);
-        importTask.execute();
+        ParseFileTask parseFileTask = new ParseFileTask(new File(mImportPath));
+        parseFileTask.setListener(this);
+        parseFileTask.execute();
     }
 
     @Override
@@ -486,18 +498,19 @@ public class MainActivity extends AppCompatActivity implements
             case IMPORT_STATE_SUCCESS:
                 stopImporting(null);
                 break;
-            case IMPORT_STATE_DISPLAY_OPTIONS:
+            case IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG:
                 if (mReader.parsingSuccess()) {
-                    final ImporterDataMappingDialog dialog = ImporterDataMappingDialog.newInstance(mReader);
-                    dialog.setListener(new ImporterDataMappingDialog.OnClickListener() {
+                    final ImportDataMappingDialog dialog = ImportDataMappingDialog.newInstance(mReader);
+                    dialog.setListener(new ImportDataMappingDialog.OnClickListener() {
                         @Override
                         public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
                             dialog.dismiss();
-                            new ImportTask.ImportDataTask(reader, dataMapping, MainActivity.this, MainActivity.this).execute();
+                            new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
                         }
 
                         @Override
                         public void onCancelSelected() {
+                            dialog.dismiss();
                             stopImporting("Import Dialog Canceled");
                         }
                     });
@@ -506,9 +519,73 @@ public class MainActivity extends AppCompatActivity implements
                     stopImporting("Parsing Error " + mErrorMsg);
                 }
                 break;
+            case IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG:
+                chooseReplacementForDuplicates();
+                break;
             case IMPORT_STATE_ERROR:
                 stopImporting(mErrorMsg);
                 break;
+        }
+    }
+
+    void chooseReplacementForDuplicates() {
+        boolean found_duplicates = false;
+        Vector<String> duplicates = null;
+
+        // this can't be a single variable b/c it is final
+        final boolean []is_categories = new boolean[]{false};
+
+        if (!mDuplicateEntities.categoryDuplicates.isEmpty()) {
+            found_duplicates = true;
+            is_categories[0] = true;
+            duplicates = mDuplicateEntities.categoryDuplicates.remove(0);
+        } else if (!mDuplicateEntities.branchDuplicates.isEmpty()) {
+            found_duplicates = true;
+            is_categories[0] = false;
+            duplicates = mDuplicateEntities.branchDuplicates.remove(0);
+        }
+
+        if (found_duplicates) {
+            final DuplicateReplacementDialog dialog = DuplicateReplacementDialog.newInstance(duplicates,
+                    is_categories[0] ? "Categories" : "Branches");
+            dialog.setListener(new DuplicateReplacementDialog.ReplacementListener() {
+                @Override
+                public void noDuplicatesFound() {
+                    dialog.dismiss();
+
+                    // recursive for the next
+                    chooseReplacementForDuplicates();
+                }
+
+                @Override
+                public void duplicatesFound(Set<String> nonDuplicates, DuplicateReplacementDialog.Replacement replacement) {
+                    dialog.dismiss();
+                    /**
+                     * for each replacement word, make a mapping for it to the "correct word".
+                     * we use this mapping when we actually do the importing to replace out the
+                     * duplicates with the correct ones.
+                     */
+
+                    // doing the checking outside is more efficient
+                    if (is_categories[0]) {
+                        for (String duplicateCategory : replacement.duplicates) {
+                            mDuplicateEntities.categoryReplacement.put(duplicateCategory, replacement.correctWord);
+                        }
+                    } else {
+                        for (String duplicateBranch : replacement.duplicates) {
+                            mDuplicateEntities.branchReplacement.put(duplicateBranch, replacement.correctWord);
+                        }
+                    }
+
+                    // recursive for the next
+                    chooseReplacementForDuplicates();
+                }
+            });
+            dialog.show(getSupportFragmentManager(), "Duplicate " + (is_categories[0] ? "Categories" : "Branches"));
+        } else {
+            // This means we've gone through all the categories and branches,
+            // time to do the actual importing
+            new ImportDataTask(mReader, mImportDataMapping, mDuplicateEntities, this, this).execute();
         }
     }
 
@@ -522,9 +599,21 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void showImportOptionsDialog(SimpleCSVReader reader) {
+    public void displayDataMappingDialog(SimpleCSVReader reader) {
         mReader = reader;
-        mImportState = IMPORT_STATE_DISPLAY_OPTIONS;
+        mImportState = IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG;
+        if (mDidResume) {
+            showImportUpdates();
+        }
+    }
+
+    @Override
+    public void displayReplacementDialog(SimpleCSVReader reader, Map<Integer, Integer> mapping, DuplicateEntities duplicateEntities) {
+        mImportState = IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG;
+
+        mImportDataMapping = mapping;
+        mDuplicateEntities = duplicateEntities;
+
         if (mDidResume) {
             showImportUpdates();
         }
