@@ -21,7 +21,7 @@ import java.util.Vector;
 /**
  * Created by fuad on 6/9/16.
  */
-public class ImporterDataMappingDialog extends DialogFragment {
+public class ImportDataMappingDialog extends DialogFragment {
     public interface OnClickListener {
         void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping);
         void onCancelSelected();
@@ -37,8 +37,8 @@ public class ImporterDataMappingDialog extends DialogFragment {
     private Spinner mLocationSpinner;
     private Spinner mBalanceSpinner;
 
-    public static ImporterDataMappingDialog newInstance(SimpleCSVReader reader) {
-        ImporterDataMappingDialog dialog = new ImporterDataMappingDialog();
+    public static ImportDataMappingDialog newInstance(SimpleCSVReader reader) {
+        ImportDataMappingDialog dialog = new ImportDataMappingDialog();
         dialog.mReader = reader;
         return dialog;
     }
@@ -107,7 +107,7 @@ public class ImporterDataMappingDialog extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (mListener != null) {
-                                    mListener.onOkSelected(ImporterDataMappingDialog.this.mReader,
+                                    mListener.onOkSelected(ImportDataMappingDialog.this.mReader,
                                             getDataMapping());
                                 }
                             }

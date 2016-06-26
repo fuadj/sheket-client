@@ -137,9 +137,7 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
         settingsChildren.add(StaticNavigationAdapter.ENTITY_USER_PROFILE);
         settingsChildren.add(StaticNavigationAdapter.ENTITY_COMPANIES);
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DEBUG);
-        /*
         settingsChildren.add(StaticNavigationAdapter.ENTITY_DELETE);
-        */
         settingsChildren.add(StaticNavigationAdapter.ENTITY_LOG_OUT);
 
         Pair<Integer, List<Integer>> settingsCategory =
