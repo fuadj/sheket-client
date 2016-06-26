@@ -466,9 +466,12 @@ public class MainActivity extends AppCompatActivity implements
 
     void stopImporting(String err_msg) {
         mImporting = false;
+        mImportState = IMPORT_STATE_NONE;
 
-        if (mImportProgress != null)
+        if (mImportProgress != null) {
             mImportProgress.dismiss();
+            mImportProgress = null;
+        }
 
         if (err_msg != null) {
             new AlertDialog.Builder(MainActivity.this).
