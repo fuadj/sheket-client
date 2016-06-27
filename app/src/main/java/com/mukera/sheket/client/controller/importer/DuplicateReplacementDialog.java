@@ -5,7 +5,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,35 +44,40 @@ public class DuplicateReplacementDialog extends DialogFragment {
 
         /**
          * Callback for the duplicates found.
-         * @param nonDuplicates   This are words that were "possible candidates" to have duplicates,
-         *                        but the user has identified them as unique and aren't duplicates.
          *
-         * @param replacement     The user selected replacement to "group" the duplicates as one
-         *                        unique word. See class {@code Replacement}.
+         * @param nonDuplicates This are words that were "possible candidates" to have duplicates,
+         *                      but the user has identified them as unique and aren't duplicates.
+         * @param replacement   The user selected replacement to "group" the duplicates as one
+         *                      unique word. See class {@code Replacement}.
          */
         void duplicatesFound(Set<String> nonDuplicates, Replacement replacement);
     }
 
     private ReplacementListener mListener;
-    public void setListener(ReplacementListener listener) { mListener = listener; }
+
+    public void setListener(ReplacementListener listener) {
+        mListener = listener;
+    }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        String[] words = mWordList.toArray(new String[]{});
-        final boolean[] checkedWords = new boolean[words.length];
+        String[] words = new String[mWordList.size()];
+        mWordList.toArray(words);
+
+        final boolean[] selectedWords = new boolean[words.length];
         for (int i = 0; i < words.length; i++) {
             // The DEFAULT is for the words to be duplicate
-            checkedWords[i] = true;
+            selectedWords[i] = true;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setMultiChoiceItems(words, checkedWords, new DialogInterface.OnMultiChoiceClickListener() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext()).setCancelable(false);
+        builder.setMultiChoiceItems(words, selectedWords, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                checkedWords[which] = isChecked;
+                selectedWords[which] = isChecked;
                 int selected = 0;
-                for (Boolean check : checkedWords) {
+                for (Boolean check : selectedWords) {
                     if (check) {
                         selected++;
                         // we need at least 2 to have duplicates, a single word can't be a duplicate
@@ -79,62 +86,97 @@ public class DuplicateReplacementDialog extends DialogFragment {
                     }
                 }
 
-                ((AlertDialog)getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(selected >= 2);
+                ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(selected >= 2);
             }
-        }).
-                setCancelable(false).
+        }).setCancelable(false).
                 setTitle("Select the duplicate " + mEntityType).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(DialogInterface outerDialog, int which) {
                         // If we get here, it means at least 2 words have been selected
                         // now choose which one is the "correct one"
 
                         Vector<String> duplicates = new Vector<>();
-                        for (int i = 0; i < checkedWords.length; i++) {
-                            if (checkedWords[i]) {      // this was selected as duplicate
+                        for (int i = 0; i < selectedWords.length; i++) {
+                            if (selectedWords[i]) {      // this was selected as duplicate
                                 duplicates.add(mWordList.get(i));
                             }
                         }
 
-                        final String[] duplicateWords = duplicates.toArray(new String[]{});
+                        final String[] duplicateWords = new String[duplicates.size()];
+                        duplicates.toArray(duplicateWords);
 
-                        AlertDialog.Builder chooser = new AlertDialog.Builder(getContext());
-                        chooser.setSingleChoiceItems(duplicateWords, -1, new DialogInterface.OnClickListener() {
+                        DialogFragment wordChooserDialog = new DialogFragment() {
+                            @NonNull
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // once a word is selected, we are good to go.
-                                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).
-                                        setEnabled(true);
-                            }
-                        }).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                int selectedPosition = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
-                                dialog.dismiss();
+                            public Dialog onCreateDialog(Bundle savedInstanceState) {
+                                final DialogFragment self = this;
+                                AlertDialog dialog = new AlertDialog.Builder(getContext()).setCancelable(false).
+                                        setSingleChoiceItems(duplicateWords, -1,
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        // once a word is selected, we are good to go.
+                                                        ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).
+                                                                setEnabled(true);
+                                                    }
+                                                }).setPositiveButton("Ok",
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                                                self.dismiss();
 
-                                correctWordChosen(selectedPosition, duplicateWords);
-                            }
-                        }).setNeutralButton("Back", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setTitle("Choose The Correct Word");
+                                                correctWordChosen(selectedPosition, duplicateWords);
+                                            }
+                                        }).setNeutralButton("Back",
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                self.dismiss();
+                                            }
+                                        }).setTitle("Choose The Correct Word").create();
 
-                        AlertDialog chooserDialog = chooser.create();
-                        chooserDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                            @Override
-                            public void onShow(DialogInterface dialog) {
-                                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                                dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                                    @Override
+                                    public void onShow(DialogInterface dialog) {
+                                        ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                                    }
+                                });
+
+                                dialog.setCanceledOnTouchOutside(false);
+                                return dialog;
                             }
-                        });
-                        chooserDialog.show();
+                        };
+
+                        /**
+                         * Because the {@code DuplicateReplacementDialog} is a 2-level dialog(i.e:
+                         *      it first asks for the duplicates from a possible list of words, it then
+                         *      asks for the "correct" version of the word) we want to add the first
+                         *      dialog to the backstack if the user navigates back from the second
+                         *      to the first. But the normal {@code show()} method for dialogs doesn't
+                         *      add them to the backstack, trying to go back from the second to the first
+                         *      will also cause the first to be removed. This creates a UI bug where
+                         *      the importing is frozen due to the dialogs disappearing.
+                         *
+                         * Reference https://books.google.com.et/books?id=I4knCgAAQBAJ&pg=PA51&lpg=PA51&dq=android+show+dialog+on+a+transaction+with+backstack&source=bl&ots=UHd3TOFPNy&sig=oqmALWf6P0W1fLo5Fr65ZNFTQCk&hl=en&sa=X&ved=0ahUKEwj30rz6_MjNAhUJnRoKHZAnA3gQ6AEIQTAG#v=onepage&q=android%20show%20dialog%20on%20a%20transaction%20with%20backstack&f=false
+                         *
+                         * See also http://stackoverflow.com/questions/20733142/android-multiple-nested-dialogfragment
+                         * for more information.
+                         */
+                        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+
+                        // When the transaction is popped when the second dialog is dismissed, the transaction will
+                        // be done in reverse which also means the removed dialog will be added back.
+                        transaction.remove(DuplicateReplacementDialog.this);
+
+                        transaction.addToBackStack(null);
+                        wordChooserDialog.show(transaction, "Choose Correct Word");
                     }
                 }).
                 // we don't use the negative b/c its location is closer to the positive btn
                 // the neutral is at the opposite end of the dialog
-                setNeutralButton("Not Duplicates", new DialogInterface.OnClickListener() {
+                        setNeutralButton("Not Duplicates", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         mListener.noDuplicatesFound();
@@ -142,13 +184,21 @@ public class DuplicateReplacementDialog extends DialogFragment {
                 });
 
         final AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
                 // this is here for convenience, if we want to disable it we can.
-                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
             }
         });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Log.d("DuplicateDialog", "dismissed");
+            }
+        });
+
         return dialog;
     }
 

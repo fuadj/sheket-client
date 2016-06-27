@@ -100,7 +100,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         mLocationSpinner.setAdapter(adapter);
         mBalanceSpinner.setAdapter(adapter);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext()).setCancelable(false);
         builder.setTitle("Import Data").
                 setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
@@ -124,6 +124,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         builder.setView(view);
 
         final AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
