@@ -2,6 +2,7 @@ package com.mukera.sheket.client.controller.items;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -10,7 +11,9 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,6 +26,7 @@ import android.widget.*;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.controller.transactions.TransactionActivity;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -128,67 +132,90 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
         mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view_items);
         mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
-        final AppCompatActivity activity = (AppCompatActivity)getActivity();
+        final AppCompatActivity activity = (AppCompatActivity) getActivity();
         mBranchItemAdapter.setListener(new BranchItemCursorAdapter.ItemSelectionListener() {
             @Override
             public void editItemLocationSelected(final SBranchItem branchItem) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                final ItemLocationDialog dialog = new ItemLocationDialog();
-                dialog.setBranchItem(branchItem);
-                dialog.setListener(new ItemLocationDialog.ItemLocationListener() {
-                    @Override
-                    public void cancelSelected() {
-                        dialog.dismiss();
-                    }
-
-                    @Override
-                    public void locationSelected(final String location) {
-                        // the text didn't change, ignore it
-                        if (TextUtils.equals(branchItem.item_location, location))
-                            return;
-
-                        Thread t = new Thread() {
-                            @Override
-                            public void run() {
-                                ContentValues values = new ContentValues();
-                                values.put(BranchItemEntry.COLUMN_ITEM_LOCATION, location);
-
-                                /**
-                                 * If the branch item was in created state, we don't want to change it until
-                                 * we sync with server. If we change it to updated state, it will create problems
-                                 * as the server still doesn't know about it and the update will fail.
-                                 */
-                                if (branchItem.change_status != ChangeTraceable.CHANGE_STATUS_CREATED) {
-                                    values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_UPDATED);
-                                }
-                                getContext().getContentResolver().update(
-                                        BranchItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
-                                        values,
-                                        String.format("%s = ? AND %s = ?",
-                                                BranchItemEntry.COLUMN_BRANCH_ID, BranchItemEntry.COLUMN_ITEM_ID),
-                                        new String[]{
-                                                String.valueOf(branchItem.branch_id),
-                                                String.valueOf(branchItem.item_id)
-                                        }
-                                );
-                                activity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        dialog.dismiss();
-                                    }
-                                });
-                            }
-                        };
-                        t.start();
-                    }
-                });
-                dialog.show(fm, "Set Location");
+                displayItemLocationDialog(branchItem);
             }
         });
         mBranchItemList.setAdapter(mBranchItemAdapter);
 
         return rootView;
+    }
+
+    void displayItemLocationDialog(final SBranchItem branchItem) {
+        final EditText editText = new EditText(getActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
+                setTitle("Set Item Location").
+                setMessage(branchItem.item.name).
+                setView(editText).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String location = editText.getText().toString().trim();
+
+                        // the text didn't change, ignore it
+                        if (TextUtils.equals(branchItem.item_location, location)) {
+                            dialog.dismiss();
+                            return;
+                        }
+
+                        setItemLocation(dialog, branchItem, location);
+                    }
+                }).setNeutralButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
+
+        if (!TextUtils.isEmpty(branchItem.item_location))
+            editText.setText(branchItem.item_location);
+
+        dialog.show();
+    }
+
+    void setItemLocation(final DialogInterface dialog,
+                         final SBranchItem branchItem,
+                         final String location) {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                ContentValues values = new ContentValues();
+                values.put(BranchItemEntry.COLUMN_ITEM_LOCATION, location);
+
+                /**
+                 * If the branch item was in created state, we don't want to change it until
+                 * we sync with server. If we change it to updated state, it will create problems
+                 * as the server still doesn't know about it and the update will fail.
+                 */
+                if (branchItem.change_status != ChangeTraceable.CHANGE_STATUS_CREATED) {
+                    values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_UPDATED);
+                }
+                getContext().getContentResolver().update(
+                        BranchItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
+                        values,
+                        String.format("%s = ? AND %s = ?",
+                                BranchItemEntry.COLUMN_BRANCH_ID, BranchItemEntry.COLUMN_ITEM_ID),
+                        new String[]{
+                                String.valueOf(branchItem.branch_id),
+                                String.valueOf(branchItem.item_id)
+                        }
+                );
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialog.dismiss();
+                    }
+                });
+            }
+        };
+        t.start();
     }
 
     @Override
@@ -209,7 +236,8 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
     @Override
     public void onInitLoader() {
-        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this); }
+        getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_ITEM_LOADER, null, this);
+    }
 
     @Override
     public void onRestartLoader() {
