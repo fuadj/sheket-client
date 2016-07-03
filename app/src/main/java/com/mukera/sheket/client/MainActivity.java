@@ -658,13 +658,38 @@ public class MainActivity extends AppCompatActivity implements
         if (key.equals(getString(R.string.sync_status)) &&
                 PrefUtil.getSyncStatus(this) != SheketService.SYNC_STATUS_SYNCING) {
             if (mSyncingProgress != null)
-                mSyncingProgress.dismiss();;
-            if (PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_ERROR) {
+                mSyncingProgress.dismiss();
+
+            boolean is_error = true;
+            String err_title = null, err_msg = null;
+            switch (PrefUtil.getSyncStatus(this)) {
+                case SheketService.SYNC_STATUS_SUCCESSFUL:
+                    is_error = false;
+                    break;
+                case SheketService.SYNC_STATUS_SYNC_ERROR:
+                    err_title = "Sync Error, try again";
+                    err_msg = PrefUtil.getSyncErrorMessage(this);
+                    break;
+                case SheketService.SYNC_STATUS_INTERNET_ERROR:
+                    err_title = "Internet Problem";
+                    err_msg = "Try Again";
+                    break;
+                case SheketService.SYNC_STATUS_GENERAL_ERROR:
+                    // TODO: don't know how to display it, just print it for now
+                    err_title = "Error, Try again";
+                    err_msg = PrefUtil.getSyncErrorMessage(this);
+                    break;
+            }
+
+            if (is_error) {
                 new AlertDialog.Builder(this).
-                        setTitle("Sync Error, try again").
-                        setMessage(PrefUtil.getSyncError(this)).
+                        setTitle(err_title).
+                        setMessage(err_msg).
+                        setIcon(android.R.drawable.ic_dialog_alert).
                         show();
             }
+
+            // reset it to synced state
             PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
         }
     }

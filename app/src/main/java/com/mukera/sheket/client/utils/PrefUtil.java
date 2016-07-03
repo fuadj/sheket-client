@@ -337,7 +337,7 @@ public class PrefUtil {
         editor.commit();
     }
 
-    public static String getSyncError(Context c) {
+    public static String getSyncErrorMessage(Context c) {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         return p.getString(c.getString(R.string.sync_error), "");
     }

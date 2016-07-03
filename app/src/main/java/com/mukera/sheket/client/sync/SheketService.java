@@ -52,13 +52,18 @@ public class SheketService extends IntentService {
     public static final OkHttpClient client = new OkHttpClient();
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({SYNC_STATUS_SYNCED, SYNC_STATUS_SYNCING, SYNC_STATUS_ERROR, SYNC_STATUS_SUCCESSFUL})
+    @IntDef({SYNC_STATUS_SYNCED, SYNC_STATUS_SYNCING, SYNC_STATUS_SUCCESSFUL,
+            SYNC_STATUS_SYNC_ERROR, SYNC_STATUS_INTERNET_ERROR, SYNC_STATUS_GENERAL_ERROR})
     public @interface SyncStatus {}
 
     public static final int SYNC_STATUS_SYNCED = 0;
     public static final int SYNC_STATUS_SYNCING = 1;
-    public static final int SYNC_STATUS_ERROR = 2;
-    public static final int SYNC_STATUS_SUCCESSFUL = 3;
+    public static final int SYNC_STATUS_SUCCESSFUL = 2;
+    public static final int SYNC_STATUS_SYNC_ERROR = 3;
+    public static final int SYNC_STATUS_INTERNET_ERROR = 4;
+    public static final int SYNC_STATUS_GENERAL_ERROR = 5;
+
+    private String error_msg;
 
     public SheketService() {
         super("Sheket");
@@ -79,7 +84,14 @@ public class SheketService extends IntentService {
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
             PrefUtil.setSyncError(this, e.getMessage());
-            PrefUtil.setSyncStatus(this, SYNC_STATUS_ERROR);
+            PrefUtil.setSyncStatus(this, SYNC_STATUS_SYNC_ERROR);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Internet Problem", e);
+            PrefUtil.setSyncError(this, "Internet Problem");
+            PrefUtil.setSyncStatus(this, SYNC_STATUS_INTERNET_ERROR);
+        } catch (Exception e) {
+            PrefUtil.setSyncError(this, "Internet Problem");
+            PrefUtil.setSyncStatus(this, SYNC_STATUS_GENERAL_ERROR);
         }
     }
 
@@ -93,7 +105,7 @@ public class SheketService extends IntentService {
         return "";
     }
 
-    void syncUser() throws SyncException {
+    void syncUser() throws Exception {
         try {
             Log.d(LOG_TAG, "Syncing User started");
             Request.Builder builder = new Request.Builder();
@@ -144,7 +156,7 @@ public class SheketService extends IntentService {
 
         } catch (JSONException | IOException |
                 RemoteException | OperationApplicationException | SyncException e) {
-            throw new SyncException(e);
+            throw e;
         }
     }
 
@@ -153,7 +165,7 @@ public class SheketService extends IntentService {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      */
-    void syncEntities() throws SyncException {
+    void syncEntities() throws Exception {
         try {
             Log.d(LOG_TAG, "Syncing Entity started");
             Request.Builder builder = new Request.Builder();
@@ -174,7 +186,7 @@ public class SheketService extends IntentService {
             EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
             applyEntitySync(result);
         } catch (JSONException | IOException | SyncException e) {
-            throw new SyncException(e);
+            throw e;
         }
     }
 
@@ -183,7 +195,7 @@ public class SheketService extends IntentService {
         return values;
     }
 
-    void applyEntitySync(EntitySyncResponse response) throws SyncException {
+    void applyEntitySync(EntitySyncResponse response) throws Exception {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
         long company_id = PrefUtil.getCurrentCompanyId(this);
@@ -258,7 +270,7 @@ public class SheketService extends IntentService {
             PrefUtil.setBranchRevision(this, response.latest_branch_rev);
             PrefUtil.setMemberRevision(this, response.latest_member_rev);
         } catch (OperationApplicationException | RemoteException e) {
-            throw new SyncException(e);
+            throw e;
         }
     }
 
@@ -845,7 +857,7 @@ public class SheketService extends IntentService {
         return new Pair<>(Boolean.TRUE, memberJson);
     }
 
-    void syncTransactions() throws SyncException {
+    void syncTransactions() throws Exception {
         try {
             JSONObject json = createTransactionSyncJSON();
             Request.Builder builder = new Request.Builder();
@@ -866,7 +878,7 @@ public class SheketService extends IntentService {
                     response.body().string());
             applyTransactionSync(result);
         } catch (JSONException | IOException | SyncException e) {
-            throw new SyncException(e);
+            throw e;
         }
     }
 
@@ -1001,7 +1013,7 @@ public class SheketService extends IntentService {
         return result;
     }
 
-    void applyTransactionSync(TransactionSyncResponse result) throws SyncException {
+    void applyTransactionSync(TransactionSyncResponse result) throws Exception {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
         long company_id = PrefUtil.getCurrentCompanyId(this);
         for (SyncUpdatedElement updated_trans : result.updatedTransIds) {
@@ -1052,7 +1064,7 @@ public class SheketService extends IntentService {
             PrefUtil.setTransactionRevision(this, result.latest_transaction_rev);
             PrefUtil.setBranchItemRevision(this, result.latest_branch_item_rev);
         } catch (OperationApplicationException | RemoteException e) {
-            throw new SyncException(e);
+            throw e;
         }
     }
 
