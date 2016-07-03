@@ -142,3 +142,4 @@ hs_err_pid*
 
 # ignore the keystore file
 keystore.properties
+/app/app-release.apk
