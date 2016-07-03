@@ -306,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onElementSelected(int item) {
         removeCustomActionBarViews();
+        closeNavDrawer();
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
                 mIsBranchSelected = false;
@@ -360,7 +361,6 @@ public class MainActivity extends AppCompatActivity implements
                 requireLogin();
                 break;
         }
-        closeNavDrawer();
     }
 
     void deleteAllRecords() {
@@ -687,6 +687,14 @@ public class MainActivity extends AppCompatActivity implements
                         setMessage(err_msg).
                         setIcon(android.R.drawable.ic_dialog_alert).
                         show();
+            } else {
+                if (PrefUtil.isCompanySet(this)) {
+                    new AlertDialog.Builder(this).
+                            setTitle("Success").
+                            setMessage("You've synced successfully").
+                            setIcon(android.R.drawable.ic_dialog_info).
+                            show();
+                }
             }
 
             // reset it to synced state
