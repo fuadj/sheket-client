@@ -74,7 +74,7 @@
         android:layout_marginTop="8dp"
         android:textSize="20dp" />
 
-    <EditText android:id="@+id/dialog_trans_qty_edit_text_note"
+    <EditText android:id="@+id/dialog_trans_qty_edit_text_item_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxLength="20"

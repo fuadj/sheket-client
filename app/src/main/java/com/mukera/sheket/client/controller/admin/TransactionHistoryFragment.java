@@ -268,6 +268,14 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             } else {
                 holder.username.setVisibility(View.GONE);
             }
+
+            if (TextUtils.isEmpty(detail.trans.transactionNote)) {
+                holder.transNote.setVisibility(View.GONE);
+            } else {
+                holder.transNote.setVisibility(View.VISIBLE);
+                holder.transNote.setText(detail.trans.transactionNote);
+            }
+
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             holder.date.setText(detail.trans.decodedDate);
             if (mDisplayDeleteBtn) {
@@ -292,6 +300,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             ImageView deleteTrans;
             ImageView trans_icon;
             TextView username;
+            TextView transNote;
             TextView total_qty;
             TextView date;
 
@@ -299,6 +308,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 deleteTrans = (ImageView) view.findViewById(R.id.list_item_trans_history_delete);
                 trans_icon = (ImageView) view.findViewById(R.id.list_item_trans_history_icon);
                 username = (TextView) view.findViewById(R.id.list_item_trans_history_user_name);
+                transNote = (TextView) view.findViewById(R.id.list_item_trans_history_trans_note);
                 total_qty = (TextView) view.findViewById(R.id.list_item_trans_history_qty);
                 date = (TextView) view.findViewById(R.id.list_item_trans_history_date);
             }
@@ -367,21 +377,21 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                     convertView = inflater.inflate(R.layout.list_item_trans_history_dialog, parent, false);
                 }
 
-                TextView itemName, sourceDetail, qty, transNote;
+                TextView itemName, sourceDetail, qty, itemNote;
 
                 itemName = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_item_name);
                 sourceDetail = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_source_detail);
                 qty = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_qty);
-                transNote = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_trans_note);
+                itemNote = (TextView) convertView.findViewById(R.id.list_item_trans_history_dialog_item_note);
 
                 itemName.setText(transItem.item.name);
                 sourceDetail.setText(TransItemEntry.getStringForm(transItem.trans_type));
                 qty.setText(Utils.formatDoubleForDisplay(transItem.quantity));
-                if (!TextUtils.isEmpty(transItem.trans_note)) {
-                    transNote.setVisibility(View.VISIBLE);
-                    transNote.setText(transItem.trans_note);
+                if (!TextUtils.isEmpty(transItem.item_note)) {
+                    itemNote.setVisibility(View.VISIBLE);
+                    itemNote.setText(transItem.item_note);
                 } else {
-                    transNote.setVisibility(View.GONE);
+                    itemNote.setVisibility(View.GONE);
                 }
                 return convertView;
             }

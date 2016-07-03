@@ -47,7 +47,7 @@ public class TransDialog {
         private LinearLayout mLayoutUnitSelection;
         private TextView mUnitExtension, mConversionFormula;
         private EditText mQtyEdit;
-        private EditText mTransactionNote;
+        private EditText mItemNote;
 
         protected List<TransBranch> mTransBranches;
 
@@ -86,7 +86,7 @@ public class TransDialog {
                 }
             });
 
-            mTransactionNote = (EditText) view.findViewById(R.id.dialog_trans_qty_edit_text_note);
+            mItemNote = (EditText) view.findViewById(R.id.dialog_trans_qty_edit_text_item_note);
 
             mLayoutUnitSelection = (LinearLayout) view.findViewById(R.id.dialog_trans_qty_layout_units);
             mSpinnerUnitSelection = (Spinner) view.findViewById(R.id.dialog_trans_qty_spinner_units);
@@ -166,8 +166,8 @@ public class TransDialog {
             return factor * Double.valueOf(mQtyEdit.getText().toString().trim());
         }
 
-        String getTransactionNote() {
-            return mTransactionNote.getText().toString().trim();
+        String getItemNote() {
+            return mItemNote.getText().toString().trim();
         }
 
         abstract void setOkBtnStatus();
@@ -267,7 +267,7 @@ public class TransDialog {
                     transItem.item_id = mItem.item_id;
                     transItem.quantity = qty;
                     transItem.trans_type = getSelectedSourceType().type;
-                    transItem.trans_note = getTransactionNote();
+                    transItem.item_note = getItemNote();
                     transItem.company_id = PrefUtil.getCurrentCompanyId(getActivity());
                     transItem.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED;
                     if (transItem.trans_type == TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH) {
@@ -399,7 +399,7 @@ public class TransDialog {
                     transItem.item = mItem;
                     transItem.item_id = mItem.item_id;
                     transItem.quantity = qty;
-                    transItem.trans_note = getTransactionNote();
+                    transItem.item_note = getItemNote();
                     transItem.company_id = PrefUtil.getCurrentCompanyId(getActivity());
                     transItem.trans_type = getSelectedSourceType().type;
                     transItem.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED;

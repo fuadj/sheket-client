@@ -456,6 +456,7 @@ public class SheketContract {
         public static final String COLUMN_USER_ID = "column_user_id";
         public static final String COLUMN_BRANCH_ID = "column_branch_id";
         public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_TRANS_NOTE = "trans_note";
 
         public static Uri buildTransactionUri(long company_id, long trans_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
@@ -487,7 +488,7 @@ public class SheketContract {
         public static final String COLUMN_ITEM_ID = "column_item_id";
         public static final String COLUMN_OTHER_BRANCH_ID = "column_other_branch_id";
         public static final String COLUMN_QTY = "quantity";
-        public static final String COLUMN_TRANSACTION_NOTE = "transaction_note";
+        public static final String COLUMN_ITEM_NOTE = "item_note";
 
         /**
          * Transaction Types
@@ -514,7 +515,7 @@ public class SheketContract {
 
         public static String getStringForm(int trans_type) {
             switch (trans_type) {
-                case TYPE_INCREASE_PURCHASE: return "Purchase";
+                case TYPE_INCREASE_PURCHASE: return "Buy";
                 case TYPE_INCREASE_RETURN_ITEM: return "Returned";
                 case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Receive From Branch";
 

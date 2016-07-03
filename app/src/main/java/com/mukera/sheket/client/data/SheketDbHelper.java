@@ -130,6 +130,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 TransactionEntry.COLUMN_USER_ID + " integer not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +
+                TransactionEntry.COLUMN_TRANS_NOTE + " text, " +
                 TransactionEntry.COLUMN_DATE + " integer not null);";
 
         final String sql_create_transaction_items_table = "create table if not exists " + TransItemEntry.TABLE_NAME + " ( " +
@@ -151,7 +152,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 TransItemEntry.COLUMN_OTHER_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
 
                 TransItemEntry.COLUMN_QTY + " real not null, " +
-                TransItemEntry.COLUMN_TRANSACTION_NOTE + " text);";
+                TransItemEntry.COLUMN_ITEM_NOTE + " text);";
 
         db.execSQL(sql_create_company_table);
         db.execSQL(sql_create_members_table);

@@ -11,7 +11,7 @@ import com.mukera.sheket.client.R;
  */
 public class ConfigData {
     public static String getAddress(Context context) {
-        return "https://sheket.herokuapp.com/api/";
+        return "http://mukerax.com/api/";
         //return "http://192.168.0.107:5000/api/";
         //return "http://172.20.10.8:5000/api/";
         /*

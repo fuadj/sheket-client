@@ -38,7 +38,10 @@ public class TransactionUtil {
         updateBranchItemsInTransactions(context, itemList, transaction.branch_id, true);
     }
 
-    public static boolean createTransactionWithItems(Context context, List<STransaction.STransactionItem> itemList, long branch_id) {
+    public static boolean createTransactionWithItems(Context context,
+                                                     List<STransaction.STransactionItem> itemList,
+                                                     long branch_id,
+                                                     String transactionNote) {
         if (itemList.isEmpty())
             // it is false b/c we didn't create any transactions
             return false;
@@ -50,6 +53,7 @@ public class TransactionUtil {
         ContentValues values = new ContentValues();
         values.put(TransactionEntry.COLUMN_TRANS_ID, new_trans_id);
         values.put(TransactionEntry.COLUMN_BRANCH_ID, branch_id);
+        values.put(TransactionEntry.COLUMN_TRANS_NOTE, transactionNote);
         values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
         values.put(TransactionEntry.COLUMN_COMPANY_ID, PrefUtil.getCurrentCompanyId(context));
         values.put(TransactionEntry.COLUMN_USER_ID, PrefUtil.getUserId(context));

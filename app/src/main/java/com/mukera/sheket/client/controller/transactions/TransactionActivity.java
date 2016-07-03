@@ -1,17 +1,23 @@
 package com.mukera.sheket.client.controller.transactions;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextUtils;
 import android.view.View;
+import android.widget.EditText;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -22,6 +28,7 @@ import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction.*;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -105,7 +112,6 @@ public class TransactionActivity extends AppCompatActivity {
         setActionbarVisibility(true);
         ItemSearchFragment fragment = ItemSearchFragment.newInstance(mBranchId,
                 mCurrentLaunch == LAUNCH_TYPE_BUY);
-        final AppCompatActivity activity = this;
         fragment.setResultListener(new ItemSearchFragment.SearchResultListener() {
 
             @Override
@@ -120,79 +126,7 @@ public class TransactionActivity extends AppCompatActivity {
 
             @Override
             public void finishTransaction() {
-                setActionbarVisibility(false);
-                final SummaryFragment summaryFragment = new SummaryFragment();
-                summaryFragment.setListener(new SummaryFragment.SummaryListener() {
-                    @Override
-                    public void cancelSelected() {
-                        activity.finish();
-                    }
-
-                    @Override
-                    public void backSelected() {
-                        activity.getSupportFragmentManager().popBackStack();
-                        setActionbarVisibility(true);
-                    }
-
-                    @Override
-                    public void okSelected(final List<STransactionItem> itemList) {
-                        Thread t = new Thread() {
-                            @Override
-                            public void run() {
-                                if (!itemList.isEmpty())
-                                    TransactionUtil.createTransactionWithItems(activity, itemList, mBranchId);
-
-                                activity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        activity.finish();
-                                    }
-                                });
-                            }
-                        };
-                        t.start();
-                    }
-
-                    @Override
-                    public void editItemAtPosition(List<STransactionItem> itemList, final int position) {
-                        STransactionItem tranItem = itemList.get(position);
-                        SItem item = tranItem.item;
-
-                        FragmentManager fm = getSupportFragmentManager();
-                        final TransDialog.QtyDialog dialog = TransDialog.newInstance(mCurrentLaunch == LAUNCH_TYPE_BUY);
-                        dialog.setItem(item);
-                        dialog.setBranches(getBranches());
-
-                        dialog.setListener(new TransDialog.TransQtyDialogListener() {
-                            @Override
-                            public void dialogOk(STransactionItem transactionItem) {
-                                dialog.dismiss();
-
-                                mTransactionItemList.set(position, transactionItem);
-                                summaryFragment.refreshAdapter();
-                            }
-
-                            @Override
-                            public void dialogCancel() {
-                                dialog.dismiss();
-                                summaryFragment.refreshAdapter();
-                            }
-
-                        });
-                        dialog.show(fm, "Set Item Quantity");
-                    }
-
-                    @Override
-                    public void deleteItemAtPosition(List<STransactionItem> itemList, int position) {
-                        mTransactionItemList.remove(position);
-                    }
-                });
-
-                summaryFragment.mItemList = mTransactionItemList;
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.transaction_action_container, summaryFragment)
-                        .addToBackStack(null)
-                        .commit();
+                displayTransactionSummary();
             }
 
             @Override
@@ -205,4 +139,134 @@ public class TransactionActivity extends AppCompatActivity {
                 .commit();
     }
 
+    void displayTransactionSummary() {
+        setActionbarVisibility(false);
+
+        final AppCompatActivity activity = this;
+        final SummaryFragment summaryFragment = new SummaryFragment();
+        summaryFragment.setListener(new SummaryFragment.SummaryListener() {
+            @Override
+            public void cancelSelected() {
+                activity.finish();
+            }
+
+            @Override
+            public void backSelected() {
+                activity.getSupportFragmentManager().popBackStack();
+                setActionbarVisibility(true);
+            }
+
+            @Override
+            public void okSelected(final List<STransactionItem> itemList) {
+                displayTransactionNoteDialog(itemList);
+            }
+
+            @Override
+            public void editItemAtPosition(List<STransactionItem> itemList, final int position) {
+                STransactionItem tranItem = itemList.get(position);
+                SItem item = tranItem.item;
+
+                FragmentManager fm = getSupportFragmentManager();
+                final TransDialog.QtyDialog dialog = TransDialog.newInstance(mCurrentLaunch == LAUNCH_TYPE_BUY);
+                dialog.setItem(item);
+                dialog.setBranches(getBranches());
+
+                dialog.setListener(new TransDialog.TransQtyDialogListener() {
+                    @Override
+                    public void dialogOk(STransactionItem transactionItem) {
+                        dialog.dismiss();
+
+                        mTransactionItemList.set(position, transactionItem);
+                        summaryFragment.refreshAdapter();
+                    }
+
+                    @Override
+                    public void dialogCancel() {
+                        dialog.dismiss();
+                        summaryFragment.refreshAdapter();
+                    }
+
+                });
+                dialog.show(fm, "Set Item Quantity");
+            }
+
+            @Override
+            public void deleteItemAtPosition(List<STransactionItem> itemList, int position) {
+                mTransactionItemList.remove(position);
+            }
+        });
+
+        summaryFragment.mItemList = mTransactionItemList;
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.transaction_action_container, summaryFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    void displayTransactionNoteDialog(final List<STransactionItem> itemList) {
+        final EditText editText = new EditText(this);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add a Reminder?")
+                .setMessage("(Optional) Write a reminder to remember the transaction").
+                setView(editText).
+                setPositiveButton("Finish", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        commitTransaction(itemList, editText.getText().toString().trim());
+                    }
+                }).setNegativeButton("Back",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).setNeutralButton("No Reminder",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        commitTransaction(itemList, "");
+                    }
+                }).setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            }
+        });
+
+        editText.addTextChangedListener(new TextWatcherAdapter(){
+            @Override
+            public void afterTextChanged(Editable s) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
+                        !TextUtils.isEmpty(s.toString().trim()));
+            }
+        });
+        dialog.show();
+    }
+
+    void commitTransaction(final List<STransactionItem> itemList, final String transactionNote) {
+        final ProgressDialog progress = ProgressDialog.show(
+                this, "Saving", "Please Wait...", true);
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                if (!itemList.isEmpty())
+                    TransactionUtil.createTransactionWithItems(TransactionActivity.this, itemList, mBranchId, transactionNote);
+
+                TransactionActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progress.dismiss();
+                        TransactionActivity.this.finish();
+                    }
+                });
+            }
+        };
+        t.start();
+    }
 }

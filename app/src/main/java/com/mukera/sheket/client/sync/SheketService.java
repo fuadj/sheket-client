@@ -10,7 +10,6 @@ import android.os.RemoteException;
 import android.support.annotation.IntDef;
 import android.support.v4.util.Pair;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
@@ -872,7 +871,7 @@ public class SheketService extends IntentService {
     }
 
     JSONObject createTransactionSyncJSON() throws JSONException {
-        List<STransaction> editedTrans = new ArrayList<>();
+        List<STransaction> unsyncedTrans = new ArrayList<>();
 
         String change_selector = String.format("%s != ?", TransItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
         String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
@@ -886,14 +885,14 @@ public class SheketService extends IntentService {
         if (cursor.moveToFirst()) {
             do {
                 STransaction transaction = new STransaction(cursor, true);
-                editedTrans.add(transaction);
+                unsyncedTrans.add(transaction);
             } while (cursor.moveToNext());
         }
 
         JSONObject transactionJson = new JSONObject();
-        if (!editedTrans.isEmpty()) {
+        if (!unsyncedTrans.isEmpty()) {
             JSONArray transArray = new JSONArray();
-            for (STransaction transaction : editedTrans) {
+            for (STransaction transaction : unsyncedTrans) {
                 transArray.put(transaction.toJsonObject());
             }
 
@@ -957,13 +956,14 @@ public class SheketService extends IntentService {
             final String TRANS_JSON_USER_ID = "user_id";
             final String TRANS_JSON_BRANCH_ID = "branch_id";
             final String TRANS_JSON_DATE = "date";
+            final String TRANS_JSON_TRANS_NOTE = "trans_note";
             final String TRANS_JSON_ITEMS = "items";
 
             final String TRANS_ITEM_JSON_TRANS_TYPE = "trans_type";
             final String TRANS_ITEM_JSON_ITEM_ID = "item_id";
             final String TRANS_ITEM_JSON_OTHER_BRANCH_ID = "other_branch";
             final String TRANS_ITEM_JSON_QUANTITY = "quantity";
-            final String TRANS_ITEM_JSON_TRANS_NOTE = "trans_note";
+            final String TRANS_ITEM_JSON_ITEM_NOTE = "item_note";
 
             for (int i = 0; i < transArray.length(); i++) {
                 JSONObject transObject = transArray.getJSONObject(i);
@@ -974,6 +974,7 @@ public class SheketService extends IntentService {
                 transaction.user_id = transObject.getLong(TRANS_JSON_USER_ID);
                 transaction.branch_id = transObject.getLong(TRANS_JSON_BRANCH_ID);
                 transaction.date = transObject.getLong(TRANS_JSON_DATE);
+                transaction.transactionNote = transObject.getString(TRANS_JSON_TRANS_NOTE);
 
                 transaction.transactionItems = new ArrayList<>();
 
@@ -988,7 +989,7 @@ public class SheketService extends IntentService {
                     transactionItem.item_id = itemObject.getInt(TRANS_ITEM_JSON_ITEM_ID);
                     transactionItem.other_branch_id = itemObject.getInt(TRANS_ITEM_JSON_OTHER_BRANCH_ID);
                     transactionItem.quantity = itemObject.getInt(TRANS_ITEM_JSON_QUANTITY);
-                    transactionItem.trans_note = itemObject.getString(TRANS_ITEM_JSON_TRANS_NOTE);
+                    transactionItem.item_note = itemObject.getString(TRANS_ITEM_JSON_ITEM_NOTE);
 
                     transaction.transactionItems.add(transactionItem);
                 }

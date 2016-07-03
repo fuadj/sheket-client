@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -26,6 +27,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     public static final String JSON_TRANS_KEY_TRANS_ID = "trans_id";
     public static final String JSON_TRANS_KEY_BRANCH_ID = "branch_id";
     public static final String JSON_TRANS_KEY_DATE = "date";
+    public static final String JSON_TRANS_KEY_TRANS_NOTE = "trans_note";
     public static final String JSON_TRANS_KEY_ITEMS = "items";
     public static final String JSON_TRANS_KEY_UUID = "client_uuid";
 
@@ -39,6 +41,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             _f(TransactionEntry.COLUMN_USER_ID),
             _f(TransactionEntry.COLUMN_BRANCH_ID),
             _f(TransactionEntry.COLUMN_DATE),
+            _f(TransactionEntry.COLUMN_TRANS_NOTE),
             _f(COLUMN_CHANGE_INDICATOR),
             _f(COLUMN_UUID)
     };
@@ -66,11 +69,12 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     public static final int COL_USER_ID = 2;
     public static final int COL_BRANCH_ID = 3;
     public static final int COL_DATE = 4;
-    public static final int COL_CHANGE = 5;
-    public static final int COL_CLIENT_UUID = 6;
+    public static final int COL_TRANS_NOTE = 5;
+    public static final int COL_CHANGE = 6;
+    public static final int COL_CLIENT_UUID = 7;
 
     // use this to retrieve next columns in a joined query
-    public static final int COL_LAST = 7;
+    public static final int COL_LAST = 8;
 
     public long company_id;
     public long transaction_id;
@@ -78,6 +82,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     public long branch_id;
     public long date;
     public String decodedDate;
+    public String transactionNote;
 
     public List<STransactionItem> transactionItems;
 
@@ -104,8 +109,11 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         user_id = cursor.getLong(COL_USER_ID + offset);
         branch_id = cursor.getLong(COL_BRANCH_ID + offset);
         date = cursor.getLong(COL_DATE + offset);
+
         Date d = SheketContract.getDateFromDb(date);
         decodedDate = sDateFormatter.format(d);
+        transactionNote = cursor.getString(COL_TRANS_NOTE + offset);
+
         change_status = cursor.getInt(COL_CHANGE + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
 
@@ -130,6 +138,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         user_id = parcel.readLong();
         branch_id = parcel.readLong();
         date = parcel.readLong();
+        transactionNote = parcel.readString();
         change_status = parcel.readInt();
         transactionItems = parcel.readArrayList(STransactionItem.class.getClassLoader());
     }
@@ -141,6 +150,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         values.put(TransactionEntry.COLUMN_USER_ID, user_id);
         values.put(TransactionEntry.COLUMN_BRANCH_ID, branch_id);
         values.put(TransactionEntry.COLUMN_DATE, date);
+        values.put(TransactionEntry.COLUMN_TRANS_NOTE, transactionNote);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
         return values;
     }
@@ -152,6 +162,9 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         result.put(JSON_TRANS_KEY_UUID, client_uuid);
 
         result.put(JSON_TRANS_KEY_DATE, date);
+        result.put(JSON_TRANS_KEY_TRANS_NOTE,
+                TextUtils.isEmpty(transactionNote) ? "" : transactionNote);
+
         JSONArray itemsArr = new JSONArray();
         for (STransactionItem transItem : transactionItems) {
             JSONArray json_item = new JSONArray();
@@ -163,14 +176,14 @@ public class STransaction extends UUIDSyncable implements Parcelable {
              * b: item_id
              * c: other_branch_id
              * d: quantity
-             * e: transaction note
+             * e: item note
              */
             json_item.put(transItem.trans_type);
             json_item.put(transItem.item_id);
             json_item.put(transItem.other_branch_id);
             json_item.put(transItem.quantity);
-            json_item.put(transItem.trans_note == null ? "" :
-                    transItem.trans_note);
+            json_item.put(TextUtils.isEmpty(transItem.item_note) ? "" :
+                    transItem.item_note);
 
             itemsArr.put(json_item);
         }
@@ -190,6 +203,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         dest.writeLong(user_id);
         dest.writeLong(branch_id);
         dest.writeLong(date);
+        dest.writeString(transactionNote);
         dest.writeInt(change_status);
         dest.writeList(transactionItems);
     }
@@ -216,7 +230,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
                 _f(TransItemEntry.COLUMN_ITEM_ID),
                 _f(TransItemEntry.COLUMN_OTHER_BRANCH_ID),
                 _f(TransItemEntry.COLUMN_QTY),
-                _f(TransItemEntry.COLUMN_TRANSACTION_NOTE),
+                _f(TransItemEntry.COLUMN_ITEM_NOTE),
                 _f(COLUMN_CHANGE_INDICATOR),
         };
 
@@ -226,7 +240,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         public static final int COL_ITEM_ID = 3;
         public static final int COL_OTHER_BRANCH_ID = 4;
         public static final int COL_QTY = 5;
-        public static final int COL_TRANS_NOTE = 6;
+        public static final int COL_ITEM_NOTE = 6;
         public static final int COL_CHANGE = 7;
 
         public static final int COL_LAST = 8;
@@ -237,7 +251,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         public long item_id;
         public long other_branch_id;
         public double quantity;
-        public String trans_note;
+        public String item_note;
 
         public SItem item;
 
@@ -251,7 +265,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             item_id = cursor.getInt(COL_ITEM_ID + offset);
             other_branch_id = cursor.getLong(COL_OTHER_BRANCH_ID + offset);
             quantity = cursor.getDouble(COL_QTY + offset);
-            trans_note = cursor.getString(COL_TRANS_NOTE + offset);
+            item_note = cursor.getString(COL_ITEM_NOTE + offset);
             change_status = cursor.getInt(COL_CHANGE + offset);
             if (fetch_item) {
                 item = new SItem(cursor, offset + COL_LAST);
@@ -266,7 +280,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             values.put(TransItemEntry.COLUMN_ITEM_ID, item_id);
             values.put(TransItemEntry.COLUMN_OTHER_BRANCH_ID, other_branch_id);
             values.put(TransItemEntry.COLUMN_QTY, quantity);
-            values.put(TransItemEntry.COLUMN_TRANSACTION_NOTE, trans_note);
+            values.put(TransItemEntry.COLUMN_ITEM_NOTE, item_note);
             values.put(COLUMN_CHANGE_INDICATOR, change_status);
             return values;
         }
@@ -278,7 +292,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             item_id = parcel.readLong();
             other_branch_id = parcel.readLong();
             quantity = parcel.readDouble();
-            trans_note = parcel.readString();
+            item_note = parcel.readString();
             change_status = parcel.readInt();
         }
 
@@ -295,7 +309,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             dest.writeLong(item_id);
             dest.writeLong(other_branch_id);
             dest.writeDouble(quantity);
-            dest.writeString(trans_note);
+            dest.writeString(item_note);
             dest.writeInt(change_status);
         }
 
