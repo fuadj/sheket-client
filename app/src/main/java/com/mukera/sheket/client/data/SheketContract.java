@@ -205,14 +205,9 @@ public class SheketContract {
         public static final String PART_PARENT = "parent";
         public static final String PART_CHILD = "child";
 
-        public static String _fullTable(String col_name) { return TABLE_NAME + "." + col_name; }
-        public static String _fullParent(String col_name) { return PART_PARENT + "." + col_name; }
+        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
 
-        /**
-         * _full is alias for _fullParent, if you want to actually refer to the
-         * table, use _fullTable instead.
-         */
-        public static String _full(String col_name) { return _fullParent(col_name); }
+        public static String _fullParent(String col_name) { return PART_PARENT + "." + col_name; }
         public static String _fullChild(String col_name) { return PART_CHILD + "." + col_name; }
 
         public static final String COLUMN_CATEGORY_ID = "_id";

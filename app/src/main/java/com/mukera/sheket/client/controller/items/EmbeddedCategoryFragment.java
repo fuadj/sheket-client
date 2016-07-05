@@ -232,12 +232,12 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         if (id != getCategoryLoaderId())
             return onEmbeddedCreateLoader(id, args);
 
-        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_NAME) + " ASC";
+        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_NAME) + " ASC";
 
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SCategory.CATEGORY_COLUMNS,
-                CategoryEntry._full(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                 new String[]{String.valueOf(mCurrentParentCategoryId)},
                 sortOrder);
     }

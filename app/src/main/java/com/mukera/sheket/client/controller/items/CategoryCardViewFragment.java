@@ -99,13 +99,13 @@ public class CategoryCardViewFragment extends Fragment implements LoaderManager.
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_NAME) + " ASC";
+        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_NAME) + " ASC";
 
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(company_id),
                 SCategory.CATEGORY_COLUMNS,
-                CategoryEntry._full(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                 new String[]{String.valueOf(CategoryEntry.ROOT_CATEGORY_ID)},
                 sortOrder);
     }

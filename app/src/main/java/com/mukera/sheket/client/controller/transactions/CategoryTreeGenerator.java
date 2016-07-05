@@ -34,7 +34,7 @@ public class CategoryTreeGenerator {
 
         long company_id = PrefUtil.getCurrentCompanyId(context);
 
-        String sortOrder = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
+        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
         Cursor cursor = context.getContentResolver().query(
                 CategoryEntry.buildBaseUri(company_id), SCategory.CATEGORY_COLUMNS,
                 null, null, sortOrder);
