@@ -15,7 +15,7 @@ import okio.ByteString;
 public class UserUtil {
     private static final long ID_OFFSET = 473;
 
-    private static final String GROUP_DELIMITER = "-";
+    public static final String GROUP_DELIMITER = "-";
 
     /**
      * To make it more readable, the id is delimited as numbers are with commas.
@@ -29,10 +29,19 @@ public class UserUtil {
         }
 
         int delimited_groups = (int)Math.floor(encoded_id.length() / (1.0 * group_size));
+        if ((delimited_groups * group_size) == encoded_id.length()) {
+            // When encoded length is a multiple of group_size, we won't have
+            // any "left-over" bits, it will cut it without any reminder.
+            // In that case, there won't be any "left-over" group. So, our group number
+            // is smaller by 1.
+            delimited_groups -= 1;
+            if (delimited_groups < 0)
+                delimited_groups = 0;
+        }
 
         StringBuilder delimited = new StringBuilder();
         int last_index = 0;
-        for (int group = 0; group < delimited_groups; group++) {
+        for (int group = 0; group <= delimited_groups; group++) {
             if (group > 0) {
                 delimited.append(GROUP_DELIMITER);
             }
