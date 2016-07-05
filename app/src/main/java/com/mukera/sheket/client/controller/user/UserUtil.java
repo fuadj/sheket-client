@@ -77,6 +77,14 @@ public class UserUtil {
         return (int)Math.floor(Math.log10(number)) + 1;
     }
 
+    private static String flip_string(String s) {
+        if (TextUtils.isEmpty(s)) return s;
+        StringBuilder flipped = new StringBuilder();
+        for (int i = s.length() - 1; i >= 0; i--) {
+            flipped.append(s.charAt(i));
+        }
+        return flipped.toString();
+    }
     /**
      * Encodes a user id by adding error detection logic to it.
      * This is helpful to prevent invalid/mistaken user id addition(like when
@@ -92,6 +100,7 @@ public class UserUtil {
     public static String encodeUserId(long user_id) {
         user_id = user_id + ID_OFFSET;
         String id_str = Long.toString(user_id);
+        String flipped_id = flip_string(id_str);
         String hash = md5Hex(Long.toString(user_id));
 
         int digits = num_digits(user_id);
@@ -106,7 +115,7 @@ public class UserUtil {
                 j++;
                 encoded_id.append(hash.charAt(hash_index));
             } else {
-                encoded_id.append(id_str.charAt(k));
+                encoded_id.append(flipped_id.charAt(k));
                 k++;
             }
         }
@@ -144,9 +153,11 @@ public class UserUtil {
         String stored_user_id = b_embedded_id.toString();
         String stored_hash = b_encoded_hash.toString();
 
+        String flipped_id = flip_string(stored_user_id);
+
         long user_id;
         try {
-            user_id = Long.parseLong(stored_user_id);
+            user_id = Long.parseLong(flipped_id);
         } catch (NumberFormatException e) {
             return INVALID_USER_ID;
         }
