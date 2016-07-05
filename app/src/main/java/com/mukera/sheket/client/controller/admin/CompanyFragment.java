@@ -96,8 +96,9 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                 final Context context = getActivity();
 
-                // This isn't just run in the tread below for EFFICIENCY, because
-                // most users only have 1 company.
+                // This isn't just run in the thread below for EFFICIENCY, because
+                // most users only have 1 company, starting a thread is unnecessary
+                // b/c we won't be switching between companies and there is no state backup necessary.
                 if (!PrefUtil.isCompanySet(context)) {
                     PrefUtil.setCurrentCompanyId(getActivity(), company_id);
                     PrefUtil.setCurrentCompanyName(getActivity(), company_name);
