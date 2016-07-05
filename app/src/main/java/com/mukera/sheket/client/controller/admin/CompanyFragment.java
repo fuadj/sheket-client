@@ -119,7 +119,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                             context.getContentResolver().
                                     update(
-                                            CompanyEntry.buildCompanyUri(current_company),
+                                            CompanyEntry.CONTENT_URI,
                                             values,
                                             CompanyEntry._full(CompanyEntry.COLUMN_ID) + " = ?",
                                             new String[]{
