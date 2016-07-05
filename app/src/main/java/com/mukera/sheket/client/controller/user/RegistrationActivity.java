@@ -1,7 +1,6 @@
 package com.mukera.sheket.client.controller.user;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.sync.SheketService;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 /**
  * Created by gamma on 4/2/16.
@@ -58,6 +58,21 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
 
     @Override
     public void SingUpFailed(String err_msg) {
+    }
+
+    @Override
+    public void onBackPressed() {
+        /**
+         * this activity was started by an intent from main, if we press back
+         * we shouldn't go to main without the user login/signup success.
+         * So, just ignore the back button.
+         */
+        if (PrefUtil.isUserSet(this)) {
+            super.onBackPressed();
+        } else {
+            // TODO: quit the application(may be after 2 back presses)
+            // just ignore it, or quit the app
+        }
     }
 
     @Override
