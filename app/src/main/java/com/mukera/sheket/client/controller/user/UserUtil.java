@@ -15,6 +15,55 @@ import okio.ByteString;
 public class UserUtil {
     private static final long ID_OFFSET = 473;
 
+    private static final String GROUP_DELIMITER = "-";
+
+    /**
+     * To make it more readable, the id is delimited as numbers are with commas.
+     * @param encoded_id
+     * @return
+     */
+    public static String delimitEncodedUserId(String encoded_id, int group_size) {
+        if (encoded_id.length() <= 5) {
+            // this is readable enough
+            return encoded_id;
+        }
+
+        int delimited_groups = (int)Math.floor(encoded_id.length() / (1.0 * group_size));
+
+        StringBuilder delimited = new StringBuilder();
+        int last_index = 0;
+        for (int group = 0; group < delimited_groups; group++) {
+            if (group > 0) {
+                delimited.append(GROUP_DELIMITER);
+            }
+
+            int start_index = group * group_size;
+            int stop_index = (group + 1) * group_size;
+            if (stop_index > encoded_id.length())
+                stop_index = encoded_id.length();
+
+            delimited.append(
+                    encoded_id.substring(start_index, stop_index));
+            last_index += group_size;
+        }
+
+        if (last_index < encoded_id.length()) {
+            // the last group that didn't make the cut b/c it wasn't a "group length wide"
+            delimited.append(encoded_id.substring(last_index));
+        }
+
+        return delimited.toString();
+    }
+
+    /**
+     * Undo the delimiting applied by {code delimitEncodedUserId}
+     * @param delimited_id
+     * @return
+     */
+    public static String removeDelimiterOnEncodedId(String delimited_id) {
+        return delimited_id.replaceAll(GROUP_DELIMITER, "");
+    }
+
     private static int num_digits(long number) {
         return (int)Math.floor(Math.log10(number)) + 1;
     }
@@ -62,8 +111,12 @@ public class UserUtil {
     public static final long INVALID_USER_ID = -1;
 
     public static long decodeUserId(String encoded_id) {
-        encoded_id = encoded_id.toLowerCase();
+        if (encoded_id == null) return INVALID_USER_ID;
+        encoded_id = encoded_id.trim().toLowerCase();
+        if (TextUtils.isEmpty(encoded_id)) return INVALID_USER_ID;
+
         if (encoded_id.length() < 3 ||
+                // it can't also be even length-ed, b/c it must be of the form 2n + 1
                 (encoded_id.length() % 2) == 0) {
             return INVALID_USER_ID;
         }
