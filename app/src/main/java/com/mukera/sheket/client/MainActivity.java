@@ -2,6 +2,7 @@ package com.mukera.sheket.client;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -306,7 +307,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onElementSelected(int item) {
         removeCustomActionBarViews();
-        closeNavDrawer();
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
                 mIsBranchSelected = false;
@@ -321,7 +321,21 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
             case NavigationFragment.StaticNavigationAdapter.ENTITY_DELETE: {
-                deleteAllRecords();
+                new AlertDialog.Builder(this).
+                        setTitle("Are You Sure?").
+                        setMessage("This will delete all un-synced data, are you sure?").
+                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                deleteAllUnSyncedData();
+                            }
+                        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
                 break;
             }
             case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
@@ -361,43 +375,46 @@ public class MainActivity extends AppCompatActivity implements
                 requireLogin();
                 break;
         }
+        closeNavDrawer();
     }
 
-    void deleteAllRecords() {
+    String unsyncedSelector(String column) {
+        return column + " != " + ChangeTraceable.CHANGE_STATUS_SYNCED;
+    }
+
+    void deleteAllUnSyncedData() {
         long company_id = PrefUtil.getCurrentCompanyId(this);
         getContentResolver().delete(
                 TransItemEntry.buildBaseUri(company_id),
-                null,
+                unsyncedSelector(TransItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
         getContentResolver().delete(
                 TransactionEntry.buildBaseUri(company_id),
-                null,
+                unsyncedSelector(TransactionEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
         getContentResolver().delete(
                 BranchItemEntry.buildBaseUri(company_id),
-                null,
+                unsyncedSelector(BranchItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
         getContentResolver().delete(
                 CategoryEntry.buildBaseUri(company_id),
-                CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry.ROOT_CATEGORY_ID +
-                        "' AND  " +
-                        CategoryEntry.COLUMN_CATEGORY_ID + " != '" + CategoryEntry._ROOT_CATEGORY_PARENT_ID + "' ",
+                unsyncedSelector(CategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
         getContentResolver().delete(
                 ItemEntry.buildBaseUri(company_id),
-                null,
+                unsyncedSelector(ItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
         getContentResolver().delete(
                 BranchEntry.buildBaseUri(company_id),
-                BranchEntry.COLUMN_BRANCH_ID + " != ' " + BranchEntry.DUMMY_BRANCH_ID + " ' ",
+                unsyncedSelector(BranchEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
-        PrefUtil.resetAllRevisionNumbers(this);
+        //PrefUtil.resetAllRevisionNumbers(this);
     }
 
     @Override
@@ -655,50 +672,55 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(getString(R.string.sync_status)) &&
-                PrefUtil.getSyncStatus(this) != SheketService.SYNC_STATUS_SYNCING) {
-            if (mSyncingProgress != null)
-                mSyncingProgress.dismiss();
-
-            boolean is_error = true;
-            String err_title = null, err_msg = null;
-            switch (PrefUtil.getSyncStatus(this)) {
-                case SheketService.SYNC_STATUS_SUCCESSFUL:
-                    is_error = false;
-                    break;
-                case SheketService.SYNC_STATUS_SYNC_ERROR:
-                    err_title = "Sync Error, try again";
-                    err_msg = PrefUtil.getSyncErrorMessage(this);
-                    break;
-                case SheketService.SYNC_STATUS_INTERNET_ERROR:
-                    err_title = "Internet Problem";
-                    err_msg = "Try Again";
-                    break;
-                case SheketService.SYNC_STATUS_GENERAL_ERROR:
-                    // TODO: don't know how to display it, just print it for now
-                    err_title = "Error, Try again";
-                    err_msg = PrefUtil.getSyncErrorMessage(this);
-                    break;
-            }
-
-            if (is_error) {
-                new AlertDialog.Builder(this).
-                        setTitle(err_title).
-                        setMessage(err_msg).
-                        setIcon(android.R.drawable.ic_dialog_alert).
-                        show();
-            } else {
-                if (PrefUtil.isCompanySet(this)) {
-                    new AlertDialog.Builder(this).
-                            setTitle("Success").
-                            setMessage("You've synced successfully").
-                            setIcon(android.R.drawable.ic_dialog_info).
-                            show();
-                }
-            }
-
-            // reset it to synced state
-            PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
+        if (!key.equals(getString(R.string.sync_status)) &&
+                PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_SYNCING) {
+            return;
         }
+        if (mSyncingProgress != null) {
+            mSyncingProgress.dismiss();
+            mSyncingProgress = null;
+        }
+
+        boolean is_error = true;
+        String err_title = null, err_msg = null;
+        switch (PrefUtil.getSyncStatus(this)) {
+            case SheketService.SYNC_STATUS_SUCCESSFUL:
+                is_error = false;
+                break;
+            case SheketService.SYNC_STATUS_SYNC_ERROR:
+                err_title = "Sync Error, try again";
+                err_msg = PrefUtil.getSyncErrorMessage(this);
+                break;
+            case SheketService.SYNC_STATUS_INTERNET_ERROR:
+                err_title = "Internet Problem";
+                err_msg = "Try Again";
+                break;
+            case SheketService.SYNC_STATUS_GENERAL_ERROR:
+                // TODO: don't know how to display it, just print it for now
+                err_title = "Error, Try again";
+                err_msg = PrefUtil.getSyncErrorMessage(this);
+                break;
+        }
+
+        AlertDialog dialog = null;
+        if (is_error) {
+            dialog = new AlertDialog.Builder(this).
+                    setTitle(err_title).
+                    setMessage(err_msg).
+                    setIcon(android.R.drawable.ic_dialog_alert).create();
+        } else {
+            if (PrefUtil.isCompanySet(this)) {
+                dialog = new AlertDialog.Builder(this).
+                        setTitle("Success").
+                        setMessage("You've synced successfully").create();
+            }
+        }
+
+        if (dialog != null) {
+            dialog.show();
+        }
+
+        // reset it to synced state
+        PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
     }
 }
