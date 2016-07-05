@@ -11,7 +11,6 @@ import java.util.Locale;
  * Created by fuad on 7/5/16.
  */
 public class TestUserUtils extends AndroidTestCase {
-    @MediumTest
     public void testEncodeDecodeUserId() {
         long test_id = 12784;
         String encoded_id = UserUtil.encodeUserId(test_id);
@@ -60,7 +59,6 @@ public class TestUserUtils extends AndroidTestCase {
 
     /*
     // Uncomment to run this benchmark
-    @MediumTest
     public void testBenchmarkEncodeDecodeUserId() {
         final int num_tests = 10000;
         final int start_id = 12342;
