@@ -19,6 +19,18 @@ public class UserUtil {
         return (int)Math.floor(Math.log10(number)) + 1;
     }
 
+    /**
+     * Encodes a user id by adding error detection logic to it.
+     * This is helpful to prevent invalid/mistaken user id addition(like when
+     * adding members).
+     * The implementation is based on md5 checksum of the id. The generated
+     * checksum is then mixed alongside the id to make them more intertwined.
+     *
+     * User {@code isValidEncodedId} to check if it is a valid encoded id.
+     * You can then parse-out the id by {@code decodeUserId}
+     * @param user_id
+     * @return
+     */
     public static String encodeUserId(long user_id) {
         user_id = user_id + ID_OFFSET;
         String id_str = Long.toString(user_id);
@@ -32,12 +44,10 @@ public class UserUtil {
         StringBuilder encoded_id = new StringBuilder();
         for (int i = 0, j = 0, k = 0; i < total_length; i++) {
             if (i % 2 == 0) {
-                // this is the hash is stored
                 int hash_index = hash.length() - (encoded_hash_length - j);
                 j++;
                 encoded_id.append(hash.charAt(hash_index));
             } else {
-                // this is where the id is stored
                 encoded_id.append(id_str.charAt(k));
                 k++;
             }
