@@ -5,6 +5,8 @@ import android.test.suitebuilder.annotation.MediumTest;
 
 import com.mukera.sheket.client.controller.user.UserUtil;
 
+import java.util.Locale;
+
 /**
  * Created by fuad on 7/5/16.
  */
@@ -35,7 +37,7 @@ public class TestUserUtils extends AndroidTestCase {
 
             String recovered = UserUtil.removeDelimiterOnEncodedId(delimited);
 
-            assertEquals(String.format("Test: '%s' recovered '%s' doesn't match original. Delimited '%s'",
+            assertEquals(String.format(Locale.US, "Test: '%s' recovered '%s' doesn't match original. Delimited '%s'",
                     test, recovered, delimited),
                     test, recovered);
         }
@@ -51,7 +53,7 @@ public class TestUserUtils extends AndroidTestCase {
                 encoded_id, delimiter_removed);
 
         long recovered_id = UserUtil.decodeUserId(delimiter_removed);
-        assertEquals(String.format("User id:'%d' doesn't recover after delimiting '%s', recovered '%d' ",
+        assertEquals(String.format(Locale.US, "User id:'%d' doesn't recover after delimiting '%s', recovered '%d' ",
                 test_id, delimited, recovered_id),
                 test_id, recovered_id);
     }

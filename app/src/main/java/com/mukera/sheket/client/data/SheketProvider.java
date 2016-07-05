@@ -13,6 +13,8 @@ import android.support.annotation.Nullable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
+import java.util.Locale;
+
 /**
  * Created by gamma on 3/2/16.
  */
@@ -84,7 +86,7 @@ public class SheketProvider extends ContentProvider {
         );
         sCategoryWithChildrenQueryBuilder = new SQLiteQueryBuilder();
         sCategoryWithChildrenQueryBuilder.setTables(
-                String.format("%s %s LEFT JOIN %s %s ON %s = %s",
+                String.format(Locale.US, "%s %s LEFT JOIN %s %s ON %s = %s",
                         CategoryEntry.TABLE_NAME,
                         CategoryEntry.PART_PARENT,
                         CategoryEntry.TABLE_NAME,
@@ -246,7 +248,7 @@ public class SheketProvider extends ContentProvider {
 
                     if (branch_set && item_set) {
                         selection = withAppendedSelection(selection,
-                                String.format("%s = ? AND %s = ?",
+                                String.format(Locale.US, "%s = ? AND %s = ?",
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
@@ -256,7 +258,7 @@ public class SheketProvider extends ContentProvider {
                                 });
                     } else if (branch_set) {
                         selection = withAppendedSelection(selection,
-                                String.format("%s = ?",
+                                String.format(Locale.US, "%s = ?",
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID)));
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
                                 new String[]{
@@ -264,7 +266,7 @@ public class SheketProvider extends ContentProvider {
                                 });
                     } else if (item_set) {
                         selection = withAppendedSelection(selection,
-                                String.format("%s = ?",
+                                String.format(Locale.US, "%s = ?",
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
                                 new String[]{
