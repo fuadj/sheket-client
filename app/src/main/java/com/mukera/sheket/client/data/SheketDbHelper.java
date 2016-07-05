@@ -49,7 +49,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 CompanyEntry.COLUMN_NAME + " text not null, " +
                 CompanyEntry.COLUMN_PERMISSION + " text not null, " +
                 // This can be empty because it might be the user's first time
-                CompanyEntry.COLUMN_REVISIONS + " text);";
+                CompanyEntry.COLUMN_STATE_BACKUP + " text);";
 
         final String sql_create_members_table = "create table if not exists " + MemberEntry.TABLE_NAME + " ( " +
                 MemberEntry.COLUMN_COMPANY_ID + " integer not null, " +

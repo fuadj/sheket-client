@@ -130,8 +130,10 @@ public class SheketContract {
         // the user's permission is stored as TEXT
         public static final String COLUMN_PERMISSION = "permission";
 
-        // holds revisions related to the company
-        public static final String COLUMN_REVISIONS = "revision";
+        // save state bkup stuff when switching between companies,
+        // This was previously used to save revision number, that is why
+        // the naming has stuck-ed.
+        public static final String COLUMN_STATE_BACKUP = "revision";
 
         public static Uri buildCompanyUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

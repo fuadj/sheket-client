@@ -3,9 +3,13 @@ package com.mukera.sheket.client.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.sync.SheketService;
+
+import java.util.Vector;
 
 /**
  * Created by gamma on 3/28/16.
@@ -222,14 +226,20 @@ public class PrefUtil {
      * All these ids are -ve, this is b/c we will be replacing
      * them with a globally unique id after syncing with the server.
      * So, to avoid any collisions with the local and server ids, all
-     * locally generated ids are negative. We add -1
-     * to get a new id for each entity.
+     * locally generated ids are negative.
+     */
+    public static long getCurrentBranchId(Context c) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+
+        long default_id = c.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getLong(c.getString(R.string.local_last_branch_id), default_id);
+    }
+
+    /**
+     * We add -1 to get a new id for each entity.
      */
     public static long getNewBranchId(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_branch_id), default_id) - 1;
+        return getCurrentBranchId(context) - 1;
     }
 
     public static void setNewBranchId(Context context, long branch_id) {
@@ -238,11 +248,15 @@ public class PrefUtil {
         editor.commit();
     }
 
-    public static long getNewItemId(Context context) {
+    public static long getCurrentItemId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_item_id), default_id) - 1;
+        return prefs.getLong(context.getString(R.string.local_last_item_id), default_id);
+    }
+
+    public static long getNewItemId(Context context) {
+        return getCurrentItemId(context) - 1;
     }
 
     public static void setNewItemId(Context context, long item_id) {
@@ -251,24 +265,32 @@ public class PrefUtil {
         editor.commit();
     }
 
+    public static long getCurrentTransId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getLong(context.getString(R.string.local_last_trans_id), default_id);
+    }
+
+    public static long getNewTransId(Context context) {
+        return getCurrentTransId(context) - 1;
+    }
+
     public static void setNewTransId(Context context, long trans_id) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putLong(context.getString(R.string.local_last_trans_id), trans_id);
         editor.commit();
     }
 
-    public static long getNewTransId(Context context) {
+    public static long getCurrentCategoryId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_trans_id), default_id) - 1;
+        return prefs.getLong(context.getString(R.string.local_last_category_id), default_id);
     }
 
     public static long getNewCategoryId(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_category_id), default_id) - 1;
+        return getCurrentCategoryId(context) - 1;
     }
 
     public static void setNewCategoryId(Context context, long category_id) {
@@ -326,7 +348,9 @@ public class PrefUtil {
     }
 
     @SuppressWarnings("ResourceType")
-    static public @SheketService.SyncStatus int getSyncStatus(Context c) {
+    static public
+    @SheketService.SyncStatus
+    int getSyncStatus(Context c) {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         return p.getInt(c.getString(R.string.sync_status), SheketService.SYNC_STATUS_SYNCED);
     }
@@ -340,5 +364,89 @@ public class PrefUtil {
     public static String getSyncErrorMessage(Context c) {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
         return p.getString(c.getString(R.string.sync_error), "");
+    }
+
+    static String _to_str(int i) {
+        return Integer.toString(i);
+    }
+
+    static String _to_str(long l) {
+        return Long.toString(l);
+    }
+
+    /**
+     * Encode the current state so it may be restored later.
+     * This can then be persisted, e.g: stored in database.
+     */
+    public static String getEncodedStateBackup(Context c) {
+        int branch_rev = getBranchRevision(c);
+        int item_rev = getItemRevision(c);
+        int branch_item_rev = getBranchItemRevision(c);
+        int trans_rev = getTransactionRevision(c);
+        int category_rev = getCategoryRevision(c);
+
+        long c_branch_id = getCurrentBranchId(c);
+        long c_item_id = getCurrentItemId(c);
+        long c_trans_id = getCurrentTransId(c);
+        long c_category_id = getCurrentCategoryId(c);
+
+        Vector<String> vec = new Vector<>();
+        vec.add(_to_str(branch_rev));
+        vec.add(_to_str(item_rev));
+        vec.add(_to_str(branch_item_rev));
+        vec.add(_to_str(trans_rev));
+        vec.add(_to_str(category_rev));
+
+        vec.add(_to_str(c_branch_id));
+        vec.add(_to_str(c_item_id));
+        vec.add(_to_str(c_trans_id));
+        vec.add(_to_str(c_category_id));
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < vec.size(); i++) {
+            if (i > 0)
+                builder.append(":");
+            builder.append(vec.get(i));
+        }
+        return builder.toString();
+    }
+
+    static int _to_i(String s) { return Integer.parseInt(s); }
+    static long _to_l(String s) { return Long.parseLong(s); }
+    public static void restoreStateFromBackup(Context context, String bkup) {
+        if (bkup == null) return;
+        bkup = bkup.trim();
+
+        if (TextUtils.isEmpty(bkup))
+            return;
+
+        String[] values = bkup.split(":");
+
+        if (values.length != 9) {
+            Log.e("PrefUtil", "Invalid restoration");
+            return;
+        }
+
+        int branch_rev = _to_i(values[0]);
+        int item_rev = _to_i(values[1]);
+        int branch_item_rev = _to_i(values[2]);
+        int trans_rev = _to_i(values[3]);
+        int category_rev = _to_i(values[4]);
+
+        long c_branch_id = _to_l(values[5]);
+        long c_item_id = _to_l(values[6]);
+        long c_trans_id = _to_l(values[7]);
+        long c_category_id = _to_l(values[8]);
+
+        setBranchRevision(context, branch_rev);
+        setItemRevision(context, item_rev);
+        setBranchItemRevision(context, branch_item_rev);
+        setTransactionRevision(context, trans_rev);
+        setCategoryRevision(context, category_rev);
+
+        setNewBranchId(context, c_branch_id);
+        setNewItemId(context, c_item_id);
+        setNewTransId(context, c_trans_id);
+        setNewCategoryId(context, c_category_id);
     }
 }

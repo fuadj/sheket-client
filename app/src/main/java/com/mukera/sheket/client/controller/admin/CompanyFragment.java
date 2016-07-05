@@ -55,13 +55,13 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
             CompanyEntry._full(CompanyEntry.COLUMN_ID),
             CompanyEntry._full(CompanyEntry.COLUMN_NAME),
             CompanyEntry._full(CompanyEntry.COLUMN_PERMISSION),
-            CompanyEntry._full(CompanyEntry.COLUMN_REVISIONS)
+            CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP)
     };
 
     private static final int COL_COMPANY_ID = 0;
     private static final int COL_NAME = 1;
     private static final int COL_PERMISSION = 2;
-    private static final int COL_REVISION = 3;
+    private static final int COL_STATE_BKUP = 3;
 
     private ListView mCompanies;
     private CompanyAdapter mAdapter;
@@ -69,7 +69,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_companies, container, false);
 
         mAdapter = new CompanyAdapter(getContext());
@@ -79,21 +79,71 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = mAdapter.getCursor();
-                if (cursor != null && cursor.moveToPosition(position)) {
-                    long company_id = cursor.getLong(COL_COMPANY_ID);
-                    String company_name = cursor.getString(COL_NAME);
-                    String permission = cursor.getString(COL_PERMISSION);
-                    // TODO: update the revisions
-                    // TODO: parse out the revisions for the different entities and set them
+                if (cursor == null ||
+                        !cursor.moveToPosition(position)) {
+                    return;
+                }
 
+                final long company_id = cursor.getLong(COL_COMPANY_ID);
+                final String company_name = cursor.getString(COL_NAME);
+                final String permission = cursor.getString(COL_PERMISSION);
+                final String state_bkup = cursor.getString(COL_STATE_BKUP);
+
+                final Context context = getActivity();
+
+                // This isn't just run in the tread below for EFFICIENCY, because
+                // most users only have 1 company.
+                if (!PrefUtil.isCompanySet(context)) {
                     PrefUtil.setCurrentCompanyId(getActivity(), company_id);
                     PrefUtil.setCurrentCompanyName(getActivity(), company_name);
                     PrefUtil.setUserPermission(getActivity(), permission);
+                    PrefUtil.restoreStateFromBackup(context, state_bkup);
 
                     SPermission.setSingletonPermission(permission);
+
                     if (mListener != null) {
                         mListener.userPermissionChanged();
                     }
+                } else {
+                    // save the current company's state, we are switching!!!
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            long current_company = PrefUtil.getCurrentCompanyId(context);
+                            String current_state = PrefUtil.getEncodedStateBackup(context);
+
+                            ContentValues values = new ContentValues();
+                            // Yes, It is valid to only include the values you want to update
+                            values.put(CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP),
+                                    current_state);
+
+                            context.getContentResolver().
+                                    update(
+                                            CompanyEntry.buildCompanyUri(company_id),
+                                            values,
+                                            CompanyEntry._full(CompanyEntry.COLUMN_ID) + " = ?",
+                                            new String[]{
+                                                    String.valueOf(current_company)
+                                            }
+                                    );
+
+                            PrefUtil.setCurrentCompanyId(getActivity(), company_id);
+                            PrefUtil.setCurrentCompanyName(getActivity(), company_name);
+                            PrefUtil.setUserPermission(getActivity(), permission);
+                            PrefUtil.restoreStateFromBackup(context, state_bkup);
+
+                            SPermission.setSingletonPermission(permission);
+
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (mListener != null) {
+                                        mListener.userPermissionChanged();
+                                    }
+                                }
+                            });
+                        }
+                    }).start();
                 }
             }
         });
@@ -220,6 +270,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                     Thread t = new Thread() {
                         @Override
                         public void run() {
+                            // TODO: give some feedback if it is success/failiure(maybe no internet)
                             createCompany(activity, company_name);
                             activity.runOnUiThread(new Runnable() {
                                 @Override
