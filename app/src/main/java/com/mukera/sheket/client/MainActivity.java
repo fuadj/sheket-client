@@ -2,6 +2,8 @@ package com.mukera.sheket.client;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -371,11 +373,44 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new ProfileFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_LOG_OUT:
-                PrefUtil.logoutUser(this);
-                requireLogin();
+                logoutUser();
                 break;
         }
         closeNavDrawer();
+    }
+
+    void logoutUser() {
+        final ProgressDialog savingDialog = ProgressDialog.show(this, "Logging out", "Please wait...", true);
+        final Context context = MainActivity.this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long current_company = PrefUtil.getCurrentCompanyId(context);
+                String current_state = PrefUtil.getEncodedStateBackup(context);
+
+                ContentValues values = new ContentValues();
+                // Yes, It is valid to only include the values you want to update
+                values.put(CompanyEntry.COLUMN_STATE_BACKUP, current_state);
+
+                context.getContentResolver().
+                        update(
+                                CompanyEntry.CONTENT_URI,
+                                values,
+                                CompanyEntry._full(CompanyEntry.COLUMN_ID) + " = ?",
+                                new String[]{
+                                        String.valueOf(current_company)
+                                }
+                        );
+                PrefUtil.logoutUser(MainActivity.this);
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        savingDialog.dismiss();
+                        requireLogin();
+                    }
+                });
+            }
+        }).start();
     }
 
     String unsyncedSelector(String column) {
@@ -414,7 +449,6 @@ public class MainActivity extends AppCompatActivity implements
                 unsyncedSelector(BranchEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
                 null
         );
-        //PrefUtil.resetAllRevisionNumbers(this);
     }
 
     @Override

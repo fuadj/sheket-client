@@ -85,6 +85,11 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                 }
 
                 final long company_id = cursor.getLong(COL_COMPANY_ID);
+                if (PrefUtil.getCurrentCategoryId(getActivity()) == company_id) {
+                    // there is nothing to do, we are already viewing that company
+                    return;
+                }
+
                 final String company_name = cursor.getString(COL_NAME);
                 final String permission = cursor.getString(COL_PERMISSION);
                 final String state_bkup = cursor.getString(COL_STATE_BKUP);
@@ -114,8 +119,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                             ContentValues values = new ContentValues();
                             // Yes, It is valid to only include the values you want to update
-                            values.put(CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP),
-                                    current_state);
+                            values.put(CompanyEntry.COLUMN_STATE_BACKUP, current_state);
 
                             context.getContentResolver().
                                     update(
