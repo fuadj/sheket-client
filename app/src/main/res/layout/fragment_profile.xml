@@ -37,7 +37,7 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Id #:"
+            android:text="Member Id:"
             android:id="@+id/textView14"
             android:layout_weight="1"
             android:textColor="#000000"
@@ -52,4 +52,11 @@
             android:textColor="#000000"
             android:textSize="24dp" />
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="*Note: Use this id when adding a member to your company."
+        android:id="@+id/textView" />
 </LinearLayout>

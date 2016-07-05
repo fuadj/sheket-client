@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.controller.user.UserUtil;
 import com.mukera.sheket.client.sync.SheketService;
 
 import java.util.Vector;
@@ -182,6 +183,7 @@ public class PrefUtil {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putLong(context.getString(R.string.pref_user_id), user_id);
         editor.commit();
+        setEncodedDelimitedUserId(context, user_id);
     }
 
     public static long getUserId(Context context) {
@@ -189,6 +191,29 @@ public class PrefUtil {
 
         long invalid_id = context.getResources().getInteger(R.integer.invalid_user_id);
         return prefs.getLong(context.getString(R.string.pref_user_id), invalid_id);
+    }
+
+    private static final String ENCODED_DELIMITED_USER_ID = "encoded_delimited_user_id";
+    private static final int USER_ID_GROUPING = 4;
+    public static void setEncodedDelimitedUserId(Context context, long user_id) {
+        String encoded = UserUtil.encodeUserId(user_id);
+        String delimited = UserUtil.delimitEncodedUserId(encoded, USER_ID_GROUPING);
+
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putString(ENCODED_DELIMITED_USER_ID, delimited);
+        editor.commit();
+    }
+
+    public static String getEncodedDelimitedUserId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        String encoded = prefs.getString(ENCODED_DELIMITED_USER_ID, "");
+        if (TextUtils.isEmpty(encoded)) {
+            // in-case we didn't save it
+            setEncodedDelimitedUserId(context, getUserId(context));
+        }
+
+        return prefs.getString(ENCODED_DELIMITED_USER_ID, "");
     }
 
     public static boolean isUserSet(Context context) {

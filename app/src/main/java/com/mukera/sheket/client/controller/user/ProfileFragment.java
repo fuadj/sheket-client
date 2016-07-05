@@ -24,7 +24,7 @@ public class ProfileFragment extends Fragment {
         TextView id = (TextView) rootView.findViewById(R.id.profile_text_view_id);
 
         name.setText(PrefUtil.getUsername(getContext()));
-        id.setText(String.valueOf(PrefUtil.getUserId(getContext())));
+        id.setText(String.valueOf(PrefUtil.getEncodedDelimitedUserId(getContext())));
 
         return rootView;
     }
