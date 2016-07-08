@@ -13,6 +13,13 @@ import java.util.Vector;
 
 /**
  * Created by fuad on 6/9/16.
+ *
+ * Parses a CSV file. Parsers the first line of the file to get the "headers" columns. These should then
+ * exist in every row after. If a row doesn't have a column for a given "header" column, then that row
+ * is ignored.
+ *
+ * The parser is case insensitive and ignores duplicate entities with different "case"s. When a duplicate
+ * entity is found, its first occurrence is used.
  */
 public class SimpleCSVReader {
     private File mFile;
@@ -65,6 +72,15 @@ public class SimpleCSVReader {
                 }
             }
 
+            /**
+             * For each column, we keep a which names have been used. The names
+             * are converted to lower case and any extra space around AND
+             * within(e.g: 2 space('  ') instead of 1(' ') space) are removed.
+             * When we find a name already used, we replace it with the
+             * first occurrence of it.
+             */
+            Map<Integer, Map<String, String>> duplicateColumns = new HashMap<>();
+
             // read in the data
             while ((line = reader.readLine()) != null) {
                 Vector<String> cols = splitAndTrim(line);
@@ -73,9 +89,26 @@ public class SimpleCSVReader {
 
                 Vector<String> row = new Vector<>();
                 for (int i = 0; i < cols.size(); i++) {
-                    if (emptyColumns.get(i) == Boolean.FALSE) {
-                        // only add the non empty columns
-                        row.add(cols.get(i));
+                    if (emptyColumns.get(i) == Boolean.TRUE) {
+                        // ignore columns if the header isn't defined for it.
+                        continue;
+                    }
+
+                    String name = removeInnerSpaces(cols.get(i));
+                    String name_keyed = name.toLowerCase();
+
+                    if (!duplicateColumns.containsKey(i)) {
+                        duplicateColumns.put(i, new HashMap<String, String>());
+                    }
+
+                    Map<String, String> columnNames = duplicateColumns.get(i);
+
+                    if (columnNames.containsKey(name_keyed)) {
+                        // use the previously used name
+                        row.add(columnNames.get(name_keyed));
+                    } else {
+                        row.add(name);
+                        columnNames.put(name_keyed, name);
                     }
                 }
                 mData.add(row);
@@ -88,6 +121,18 @@ public class SimpleCSVReader {
             mData = new Vector<>();
             mErrorMsg = e.getMessage();
         }
+    }
+
+    String removeInnerSpaces(String s) {
+        String[] space_removed = s.trim().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+
+        for (int j = 0; j < space_removed.length; j++) {
+            if (j > 0) sb.append(" ");
+            sb.append(space_removed[j]);
+        }
+
+        return sb.toString();
     }
 
     public boolean parsingSuccess() {
