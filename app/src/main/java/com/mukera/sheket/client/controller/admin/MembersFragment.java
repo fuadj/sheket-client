@@ -5,6 +5,8 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -29,6 +31,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
+import com.mukera.sheket.client.controller.user.UserUtil;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
@@ -241,9 +244,9 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_NONE,
                     new PermType(SPermission.PERMISSION_TYPE_NONE, "--Select Access--"));
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_ALL_ACCESS,
-                    new PermType(SPermission.PERMISSION_TYPE_ALL_ACCESS, "All Access"));
+                    new PermType(SPermission.PERMISSION_TYPE_ALL_ACCESS, "Manager"));
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_LISTED_BRANCHES,
-                    new PermType(SPermission.PERMISSION_TYPE_LISTED_BRANCHES, "Some Branches"));
+                    new PermType(SPermission.PERMISSION_TYPE_LISTED_BRANCHES, "Branch Employee"));
         }
 
         public void setBranches(List<SBranch> branches) {
@@ -251,6 +254,15 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         }
 
         void setOkButtonStatus() {
+            setOkButtonStatus(false);
+        }
+
+        void setOkButtonStatus(boolean disable) {
+            if (disable) {
+                mBtnAddEditMember.setEnabled(false);
+                return;
+            }
+
             PermType perm_type = (PermType) mSpinnerPermissionType.getSelectedItem();
             if (perm_type.type == SPermission.PERMISSION_TYPE_NONE) {
                 mBtnAddEditMember.setEnabled(false);
@@ -290,6 +302,9 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
             final View layout_name = view.findViewById(R.id.dialog_layout_member_name);
             mEditMemberId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
 
+            final Drawable successIcon = getResources().getDrawable(R.drawable.ic_action_success);
+            successIcon.setBounds(new Rect(0, 0, successIcon.getIntrinsicWidth(), successIcon.getIntrinsicHeight()));
+
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
             TextView title = (TextView) view.findViewById(R.id.dialog_text_view_member_action);
             if (is_edit) {
@@ -306,7 +321,17 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                 mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {
                     @Override
                     public void afterTextChanged(Editable s) {
-                        setOkButtonStatus();
+                        String delimited_id = s.toString().trim();
+                        String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited_id);
+                        if (UserUtil.isValidEncodedId(delimiter_removed)) {
+                            // I know it is weird to call {@code setError} for telling success
+                            // but we don't have an API for the success.
+                            mEditMemberId.setError("Correct ID", successIcon);
+                            setOkButtonStatus(false);
+                        } else {
+                            mEditMemberId.setError(null);
+                            setOkButtonStatus(true);
+                        }
                     }
                 });
             }
@@ -401,12 +426,12 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                                 updateMember(activity, member);
                             } else {
                                 addMember(activity, member);
-                                if (mProgressDialog != null)
-                                    mProgressDialog.dismiss();
                             }
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    if (mProgressDialog != null)
+                                        mProgressDialog.dismiss();
                                     getDialog().dismiss();
                                 }
                             });
