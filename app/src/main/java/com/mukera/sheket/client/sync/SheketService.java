@@ -24,6 +24,7 @@ import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.SyncUtil;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -95,16 +96,6 @@ public class SheketService extends IntentService {
         }
     }
 
-    String getErrorMessage(Response response) {
-        final String JSON_ERROR_MSG = "error_message";
-        try {
-            JSONObject object = new JSONObject(response.body().string());
-            return object.getString(JSON_ERROR_MSG);
-        } catch (JSONException | IOException e) {
-        }
-        return "";
-    }
-
     void syncUser() throws Exception {
         try {
             Log.d(LOG_TAG, "Syncing User started");
@@ -120,7 +111,7 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                throw new SyncException(getErrorMessage(response));
+                throw new SyncException(SyncUtil.getErrorMessage(response));
             }
 
             JSONObject result = new JSONObject(response.body().string());
@@ -180,7 +171,7 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                throw new SyncException(getErrorMessage(response));
+                throw new SyncException(SyncUtil.getErrorMessage(response));
             }
 
             EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
@@ -871,7 +862,7 @@ public class SheketService extends IntentService {
 
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful()) {
-                throw new SyncException(getErrorMessage(response));
+                throw new SyncException(SyncUtil.getErrorMessage(response));
             }
 
             TransactionSyncResponse result = parseTransactionSyncResponse(
