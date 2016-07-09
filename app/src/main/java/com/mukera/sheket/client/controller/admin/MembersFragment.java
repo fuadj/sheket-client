@@ -16,6 +16,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,7 @@ import com.mukera.sheket.client.controller.user.UserUtil;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.utils.SyncUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -222,6 +224,9 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
 
         private ProgressDialog mProgressDialog;
 
+        private boolean mErrorOccurred;
+        private String mErrorMsg;
+
         static class PermType {
             public int type;
             public String name;
@@ -312,7 +317,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                 layout_name.setVisibility(View.VISIBLE);
                 mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
                 mMemberName.setText(mMember.member_name);
-                mEditMemberId.setText("" + mMember.member_id);
+                mEditMemberId.setText(UserUtil.delimitEncodedUserId(UserUtil.encodeUserId(mMember.member_id), 4));
                 mEditMemberId.setEnabled(false);
             } else {
                 title.setText("Add Member");
@@ -395,7 +400,8 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     final SMember member;
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
-                        member.member_id = Long.valueOf(mEditMemberId.getText().toString().trim());
+                        String id = mEditMemberId.getText().toString().trim();
+                        member.member_id = UserUtil.decodeUserId(UserUtil.removeDelimiterOnEncodedId(id));
                         mProgressDialog = ProgressDialog.show(getActivity(),
                                 "Adding Member", "Please wait...", true);
                     } else {
@@ -422,6 +428,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     Thread t = new Thread() {
                         @Override
                         public void run() {
+                            mErrorOccurred = false;
                             if (is_editing) {
                                 updateMember(activity, member);
                             } else {
@@ -433,6 +440,18 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                                     if (mProgressDialog != null)
                                         mProgressDialog.dismiss();
                                     getDialog().dismiss();
+
+                                    if (!is_editing) {
+                                        if (mErrorOccurred) {
+                                            new AlertDialog.Builder(getActivity()).
+                                                    setTitle("Member Error").
+                                                    setMessage(mErrorMsg).show();
+                                        } else {
+                                            new AlertDialog.Builder(getActivity()).
+                                                    setTitle("Member Success").
+                                                    setMessage("Member Added").show();
+                                        }
+                                    }
                                 }
                             });
                         }
@@ -477,7 +496,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                 Response response = client.newCall(builder.build()).execute();
                 if (!response.isSuccessful()) {
-                    throw new MemberException("member request error");
+                    throw new MemberException(SyncUtil.getErrorMessage(response));
                 }
 
                 JSONObject json = new JSONObject(response.body().string());
@@ -501,7 +520,8 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     throw new MemberException("error adding member into company");
                 }
             } catch (JSONException | IOException | MemberException e) {
-
+                mErrorOccurred = true;
+                mErrorMsg = e.getMessage();
             }
         }
     }
