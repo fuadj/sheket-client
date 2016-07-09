@@ -61,6 +61,7 @@ import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -135,9 +136,7 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        if (savedInstanceState == null) {
-            initNavigationDrawer();
-        }
+        initNavigationDrawer();
     }
 
     void initNavigationDrawer() {
@@ -723,7 +722,9 @@ public class MainActivity extends AppCompatActivity implements
 
         boolean is_error = true;
         String err_title = null, err_msg = null;
-        switch (PrefUtil.getSyncStatus(this)) {
+        int sync_status = PrefUtil.getSyncStatus(this);
+        switch (sync_status) {
+            case SheketService.SYNC_STATUS_SYNCED:
             case SheketService.SYNC_STATUS_SUCCESSFUL:
                 is_error = false;
                 break;
@@ -747,12 +748,19 @@ public class MainActivity extends AppCompatActivity implements
             dialog = new AlertDialog.Builder(this).
                     setTitle(err_title).
                     setMessage(err_msg).
-                    setIcon(android.R.drawable.ic_dialog_alert).create();
+                    create();
         } else {
             if (PrefUtil.isCompanySet(this)) {
+                String company_name = PrefUtil.getCurrentCompanyName(MainActivity.this);
                 dialog = new AlertDialog.Builder(this).
                         setTitle("Success").
-                        setMessage("You've synced successfully").create();
+                        setMessage(
+                                String.format(Locale.US, "Synced successfully with %s", company_name)
+                        ).create();
+            } else {
+                dialog = new AlertDialog.Builder(this).
+                        setTitle("Success").
+                        setMessage("You've synced successfully.").create();
             }
         }
 
