@@ -1,7 +1,9 @@
 package com.mukera.sheket.client;
 
 import android.test.AndroidTestCase;
+import android.test.PerformanceTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
+import android.util.Log;
 
 import com.mukera.sheket.client.controller.user.UserUtil;
 
@@ -22,30 +24,47 @@ public class TestUserUtils extends AndroidTestCase {
     }
 
     public void testDelimitedRecovery() {
-        // it is a 2-d array of {String, integer}
-        // the string is the text to delimit and the int is the delimiting size
+        // it is a 2-d array of {String, integer, integer}
+        // elements:
+        // 1st: (string) the text to delimit
+        // 2nd: (int) the delimiting(grouping) size
+        // 3rd: (int) the expected number of delimiter
         Object[][] delimit_tests = {
-                {"qewafoijf", 3},
-                {"abde", 1},
-                {"124wqerafadfqwer", 10},
-                {"1", 1},
-                {"", 1},
+                {"qewafoijf", 3, 2},
+                {"abde", 1, 3},
+                {"124wqerafadfqwer", 10, 1},
+                {"1", 1, 0},
+                {"", 1, 0},
 
                 /**
                  * These test when the delimiting size splits the string evenly with not reminders.
-                 * IMPORTANT: It is a corner case.
                 */
-                {"kan123", 3},
-                {"abcdabcd", 4},
-                {"abcdabcdabcd", 2},
-                {"abcdedlkja", 1},
+                {"kan123", 3, 1},
+                {"abcdabcd", 4, 1},
+                {"abcdabcdabcd", 2, 5},
+                {"abcdedlkja", 1, 9},
         };
 
         for (Object[] test : delimit_tests) {
             String text = (String) test[0];
             int size = (Integer) test[1];
+            int expected_delimiters = (Integer) test[2];
 
             String delimited = UserUtil.delimitEncodedUserId(text, size);
+
+            int num_delimiters = 0;
+
+            int last_index = 0;
+            while ((last_index = delimited.indexOf(UserUtil.GROUP_DELIMITER, last_index)) != -1) {
+                last_index++;       // starting at last index keeps us in infinite loop b/c we find it right there
+                num_delimiters++;
+            }
+
+            assertEquals(
+                    String.format(Locale.US, "Test: '%s' delimited '%s'. Expected %d delimiters, found %d",
+                            text, delimited, expected_delimiters, num_delimiters),
+                    expected_delimiters, num_delimiters
+            );
 
             String recovered = UserUtil.removeDelimiterOnEncodedId(delimited);
 

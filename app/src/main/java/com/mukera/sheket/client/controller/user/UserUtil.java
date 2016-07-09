@@ -23,11 +23,6 @@ public class UserUtil {
      * @return
      */
     public static String delimitEncodedUserId(String encoded_id, int group_size) {
-        if (encoded_id.length() <= 5) {
-            // this is readable enough
-            return encoded_id;
-        }
-
         int delimited_groups = (int)Math.floor(encoded_id.length() / (1.0 * group_size));
         if ((delimited_groups * group_size) == encoded_id.length()) {
             // When encoded length is a multiple of group_size, we won't have
