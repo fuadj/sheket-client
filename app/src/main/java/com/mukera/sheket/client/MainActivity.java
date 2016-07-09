@@ -709,14 +709,17 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (!key.equals(getString(R.string.sync_status)) &&
-                PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_SYNCING) {
+        // if the preference change isn't about syncing
+        if (!key.equals(getString(R.string.sync_status)) ||
+                // or we still haven't finished syncing
+                PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_SYNCING ||
+                // or we've already dismissed the progress dialog, no need to do it again
+                mSyncingProgress == null) {
             return;
         }
-        if (mSyncingProgress != null) {
-            mSyncingProgress.dismiss();
-            mSyncingProgress = null;
-        }
+
+        mSyncingProgress.dismiss();
+        mSyncingProgress = null;
 
         boolean is_error = true;
         String err_title = null, err_msg = null;
