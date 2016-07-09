@@ -135,7 +135,9 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        initNavigationDrawer();
+        if (savedInstanceState == null) {
+            initNavigationDrawer();
+        }
     }
 
     void initNavigationDrawer() {
@@ -308,7 +310,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onElementSelected(int item) {
+        closeNavDrawer();
         removeCustomActionBarViews();
+
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
                 mIsBranchSelected = false;
@@ -376,7 +380,6 @@ public class MainActivity extends AppCompatActivity implements
                 logoutUser();
                 break;
         }
-        closeNavDrawer();
     }
 
     void logoutUser() {
@@ -467,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 mImportPath = path;
 
-                if (verityStoragePermissions()) {
+                if (verifyStoragePermissions()) {
                     startImporterTask();
                 }
 
@@ -496,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private boolean verityStoragePermissions() {
+    private boolean verifyStoragePermissions() {
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
@@ -701,7 +704,7 @@ public class MainActivity extends AppCompatActivity implements
                     recreate();
                 }
             }
-        }, 1);
+        }, 100);
     }
 
     @Override
