@@ -12,6 +12,7 @@ import android.util.Log;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created by gamma on 3/2/16.
@@ -51,8 +52,11 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 // This can be empty because it might be the user's first time
                 CompanyEntry.COLUMN_STATE_BACKUP + " text);";
 
+        final String COMPANY_FOREIGN_KEY_REFERENCE = String.format(Locale.US,
+                " integer references %s(%s) ON DELETE CASCADE, ", CompanyEntry.TABLE_NAME, CompanyEntry.COLUMN_ID);
+
         final String sql_create_members_table = "create table if not exists " + MemberEntry.TABLE_NAME + " ( " +
-                MemberEntry.COLUMN_COMPANY_ID + " integer not null, " +
+                MemberEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 MemberEntry.COLUMN_MEMBER_ID + " integer not null, " +
                 MemberEntry.COLUMN_MEMBER_NAME + " text not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
@@ -61,16 +65,16 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 MemberEntry.COLUMN_COMPANY_ID + ", " + MemberEntry.COLUMN_MEMBER_ID + ") ON CONFLICT REPLACE);";
 
         final String sql_create_branch_table = "create table if not exists " + BranchEntry.TABLE_NAME + " ( " +
+                BranchEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 BranchEntry.COLUMN_BRANCH_ID + " integer primary key ON CONFLICT REPLACE, " +
-                BranchEntry.COLUMN_COMPANY_ID + " integer not null, " +
                 BranchEntry.COLUMN_NAME + " text not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +
                 BranchEntry.COLUMN_LOCATION + " text);";
 
         final String sql_create_category_table = "create table if not exists " + CategoryEntry.TABLE_NAME + " ( " +
+                CategoryEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 CategoryEntry.COLUMN_CATEGORY_ID + " integer primary key on conflict replace, " +
-                CategoryEntry.COLUMN_COMPANY_ID + " integer not null, " +
                 CategoryEntry.COLUMN_NAME + " text not null, " +
 
                 String.format("%s INTEGER DEFAULT %s REFERENCES %s(%s) ON UPDATE CASCADE ON DELETE SET DEFAULT, ",
@@ -84,8 +88,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
 
 
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
+                ItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 ItemEntry.COLUMN_ITEM_ID + " integer primary key ON CONFLICT REPLACE, " +
-                ItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
 
                 String.format("%s INTEGER DEFAULT %s REFERENCES %s(%s) ON UPDATE CASCADE ON DELETE SET DEFAULT, ",
                         ItemEntry.COLUMN_CATEGORY_ID,
@@ -113,8 +117,9 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 ItemEntry.COLUMN_HAS_BAR_CODE + " integer null);";
 
         final String sql_create_branch_item_table = "create table if not exists " + BranchItemEntry.TABLE_NAME + " ( " +
-                BranchItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
+                BranchItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 BranchItemEntry.COLUMN_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
+
                 BranchItemEntry.COLUMN_ITEM_ID + cascadeUpdate(ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID) +
                 BranchItemEntry.COLUMN_ITEM_LOCATION + " text, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
@@ -124,8 +129,9 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 BranchItemEntry.COLUMN_ITEM_ID + ") ON CONFLICT REPLACE);";
 
         final String sql_create_transaction_table = "create table if not exists " + TransactionEntry.TABLE_NAME + " ( " +
+                TransactionEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
                 TransactionEntry.COLUMN_TRANS_ID + " integer primary key ON CONFLICT REPLACE, " +
-                TransactionEntry.COLUMN_COMPANY_ID + " integer not null, " +
+
                 TransactionEntry.COLUMN_BRANCH_ID + cascadeUpdate(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
                 TransactionEntry.COLUMN_USER_ID + " integer not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
@@ -134,7 +140,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 TransactionEntry.COLUMN_DATE + " integer not null);";
 
         final String sql_create_transaction_items_table = "create table if not exists " + TransItemEntry.TABLE_NAME + " ( " +
-                TransItemEntry.COLUMN_COMPANY_ID + " integer not null, " +
+                TransItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
 
                 TransItemEntry.COLUMN_TRANSACTION_ID + cascadeUpdateAndDelete(TransactionEntry.TABLE_NAME, TransactionEntry.COLUMN_TRANS_ID) +
 
