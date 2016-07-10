@@ -34,6 +34,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/dialog_edit_text_member_id"
             android:layout_weight="3"
+            android:inputType="textNoSuggestions"
             android:textColor="#000000" />
     </LinearLayout>
 

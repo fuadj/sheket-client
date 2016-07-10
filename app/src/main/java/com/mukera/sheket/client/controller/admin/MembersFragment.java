@@ -259,11 +259,14 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         }
 
         void setOkButtonStatus() {
-            setOkButtonStatus(false);
-        }
+            String delimited_id = mEditMemberId.getText().toString().trim().
+                    // remove any space
+                            replaceAll("\\s+", "").
+                    // also remove any non-alphanumeric characters
+                            replaceAll("\\W+", "");
 
-        void setOkButtonStatus(boolean disable) {
-            if (disable) {
+            String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited_id);
+            if (!UserUtil.isValidEncodedId(delimiter_removed)) {
                 mBtnAddEditMember.setEnabled(false);
                 return;
             }
@@ -304,11 +307,11 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.dialog_add_edit_member, container);
 
-            final View layout_name = view.findViewById(R.id.dialog_layout_member_name);
-            mEditMemberId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
-
             final Drawable successIcon = getResources().getDrawable(R.drawable.ic_action_success);
             successIcon.setBounds(new Rect(0, 0, successIcon.getIntrinsicWidth(), successIcon.getIntrinsicHeight()));
+
+            final View layout_name = view.findViewById(R.id.dialog_layout_member_name);
+            mEditMemberId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
 
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
             TextView title = (TextView) view.findViewById(R.id.dialog_text_view_member_action);
@@ -326,16 +329,21 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                 mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {
                     @Override
                     public void afterTextChanged(Editable s) {
-                        String delimited_id = s.toString().trim();
+                        setOkButtonStatus();
+
+                        String delimited_id = mEditMemberId.getText().toString().trim().
+                                // remove any space
+                                        replaceAll("\\s+", "").
+                                // also remove any non-alphanumeric characters
+                                        replaceAll("\\W+", "");
+
                         String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited_id);
                         if (UserUtil.isValidEncodedId(delimiter_removed)) {
                             // I know it is weird to call {@code setError} for telling success
                             // but we don't have an API for the success.
                             mEditMemberId.setError("Correct ID", successIcon);
-                            setOkButtonStatus(false);
                         } else {
                             mEditMemberId.setError(null);
-                            setOkButtonStatus(true);
                         }
                     }
                 });
