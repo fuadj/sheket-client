@@ -44,7 +44,7 @@ import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.CardViewToggleListener;
 import com.mukera.sheket.client.controller.items.CategoryCardViewFragment;
-import com.mukera.sheket.client.controller.items.ItemListFragment;
+import com.mukera.sheket.client.controller.items.AllItemsFragment;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
@@ -61,14 +61,13 @@ import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity implements
-        NavigationFragment.BranchSelectionCallback,
+        NavigationFragment.NavigationSelectionCallback,
         SPermission.PermissionChangeListener,
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
@@ -245,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements
                                 newInstance(category.category_id, mSelectedBranchId, false).
                                 setCardViewToggleListener(listener);
                     } else {
-                        fragment = ItemListFragment.
+                        fragment = AllItemsFragment.
                                 newInstance(category.category_id, false).
                                 setCardViewToggleListener(listener);
                     }
@@ -276,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements
                                 mSelectedBranchId, true).
                         setCardViewToggleListener(listener);
             } else {
-                fragment = ItemListFragment.
+                fragment = AllItemsFragment.
                         newInstance(CategoryEntry.ROOT_CATEGORY_ID, true).
                         setCardViewToggleListener(listener);
             }

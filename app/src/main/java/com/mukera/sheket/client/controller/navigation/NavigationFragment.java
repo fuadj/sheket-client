@@ -40,7 +40,7 @@ import java.util.List;
  * Created by gamma on 3/27/16.
  */
 public class NavigationFragment extends Fragment implements LoaderCallbacks<Cursor> {
-    private BranchSelectionCallback mCallback;
+    private NavigationSelectionCallback mCallback;
 
     private ListView mBranchListView;
     private ListView mSyncingListView;
@@ -246,13 +246,13 @@ public class NavigationFragment extends Fragment implements LoaderCallbacks<Curs
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mCallback = (BranchSelectionCallback) activity;
+            mCallback = (NavigationSelectionCallback) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement BranchSelectionCallback.");
+            throw new ClassCastException("Activity must implement NavigationSelectionCallback.");
         }
     }
 
-    public interface BranchSelectionCallback {
+    public interface NavigationSelectionCallback {
         void onBranchSelected(SBranch branch);
 
         void onElementSelected(int item);
