@@ -742,30 +742,18 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
 
-        AlertDialog dialog = null;
+        AlertDialog dialog;
         if (is_error) {
             dialog = new AlertDialog.Builder(this).
                     setTitle(err_title).
                     setMessage(err_msg).
                     create();
         } else {
-            if (PrefUtil.isCompanySet(this)) {
-                String company_name = PrefUtil.getCurrentCompanyName(MainActivity.this);
-                dialog = new AlertDialog.Builder(this).
-                        setTitle("Success").
-                        setMessage(
-                                String.format(Locale.US, "Synced successfully with %s", company_name)
-                        ).create();
-            } else {
-                dialog = new AlertDialog.Builder(this).
-                        setTitle("Success").
-                        setMessage("You've synced successfully.").create();
-            }
+            dialog = new AlertDialog.Builder(this).
+                    setTitle("Success").
+                    setMessage("You've synced successfully.").create();
         }
-
-        if (dialog != null) {
-            dialog.show();
-        }
+        dialog.show();
 
         // reset it to synced state
         PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
