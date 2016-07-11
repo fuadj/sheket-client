@@ -1,12 +1,14 @@
 package com.mukera.sheket.client.controller.items;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -315,6 +317,69 @@ public class ItemListFragment extends EmbeddedCategoryFragment {
                 item_name = (TextView) view.findViewById(R.id.list_item_item_detail_name);
                 item_code = (TextView) view.findViewById(R.id.list_item_item_detail_code);
                 total_qty = (TextView) view.findViewById(R.id.list_item_item_detail_total_qty);
+            }
+        }
+    }
+
+    /**
+     * Shows which branches the items exist in and the location in each.
+     */
+    public static class ItemDetailDialog extends DialogFragment {
+        public SItemDetail mItemDetail;
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            LayoutInflater inflater = getActivity().getLayoutInflater();
+
+            View view = inflater.inflate(R.layout.dialog_all_item_detail, null);
+
+            ListView branchesList = (ListView) view.findViewById(R.id.dialog_all_item_list_view_branches);
+            DetailDialogAdapter adapter = new DetailDialogAdapter(getActivity());
+            for (Pair<SBranch, SBranchItem> pair : mItemDetail.available_branches) {
+                adapter.add(pair);
+            }
+            branchesList.setAdapter(adapter);
+
+            TextView qty_text_view = (TextView) view.findViewById(R.id.dialog_all_item_text_view_total_quantity);
+            qty_text_view.setText("Total Qty: " + Utils.formatDoubleForDisplay(mItemDetail.total_quantity));
+
+            return builder.setTitle(mItemDetail.item.name).
+                    setView(view).create();
+        }
+
+        public static class DetailDialogAdapter extends ArrayAdapter<Pair<SBranch, SBranchItem>> {
+            public DetailDialogAdapter(Context context) {
+                super(context, 0);
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                final Pair<SBranch, SBranchItem> pair = getItem(position);
+
+                if (convertView == null) {
+                    LayoutInflater inflater = LayoutInflater.from(getContext());
+                    convertView = inflater.inflate(R.layout.list_item_all_item_detail_dialog, parent, false);
+                }
+
+                TextView branchName, itemLoc, itemQty;
+
+                branchName = (TextView) convertView.findViewById(R.id.list_item_all_item_item_detail_text_view_branch_name);
+                itemLoc = (TextView) convertView.findViewById(R.id.list_item_all_item_item_detail_text_view_location);
+                itemQty = (TextView) convertView.findViewById(R.id.list_item_all_item_item_detail_text_view_quantity);
+
+                branchName.setText(pair.first.branch_name);
+                SBranchItem branchItem = pair.second;
+                itemQty.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
+                if (branchItem.item_location != null && !branchItem.item_location.isEmpty()) {
+                    itemLoc.setText(pair.second.item_location);
+                    itemLoc.setVisibility(View.VISIBLE);
+                } else {
+                    itemLoc.setVisibility(View.GONE);
+                }
+
+                return convertView;
             }
         }
     }
