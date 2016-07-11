@@ -45,27 +45,17 @@ import java.util.List;
  */
 public class AllItemsFragment extends EmbeddedCategoryFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
-    private static final String KEY_SHOW_CARD_TOGGLE_MENU = "key_show_card_toggle_menu";
-
-    private CardViewToggleListener mCardListener;
 
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-    private boolean mShowCardToggleMenu;
 
-    public AllItemsFragment setCardViewToggleListener(CardViewToggleListener listener) {
-        mCardListener = listener;
-        return this;
-    }
-
-    public static AllItemsFragment newInstance(long category_id, boolean show_toggle_menu) {
+    public static AllItemsFragment newInstance(long category_id) {
         Bundle args = new Bundle();
 
         AllItemsFragment fragment = new AllItemsFragment();
         args.putLong(KEY_CATEGORY_ID, category_id);
-        args.putBoolean(KEY_SHOW_CARD_TOGGLE_MENU, show_toggle_menu);
         fragment.setArguments(args);
 
         return fragment;
@@ -76,8 +66,6 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
-        mShowCardToggleMenu = args.getBoolean(KEY_SHOW_CARD_TOGGLE_MENU);
-        setHasOptionsMenu(true);
         setParentCategoryId(mCategoryId);
     }
 
@@ -85,11 +73,6 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.all_items, menu);
         super.onCreateOptionsMenu(menu, inflater);
-
-        MenuItem toggleCardView = menu.findItem(R.id.all_items_menu_toggle_card_view);
-        if (!mShowCardToggleMenu) {
-            toggleCardView.setVisible(false);
-        }
     }
 
     @Override
@@ -97,9 +80,6 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
         switch (item.getItemId()) {
             case R.id.all_items_menu_add_item:
                 startActivity(ItemCreateEditActivity.createIntent(getActivity(), false, null));
-                return true;
-            case R.id.all_items_menu_toggle_card_view:
-                mCardListener.onCardOptionSelected(true);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -174,8 +154,6 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
 
     @Override
     protected void onCategoryTreeViewToggled(boolean show_tree_view) {
-        if (!show_tree_view)
-            mCardListener.onCardOptionSelected(false);
     }
 
     @Override

@@ -40,29 +40,19 @@ import com.mukera.sheket.client.utils.PrefUtil;
 public class BranchItemFragment extends EmbeddedCategoryFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
     private static final String KEY_BRANCH_ID = "key_branch_id";
-    private static final String KEY_SHOW_CARD_TOGGLE_MENU = "key_show_card_toggle_menu";
-
-    private CardViewToggleListener mCardListener;
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     private long mBranchId;
-    private boolean mShowCardToggleMenu;
 
     private ListView mBranchItemList;
     private BranchItemCursorAdapter mBranchItemAdapter;
 
-    public BranchItemFragment setCardViewToggleListener(CardViewToggleListener listener) {
-        mCardListener = listener;
-        return this;
-    }
-
-    public static BranchItemFragment newInstance(long category_id, long branch_id, boolean show_toggle_menu) {
+    public static BranchItemFragment newInstance(long category_id, long branch_id) {
         Bundle args = new Bundle();
 
         BranchItemFragment fragment = new BranchItemFragment();
         args.putLong(KEY_CATEGORY_ID, category_id);
         args.putLong(KEY_BRANCH_ID, branch_id);
-        args.putBoolean(KEY_SHOW_CARD_TOGGLE_MENU, show_toggle_menu);
         fragment.setArguments(args);
 
         return fragment;
@@ -74,31 +64,8 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         mBranchId = args.getLong(KEY_BRANCH_ID);
-        mShowCardToggleMenu = args.getBoolean(KEY_SHOW_CARD_TOGGLE_MENU);
 
         setParentCategoryId(mCategoryId);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.branch_items, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-
-        MenuItem toggleCardView = menu.findItem(R.id.branch_item_menu_toggle_card_view);
-        if (!mShowCardToggleMenu) {
-            toggleCardView.setVisible(false);
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.branch_item_menu_toggle_card_view:
-                mCardListener.onCardOptionSelected(true);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     void startTransactionActivity(int action, long branch_id) {
@@ -132,7 +99,6 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
         mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view_items);
         mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
-        final AppCompatActivity activity = (AppCompatActivity) getActivity();
         mBranchItemAdapter.setListener(new BranchItemCursorAdapter.ItemSelectionListener() {
             @Override
             public void editItemLocationSelected(final SBranchItem branchItem) {
@@ -220,8 +186,6 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
     @Override
     protected void onCategoryTreeViewToggled(boolean show_tree_view) {
-        if (!show_tree_view)
-            mCardListener.onCardOptionSelected(false);
     }
 
     @Override

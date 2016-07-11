@@ -42,8 +42,6 @@ import com.mukera.sheket.client.controller.importer.ImportListener;
 import com.mukera.sheket.client.controller.importer.ParseFileTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
-import com.mukera.sheket.client.controller.items.CardViewToggleListener;
-import com.mukera.sheket.client.controller.items.CategoryCardViewFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
@@ -55,7 +53,6 @@ import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
-import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -85,9 +82,6 @@ public class MainActivity extends AppCompatActivity implements
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
-    private boolean mIsBranchSelected = false;
-    private long mSelectedBranchId;
 
     private String mImportPath;
 
@@ -217,70 +211,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBranchSelected(final SBranch branch) {
-        mIsBranchSelected = true;
-        mSelectedBranchId = branch.branch_id;
-        displayItemsORBranchFragment();
+        replaceMainFragment(BranchItemFragment.
+                newInstance(CategoryEntry.ROOT_CATEGORY_ID, branch.branch_id), false);
         closeNavDrawer();
-    }
-
-    void displayItemsORBranchFragment() {
-        removeCustomActionBarViews();
-        boolean show_category_card = PrefUtil.showCategoryCards(this);
-
-        if (show_category_card) {
-            CategoryCardViewFragment fragment = new CategoryCardViewFragment();
-            fragment.setCategorySelectionListener(new CategoryCardViewFragment.SelectionListener() {
-                @Override
-                public void onCategorySelected(SCategory category) {
-                    CardViewToggleListener listener = new CardViewToggleListener() {
-                        @Override
-                        public void onCardOptionSelected(boolean enable_card_view) {
-                            displayItemsORBranchFragment();
-                        }
-                    };
-                    Fragment fragment;
-                    if (mIsBranchSelected) {
-                        fragment = BranchItemFragment.
-                                newInstance(category.category_id, mSelectedBranchId, false).
-                                setCardViewToggleListener(listener);
-                    } else {
-                        fragment = AllItemsFragment.
-                                newInstance(category.category_id, false).
-                                setCardViewToggleListener(listener);
-                    }
-                    replaceMainFragment(fragment, true);
-                }
-            }).setCardViewToggleListener(new CardViewToggleListener() {
-                @Override
-                public void onCardOptionSelected(boolean enable_card_view) {
-                    PrefUtil.setCategoryCardShow(MainActivity.this,
-                            false);
-                    displayItemsORBranchFragment();
-                }
-            });
-            replaceMainFragment(fragment, false);
-        } else {
-            CardViewToggleListener listener = new CardViewToggleListener() {
-                @Override
-                public void onCardOptionSelected(boolean enable_card_view) {
-                    PrefUtil.setCategoryCardShow(MainActivity.this,
-                            enable_card_view);
-                    displayItemsORBranchFragment();
-                }
-            };
-            Fragment fragment;
-            if (mIsBranchSelected) {
-                fragment = BranchItemFragment.
-                        newInstance(CategoryEntry.ROOT_CATEGORY_ID,
-                                mSelectedBranchId, true).
-                        setCardViewToggleListener(listener);
-            } else {
-                fragment = AllItemsFragment.
-                        newInstance(CategoryEntry.ROOT_CATEGORY_ID, true).
-                        setCardViewToggleListener(listener);
-            }
-            replaceMainFragment(fragment, false);
-        }
     }
 
     void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
@@ -313,8 +246,7 @@ public class MainActivity extends AppCompatActivity implements
 
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
-                mIsBranchSelected = false;
-                displayItemsORBranchFragment();
+                replaceMainFragment(AllItemsFragment.newInstance(CategoryEntry.ROOT_CATEGORY_ID), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
                 // Create the ACTION_GET_CONTENT Intent
