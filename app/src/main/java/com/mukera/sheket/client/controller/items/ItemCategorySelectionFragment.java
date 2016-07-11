@@ -43,7 +43,7 @@ import java.util.UUID;
 /**
  * Created by fuad on 5/21/16.
  */
-public class CategorySelectionFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ItemCategorySelectionFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     public interface SelectionListener {
         void okSelected(long category_id, SCategory category);
@@ -64,10 +64,10 @@ public class CategorySelectionFragment extends Fragment implements LoaderManager
 
     private SelectionListener mListener;
 
-    public static CategorySelectionFragment newInstance(long previous_selected_category_id) {
+    public static ItemCategorySelectionFragment newInstance(long previous_selected_category_id) {
         Bundle args = new Bundle();
 
-        CategorySelectionFragment fragment = new CategorySelectionFragment();
+        ItemCategorySelectionFragment fragment = new ItemCategorySelectionFragment();
         args.putLong(PREVIOUS_CATEGORY_ID_KEY, previous_selected_category_id);
         fragment.setArguments(args);
         return fragment;

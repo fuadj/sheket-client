@@ -277,9 +277,9 @@ public class ItemCreateEditActivity extends AppCompatActivity {
                     InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getActivity().getWindow().getDecorView().getWindowToken(), 0);
 
-                    CategorySelectionFragment fragment = CategorySelectionFragment.
+                    ItemCategorySelectionFragment fragment = ItemCategorySelectionFragment.
                             newInstance(mSelectedCategoryId);
-                    fragment.setListener(new CategorySelectionFragment.SelectionListener() {
+                    fragment.setListener(new ItemCategorySelectionFragment.SelectionListener() {
                         @Override
                         public void okSelected(long category_id, SCategory category) {
                             mSelectedCategoryId = category_id;
