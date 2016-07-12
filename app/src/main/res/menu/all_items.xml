@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/all_items_menu_toggle_card_view"
-        android:icon="@drawable/ic_action_toggle_card_view"
-        android:title="Enable Card View"
-        app:showAsAction="always" />
-
-    <item
         android:id="@+id/all_items_menu_add_item"
         android:icon="@drawable/ic_action_add_light"
         android:title="Add Item"

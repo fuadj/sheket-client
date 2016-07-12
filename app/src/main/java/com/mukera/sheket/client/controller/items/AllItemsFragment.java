@@ -66,6 +66,7 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        setHasOptionsMenu(true);
         setParentCategoryId(mCategoryId);
     }
 

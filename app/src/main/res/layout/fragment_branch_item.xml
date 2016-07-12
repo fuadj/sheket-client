@@ -34,23 +34,13 @@
     </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/float_btn_item_list_buy"
+        android:id="@+id/float_btn_branch_item_transaction"
         android:layout_width="wrap_content"
         android:clickable="true"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|left"
+        android:layout_gravity="bottom|center"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_action_add_light"
-        app:backgroundTint="@color/colorPrimary"/>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/float_btn_item_list_sell"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:layout_gravity="bottom|right"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_action_minus_light"
-        app:backgroundTint="@color/colorPrimary"/>
+        android:src="@drawable/ic_action_edit"
+        app:backgroundTint="@color/branch_item_floating_btn"/>
 
 </android.support.design.widget.CoordinatorLayout>

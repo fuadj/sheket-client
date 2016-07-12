@@ -3,36 +3,37 @@ package com.mukera.sheket.client.controller.items;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentManager;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.TextView;
 
-import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
-import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.mukera.sheket.client.utils.Utils;
-import com.mukera.sheket.client.controller.transactions.TransactionActivity;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.models.STransaction;
+import com.mukera.sheket.client.models.STransaction.STransactionItem;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by gamma on 3/27/16.
@@ -47,6 +48,11 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     private ListView mBranchItemList;
     private BranchItemCursorAdapter mBranchItemAdapter;
 
+    private FloatingActionButton mFinishTransactionBtn;
+
+    private List<STransactionItem> mTrasactionItemList;
+    private List<SBranch> mBranches = null;
+
     public static BranchItemFragment newInstance(long category_id, long branch_id) {
         Bundle args = new Bundle();
 
@@ -58,6 +64,33 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         return fragment;
     }
 
+    /**
+     * Lazily fetch the branches
+     * @return
+     */
+    List<SBranch> getBranches() {
+        if (mBranches == null) {
+            long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+
+            String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
+            Cursor cursor = getActivity().getContentResolver().
+                    query(BranchEntry.buildBaseUri(company_id),
+                    SBranch.BRANCH_COLUMNS, null, null, sortOrder);
+            if (cursor != null && cursor.moveToFirst()) {
+                mBranches = new ArrayList<>();
+                do {
+                    SBranch branch = new SBranch(cursor);
+
+                    // we don't want the current branch to be in the list of "transfer branches"
+                    if (branch.branch_id != mBranchId) {
+                        mBranches.add(branch);
+                    }
+                } while (cursor.moveToNext());
+            }
+        }
+        return mBranches;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,14 +98,19 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         mBranchId = args.getLong(KEY_BRANCH_ID);
 
+        mTrasactionItemList = new ArrayList<>();
+
         setParentCategoryId(mCategoryId);
     }
 
-    void startTransactionActivity(int action, long branch_id) {
-        Intent intent = new Intent(getActivity(), TransactionActivity.class);
-        intent.putExtra(TransactionActivity.LAUNCH_ACTION_KEY, action);
-        intent.putExtra(TransactionActivity.LAUNCH_BRANCH_ID_KEY, branch_id);
-        startActivity(intent);
+    /**
+     * Sets visible the finish transaction floating button if
+     * there is at least 1 item in the transaction.
+     */
+    void updateFinishBtnVisibility() {
+        mFinishTransactionBtn.setVisibility(
+                mTrasactionItemList.isEmpty() ? View.GONE : View.VISIBLE
+        );
     }
 
     @Nullable
@@ -80,22 +118,14 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        FloatingActionButton buyAction, sellAction;
-
-        buyAction = (FloatingActionButton) rootView.findViewById(R.id.float_btn_item_list_buy);
-        buyAction.setOnClickListener(new View.OnClickListener() {
+        mFinishTransactionBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_branch_item_transaction);
+        mFinishTransactionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startTransactionActivity(TransactionActivity.LAUNCH_TYPE_BUY, mBranchId);
+                displaySummaryDialog();
             }
         });
-        sellAction = (FloatingActionButton) rootView.findViewById(R.id.float_btn_item_list_sell);
-        sellAction.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startTransactionActivity(TransactionActivity.LAUNCH_TYPE_SELL, mBranchId);
-            }
-        });
+        updateFinishBtnVisibility();
 
         mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view_items);
         mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
@@ -104,10 +134,67 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
             public void editItemLocationSelected(final SBranchItem branchItem) {
                 displayItemLocationDialog(branchItem);
             }
+
+            @Override
+            public void branchItemSelected(SBranchItem branchItem) {
+                displayQuantityDialog(branchItem);
+            }
         });
         mBranchItemList.setAdapter(mBranchItemAdapter);
 
         return rootView;
+    }
+
+    void displaySummaryDialog() {
+        TransactionSummaryDialog dialog = new TransactionSummaryDialog();
+        dialog.setTransactionItems(mTrasactionItemList);
+        dialog.setListener(new TransactionSummaryDialog.SummaryListener() {
+            @Override
+            public void cancelSelected(DialogFragment dialog) {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void backSelected(DialogFragment dialog) {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void editItemAtPosition(DialogFragment dialog, List<STransactionItem> itemList, int position) {
+
+            }
+
+            @Override
+            public void deleteItemAtPosition(DialogFragment dialog, List<STransactionItem> itemList, int position) {
+
+            }
+
+            @Override
+            public void okSelected(DialogFragment dialog, List<STransactionItem> list) {
+
+            }
+        });
+    }
+
+    void displayQuantityDialog(SBranchItem branchItem) {
+        QuantityDialog dialog = new QuantityDialog();
+
+        dialog.setBranches(getBranches());
+        dialog.setBranchItem(branchItem);
+        dialog.setListener(new QuantityDialog.DialogListener() {
+            @Override
+            public void dialogCancel(DialogFragment dialog) {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void dialogOk(DialogFragment dialog, STransactionItem transItem) {
+                dialog.dismiss();
+                mTrasactionItemList.add(transItem);
+                updateFinishBtnVisibility();
+            }
+        });
+        dialog.show(getActivity().getSupportFragmentManager(), null);
     }
 
     void displayItemLocationDialog(final SBranchItem branchItem) {
@@ -248,6 +335,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
     public static class BranchItemCursorAdapter extends android.support.v4.widget.CursorAdapter {
         public interface ItemSelectionListener {
+            void branchItemSelected(SBranchItem branchItem);
             void editItemLocationSelected(SBranchItem branchItem);
         }
 
@@ -307,6 +395,12 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
                 holder.item_loc.setVisibility(View.VISIBLE);
                 holder.item_loc.setText(branchItem.item_location);
             }
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.branchItemSelected(branchItem);
+                }
+            });
             holder.edit_loc.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

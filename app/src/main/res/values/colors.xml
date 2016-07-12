@@ -8,6 +8,8 @@
     <color name="text_primary">#020631</color>
     <color name="text_secondary">#010059</color>
 
+    <color name="branch_item_floating_btn">#03a9f4</color>
+
     <color name="background_category">#fff</color>
 
     <color name="text_black_87">#de000000</color>
@@ -41,8 +43,4 @@
     <color name="icons">#FFFFFF</color>
     <color name="divider">#f5f5f5</color>
 
-    <color name="viewfinder_mask">#60000000</color>
-    <color name="viewfinder_laser">#ffcc0000</color>
-    <color name="viewfinder_border">#ffafed44</color>
-    
 </resources>
