@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_action_list);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initNavigationDrawer();

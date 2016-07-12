@@ -3,8 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/branch_item_menu_toggle_card_view"
+        android:id="@+id/branch_item_menu_toggle_all_items"
         android:icon="@drawable/ic_action_toggle_card_view"
-        android:title="Disable Card View"
+        android:title="List All Items"
         app:showAsAction="always" />
 </menu>

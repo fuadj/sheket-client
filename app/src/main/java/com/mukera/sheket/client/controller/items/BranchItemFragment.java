@@ -8,11 +8,15 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -26,7 +30,6 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
-import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -50,8 +53,9 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
     private FloatingActionButton mFinishTransactionBtn;
 
-    private List<STransactionItem> mTrasactionItemList;
+    private List<STransactionItem> mTransactionItemList;
     private List<SBranch> mBranches = null;
+
 
     public static BranchItemFragment newInstance(long category_id, long branch_id) {
         Bundle args = new Bundle();
@@ -98,9 +102,35 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         mBranchId = args.getLong(KEY_BRANCH_ID);
 
-        mTrasactionItemList = new ArrayList<>();
+        mTransactionItemList = new ArrayList<>();
 
         setParentCategoryId(mCategoryId);
+
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.branch_items, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+
+        MenuItem toggleAllItems = menu.findItem(R.id.branch_item_menu_toggle_all_items);
+        toggleAllItems.setCheckable(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.branch_item_menu_toggle_all_items:
+                if (item.isChecked()) {
+
+                } else {
+
+                }
+                item.setChecked(!item.isChecked());
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -109,7 +139,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
      */
     void updateFinishBtnVisibility() {
         mFinishTransactionBtn.setVisibility(
-                mTrasactionItemList.isEmpty() ? View.GONE : View.VISIBLE
+                mTransactionItemList.isEmpty() ? View.GONE : View.VISIBLE
         );
     }
 
@@ -143,7 +173,8 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
             @Override
             public void branchItemSelected(SBranchItem branchItem) {
-                displayQuantityDialog(branchItem);
+                displayTransactionQuantityDialog(branchItem.item, false, -1,
+                        false, null);
             }
         });
         mBranchItemList.setAdapter(mBranchItemAdapter);
@@ -153,11 +184,13 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
     void displaySummaryDialog() {
         TransactionSummaryDialog dialog = new TransactionSummaryDialog();
-        dialog.setTransactionItems(mTrasactionItemList);
+        dialog.setTransactionItems(mTransactionItemList);
         dialog.setListener(new TransactionSummaryDialog.SummaryListener() {
             @Override
             public void cancelSelected(DialogFragment dialog) {
                 dialog.dismiss();
+                mTransactionItemList.clear();
+                updateFinishBtnVisibility();
             }
 
             @Override
@@ -166,28 +199,62 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
             }
 
             @Override
-            public void editItemAtPosition(DialogFragment dialog, List<STransactionItem> itemList, int position) {
+            public void editItemAtPosition(DialogFragment trans_dialog,
+                                           List<STransactionItem> itemList, int position) {
+                SItem item = itemList.get(position).item;
 
+                FragmentTransaction transaction = getActivity().getSupportFragmentManager().
+                        beginTransaction();
+
+                // we are removing the dialog and adding the transaction to
+                // the back-stack so we can get rollback the transaction when the quantity
+                // dialog returns
+                transaction.remove(trans_dialog);
+                transaction.addToBackStack(null);
+
+                displayTransactionQuantityDialog(item, true, position,
+                        true, transaction);
             }
 
             @Override
             public void deleteItemAtPosition(DialogFragment dialog, List<STransactionItem> itemList, int position) {
-
+                itemList.remove(position);
+                if (itemList.isEmpty()) {
+                    dialog.dismiss();
+                } else {
+                    ((TransactionSummaryDialog)dialog).refreshSummaryDialog();
+                }
+                updateFinishBtnVisibility();
             }
 
             @Override
             public void okSelected(DialogFragment dialog, List<STransactionItem> list) {
-
+                // TODO: finish the transaction(ask for reminder)
             }
         });
         dialog.show(getActivity().getSupportFragmentManager(), null);
     }
 
-    void displayQuantityDialog(SBranchItem branchItem) {
+    /**
+     * Displays a quantity selection dialog for the item. It supports
+     * this operation for both new items and editing items already in the transaction.
+     *
+     * This dialog can be run in a transaction if specified.
+     * @param item
+     * @param is_editing
+     * @param edit_position
+     * @param run_in_transaction
+     * @param transaction
+     */
+    void displayTransactionQuantityDialog(SItem item,
+                                          final boolean is_editing,
+                                          final int edit_position,
+                                          boolean run_in_transaction,
+                                          FragmentTransaction transaction) {
         QuantityDialog dialog = new QuantityDialog();
 
         dialog.setBranches(getBranches());
-        dialog.setBranchItem(branchItem);
+        dialog.setItem(item);
         dialog.setListener(new QuantityDialog.DialogListener() {
             @Override
             public void dialogCancel(DialogFragment dialog) {
@@ -197,11 +264,20 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
             @Override
             public void dialogOk(DialogFragment dialog, STransactionItem transItem) {
                 dialog.dismiss();
-                mTrasactionItemList.add(transItem);
+                if (!is_editing) {
+                    mTransactionItemList.add(transItem);
+                } else {
+                    mTransactionItemList.remove(edit_position);
+                    mTransactionItemList.add(edit_position, transItem);
+                }
                 updateFinishBtnVisibility();
             }
         });
-        dialog.show(getActivity().getSupportFragmentManager(), null);
+        if (run_in_transaction) {
+            dialog.show(transaction, null);
+        } else {
+            dialog.show(getActivity().getSupportFragmentManager(), null);
+        }
     }
 
     void displayItemLocationDialog(final SBranchItem branchItem) {

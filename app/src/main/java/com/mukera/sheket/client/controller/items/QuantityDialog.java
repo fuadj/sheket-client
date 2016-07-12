@@ -52,15 +52,13 @@ public class QuantityDialog extends DialogFragment {
 
     private Button mBtnOk;
 
-    private SBranchItem mBranchItem;
     private SItem mItem;
 
     private DialogListener mListener;
     private List<TransBranch> mTransBranches;
 
-    public void setBranchItem(SBranchItem branchItem) {
-        mBranchItem = branchItem;
-        mItem = mBranchItem.item;
+    public void setItem(SItem item) {
+        mItem = item;
     }
 
     public void setListener(DialogListener listener) {

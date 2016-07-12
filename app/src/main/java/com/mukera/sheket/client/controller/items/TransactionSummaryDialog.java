@@ -4,9 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +17,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.transactions.SummaryFragment;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.*;
 
@@ -31,7 +28,7 @@ import java.util.List;
 public class TransactionSummaryDialog extends DialogFragment {
     public SummaryListener mListener;
     private ListView mListViewItems;
-    private Button mCancel, mBack, mOk;
+    private ImageButton mCancel, mBack, mFinish;
 
     private SummaryListAdapter mAdapter;
 
@@ -49,24 +46,24 @@ public class TransactionSummaryDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         View rootView = getActivity().getLayoutInflater().
-                inflate(R.layout.dialog_quantity, null);
+                inflate(R.layout.dialog_summary, null);
 
-        mOk = (Button) rootView.findViewById(R.id.summary_btn_ok);
-        mOk.setOnClickListener(new View.OnClickListener() {
+        mFinish = (ImageButton) rootView.findViewById(R.id.dialog_summary_btn_finish);
+        mFinish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mListener.okSelected(TransactionSummaryDialog.this, mItemList);
             }
         });
 
-        mBack = (Button) rootView.findViewById(R.id.summary_btn_back);
+        mBack = (ImageButton) rootView.findViewById(R.id.dialog_summary_btn_back);
         mBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mListener.backSelected(TransactionSummaryDialog.this);
             }
         });
-        mCancel = (Button) rootView.findViewById(R.id.summary_btn_cancel);
+        mCancel = (ImageButton) rootView.findViewById(R.id.dialog_summary_btn_cancel);
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,7 +72,7 @@ public class TransactionSummaryDialog extends DialogFragment {
         });
 
         mAdapter = new SummaryListAdapter(getActivity());
-        mListViewItems = (ListView) rootView.findViewById(R.id.summary_list_view);
+        mListViewItems = (ListView) rootView.findViewById(R.id.dialog_summary_list_items);
         mListViewItems.setAdapter(mAdapter);
         mListViewItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -83,12 +80,12 @@ public class TransactionSummaryDialog extends DialogFragment {
                 mListener.editItemAtPosition(TransactionSummaryDialog.this, mItemList, position);
 
                 // If the user changes anything, refresh
-                refreshAdapter();
+                refreshSummaryDialog();
             }
         });
 
         // to start things off
-        refreshAdapter();
+        refreshSummaryDialog();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Summary").
@@ -99,7 +96,7 @@ public class TransactionSummaryDialog extends DialogFragment {
         return dialog;
     }
 
-    public void refreshAdapter() {
+    public void refreshSummaryDialog() {
         mAdapter.clear();
         for (STransactionItem item : mItemList) {
             mAdapter.add(item);
@@ -132,8 +129,6 @@ public class TransactionSummaryDialog extends DialogFragment {
                 @Override
                 public void onClick(View v) {
                     mListener.deleteItemAtPosition(TransactionSummaryDialog.this, mItemList, position);
-
-                    refreshAdapter();
                 }
             });
             holder.textItemName.setText(transItem.item.name);
