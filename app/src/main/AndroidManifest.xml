@@ -52,15 +52,6 @@
             android:theme="@style/Theme.AppCompat.Light"/>
 
         <activity
-            android:label="Action"
-            android:name=".controller.transactions.TransactionActivity"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-
-        <activity
             android:label="Registration"
             android:name=".controller.user.RegistrationActivity"
             android:parentActivityName=".MainActivity" >
