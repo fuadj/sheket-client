@@ -46,7 +46,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String sql_create_company_table = "create table if not exists " + CompanyEntry.TABLE_NAME + " ( " +
-                CompanyEntry.COLUMN_ID + " integer primary key ON CONFLICT REPLACE, " +
+                CompanyEntry.COLUMN_ID + " integer primary key ON CONFLICT IGNORE, " +
                 CompanyEntry.COLUMN_NAME + " text not null, " +
                 CompanyEntry.COLUMN_PERMISSION + " text not null, " +
                 // This can be empty because it might be the user's first time
