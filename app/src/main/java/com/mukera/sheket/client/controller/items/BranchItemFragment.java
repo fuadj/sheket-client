@@ -202,10 +202,27 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         dialog.setTransactionItems(mTransactionItemList);
         dialog.setListener(new TransactionSummaryDialog.SummaryListener() {
             @Override
-            public void cancelSelected(DialogFragment dialog) {
+            public void cancelSelected(final DialogFragment dialog) {
                 dialog.dismiss();
-                mTransactionItemList.clear();
-                updateFinishBtnVisibility();
+
+                new AlertDialog.Builder(getActivity()).
+                        setTitle("Quit Transaction?").
+                        setMessage("Are You Sure?").
+                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface quitDialog, int which) {
+                                quitDialog.dismiss();
+                                dialog.dismiss();
+                                mTransactionItemList.clear();
+                                updateFinishBtnVisibility();
+                            }
+                        }).setNegativeButton("No",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface quitDialog, int which) {
+                                quitDialog.dismiss();
+                            }
+                        }).show();
             }
 
             @Override
@@ -237,14 +254,14 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
                 if (itemList.isEmpty()) {
                     dialog.dismiss();
                 } else {
-                    ((TransactionSummaryDialog)dialog).refreshSummaryDialog();
+                    ((TransactionSummaryDialog) dialog).refreshSummaryDialog();
                 }
                 updateFinishBtnVisibility();
             }
 
             @Override
             public void okSelected(DialogFragment dialog, List<STransactionItem> list) {
-                displayTransactionNoteDialog((TransactionSummaryDialog)dialog, list);
+                displayTransactionNoteDialog((TransactionSummaryDialog) dialog, list);
             }
         });
         dialog.show(getActivity().getSupportFragmentManager(), null);
@@ -290,7 +307,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
             }
         });
 
-        editText.addTextChangedListener(new TextWatcherAdapter(){
+        editText.addTextChangedListener(new TextWatcherAdapter() {
             @Override
             public void afterTextChanged(Editable s) {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
@@ -326,8 +343,9 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     /**
      * Displays a quantity selection dialog for the item. It supports
      * this operation for both new items and editing items already in the transaction.
-     *
+     * <p/>
      * This dialog can be run in a transaction if specified.
+     *
      * @param item
      * @param is_editing
      * @param edit_position
@@ -502,6 +520,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     public static class BranchItemCursorAdapter extends android.support.v4.widget.CursorAdapter {
         public interface ItemSelectionListener {
             void branchItemSelected(SBranchItem branchItem);
+
             void editItemLocationSelected(SBranchItem branchItem);
         }
 
