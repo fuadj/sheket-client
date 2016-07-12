@@ -96,6 +96,15 @@ public class SheketDbHelper extends SQLiteOpenHelper {
 
                 " UNIQUE( " +
                 BranchCategoryEntry.COLUMN_COMPANY_ID + ", " + BranchCategoryEntry.COLUMN_BRANCH_ID + ", " +
+
+                /**
+                 * it is ignored b/c we don't want to update the change indicator flag. This is necessary
+                 * to reduce the number of BranchCategory stuff on syncing. Since this table only holds
+                 * the relation b/n the two tables and no other data(like "quantity, item_location" held by branch_item),
+                 * the first time insertion is enough. Any subsequent updates won't affect it in any way
+                 * and will only add to data costs during syncing. So, we only change the flags on Insert
+                 * and Delete.
+                 */
                 BranchCategoryEntry.COLUMN_CATEGORY_ID + ") ON CONFLICT IGNORE);";
 
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
