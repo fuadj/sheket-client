@@ -113,9 +113,15 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         );
     }
 
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.fragment_branch_item;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // the base class uses {@code getLayoutResId} to inflate the resource
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
         mFinishTransactionBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_branch_item_transaction);
@@ -174,6 +180,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
             }
         });
+        dialog.show(getActivity().getSupportFragmentManager(), null);
     }
 
     void displayQuantityDialog(SBranchItem branchItem) {
@@ -278,11 +285,6 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     @Override
     protected int getCategoryLoaderId() {
         return LoaderId.MainActivity.BRANCH_ITEM_CATEGORY_LOADER;
-    }
-
-    @Override
-    protected int getLayoutResId() {
-        return R.layout.fragment_branch_item;
     }
 
     @Override
