@@ -91,7 +91,15 @@ public class SheketService extends IntentService {
             PrefUtil.setSyncError(this, "Internet Problem");
             PrefUtil.setSyncStatus(this, SYNC_STATUS_INTERNET_ERROR);
         } catch (Exception e) {
-            PrefUtil.setSyncError(this, "Internet Problem");
+            String err = e.getMessage();
+            // it usually has the format package.exception_class: error message,
+            // so do the crude "parsing" of the error message
+            int index = err.indexOf("Exception");
+            String err_msg = err;
+            if (index != -1)
+                err_msg = err.substring(index + "Exception".length());
+
+            PrefUtil.setSyncError(this, "Error " + err_msg);
             PrefUtil.setSyncStatus(this, SYNC_STATUS_GENERAL_ERROR);
         }
     }
