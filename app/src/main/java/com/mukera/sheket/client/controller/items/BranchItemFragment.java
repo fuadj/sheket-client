@@ -1,9 +1,12 @@
 package com.mukera.sheket.client.controller.items;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +15,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,6 +30,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
+import com.mukera.sheket.client.controller.transactions.TransactionUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -33,10 +38,12 @@ import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by gamma on 3/27/16.
@@ -141,6 +148,14 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
         mFinishTransactionBtn.setVisibility(
                 mTransactionItemList.isEmpty() ? View.GONE : View.VISIBLE
         );
+        if (!mTransactionItemList.isEmpty()) {
+            final float TEXT_SIZE = 48.f;
+            mFinishTransactionBtn.setImageDrawable(
+                    new TextDrawable(getContext(),
+                            String.format(Locale.US, "%d", mTransactionItemList.size()),
+                            ColorStateList.valueOf(Color.WHITE), TEXT_SIZE, TextDrawable.VerticalAlignment.BASELINE)
+            );
+        }
     }
 
     @Override
@@ -229,11 +244,84 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
             @Override
             public void okSelected(DialogFragment dialog, List<STransactionItem> list) {
-                // TODO: finish the transaction(ask for reminder)
+                displayTransactionNoteDialog((TransactionSummaryDialog)dialog, list);
             }
         });
         dialog.show(getActivity().getSupportFragmentManager(), null);
     }
+
+    void displayTransactionNoteDialog(final TransactionSummaryDialog summaryDialog,
+                                      final List<STransactionItem> itemList) {
+        final EditText editText = new EditText(getActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Add a Reminder?")
+                .setMessage("(Optional) Write a reminder to remember the transaction").
+                setView(editText).
+                setPositiveButton("Finish", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        summaryDialog.dismiss();
+                        commitTransaction(itemList, editText.getText().toString().trim());
+                    }
+                }).setNegativeButton("Back",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        updateFinishBtnVisibility();
+                        dialog.dismiss();
+                    }
+                }).setNeutralButton("No Reminder",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        summaryDialog.dismiss();
+                        commitTransaction(itemList, "");
+                    }
+                }).setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            }
+        });
+
+        editText.addTextChangedListener(new TextWatcherAdapter(){
+            @Override
+            public void afterTextChanged(Editable s) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
+                        !TextUtils.isEmpty(s.toString().trim()));
+            }
+        });
+        dialog.show();
+    }
+
+    void commitTransaction(final List<STransactionItem> itemList, final String transactionNote) {
+        final ProgressDialog progress = ProgressDialog.show(
+                getActivity(), "Saving", "Please Wait...", true);
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                if (!itemList.isEmpty())
+                    TransactionUtil.createTransactionWithItems(getActivity(), itemList, mBranchId, transactionNote);
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTransactionItemList.clear();
+                        updateFinishBtnVisibility();
+                        progress.dismiss();
+                    }
+                });
+            }
+        };
+        t.start();
+    }
+
 
     /**
      * Displays a quantity selection dialog for the item. It supports
