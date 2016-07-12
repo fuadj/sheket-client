@@ -444,18 +444,52 @@ public class SheketProvider extends ContentProvider {
         long company_id = -1;
         if (match != COMPANY) {
             company_id = CompanyBase.getCompanyId(uri);
+        } else {
+            if (values.containsKey(CompanyEntry.COLUMN_ID)) {
+                company_id = values.getAsLong(CompanyEntry.COLUMN_ID);
+            }
         }
 
         Uri returnUri = null;
         final long insert_error = -1;
         switch (match) {
             case COMPANY: {
-                long _id = db.insert(CompanyEntry.TABLE_NAME, null, values);
-                if (_id != insert_error) {
-                    returnUri = CompanyEntry.buildCompanyUri(_id);
+                /**
+                 * Since all data is DIRECTLY foreign keyed to the company table, we should be
+                 * EXTREMELY CAREFUL not to delete any row from the table. WHen the user syncs
+                 * with a company that he already is a member of, it will try to add it here.
+                 * We've set an ON CONFLICT IGNORE so as not to delete any existing rows.
+                 * We have tried to add the company using {@code db.insertWithOnConflict} method
+                 * passing in {@code SQLiteDatabase.CONFLICT_IGNORE} conflictResolutionAlgorithm
+                 * to enforce the constraint and return to us the previously added company id.
+                 * But, sadly android is not working and is returning -1 signaling an error.
+                 * This results in a COMPLETE app shutdown as the user can't sync no-more
+                 * thinking there was an error inserting the company. So, the suggested
+                 * solution is to first query the db for the company id and only try to
+                 * insert it if it doesn't exist.
+                 *
+                 * See http://stackoverflow.com/questions/13391915/why-does-insertwithonconflict-conflict-ignore-return-1-error for more.
+                 */
+
+                // first try and query to see if the company already exists
+                Cursor cursor = query(CompanyEntry.buildCompanyUri(company_id),
+                        null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) { // the company exists!!!
+                    cursor.close();
+                    returnUri = CompanyEntry.buildCompanyUri(company_id);
                 } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+
+                    long _id = db.insertWithOnConflict(CompanyEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                    if (_id != insert_error) {
+                        returnUri = CompanyEntry.buildCompanyUri(company_id);
+                    } else {
+                        throw new android.database.SQLException("Failed to insert row into " + uri);
+                    }
                 }
+
                 break;
             }
 

@@ -146,7 +146,7 @@ public class SheketService extends IntentService {
                 values.put(SheketContract.CompanyEntry.COLUMN_PERMISSION, permission);
 
                 operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
-                        withValues(DbUtil.setUpdateOnConflict(values)).build());
+                        withValues(values).build());
             }
 
             if (!operations.isEmpty())
