@@ -86,6 +86,17 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text);";
 
+        final String sql_create_branch_category_table = "create table if not exists " + BranchCategoryEntry.TABLE_NAME + " ( " +
+                BranchCategoryEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
+
+                BranchCategoryEntry.COLUMN_BRANCH_ID + cascadeUpdateAndDelete(BranchEntry.TABLE_NAME, BranchEntry.COLUMN_BRANCH_ID) +
+                BranchCategoryEntry.COLUMN_CATEGORY_ID + cascadeUpdateAndDelete(CategoryEntry.TABLE_NAME, CategoryEntry.COLUMN_CATEGORY_ID) +
+
+                ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
+
+                " UNIQUE( " +
+                BranchCategoryEntry.COLUMN_COMPANY_ID + ", " + BranchCategoryEntry.COLUMN_BRANCH_ID + ", " +
+                BranchCategoryEntry.COLUMN_CATEGORY_ID + ") ON CONFLICT IGNORE);";
 
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
                 ItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
@@ -165,6 +176,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
         db.execSQL(sql_create_branch_table);
 
         db.execSQL(sql_create_category_table);
+        db.execSQL(sql_create_branch_category_table);
+
         db.execSQL(sql_create_item_table);
 
         db.execSQL(sql_create_branch_item_table);
