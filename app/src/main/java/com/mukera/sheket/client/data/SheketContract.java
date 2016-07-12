@@ -22,6 +22,7 @@ public class SheketContract {
     public static final String PATH_COMPANY = "path_company";
     public static final String PATH_MEMBER = "path_member";
     public static final String PATH_BRANCH = "path_branch";
+    public static final String PATH_BRANCH_CATEGORY = "path_branch_category";
     public static final String PATH_BRANCH_ITEM = "path_branch_item";
     public static final String PATH_CATEGORY = "path_category";
     public static final String PATH_ITEM = "path_item";
@@ -284,6 +285,60 @@ public class SheketContract {
         }
     }
 
+    public static final class BranchCategoryEntry extends CompanyBase {
+        private static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_BRANCH_CATEGORY).
+                        build();
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_BRANCH_CATEGORY;
+        public static final String CONTENT_ITEM_TYPE =
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_BRANCH_CATEGORY;
+
+        public static final String TABLE_NAME = "branch_category_table";
+
+        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+
+        public static final String COLUMN_BRANCH_ID = "_id";
+        public static final String COLUMN_CATEGORY_ID = "category_id";
+
+        public static Uri buildBaseUri(long company_id) {
+            return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
+        }
+
+        public static final long NO_ID_SET = -1;
+
+        /**
+         * if you don't want to specify either { branch_id OR category_id },
+         * you should set it to {@code NO_ID_SET}
+         * e.g: (company_id, NO_ID_SET, category_id) when you don't specify the branch
+         */
+        public static Uri buildBranchCategoryUri(long company_id, long branch_id, long cateogry_id) {
+            return withBaseCompanyIdUri(CONTENT_URI, company_id).
+                    appendPath(Long.toString(branch_id)).
+                    appendPath(Long.toString(cateogry_id)).build();
+        }
+
+        public static long getBranchId(Uri uri) {
+            return Long.parseLong(uri.getPathSegments().get(2));
+        }
+
+        public static long getCategoryId(Uri uri) {
+            return Long.parseLong(uri.getPathSegments().get(3));
+        }
+
+        /**
+         * Use this to check if an id is set
+         */
+        public static boolean isIdSpecified(Context context, long id) {
+            long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+            // if the id didn't still sync with the server, it will be -ve
+            // then it needs to be equal or below default entity id
+            return id <= default_id ||
+                    id > 0L;
+        }
+
+    }
+
     public static final class BranchItemEntry extends CompanyBase {
         private static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_BRANCH_ITEM).build();
@@ -299,7 +354,8 @@ public class SheketContract {
             return TABLE_NAME + "." + col_name;
         }
 
-        // it is named "_id" to allow {@code CursorLoader} to work
+        // "_id" is the branch id, we have to name it "_id" for
+        // cursor loaders to work
         public static final String COLUMN_BRANCH_ID = "_id";
         public static final String COLUMN_ITEM_ID = "item_id";
         public static final String COLUMN_QUANTITY = "quantity";
@@ -334,7 +390,7 @@ public class SheketContract {
          */
         public static boolean isIdSpecified(Context context, long id) {
             long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-            // if the id didn't still sync we the server, it will be -ve
+            // if the id didn't still sync with the server, it will be -ve
             // then it needs to be equal or below default entity id
             return id <= default_id ||
                     id > 0L;
