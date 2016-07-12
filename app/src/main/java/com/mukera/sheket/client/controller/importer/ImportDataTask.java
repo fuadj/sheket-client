@@ -18,6 +18,7 @@ import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.UnitsOfMeasurement;
+import com.mukera.sheket.client.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -346,8 +347,6 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         int col_branch = has_branches ? mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION) : -1;
         int col_quantity = has_branches ? mDataMapping.get(ImportDataMappingDialog.DATA_BALANCE) : -1;
 
-        Pattern number_extractor = Pattern.compile("\\d+(?:[.]\\d+)*");
-
         // we need both branches and quantity declared to do stuff
         if (!has_branches || !has_quantity) return;
 
@@ -375,12 +374,8 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             item_id = _i.is_new ? _i.new_id : _i.previousItem.item_id;
             branch_id = _b.is_new ? _b.new_id : _b.previousBranch.branch_id;
 
-            double quantity = 0;
             String string_qty = mReader.getRowAt(i).get(col_quantity);
-            Matcher matcher = number_extractor.matcher(string_qty);
-            if (matcher.find()) {
-                quantity = Double.parseDouble(matcher.group(0));
-            }
+            double quantity = Utils.extractDoubleFromString(string_qty);
 
             long transaction_id;
             if (seenBranches.containsKey(branch_id)) {
