@@ -17,7 +17,10 @@ import com.mukera.sheket.client.utils.PrefUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -74,6 +77,8 @@ public class TransactionUtil {
                             build());
         }
 
+        updateBranchCategoriesInTransaction(context, itemList, branch_id, operations);
+
         try {
             context.getContentResolver().
                     applyBatch(SheketContract.CONTENT_AUTHORITY, operations);
@@ -89,6 +94,82 @@ public class TransactionUtil {
         } catch (OperationApplicationException e) {
         }
         return false;
+    }
+
+    /**
+     * Add categories of the items involved in the transaction if they don't already
+     * exist in the branch.
+     */
+    public static void updateBranchCategoriesInTransaction(Context context,
+                                                           List<STransaction.STransactionItem> transactionItemList,
+                                                           long branch_id,
+                                                           List<ContentProviderOperation> operations) {
+        Map<Long, CategoryUtil.CategoryNode> categoryTree = CategoryUtil.parseCategoryTree(context);
+
+        Set<Long> transactionItemCategories = new HashSet<>();
+        for (STransaction.STransactionItem transactionItem : transactionItemList) {
+            transactionItemCategories.add(transactionItem.item.category);
+        }
+
+        long company_id = PrefUtil.getCurrentCompanyId(context);
+
+        Set<Long> branchCategories = getBranchCategories(context, branch_id);
+
+        Set<Long> noneBranchCategories = transactionItemCategories;
+        // do the set difference, so categories that don't exist inside the branch remain
+        noneBranchCategories.removeAll(branchCategories);
+
+        for (Long category_id : noneBranchCategories) {
+            CategoryUtil.CategoryNode node = categoryTree.get(category_id);
+
+            // if we've reached the root, no need to go any further
+            while (node.categoryId != CategoryEntry.ROOT_CATEGORY_ID) {
+
+                // we've reached a point in the ancestry where the category
+                // does exist in the branch, so we don't need to check anymore
+                // higher since that is guaranteed to exist
+                if (branchCategories.contains(node.categoryId))
+                    break;
+
+                ContentValues values = new ContentValues();
+                values.put(BranchCategoryEntry.COLUMN_COMPANY_ID, company_id);
+                values.put(BranchCategoryEntry.COLUMN_BRANCH_ID, branch_id);
+                values.put(BranchCategoryEntry.COLUMN_CATEGORY_ID, node.categoryId);
+                values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
+
+                operations.add(
+                        ContentProviderOperation.newInsert(
+                                BranchCategoryEntry.buildBaseUri(company_id)).
+                                withValues(values).
+                                build()
+                );
+
+                // go up the ancestry tree
+                node = node.parentNode;
+            }
+        }
+    }
+
+    /**
+     * Gets the ids of the categories that exist inside the branch.
+     */
+    private static Set<Long> getBranchCategories(Context context, long branch_id) {
+        Set<Long> branchCategories = new HashSet<>();
+        long company_id = PrefUtil.getCurrentCompanyId(context);
+        Cursor cursor = context.getContentResolver().query(
+                BranchCategoryEntry.buildBranchCategoryUri(company_id, branch_id, BranchCategoryEntry.NO_ID_SET),
+                // we only want the category ids
+                new String[]{BranchCategoryEntry.COLUMN_CATEGORY_ID},
+                null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                long category_id = cursor.getLong(0);
+                branchCategories.add(category_id);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null)
+            cursor.close();
+        return branchCategories;
     }
 
     public static void updateBranchItemsInTransactions(Context context, List<STransaction.STransactionItem> transItemList,
