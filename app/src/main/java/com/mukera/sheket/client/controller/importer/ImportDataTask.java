@@ -23,7 +23,9 @@ import com.mukera.sheket.client.utils.Utils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,6 +81,15 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
                 ImportDataMappingDialog.NO_DATA_FOUND) {
             addItemsToBranches(importData);
         }
+
+        // If both branch and categories are defined, add the category to the branch
+        if ((mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION) !=
+                ImportDataMappingDialog.NO_DATA_FOUND) &&
+                (mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY) !=
+                        ImportDataMappingDialog.NO_DATA_FOUND)) {
+            addCategoriesToBranches(importData);
+        }
+
 
         try {
             mContext.getContentResolver().
@@ -428,6 +439,61 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             importData.operationsList.add(
                     ContentProviderOperation.newInsert(BranchItemEntry.buildBaseUri(importData.company_id)).
                             withValues(branchItemValues).build());
+        }
+    }
+
+    void addCategoriesToBranches(ImportData importData) {
+        boolean has_branches = mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION) != ImportDataMappingDialog.NO_DATA_FOUND;
+        boolean has_categories = mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY) != ImportDataMappingDialog.NO_DATA_FOUND;
+
+        if (!has_branches || !has_categories) return;
+
+        int col_branch = mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION);
+        int col_category = mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY);
+
+        long company_id = importData.company_id;
+
+        Map<Long, Set<Long>> seenBranchCategories = new HashMap<>();
+        for (int i = 0; i < mReader.getNumRows(); i++) {
+            String branch_name = replaceBranchNameIfDuplicate(
+                    mReader.getRowAt(i).get(col_branch)).trim();
+            String category_name = replaceBranchNameIfDuplicate(
+                    mReader.getRowAt(i).get(col_category)).trim();
+
+            if (TextUtils.isEmpty(branch_name) ||
+                    TextUtils.isEmpty(category_name))
+                continue;
+
+            _import_branch _b = importData.mBranchIds.get(
+                    _to_key(branch_name));
+            _import_category _c = importData.mCategoryIds.get(
+                    _to_key(category_name));
+            long branch_id = _b.is_new ? _b.new_id : _b.previousBranch.branch_id;
+            long category_id = _c.is_new ? _c.new_id : _c.previousCategory.category_id;
+
+            if (!seenBranchCategories.containsKey(branch_id))
+                seenBranchCategories.put(branch_id, new HashSet<Long>());
+
+            if (seenBranchCategories.get(branch_id).contains(category_id))
+                // we've already added the category to the branch
+                continue;
+
+            seenBranchCategories.get(branch_id).add(category_id);
+
+            ContentValues values = new ContentValues();
+            values.put(BranchCategoryEntry.COLUMN_COMPANY_ID, company_id);
+            values.put(BranchCategoryEntry.COLUMN_BRANCH_ID, branch_id);
+            values.put(BranchCategoryEntry.COLUMN_CATEGORY_ID, category_id);
+            values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                    ChangeTraceable.CHANGE_STATUS_CREATED);
+            /**
+             * Because we've got an "ON CONFLICT IGNORE" policy on branch categories,
+             * there is no worry of possible duplicates or erasing data.
+             */
+            importData.operationsList.add(
+                    ContentProviderOperation.newInsert(
+                            BranchCategoryEntry.buildBaseUri(company_id)).
+                            withValues(values).build());
         }
     }
 
