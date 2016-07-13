@@ -15,6 +15,8 @@ import android.util.TypedValue;
 
 /**
  * Created by fuad on 7/12/16.
+ *
+ * From http://stackoverflow.com/questions/33878629/how-to-add-text-to-floating-action-button
  */
 public class TextDrawable  extends Drawable {
 
