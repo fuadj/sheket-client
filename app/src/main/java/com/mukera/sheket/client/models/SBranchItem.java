@@ -9,6 +9,8 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 /**
  * Created by gamma on 3/27/16.
  */
@@ -99,7 +101,8 @@ public class SBranchItem extends ChangeTraceable {
      */
     public JSONObject toJsonObject() throws JSONException {
         JSONObject result = new JSONObject();
-        result.put(JSON_BRANCH_ITEM_ID, "" + branch_id + ":" + item_id);
+        result.put(JSON_BRANCH_ITEM_ID,
+                String.format(Locale.US, "%d:%d", branch_id, item_id));
         result.put(JSON_QUANTITY, quantity);
         result.put(JSON_LOCATION, item_location);
         return result;

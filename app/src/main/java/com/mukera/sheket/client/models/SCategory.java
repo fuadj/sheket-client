@@ -74,6 +74,10 @@ public class SCategory extends UUIDSyncable implements Parcelable {
         this(cursor, 0, true, true);
     }
 
+    public SCategory(Cursor cursor, int offset) {
+        this(cursor, offset, true, false);
+    }
+
     private static final int NO_CHILD_FOUND = 0;
     public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
         if (is_parent) {
