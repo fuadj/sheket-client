@@ -13,6 +13,8 @@ import android.support.annotation.Nullable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -262,32 +264,29 @@ public class SheketProvider extends ContentProvider {
                     boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
                     boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
 
-                    if (branch_set && item_set) {
-                        selection = withAppendedSelection(selection,
-                                String.format(Locale.US, "%s = ? AND %s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
-                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
-                                new String[]{
-                                        Long.toString(branch_id),
-                                        Long.toString(item_id)
-                                });
-                    } else if (branch_set) {
-                        selection = withAppendedSelection(selection,
+                    String branch_item_selection = "";
+                    List<String> args = new ArrayList<>();
+                    if (branch_set) {
+                        branch_item_selection +=
                                 String.format(Locale.US, "%s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID)));
-                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
-                                new String[]{
-                                        Long.toString(branch_id)
-                                });
-                    } else if (item_set) {
-                        selection = withAppendedSelection(selection,
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
+                        args.add(Long.toString(branch_id));
+                    }
+                    if (item_set) {
+                        branch_item_selection += (branch_set ? " AND " : "");
+                        branch_item_selection +=
                                 String.format(Locale.US, "%s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID)));
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                        args.add(Long.toString(item_id));
+                    }
+
+                    selection = withAppendedSelection(selection,
+                            branch_item_selection);
+
+                    // if neither is set, why bother
+                    if (branch_set || item_set) {
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
-                                new String[]{
-                                        Long.toString(item_id)
-                                });
+                                (String[]) args.toArray());
                     }
                 }
 
@@ -295,6 +294,52 @@ public class SheketProvider extends ContentProvider {
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
 
                 result = sBranchItemWithItemDetailQueryBuilder.query(
+                        mDbHelper.getReadableDatabase(),
+                        projection,
+                        selection, selectionArgs,
+                        null, null, sortOrder);
+                break;
+            }
+
+            case BRANCH_CATEGORY_WITH_ID:
+            case BRANCH_CATEGORY: {
+                query_db = false;
+                if (uri_match == BRANCH_CATEGORY_WITH_ID) {
+                    long branch_id = BranchCategoryEntry.getBranchId(uri);
+                    long category_id = BranchCategoryEntry.getCategoryId(uri);
+
+                    boolean branch_set = BranchCategoryEntry.isIdSpecified(getContext(), branch_id);
+                    boolean category_set = BranchCategoryEntry.isIdSpecified(getContext(), category_id);
+
+                    String branch_category_selection = "";
+                    List<String> args = new ArrayList<>();
+                    if (branch_set) {
+                        branch_category_selection +=
+                                String.format(Locale.US, "%s = ?",
+                                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID));
+                        args.add(Long.toString(branch_id));
+                    }
+                    if (category_set) {
+                        branch_category_selection += (branch_set ? " AND " : "");
+                        branch_category_selection +=
+                                String.format(Locale.US, "%s = ?",
+                                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID));
+                        args.add(Long.toString(category_id));
+                    }
+                    selection = withAppendedSelection(selection,
+                            branch_category_selection);
+
+                    // if neither is set, why bother
+                    if (branch_set || category_set) {
+                        selectionArgs = withAppendedSelectionArgs(selectionArgs,
+                                (String[]) args.toArray());
+                    }
+                }
+
+                selection = withAppendedCompanyIdSelection(selection,
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_COMPANY_ID));
+                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
+                result = sBranchCategoryWithCategoryDetailQueryBuilder.query(
                         mDbHelper.getReadableDatabase(),
                         projection,
                         selection, selectionArgs,
