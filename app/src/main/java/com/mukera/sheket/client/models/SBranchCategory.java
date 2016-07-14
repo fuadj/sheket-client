@@ -26,19 +26,24 @@ public class SBranchCategory extends ChangeTraceable {
             _f(COLUMN_CHANGE_INDICATOR)
     };
 
+    /**
+     * This query projection has its first part similar to that of a
+     * category query projection. So you can also just use the first
+     * part to parse out an SCategory and be done with it.
+     */
     public static final String[] BRANCH_CATEGORY_WITH_CATEGORY_DETAIL_COLUMNS;
     static {
         int size = BRANCH_CATEGORY_COLUMNS.length +
                 SCategory.CATEGORY_COLUMNS.length;
         BRANCH_CATEGORY_WITH_CATEGORY_DETAIL_COLUMNS = new String[size];
 
-        System.arraycopy(BRANCH_CATEGORY_COLUMNS, 0,
-                BRANCH_CATEGORY_WITH_CATEGORY_DETAIL_COLUMNS,
-                0, BRANCH_CATEGORY_COLUMNS.length);
         System.arraycopy(SCategory.CATEGORY_COLUMNS, 0,
                 BRANCH_CATEGORY_WITH_CATEGORY_DETAIL_COLUMNS,
-                BRANCH_CATEGORY_COLUMNS.length,
-                SCategory.CATEGORY_COLUMNS.length);
+                0, SCategory.CATEGORY_COLUMNS.length);
+        System.arraycopy(BRANCH_CATEGORY_COLUMNS, 0,
+                BRANCH_CATEGORY_WITH_CATEGORY_DETAIL_COLUMNS,
+                SCategory.CATEGORY_COLUMNS.length,
+                BRANCH_CATEGORY_COLUMNS.length);
     }
 
     public static final int COL_COMPANY_ID = 0;
