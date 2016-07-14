@@ -46,6 +46,9 @@ public class SheketProvider extends ContentProvider {
     private static final int CATEGORY = 800;
     private static final int CATEGORY_WITH_ID = 801;
 
+    private static final int BRANCH_CATEGORY = 900;
+    private static final int BRANCH_CATEGORY_WITH_ID = 901;
+
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
@@ -131,6 +134,9 @@ public class SheketProvider extends ContentProvider {
 
         matcher.addURI(authority, SheketContract.PATH_CATEGORY + "/*", CATEGORY);
         matcher.addURI(authority, SheketContract.PATH_CATEGORY + "/*/*", CATEGORY_WITH_ID);
+
+        matcher.addURI(authority, SheketContract.PATH_BRANCH_CATEGORY + "/*", BRANCH_CATEGORY);
+        matcher.addURI(authority, SheketContract.PATH_BRANCH_CATEGORY + "/*/*/*", BRANCH_CATEGORY_WITH_ID);
         return matcher;
     }
 
@@ -396,7 +402,7 @@ public class SheketProvider extends ContentProvider {
             case BRANCH:
                 return BranchEntry.CONTENT_TYPE;
 
-            case BRANCH_ITEM_WITH_ID:
+            case BRANCH_ITEM_WITH_ID: {
                 long branch_id = BranchItemEntry.getBranchId(uri);
                 long item_id = BranchItemEntry.getItemId(uri);
                 if (BranchItemEntry.isIdSpecified(getContext(), branch_id) &&
@@ -405,8 +411,22 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     return BranchItemEntry.CONTENT_TYPE;
                 }
+            }
             case BRANCH_ITEM:
                 return BranchItemEntry.CONTENT_TYPE;
+
+            case BRANCH_CATEGORY_WITH_ID: {
+                long branch_id = BranchCategoryEntry.getBranchId(uri);
+                long category_id = BranchCategoryEntry.getBranchId(uri);
+                if (BranchCategoryEntry.isIdSpecified(getContext(), branch_id) &&
+                        BranchCategoryEntry.isIdSpecified(getContext(), category_id)) {
+                    return BranchCategoryEntry.CONTENT_ITEM_TYPE;
+                } else {
+                    return BranchCategoryEntry.CONTENT_TYPE;
+                }
+            }
+            case BRANCH_CATEGORY:
+                return BranchCategoryEntry.CONTENT_TYPE;
 
             case ITEM_WITH_ID:
                 return ItemEntry.CONTENT_ITEM_TYPE;
@@ -451,7 +471,7 @@ public class SheketProvider extends ContentProvider {
         }
 
         Uri returnUri = null;
-        final long insert_error = -1;
+        final long INSERT_ERROR = -1;
         switch (match) {
             case COMPANY: {
                 /**
@@ -483,7 +503,7 @@ public class SheketProvider extends ContentProvider {
                     }
 
                     long _id = db.insertWithOnConflict(CompanyEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-                    if (_id != insert_error) {
+                    if (_id != INSERT_ERROR) {
                         returnUri = CompanyEntry.buildCompanyUri(company_id);
                     } else {
                         throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -500,7 +520,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(MemberEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     returnUri = MemberEntry.buildMemberUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -515,7 +535,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(CategoryEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     returnUri = CategoryEntry.buildCategoryUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -530,7 +550,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(BranchEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     returnUri = BranchEntry.buildBranchUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -545,10 +565,27 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(BranchItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     long branch_id = values.getAsLong(BranchItemEntry.COLUMN_BRANCH_ID);
                     long item_id = values.getAsLong(BranchItemEntry.COLUMN_ITEM_ID);
                     returnUri = BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id);
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            }
+
+            case BRANCH_CATEGORY: {
+                long _id;
+                if (replace) {
+                    _id = db.replace(BranchCategoryEntry.TABLE_NAME, null, values);
+                } else {
+                    _id = db.insert(BranchCategoryEntry.TABLE_NAME, null, values);
+                }
+                if (_id != INSERT_ERROR) {
+                    long branch_id = values.getAsLong(BranchCategoryEntry.COLUMN_BRANCH_ID);
+                    long category_id = values.getAsLong(BranchCategoryEntry.COLUMN_CATEGORY_ID);
+                    returnUri = BranchCategoryEntry.buildBranchCategoryUri(company_id, branch_id, category_id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
@@ -562,7 +599,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(ItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     returnUri = ItemEntry.buildItemUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -577,7 +614,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(TransactionEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     returnUri = TransactionEntry.buildTransactionUri(company_id, _id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
@@ -592,7 +629,7 @@ public class SheketProvider extends ContentProvider {
                 } else {
                     _id = db.insert(TransItemEntry.TABLE_NAME, null, values);
                 }
-                if (_id != insert_error) {
+                if (_id != INSERT_ERROR) {
                     long trans_id = values.getAsLong(TransItemEntry.COLUMN_TRANSACTION_ID);
                     returnUri = TransactionEntry.buildTransactionUri(company_id, trans_id);
                 } else {
@@ -630,6 +667,9 @@ public class SheketProvider extends ContentProvider {
                 break;
             case BRANCH_ITEM:
                 tableName = BranchItemEntry.TABLE_NAME;
+                break;
+            case BRANCH_CATEGORY:
+                tableName = BranchCategoryEntry.TABLE_NAME;
                 break;
             case ITEM:
                 tableName = ItemEntry.TABLE_NAME;
@@ -676,6 +716,9 @@ public class SheketProvider extends ContentProvider {
             case BRANCH_ITEM:
                 tableName = BranchItemEntry.TABLE_NAME;
                 break;
+            case BRANCH_CATEGORY:
+                tableName = BranchCategoryEntry.TABLE_NAME;
+                break;
             case ITEM:
                 tableName = ItemEntry.TABLE_NAME;
                 break;
@@ -717,6 +760,9 @@ public class SheketProvider extends ContentProvider {
                 break;
             case BRANCH_ITEM:
                 tableName = BranchItemEntry.TABLE_NAME;
+                break;
+            case BRANCH_CATEGORY:
+                tableName = BranchCategoryEntry.TABLE_NAME;
                 break;
             case ITEM:
                 tableName = ItemEntry.TABLE_NAME;
