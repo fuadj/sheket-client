@@ -51,6 +51,7 @@ public class SheketProvider extends ContentProvider {
 
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
+    private static final SQLiteQueryBuilder sBranchCategoryWithCategoryDetailQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
     private static final SQLiteQueryBuilder sCategoryWithChildrenQueryBuilder;
 
@@ -76,6 +77,15 @@ public class SheketProvider extends ContentProvider {
                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
                         " = " +
                         ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ") "
+        );
+
+        sBranchCategoryWithCategoryDetailQueryBuilder = new SQLiteQueryBuilder();
+        sBranchCategoryWithCategoryDetailQueryBuilder.setTables(
+                BranchCategoryEntry.TABLE_NAME + " inner join " + CategoryEntry.TABLE_NAME +
+                        " ON ( " +
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) +
+                        " = " +
+                        CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ) "
         );
 
         sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
