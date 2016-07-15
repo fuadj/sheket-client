@@ -197,13 +197,13 @@ public class ItemCategorySelectionFragment extends Fragment implements LoaderMan
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
 
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(company_id),
-                SCategory.CATEGORY_COLUMNS,
-                CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
+                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                 new String[]{String.valueOf(mCurrentParentCategoryId)},
                 sortOrder);
     }

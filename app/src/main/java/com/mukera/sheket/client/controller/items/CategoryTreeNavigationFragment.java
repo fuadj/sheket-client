@@ -273,12 +273,12 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * Override this to create another loader.
      */
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_NAME) + " ASC";
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
 
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
-                SCategory.CATEGORY_COLUMNS,
-                CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
+                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                 new String[]{String.valueOf(mCurrentCategoryId)},
                 sortOrder);
     }

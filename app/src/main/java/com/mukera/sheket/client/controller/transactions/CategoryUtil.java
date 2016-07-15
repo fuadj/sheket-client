@@ -3,7 +3,6 @@ package com.mukera.sheket.client.controller.transactions;
 import android.content.Context;
 import android.database.Cursor;
 
-import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -38,7 +37,7 @@ public class CategoryUtil {
 
         long company_id = PrefUtil.getCurrentCompanyId(context);
 
-        String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
         Cursor cursor = context.getContentResolver().query(
                 CategoryEntry.buildBaseUri(company_id),
                 SCategory.CATEGORY_COLUMNS,

@@ -504,7 +504,7 @@ public class SheketService extends IntentService {
         List<SCategory> updatedCategories = new ArrayList<>();
         List<SCategory> deletedCategories = new ArrayList<>();
 
-        String change_selector = String.format("%s != ?", CategoryEntry._fullParent(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
+        String change_selector = String.format("%s != ?", CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
         String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
         Cursor cursor = this.getContentResolver().query(
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),

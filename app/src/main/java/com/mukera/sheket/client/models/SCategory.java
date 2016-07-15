@@ -24,40 +24,40 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     public static final String JSON_NAME = "name";
     public static final String JSON_PARENT_ID = "parent_id";
 
-    static String _fP(String s) { return CategoryEntry._fullParent(s); }
-    static String _fC(String s) { return CategoryEntry._fullChild(s); }
-
+    static String _fCurrent(String s) { return CategoryEntry._fullCurrent(s); }
+    static String _fChild(String s) { return CategoryEntry._fullChild(s); }
     public static final String[] CATEGORY_COLUMNS = {
-            // Parent category columns
-            _fP(CategoryEntry.COLUMN_COMPANY_ID),
-            _fP(CategoryEntry.COLUMN_CATEGORY_ID),
-            _fP(CategoryEntry.COLUMN_NAME),
-            _fP(CategoryEntry.COLUMN_PARENT_ID),
-            _fP(COLUMN_CHANGE_INDICATOR),
-            _fP(COLUMN_UUID),
-
-            // Child category columns
-            _fC(CategoryEntry.COLUMN_COMPANY_ID),
-            _fC(CategoryEntry.COLUMN_CATEGORY_ID),
-            _fC(CategoryEntry.COLUMN_NAME),
-            _fC(CategoryEntry.COLUMN_PARENT_ID),
-            _fC(COLUMN_CHANGE_INDICATOR),
-            _fC(COLUMN_UUID),
+            // Current category columns
+            _fCurrent(CategoryEntry.COLUMN_COMPANY_ID),
+            _fCurrent(CategoryEntry.COLUMN_CATEGORY_ID),
+            _fCurrent(CategoryEntry.COLUMN_NAME),
+            _fCurrent(CategoryEntry.COLUMN_PARENT_ID),
+            _fCurrent(COLUMN_CHANGE_INDICATOR),
+            _fCurrent(COLUMN_UUID),
     };
 
-    public static final int COL_P_COMPANY_ID = 0;
-    public static final int COL_P_CATEGORY_ID = 1;
-    public static final int COL_P_NAME = 2;
-    public static final int COL_P_PARENT_ID = 3;
-    public static final int COL_P_CHANGE_INDICATOR = 4;
-    public static final int COL_P_CLIENT_UUID = 5;
+            // Child category columns
+            _fChild(CategoryEntry.COLUMN_COMPANY_ID),
+            _fChild(CategoryEntry.COLUMN_CATEGORY_ID),
+            _fChild(CategoryEntry.COLUMN_NAME),
+            _fChild(CategoryEntry.COLUMN_PARENT_ID),
+            _fChild(COLUMN_CHANGE_INDICATOR),
+            _fChild(COLUMN_UUID),
+    };
 
-    public static final int COL_C_COMPANY_ID = 6;
-    public static final int COL_C_CATEGORY_ID = 7;
-    public static final int COL_C_NAME = 8;
-    public static final int COL_C_PARENT_ID = 9;
-    public static final int COL_C_CHANGE_INDICATOR = 10;
-    public static final int COL_C_CLIENT_UUID = 11;
+    public static final int COL_CURRENT_COMPANY_ID = 0;
+    public static final int COL_CURRENT_CATEGORY_ID = 1;
+    public static final int COL_CURRENT_NAME = 2;
+    public static final int COL_CURRENT_PARENT_ID = 3;
+    public static final int COL_CURRENT_CHANGE_INDICATOR = 4;
+    public static final int COL_CURRENT_CLIENT_UUID = 5;
+
+    public static final int COL_CHILD_COMPANY_ID = 6;
+    public static final int COL_CHILD_CATEGORY_ID = 7;
+    public static final int COL_CHILD_NAME = 8;
+    public static final int COL_CHILD_PARENT_ID = 9;
+    public static final int COL_CHILD_CHANGE_INDICATOR = 10;
+    public static final int COL_CHILD_CLIENT_UUID = 11;
 
     public static final int COL_LAST = 12;
 
@@ -85,13 +85,13 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     private static final int NO_CHILD_FOUND = 0;
     public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
         if (is_parent) {
-            company_id = cursor.getLong(COL_P_COMPANY_ID + offset);
-            category_id = cursor.getLong(COL_P_CATEGORY_ID + offset);
-            name = Utils.toTitleCase(cursor.getString(COL_P_NAME + offset));
-            parent_id = cursor.getLong(COL_P_PARENT_ID + offset);
+            company_id = cursor.getLong(COL_CURRENT_COMPANY_ID + offset);
+            category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID + offset);
+            name = Utils.toTitleCase(cursor.getString(COL_CURRENT_NAME + offset));
+            parent_id = cursor.getLong(COL_CURRENT_PARENT_ID + offset);
 
-            change_status = cursor.getInt(COL_P_CHANGE_INDICATOR + offset);
-            client_uuid = cursor.getString(COL_P_CLIENT_UUID + offset);
+            change_status = cursor.getInt(COL_CURRENT_CHANGE_INDICATOR + offset);
+            client_uuid = cursor.getString(COL_CURRENT_CLIENT_UUID + offset);
 
             childrenCategories = new ArrayList<>();
             if (fetch_children) {
@@ -126,18 +126,18 @@ public class SCategory extends UUIDSyncable implements Parcelable {
                 } while (cursor.moveToNext());
             }
         } else {
-            if (cursor.getType(COL_C_CATEGORY_ID) == Cursor.FIELD_TYPE_NULL) {
+            if (cursor.getType(COL_CHILD_CATEGORY_ID) == Cursor.FIELD_TYPE_NULL) {
                 category_id = NO_CHILD_FOUND;
                 return;
             }
 
-            company_id = cursor.getLong(COL_C_COMPANY_ID + offset);
-            category_id = cursor.getLong(COL_C_CATEGORY_ID + offset);
-            name = Utils.toTitleCase(cursor.getString(COL_C_NAME + offset));
-            parent_id = cursor.getLong(COL_C_PARENT_ID + offset);
+            company_id = cursor.getLong(COL_CHILD_COMPANY_ID + offset);
+            category_id = cursor.getLong(COL_CHILD_CATEGORY_ID + offset);
+            name = Utils.toTitleCase(cursor.getString(COL_CHILD_NAME + offset));
+            parent_id = cursor.getLong(COL_CHILD_PARENT_ID + offset);
 
-            change_status = cursor.getInt(COL_C_CHANGE_INDICATOR + offset);
-            client_uuid = cursor.getString(COL_C_CLIENT_UUID + offset);
+            change_status = cursor.getInt(COL_CHILD_CHANGE_INDICATOR + offset);
+            client_uuid = cursor.getString(COL_CHILD_CLIENT_UUID + offset);
 
             childrenCategories = null;
         }
