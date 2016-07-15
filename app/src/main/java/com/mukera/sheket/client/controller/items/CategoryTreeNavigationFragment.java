@@ -141,7 +141,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * Override this to disable the toggle view.
      * @return
      */
-    protected boolean dispalyCategoryToggleActionBarOption() {
+    protected boolean displayCategoryToggleActionBarOption() {
         return true;
     }
 
@@ -199,7 +199,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
 
-        if (dispalyCategoryToggleActionBarOption())
+        if (displayCategoryToggleActionBarOption())
             addCategoryViewToggleActionButton(rootView);
 
         mCategoryList = (ListView) rootView.findViewById(R.id.category_tree_navigation_list_view);
