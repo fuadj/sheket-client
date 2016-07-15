@@ -45,7 +45,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
 
     private ListView mCategoryList;
     private SwitchCompat mToggleCategoryView;
-    private CategoryAdapter mCategoryAdapter = null;
+    protected CategoryAdapter mCategoryAdapter = null;
 
     private View mDividerView;
 
