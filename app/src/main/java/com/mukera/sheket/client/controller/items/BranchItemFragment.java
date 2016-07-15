@@ -49,7 +49,6 @@ import java.util.Locale;
  * Created by gamma on 3/27/16.
  */
 public class BranchItemFragment extends CategoryTreeNavigationFragment {
-    private static final String KEY_CATEGORY_ID = "key_category_id";
     private static final String KEY_BRANCH_ID = "key_branch_id";
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
@@ -64,11 +63,10 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     private List<SBranch> mBranches = null;
 
 
-    public static BranchItemFragment newInstance(long category_id, long branch_id) {
+    public static BranchItemFragment newInstance(long branch_id) {
         Bundle args = new Bundle();
 
         BranchItemFragment fragment = new BranchItemFragment();
-        args.putLong(KEY_CATEGORY_ID, category_id);
         args.putLong(KEY_BRANCH_ID, branch_id);
         fragment.setArguments(args);
 
@@ -106,7 +104,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         mBranchId = args.getLong(KEY_BRANCH_ID);
 
         mTransactionItemList = new ArrayList<>();

@@ -211,8 +211,8 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBranchSelected(final SBranch branch) {
-        replaceMainFragment(BranchItemFragment.
-                newInstance(CategoryEntry.ROOT_CATEGORY_ID, branch.branch_id), false);
+        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id),
+                false);
         closeNavDrawer();
     }
 
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements
 
         switch (item) {
             case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
-                replaceMainFragment(AllItemsFragment.newInstance(CategoryEntry.ROOT_CATEGORY_ID), false);
+                replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
                 // Create the ACTION_GET_CONTENT Intent

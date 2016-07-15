@@ -44,28 +44,15 @@ import java.util.List;
  * Created by gamma on 3/4/16.
  */
 public class AllItemsFragment extends CategoryTreeNavigationFragment {
-    private static final String KEY_CATEGORY_ID = "key_category_id";
-
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
 
-    public static AllItemsFragment newInstance(long category_id) {
-        Bundle args = new Bundle();
-
-        AllItemsFragment fragment = new AllItemsFragment();
-        args.putLong(KEY_CATEGORY_ID, category_id);
-        fragment.setArguments(args);
-
-        return fragment;
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle args = getArguments();
-        mCategoryId = args.getLong(KEY_CATEGORY_ID);
+        mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         setHasOptionsMenu(true);
         setCurrentCategory(mCategoryId);
     }
