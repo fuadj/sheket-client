@@ -26,6 +26,14 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
     static String _fCurrent(String s) { return CategoryEntry._fullCurrent(s); }
     static String _fChild(String s) { return CategoryEntry._fullChild(s); }
+
+    /**
+     * You can use this projection with results from joined queries with Category tables,
+     * provided that you ALIASED the category table with {@code CategoryEntry.PART_CURRENT} qualifier.
+     * NOTE: if you want to fetch the children categories also, you need to create a joined
+     * query to fetch children and alias that bit with {@code CategoryEntry.PART_CURRENT}. Then
+     * you can use {@code SCategory.CATEGORY_WITH_CHILDREN_COLUMNS} with it.
+     */
     public static final String[] CATEGORY_COLUMNS = {
             // Current category columns
             _fCurrent(CategoryEntry.COLUMN_COMPANY_ID),
@@ -36,6 +44,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
             _fCurrent(COLUMN_UUID),
     };
 
+    private static final String[] CHILDREN_COLUMNS = {
             // Child category columns
             _fChild(CategoryEntry.COLUMN_COMPANY_ID),
             _fChild(CategoryEntry.COLUMN_CATEGORY_ID),
@@ -44,6 +53,18 @@ public class SCategory extends UUIDSyncable implements Parcelable {
             _fChild(COLUMN_CHANGE_INDICATOR),
             _fChild(COLUMN_UUID),
     };
+
+    /**
+     * Use this if you also want to fetch the children.
+     */
+    public static final String[] CATEGORY_WITH_CHILDREN_COLUMNS;
+    static {
+        CATEGORY_WITH_CHILDREN_COLUMNS = new String[CATEGORY_COLUMNS.length + CHILDREN_COLUMNS.length];
+
+        System.arraycopy(CATEGORY_COLUMNS, 0, CATEGORY_WITH_CHILDREN_COLUMNS, 0, CATEGORY_COLUMNS.length);
+        System.arraycopy(CHILDREN_COLUMNS, 0, CATEGORY_WITH_CHILDREN_COLUMNS,
+                CATEGORY_COLUMNS.length, CHILDREN_COLUMNS.length);
+    }
 
     public static final int COL_CURRENT_COMPANY_ID = 0;
     public static final int COL_CURRENT_CATEGORY_ID = 1;
