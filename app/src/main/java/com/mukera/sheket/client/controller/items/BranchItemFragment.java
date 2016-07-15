@@ -203,8 +203,6 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
         dialog.setListener(new TransactionSummaryDialog.SummaryListener() {
             @Override
             public void cancelSelected(final DialogFragment dialog) {
-                dialog.dismiss();
-
                 new AlertDialog.Builder(getActivity()).
                         setTitle("Quit Transaction?").
                         setMessage("Are You Sure?").
