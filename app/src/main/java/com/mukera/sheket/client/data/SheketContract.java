@@ -6,7 +6,6 @@ import android.net.Uri;
 
 import com.mukera.sheket.client.R;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -205,17 +204,23 @@ public class SheketContract {
 
         public static final String TABLE_NAME = "category_table";
 
-        public static final String PART_PARENT = "parent";
-        public static final String PART_CHILD = "child";
-
-        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
-
-        public static String _fullParent(String col_name) { return PART_PARENT + "." + col_name; }
-        public static String _fullChild(String col_name) { return PART_CHILD + "." + col_name; }
-
         public static final String COLUMN_CATEGORY_ID = "_id";
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_PARENT_ID = "parent_id";
+
+        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+
+        /**
+         * IMPORTANT: when joining tables, you should alias the category table with this and
+         * fully qualify every columns you want to select with it.
+         */
+        public static final String PART_CURRENT = "current";
+
+        // If you are using a query that also fetches children, this is that child part
+        public static final String PART_CHILD = "child";
+
+        public static String _fullCurrent(String col_name) { return PART_CURRENT + "." + col_name; }
+        public static String _fullChild(String col_name) { return PART_CHILD + "." + col_name; }
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
