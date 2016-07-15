@@ -34,6 +34,7 @@ import com.mukera.sheket.client.controller.transactions.TransactionUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
+import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -154,6 +155,30 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
                             ColorStateList.valueOf(Color.WHITE), TEXT_SIZE, TextDrawable.VerticalAlignment.BASELINE)
             );
         }
+    }
+
+    @Override
+    protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
+
+        /**
+         * NOTE: we are able to use the projection of SCategory because the
+         * the result is a join between Branch and Category with each column
+         * being fully qualified(i.e: saying from which table it came from)
+         * so it doesn't create any problems.
+         *
+         * We are fetching the children so we want to use the CategoryTreeNavigation fragment's
+         * UI to display the number of children sub-categories.
+         */
+        return new CursorLoader(getActivity(),
+                BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
+                        // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
+                        // with a particular id.
+                        mBranchId, BranchCategoryEntry.NO_ID_SET),
+                SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
+                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                new String[]{String.valueOf(mCurrentCategoryId)},
+                sortOrder);
     }
 
     @Override
