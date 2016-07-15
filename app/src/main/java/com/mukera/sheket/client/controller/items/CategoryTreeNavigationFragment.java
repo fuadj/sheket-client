@@ -264,11 +264,10 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     protected abstract void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data);
     protected abstract void onCategoryTreeLoaderReset(Loader<Cursor> loader);
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if (id != getCategoryLoaderId())
-            return onCategoryTreeCreateLoader(id, args);
-
+    /**
+     * Override this to create another loader.
+     */
+    protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
         String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_NAME) + " ASC";
 
         return new CursorLoader(getActivity(),
@@ -277,6 +276,14 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                 CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                 new String[]{String.valueOf(mCurrentCategoryId)},
                 sortOrder);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id != getCategoryLoaderId())
+            return onCategoryTreeCreateLoader(id, args);
+
+        return getCategoryTreeLoader(id, args);
     }
 
     @Override
