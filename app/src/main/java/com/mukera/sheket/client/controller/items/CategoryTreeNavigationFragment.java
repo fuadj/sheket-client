@@ -16,13 +16,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.base_adapters.BaseCategoryChildrenAdapter;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -44,8 +44,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     protected Stack<Long> mCategoryBackstack;
 
     private ListView mCategoryList;
-    private CategoryAdapter mAdapter;
     private SwitchCompat mToggleCategoryView;
+    private CategoryAdapter mCategoryAdapter = null;
 
     private View mDividerView;
 
@@ -115,8 +115,14 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         super.onActivityCreated(savedInstanceState);
     }
 
-    protected BaseAdapter getCategoryAdapter() {
-        return mAdapter;
+    /**
+     * Override this to create your own adapter.
+     */
+    protected CategoryAdapter getCategoryAdapter() {
+        if (mCategoryAdapter == null) {
+            mCategoryAdapter = new CategoryChildrenArrayAdapter(getActivity());
+        }
+        return mCategoryAdapter;
     }
 
     /**
@@ -197,12 +203,11 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
             addCategoryViewToggleActionButton(rootView);
 
         mCategoryList = (ListView) rootView.findViewById(R.id.category_tree_navigation_list_view);
-        mAdapter = new CategoryAdapter(getActivity());
-        mCategoryList.setAdapter(mAdapter);
+        mCategoryList.setAdapter(getCategoryAdapter());
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SCategory category = mAdapter.getItem(position);
+                SCategory category = getCategoryAdapter().getCategoryAt(position);
 
                 setCurrentCategory(category.category_id);
 
@@ -289,7 +294,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
-            mAdapter.setCategoryCursor(data);
+            mCategoryAdapter.setCategoryCursor(data);
             setCategoryListVisibility(isShowingCategoryTree());
         } else {
             onCategoryTreeLoaderFinished(loader, data);
@@ -299,7 +304,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         if (loader.getId() != getCategoryLoaderId()) {
-            mAdapter.setCategoryCursor(null);
+            mCategoryAdapter.setCategoryCursor(null);
             setCategoryListVisibility(false);
         } else {
             onCategoryTreeLoaderReset(loader);
@@ -317,11 +322,24 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         }
     }
 
-    public static class CategoryAdapter extends BaseCategoryChildrenAdapter {
-        public CategoryAdapter(Context context) {
-            super(context);
-        }
+    /**
+     * The adapter the {@code CategoryTreeNavigationFragment} uses to load
+     * the category data should implement this. The underlying implementation can
+     * be {@code CursorAdapter}, {@code ArrayAdapter} OR what ever.
+     */
+    public interface CategoryAdapter extends ListAdapter {
+        SCategory getCategoryAt(int position);
 
+        /**
+         * The data is populated through this method.
+         */
+        void setCategoryCursor(Cursor cursor);
+    }
+
+    /**
+     * This adapter loads the categories 2-level, so the parent are loaded along with their children.
+     */
+    public static class CategoryChildrenArrayAdapter extends ArrayAdapter<SCategory> implements CategoryAdapter {
         private static class ViewHolder {
             TextView categoryName, childrenCount;
 
@@ -329,6 +347,29 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                 categoryName = (TextView) view.findViewById(R.id.list_item_select_category_name);
                 childrenCount = (TextView) view.findViewById(R.id.list_item_select_category_sub_count);
             }
+        }
+
+        public CategoryChildrenArrayAdapter(Context context) {
+            super(context, 0);
+        }
+
+        @Override
+        public SCategory getCategoryAt(int position) {
+            return super.getItem(position);
+        }
+
+        @Override
+        public void setCategoryCursor(Cursor cursor) {
+            setNotifyOnChange(false);
+
+            clear();
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    SCategory parent_category = new SCategory(cursor, true);
+                    super.add(parent_category);
+                } while (cursor.moveToNext());
+            }
+            notifyDataSetChanged();
         }
 
         @Override

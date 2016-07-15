@@ -31,7 +31,6 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.base_adapters.BaseCategoryChildrenAdapter;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -219,7 +218,7 @@ public class ItemCategorySelectionFragment extends Fragment implements LoaderMan
         mCategoryAdapter.setCategoryCursor(null);
     }
 
-    public static class CategorySelectionCursorAdapter extends BaseCategoryChildrenAdapter {
+    public static class CategorySelectionCursorAdapter extends CategoryTreeNavigationFragment.CategoryChildrenArrayAdapter {
         public interface AdapterSelectionListener {
             void categorySelected(boolean newly_selected, long category_id, SCategory category);
         }
