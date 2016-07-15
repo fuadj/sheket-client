@@ -344,16 +344,16 @@ public class PrefUtil {
         editor.putBoolean(KEY_SHOW_CATEGORY_CARD, show_cards);
         editor.commit();
         if (show_cards) {
-            setShowCategoryTree(context, true);
+            setShowCategoryTreeState(context, true);
         }
     }
 
-    public static boolean showCategoryTree(Context context) {
+    public static boolean getShowCategoryTreeState(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(KEY_SHOW_CATEGORY_TREE, true);
     }
 
-    public static void setShowCategoryTree(Context context, boolean show_tree) {
+    public static void setShowCategoryTreeState(Context context, boolean show_tree) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean(KEY_SHOW_CATEGORY_TREE, show_tree);
         editor.commit();

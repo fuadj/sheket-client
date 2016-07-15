@@ -8,16 +8,16 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -98,6 +98,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         mCategoryBackstack = new Stack<>();
         // we start at the root
         mCurrentCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+
+        setHasOptionsMenu(true);
     }
 
     protected void setCurrentCategory(long category_id) {
@@ -131,10 +133,40 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * @return
      */
     protected boolean isShowingCategoryTree() {
-        return PrefUtil.showCategoryTree(getActivity());
+        return PrefUtil.getShowCategoryTreeState(getActivity());
     }
 
     protected void onCategoryTreeViewToggled(boolean show_tree_view) {
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        if (displayCategoryToggleActionBarOption()) {
+            inflater.inflate(R.menu.category_navigation_menu, menu);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_category_navigation_toggle: {
+                boolean state = PrefUtil.getShowCategoryTreeState(getActivity());
+                state = !state;
+                PrefUtil.setShowCategoryTreeState(getActivity(), state);
+
+                onCategoryTreeViewToggled(state);
+
+                if (state) {
+                    onCategorySelected(mCurrentCategoryId);
+                } else {
+                    onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID);
+                }
+                restartLoader();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -145,62 +177,10 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         return true;
     }
 
-    void addCategoryViewToggleActionButton(View rootView) {
-        ActionBar actionBar = ((AppCompatActivity)getActivity()).
-                getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayShowCustomEnabled(true);
-
-            LayoutInflater toggleInflater = (LayoutInflater)getActivity().
-                    getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View v = toggleInflater.inflate(R.layout.action_bar_category_toggle, null);
-            actionBar.setCustomView(v);
-            mToggleCategoryView = (SwitchCompat) v.findViewById(R.id.action_bar_toggle_category_layout);
-
-            // set the current preference
-            mToggleCategoryView.setChecked(PrefUtil.showCategoryTree(getActivity()));
-
-            mToggleCategoryView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    PrefUtil.setShowCategoryTree(getActivity(), isChecked);
-
-                    if (!isChecked) {
-                        // If we choose to disable the tree view, we should
-                        // also disable the cardview. It doesn't make any sense
-                        // to select a category from the card view and see
-                        // all items dumped because we disabled the tree view.
-                        // So, if we disable the tree view we are also disabling
-                        // card view.
-                        PrefUtil.setCategoryCardShow(getActivity(), false);
-                    }
-
-                    onCategoryTreeViewToggled(isChecked);
-
-                    if (isChecked) {
-                        onCategorySelected(mCurrentCategoryId);
-                        onRestartLoader();
-                        setCategoryListVisibility(true);
-                    } else {
-                        /**
-                         * Don't do any thing with the loader, don't waste any resources
-                         * loading shit that won't be displayed anyway
-                         */
-                        onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID);
-                        setCategoryListVisibility(false);
-                    }
-                }
-            });
-        }
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
-
-        if (displayCategoryToggleActionBarOption())
-            addCategoryViewToggleActionButton(rootView);
 
         mCategoryList = (ListView) rootView.findViewById(R.id.category_tree_navigation_list_view);
         mCategoryList.setAdapter(getCategoryAdapter());
@@ -234,15 +214,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                          * it should naturally do what is mostly expected which is move back to the
                          * previous fragment.
                          */
-                        // invalidate the action-bar stuff added by this
-
-                        ActionBar actionBar = ((AppCompatActivity)getActivity()).
-                                getSupportActionBar();
-                        if (actionBar != null && (actionBar.getCustomView() != null))
-                            actionBar.getCustomView().setVisibility(View.GONE);
-                        getActivity().invalidateOptionsMenu();
                         getActivity().onBackPressed();
-                        //getActivity().getSupportFragmentManager().popBackStack();
                     } else {
                         /**
                          * If we were inside a sub-category, we should move back to the parent
