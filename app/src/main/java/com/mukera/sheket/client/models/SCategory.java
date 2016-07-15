@@ -71,7 +71,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     public SCategory() {}
 
     public SCategory(Cursor cursor) {
-        this(cursor, 0, true, true);
+        this(cursor, 0, true, false);
     }
 
     public SCategory(Cursor cursor, int offset) {
