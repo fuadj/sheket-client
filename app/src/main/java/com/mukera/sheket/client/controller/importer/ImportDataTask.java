@@ -457,7 +457,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         for (int i = 0; i < mReader.getNumRows(); i++) {
             String branch_name = replaceBranchNameIfDuplicate(
                     mReader.getRowAt(i).get(col_branch)).trim();
-            String category_name = replaceBranchNameIfDuplicate(
+            String category_name = replaceCategoryNameIfDuplicate(
                     mReader.getRowAt(i).get(col_category)).trim();
 
             if (TextUtils.isEmpty(branch_name) ||
