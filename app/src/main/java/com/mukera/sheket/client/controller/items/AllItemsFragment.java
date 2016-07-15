@@ -43,7 +43,7 @@ import java.util.List;
 /**
  * Created by gamma on 3/4/16.
  */
-public class AllItemsFragment extends EmbeddedCategoryFragment {
+public class AllItemsFragment extends CategoryTreeNavigationFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
 
     private ListView mItemList;
@@ -67,7 +67,7 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
         Bundle args = getArguments();
         mCategoryId = args.getLong(KEY_CATEGORY_ID);
         setHasOptionsMenu(true);
-        setParentCategoryId(mCategoryId);
+        setCurrentCategory(mCategoryId);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
+    protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
 
@@ -180,13 +180,13 @@ public class AllItemsFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
+    protected void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data) {
         mItemDetailAdapter.setItemCursor(data);
         ListUtils.setDynamicHeight(mItemList);
     }
 
     @Override
-    protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
+    protected void onCategoryTreeLoaderReset(Loader<Cursor> loader) {
         mItemDetailAdapter.setItemCursor(null);
         ListUtils.setDynamicHeight(mItemList);
     }

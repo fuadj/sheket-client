@@ -32,13 +32,16 @@ import java.util.Stack;
 
 /**
  * Created by fuad on 6/4/16.
+ *
+ * <p>This fragment enables traversing category ancestry tree in the UI.
+ * By extending this class and overriding its methods, sub classes can be notified
+ * of the various states of the traversal. The traversal starts at the root category.
+ * When the user selects a category, it will update the UI to look into the category.
+ * This fragment keeps a stack of the categories visited so going back is possible.</p>
  */
-public abstract class EmbeddedCategoryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
-    protected abstract int getCategoryLoaderId();
-    protected abstract int getLayoutResId();
-
-    protected long mCurrentParentCategoryId;
-    protected Stack<Long> mParentCategoryBackStack;
+public abstract class CategoryTreeNavigationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+    protected long mCurrentCategoryId;
+    protected Stack<Long> mCategoryBackstack;
 
     private ListView mCategoryList;
     private CategoryAdapter mAdapter;
@@ -55,6 +58,18 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         getLoaderManager().restartLoader(getCategoryLoaderId(), null, this);
         onRestartLoader();
     }
+
+    /**
+     * Since sub-classes inflate their own UI, they should provide the resolve layout id
+     * to be inflated.
+     * NOTE: the inflated UI should should embed the layout {@code R.layout.embedded_category_tree_navigation},
+     * which contains the category navigation list and a divider view.
+     * @return
+     */
+    protected abstract int getLayoutResId();
+
+    protected abstract int getCategoryLoaderId();
+
 
     /**
      * Subclasses can override this to get notified when a category is selected.
@@ -80,18 +95,18 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // The root category is the DEFAULT
-        setParentCategoryId(CategoryEntry.ROOT_CATEGORY_ID);
-        mParentCategoryBackStack = new Stack<>();
+        mCategoryBackstack = new Stack<>();
+        // we start at the root
+        mCurrentCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     }
 
-    protected void setParentCategoryId(long category_id) {
-        mCurrentParentCategoryId = category_id;
-    }
+    protected void setCurrentCategory(long category_id) {
+        // the root category is only added to the "bottom" of the stack
+        if (category_id == CategoryEntry.ROOT_CATEGORY_ID)
+            return;
 
-    protected void addCategoryToStack(long category_id) {
-        mParentCategoryBackStack.push(mCurrentParentCategoryId);
-        mCurrentParentCategoryId = category_id;
+        mCategoryBackstack.push(mCurrentCategoryId);
+        mCurrentCategoryId = category_id;
     }
 
     @Override
@@ -104,26 +119,35 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         return mAdapter;
     }
 
-    public boolean isShowingCategoryTree() {
+    /**
+     * Sub-classes can override this and define their own rules. This is then used
+     * to determine whether to show the category navigation list view or not.
+     * @return
+     */
+    protected boolean isShowingCategoryTree() {
         return PrefUtil.showCategoryTree(getActivity());
     }
 
     protected void onCategoryTreeViewToggled(boolean show_tree_view) {
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(getLayoutResId(), container, false);
+    /**
+     * Override this to disable the toggle view.
+     * @return
+     */
+    protected boolean dispalyCategoryToggleActionBarOption() {
+        return true;
+    }
 
+    void addCategoryViewToggleActionButton(View rootView) {
         ActionBar actionBar = ((AppCompatActivity)getActivity()).
                 getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayShowCustomEnabled(true);
 
-            LayoutInflater toggleInfaltor = (LayoutInflater)getActivity().
+            LayoutInflater toggleInflater = (LayoutInflater)getActivity().
                     getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View v = toggleInfaltor.inflate(R.layout.action_bar_category_toggle, null);
+            View v = toggleInflater.inflate(R.layout.action_bar_category_toggle, null);
             actionBar.setCustomView(v);
             mToggleCategoryView = (SwitchCompat) v.findViewById(R.id.action_bar_toggle_category_layout);
 
@@ -148,7 +172,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                     onCategoryTreeViewToggled(isChecked);
 
                     if (isChecked) {
-                        onCategorySelected(mCurrentParentCategoryId);
+                        onCategorySelected(mCurrentCategoryId);
                         onRestartLoader();
                         setCategoryListVisibility(true);
                     } else {
@@ -162,7 +186,17 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                 }
             });
         }
-        mCategoryList = (ListView) rootView.findViewById(R.id.embedded_category_list_list_view);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View rootView = inflater.inflate(getLayoutResId(), container, false);
+
+        if (dispalyCategoryToggleActionBarOption())
+            addCategoryViewToggleActionButton(rootView);
+
+        mCategoryList = (ListView) rootView.findViewById(R.id.category_tree_navigation_list_view);
         mAdapter = new CategoryAdapter(getActivity());
         mCategoryList.setAdapter(mAdapter);
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -170,7 +204,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SCategory category = mAdapter.getItem(position);
 
-                addCategoryToStack(category.category_id);
+                setCurrentCategory(category.category_id);
 
                 onCategorySelected(category.category_id);
                 restartLoader();
@@ -189,7 +223,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    if (mParentCategoryBackStack.isEmpty()) {
+                    if (mCategoryBackstack.isEmpty()) {
                         /**
                          * If we are not inside a sub-category and we press the back button,
                          * it should naturally do what is mostly expected which is move back to the
@@ -209,8 +243,8 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                          * If we were inside a sub-category, we should move back to the parent
                          * and notify of that.
                          */
-                        mCurrentParentCategoryId = mParentCategoryBackStack.pop();
-                        onCategorySelected(mCurrentParentCategoryId);
+                        mCurrentCategoryId = mCategoryBackstack.pop();
+                        onCategorySelected(mCurrentCategoryId);
                         restartLoader();
                     }
                     return true;
@@ -223,14 +257,17 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
         return rootView;
     }
 
-    protected abstract Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args);
-    protected abstract void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data);
-    protected abstract void onEmbeddedLoadReset(Loader<Cursor> loader);
+    /**
+     * Override these 3 methods to load your data.
+     */
+    protected abstract Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args);
+    protected abstract void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data);
+    protected abstract void onCategoryTreeLoaderReset(Loader<Cursor> loader);
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (id != getCategoryLoaderId())
-            return onEmbeddedCreateLoader(id, args);
+            return onCategoryTreeCreateLoader(id, args);
 
         String sortOrder = CategoryEntry._fullParent(CategoryEntry.COLUMN_NAME) + " ASC";
 
@@ -238,7 +275,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SCategory.CATEGORY_COLUMNS,
                 CategoryEntry._fullParent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
-                new String[]{String.valueOf(mCurrentParentCategoryId)},
+                new String[]{String.valueOf(mCurrentCategoryId)},
                 sortOrder);
     }
 
@@ -248,7 +285,7 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
             mAdapter.setCategoryCursor(data);
             setCategoryListVisibility(isShowingCategoryTree());
         } else {
-            onEmbeddedLoadFinished(loader, data);
+            onCategoryTreeLoaderFinished(loader, data);
         }
     }
 
@@ -256,10 +293,9 @@ public abstract class EmbeddedCategoryFragment extends Fragment implements Loade
     public void onLoaderReset(Loader<Cursor> loader) {
         if (loader.getId() != getCategoryLoaderId()) {
             mAdapter.setCategoryCursor(null);
-            ListUtils.setDynamicHeight(mCategoryList);
-            mDividerView.setVisibility(View.GONE);
+            setCategoryListVisibility(false);
         } else {
-            onEmbeddedLoadReset(loader);
+            onCategoryTreeLoaderReset(loader);
         }
     }
 

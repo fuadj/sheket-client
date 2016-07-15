@@ -6,7 +6,7 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/embedded_category_list_list_view"/>
+        android:id="@+id/category_tree_navigation_list_view"/>
 
     <!-- This will be used as the "footer" divider from anything below-->
     <View

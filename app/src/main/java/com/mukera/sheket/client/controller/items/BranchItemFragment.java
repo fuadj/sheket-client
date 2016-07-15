@@ -48,7 +48,7 @@ import java.util.Locale;
 /**
  * Created by gamma on 3/27/16.
  */
-public class BranchItemFragment extends EmbeddedCategoryFragment {
+public class BranchItemFragment extends CategoryTreeNavigationFragment {
     private static final String KEY_CATEGORY_ID = "key_category_id";
     private static final String KEY_BRANCH_ID = "key_branch_id";
 
@@ -111,7 +111,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
 
         mTransactionItemList = new ArrayList<>();
 
-        setParentCategoryId(mCategoryId);
+        setCurrentCategory(mCategoryId);
 
         setHasOptionsMenu(true);
     }
@@ -485,7 +485,7 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    protected Loader<Cursor> onEmbeddedCreateLoader(int id, Bundle args) {
+    protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
 
         String selection = null;
@@ -506,13 +506,13 @@ public class BranchItemFragment extends EmbeddedCategoryFragment {
     }
 
     @Override
-    protected void onEmbeddedLoadFinished(Loader<Cursor> loader, Cursor data) {
+    protected void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data) {
         mBranchItemAdapter.swapCursor(data);
         ListUtils.setDynamicHeight(mBranchItemList);
     }
 
     @Override
-    protected void onEmbeddedLoadReset(Loader<Cursor> loader) {
+    protected void onCategoryTreeLoaderReset(Loader<Cursor> loader) {
         mBranchItemAdapter.swapCursor(null);
         ListUtils.setDynamicHeight(mBranchItemList);
     }
