@@ -286,7 +286,8 @@ public class SheketProvider extends ContentProvider {
                     // if neither is set, why bother
                     if (branch_set || item_set) {
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
-                                (String[]) args.toArray());
+                                // use the template-ized method to avoid ClassCastException
+                                args.toArray(new String[args.size()]));
                     }
                 }
 
@@ -332,7 +333,8 @@ public class SheketProvider extends ContentProvider {
                     // if neither is set, why bother
                     if (branch_set || category_set) {
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
-                                (String[]) args.toArray());
+                                // use the template-ized method to avoid ClassCastException
+                                args.toArray(new String[args.size()]));
                     }
                 }
 
