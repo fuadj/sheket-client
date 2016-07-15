@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -81,15 +80,6 @@ public class SheketProvider extends ContentProvider {
                         ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ") "
         );
 
-        sBranchCategoryWithCategoryDetailQueryBuilder = new SQLiteQueryBuilder();
-        sBranchCategoryWithCategoryDetailQueryBuilder.setTables(
-                BranchCategoryEntry.TABLE_NAME + " inner join " + CategoryEntry.TABLE_NAME +
-                        " ON ( " +
-                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) +
-                        " = " +
-                        CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " ) "
-        );
-
         sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
         sItemWithBranchQueryBuilder.setTables(
                 ItemEntry.TABLE_NAME + " LEFT JOIN " +
@@ -101,13 +91,36 @@ public class SheketProvider extends ContentProvider {
         );
         sCategoryWithChildrenQueryBuilder = new SQLiteQueryBuilder();
         sCategoryWithChildrenQueryBuilder.setTables(
-                String.format(Locale.US, "%s %s LEFT JOIN %s %s ON %s = %s",
+                String.format(Locale.US, "%s AS %s LEFT JOIN %s AS %s ON %s = %s",
                         CategoryEntry.TABLE_NAME,
-                        CategoryEntry.PART_PARENT,
+                        CategoryEntry.PART_CURRENT,
                         CategoryEntry.TABLE_NAME,
                         CategoryEntry.PART_CHILD,
                         CategoryEntry._fullChild(CategoryEntry.COLUMN_PARENT_ID),
-                        CategoryEntry._fullParent(CategoryEntry.COLUMN_CATEGORY_ID))
+                        CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID))
+        );
+
+        sBranchCategoryWithCategoryDetailQueryBuilder = new SQLiteQueryBuilder();
+        sBranchCategoryWithCategoryDetailQueryBuilder.setTables(
+                /**
+                 * We are aliasing the Category table so we can use the {@code SCategory}'s
+                 * projection. See {@code SCategory} for detail.
+                 *
+                 * We are fetching the category WITH ITS CHILDREN, that is why we are doing
+                 * a left join of category with itself.
+                 */
+                String.format(Locale.US,
+                        " (%s) INNER JOIN %s ON %s = %s",
+                        String.format(Locale.US, "%s AS %s LEFT JOIN %s AS %s ON %s = %s",
+                                CategoryEntry.TABLE_NAME,
+                                CategoryEntry.PART_CURRENT,
+                                CategoryEntry.TABLE_NAME,
+                                CategoryEntry.PART_CHILD,
+                                CategoryEntry._fullChild(CategoryEntry.COLUMN_PARENT_ID),
+                                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID)),
+                        BranchCategoryEntry.TABLE_NAME,
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID),
+                        CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID))
         );
     }
 
@@ -231,7 +244,7 @@ public class SheketProvider extends ContentProvider {
                 }
 
                 selection = withAppendedCompanyIdSelection(selection,
-                        CategoryEntry._fullParent(CategoryEntry.COLUMN_COMPANY_ID));
+                        CategoryEntry._fullCurrent(CategoryEntry.COLUMN_COMPANY_ID));
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs,
                         company_id);
 
