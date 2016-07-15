@@ -95,7 +95,7 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
 
     @Override
     protected int getLayoutResId() {
-        return R.layout.fragment_item_list;
+        return R.layout.fragment_all_item;
     }
 
     void displayOptionToEditItem(final SItemDetail itemDetail) {
