@@ -30,7 +30,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
-import com.mukera.sheket.client.controller.transactions.TransactionUtil;
+import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -63,6 +63,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     private List<STransactionItem> mTransactionItemList;
     private List<SBranch> mBranches = null;
 
+    private static final String KEY_SAVE_ALL_ITEMS = "key_save_all_items";
+    private boolean mShowAllItems = false;
 
     public static BranchItemFragment newInstance(long branch_id) {
         Bundle args = new Bundle();
@@ -76,6 +78,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
 
     /**
      * Lazily fetch the branches
+     *
      * @return
      */
     List<SBranch> getBranches() {
@@ -85,7 +88,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
             String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
             Cursor cursor = getActivity().getContentResolver().
                     query(BranchEntry.buildBaseUri(company_id),
-                    SBranch.BRANCH_COLUMNS, null, null, sortOrder);
+                            SBranch.BRANCH_COLUMNS, null, null, sortOrder);
             if (cursor != null && cursor.moveToFirst()) {
                 mBranches = new ArrayList<>();
                 do {
@@ -104,6 +107,9 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            mShowAllItems = savedInstanceState.getBoolean(KEY_SAVE_ALL_ITEMS, false);
+        }
         Bundle args = getArguments();
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         mBranchId = args.getLong(KEY_BRANCH_ID);
@@ -116,25 +122,33 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(KEY_SAVE_ALL_ITEMS, mShowAllItems);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.branch_items, menu);
         super.onCreateOptionsMenu(menu, inflater);
+    }
 
-        MenuItem toggleAllItems = menu.findItem(R.id.branch_item_menu_toggle_all_items);
-        toggleAllItems.setCheckable(true);
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.menu_item_branch_item_list_all_items).
+                setIcon(
+                        getActivity().getResources().getDrawable(mShowAllItems ?
+                                R.drawable.ic_action_eye_open :
+                                R.drawable.ic_action_eye_closed));
+        super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.branch_item_menu_toggle_all_items:
-                if (item.isChecked()) {
-
-                } else {
-
-                }
-                item.setChecked(!item.isChecked());
-                return true;
+            case R.id.menu_item_branch_item_list_all_items:
+                mShowAllItems = !mShowAllItems;
+                break;
         }
         return super.onOptionsItemSelected(item);
     }

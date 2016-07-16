@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.controller.transactions;
+package com.mukera.sheket.client.controller.admin;
 
 import android.database.Cursor;
 import android.os.Bundle;

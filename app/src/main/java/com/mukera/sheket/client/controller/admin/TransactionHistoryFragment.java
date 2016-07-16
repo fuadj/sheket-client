@@ -21,7 +21,7 @@ import android.view.ViewGroup;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
-import com.mukera.sheket.client.controller.transactions.TransactionUtil;
+import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;

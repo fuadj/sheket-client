@@ -47,7 +47,7 @@ import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.admin.SettingsActivity;
-import com.mukera.sheket.client.controller.transactions.UnsyncedTranactionHistoryFragment;
+import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragment;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
