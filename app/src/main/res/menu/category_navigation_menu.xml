@@ -6,6 +6,8 @@
         android:id="@+id/menu_item_category_navigation_toggle"
         android:icon="@drawable/ic_action_list_2"
         android:title="Toggle Category"
+        android:orderInCategory="10"
         app:showAsAction="always" />
+    <!--the higher the orderInCategory, the last it will appear-->
 
 </menu>

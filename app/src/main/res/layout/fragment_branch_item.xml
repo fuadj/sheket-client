@@ -40,7 +40,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_action_edit"
+        android:visibility="gone"
+        android:src="@drawable/ic_action_edit_purple"
         app:backgroundTint="@color/branch_item_floating_btn"/>
 
 </android.support.design.widget.CoordinatorLayout>

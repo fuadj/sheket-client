@@ -11,7 +11,7 @@
         android:layout_alignParentLeft="true"
         android:id="@+id/list_item_img_btn_all_item_detail_dialog"
         android:focusable="false"
-        android:background="@drawable/ic_action_edit"
+        android:background="@drawable/ic_action_edit_purple"
         android:layout_centerVertical="true"/>
         -->
 

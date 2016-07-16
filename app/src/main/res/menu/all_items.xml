@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/all_items_menu_add_item"
-        android:icon="@drawable/ic_action_add_light"
+        android:id="@+id/all_items_menu_toggle_editing"
+        android:icon="@drawable/ic_action_edit_white"
         android:title="Add Item"
         app:showAsAction="always" />
 

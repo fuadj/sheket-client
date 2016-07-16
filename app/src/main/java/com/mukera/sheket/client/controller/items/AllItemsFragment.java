@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -47,6 +49,8 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
 
+    private FloatingActionButton mPasteBtn, mAddBtn, mDeleteBtn;
+
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
 
     @Override
@@ -66,8 +70,7 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.all_items_menu_add_item:
-                startActivity(ItemCreateEditActivity.createIntent(getActivity(), false, null));
+            case R.id.all_items_menu_toggle_editing:
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -116,6 +119,16 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
+        mPasteBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_paste);
+        mAddBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_add);
+        mAddBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayAddOptionDialog();
+            }
+        });
+        mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_delete);
+
         mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
@@ -138,6 +151,32 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         });
 
         return rootView;
+    }
+
+    void displayAddOptionDialog() {
+        View options_view = getActivity().getLayoutInflater().
+                inflate(R.layout.all_items_floating_btn_add_options, null);
+        final ImageButton option_item = (ImageButton) options_view.findViewById(R.id.all_items_option_add_item);
+        final ImageButton option_category = (ImageButton) options_view.findViewById(R.id.all_items_option_add_category);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
+                setTitle("What are you adding?").
+                setView(options_view);
+        final AlertDialog dialog = builder.create();
+        option_item.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                startActivity(ItemCreateEditActivity.createIntent(getActivity(), false, null));
+            }
+        });
+        option_category.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
     @Override

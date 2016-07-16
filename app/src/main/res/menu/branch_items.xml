@@ -3,8 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/branch_item_menu_toggle_all_items"
-        android:icon="@drawable/ic_action_toggle_card_view"
-        android:title="List All Items"
+        android:id="@+id/menu_item_branch_item_list_all_items"
+        android:icon="@drawable/ic_action_eye_closed"
+        android:orderInCategory="1"
+        android:title="Show All"
         app:showAsAction="always" />
 </menu>

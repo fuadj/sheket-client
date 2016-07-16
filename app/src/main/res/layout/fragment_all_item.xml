@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -24,12 +25,35 @@
     </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/float_btn_all_item_paste"
+        android:layout_width="wrap_content"
+        android:clickable="true"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        android:src="@drawable/ic_action_add_light_bigger"
+        app:backgroundTint="@color/branch_item_floating_btn"/>
+
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/float_btn_all_item_add"
         android:layout_width="wrap_content"
         android:clickable="true"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_action_add_light"
+        android:src="@drawable/ic_action_add_light_bigger"
         app:backgroundTint="@color/branch_item_floating_btn"/>
-</LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/float_btn_all_item_delete"
+        android:layout_width="wrap_content"
+        android:clickable="true"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        android:src="@drawable/ic_action_add_light_bigger"
+        app:backgroundTint="@color/branch_item_floating_btn"/>
+</android.support.design.widget.CoordinatorLayout>
+
