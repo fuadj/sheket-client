@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -25,6 +26,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -148,6 +151,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
         switch (item.getItemId()) {
             case R.id.menu_item_branch_item_list_all_items:
                 mShowAllItems = !mShowAllItems;
+                // request the loader to be restarted
+                restartLoader();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -169,30 +174,6 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
                             ColorStateList.valueOf(Color.WHITE), TEXT_SIZE, TextDrawable.VerticalAlignment.BASELINE)
             );
         }
-    }
-
-    @Override
-    protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
-
-        /**
-         * NOTE: we are able to use the projection of SCategory because the
-         * the result is a join between Branch and Category with each column
-         * being fully qualified(i.e: saying from which table it came from)
-         * so it doesn't create any problems.
-         *
-         * We are fetching the children so we want to use the CategoryTreeNavigation fragment's
-         * UI to display the number of children sub-categories.
-         */
-        return new CursorLoader(getActivity(),
-                BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
-                        // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
-                        // with a particular id.
-                        mBranchId, BranchCategoryEntry.NO_ID_SET),
-                SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
-                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
-                new String[]{String.valueOf(mCurrentCategoryId)},
-                sortOrder);
     }
 
     @Override
@@ -224,8 +205,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
             }
 
             @Override
-            public void branchItemSelected(SBranchItem branchItem) {
-                displayTransactionQuantityDialog(branchItem.item, false, -1,
+            public void itemSelected(SItem item) {
+                displayTransactionQuantityDialog(item, false, -1,
                         false, null);
             }
         });
@@ -520,6 +501,36 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     }
 
     @Override
+    protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
+
+        if (mShowAllItems) {
+            // the super class's implementation loads ALL categories, not just the ones
+            // that exist inside the branch
+            return super.getCategoryTreeLoader(id, args);
+        } else {
+            /**
+             * NOTE: we are able to use the projection of SCategory because the
+             * the result is a join between Branch and Category with each column
+             * being fully qualified(i.e: saying from which table it came from)
+             * so it doesn't create any problems.
+             *
+             * We are fetching the children so we want to use the CategoryTreeNavigation fragment's
+             * UI to display the number of children sub-categories.
+             */
+            return new CursorLoader(getActivity(),
+                    BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
+                            // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
+                            // with a particular id.
+                            mBranchId, BranchCategoryEntry.NO_ID_SET),
+                    SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
+                    CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                    new String[]{String.valueOf(mCurrentCategoryId)},
+                    sortOrder);
+        }
+    }
+
+    @Override
     protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
 
@@ -531,8 +542,11 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
             selectionArgs = new String[]{String.valueOf(mCategoryId)};
         }
 
+        Uri uri = BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId);
+        if (mShowAllItems)
+            uri = BranchItemEntry.buildFetchNoneExistingItemsUri(uri);
         return new CursorLoader(getActivity(),
-                BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId),
+                uri,
                 SBranchItem.BRANCH_ITEM_WITH_DETAIL_COLUMNS,
                 selection,
                 selectionArgs,
@@ -554,7 +568,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
 
     public static class BranchItemCursorAdapter extends android.support.v4.widget.CursorAdapter {
         public interface ItemSelectionListener {
-            void branchItemSelected(SBranchItem branchItem);
+            void itemSelected(SItem item);
 
             void editItemLocationSelected(SBranchItem branchItem);
         }
@@ -565,6 +579,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
             TextView qty_remain;
             TextView item_loc;
             ImageButton edit_loc;
+            LinearLayout layout_branch_item;
+            ImageView item_not_exist;
 
             public ViewHolder(View view) {
                 item_name = (TextView) view.findViewById(R.id.list_item_text_view_b_item_name);
@@ -572,6 +588,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
                 qty_remain = (TextView) view.findViewById(R.id.list_item_text_view_b_item_qty);
                 item_loc = (TextView) view.findViewById(R.id.list_item_text_view_b_item_loc);
                 edit_loc = (ImageButton) view.findViewById(R.id.list_item_img_btn_b_edit_location);
+                layout_branch_item = (LinearLayout) view.findViewById(R.id.layout_branch_item_section);
+                item_not_exist = (ImageView) view.findViewById(R.id.list_item_img_view_b_item_not_exist);
             }
         }
 
@@ -608,26 +626,40 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
                 code = item.item_code;
             }
             holder.item_code.setText(code);
-            if (branchItem.item_location == null ||
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.itemSelected(branchItem.item);
+                }
+            });
+            if (branchItem.branch_id == SBranchItem.ITEM_NOT_FOUND_IN_BRANCH ||
+                    branchItem.item_location == null ||
                     branchItem.item_location.isEmpty()) {
                 holder.item_loc.setVisibility(View.GONE);
             } else {
                 holder.item_loc.setVisibility(View.VISIBLE);
                 holder.item_loc.setText(branchItem.item_location);
             }
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mListener.branchItemSelected(branchItem);
-                }
-            });
-            holder.edit_loc.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mListener.editItemLocationSelected(branchItem);
-                }
-            });
-            holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
+
+            boolean item_exist = branchItem.branch_id != SBranchItem.ITEM_NOT_FOUND_IN_BRANCH;
+
+            int show_if_exist = item_exist ? View.VISIBLE : View.GONE;
+            int show_if_not_exist = item_exist ? View.GONE : View.VISIBLE;
+
+            holder.layout_branch_item.setVisibility(show_if_exist);
+            holder.edit_loc.setVisibility(show_if_exist);
+
+            holder.item_not_exist.setVisibility(show_if_not_exist);
+
+            if (item_exist) {
+                holder.edit_loc.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mListener.editItemLocationSelected(branchItem);
+                    }
+                });
+                holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
+            }
         }
     }
 }

@@ -30,6 +30,7 @@ public class SBranchItem extends ChangeTraceable {
             _f(COLUMN_CHANGE_INDICATOR)
     };
 
+    // Joined projection of "SBranchItem" + "SItem".
     public static final String[] BRANCH_ITEM_WITH_DETAIL_COLUMNS;
     static {
         int size = BRANCH_ITEM_COLUMNS.length + SItem.ITEM_COLUMNS.length;
@@ -40,6 +41,8 @@ public class SBranchItem extends ChangeTraceable {
         System.arraycopy(SItem.ITEM_COLUMNS, 0, BRANCH_ITEM_WITH_DETAIL_COLUMNS,
                 BRANCH_ITEM_COLUMNS.length, SItem.ITEM_COLUMNS.length);
     }
+
+    public static final int ITEM_NOT_FOUND_IN_BRANCH = 0;
 
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_BRANCH_ID = 1;
@@ -74,12 +77,17 @@ public class SBranchItem extends ChangeTraceable {
     }
 
     public SBranchItem(Cursor cursor, int offset, boolean fetch_item) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
-        branch_id = cursor.getLong(COL_BRANCH_ID + offset);
-        item_id = cursor.getLong(COL_ITEM_ID + offset);
-        quantity = cursor.getDouble(COL_QUANTITY + offset);
-        item_location = cursor.getString(COL_ITEM_LOCATION + offset);
-        change_status = cursor.getInt(COL_CHANGE + offset);
+        if (!cursor.isNull(COL_BRANCH_ID + offset)) {
+            branch_id = cursor.getLong(COL_BRANCH_ID + offset);
+            company_id = cursor.getLong(COL_COMPANY_ID + offset);
+            item_id = cursor.getLong(COL_ITEM_ID + offset);
+            quantity = cursor.getDouble(COL_QUANTITY + offset);
+            item_location = cursor.getString(COL_ITEM_LOCATION + offset);
+            change_status = cursor.getInt(COL_CHANGE + offset);
+        } else {
+            branch_id = ITEM_NOT_FOUND_IN_BRANCH;
+        }
+
         if (fetch_item) {
             item = new SItem(cursor, offset + COL_LAST);
         }

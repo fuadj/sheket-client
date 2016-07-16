@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
@@ -51,7 +52,7 @@ public class SheketProvider extends ContentProvider {
     private static final int BRANCH_CATEGORY_WITH_ID = 901;
 
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
-    private static final SQLiteQueryBuilder sBranchItemWithItemDetailQueryBuilder;
+    private static final SQLiteQueryBuilder sBranchItemFetchOnlyExistingItemQueryBuilder;
     private static final SQLiteQueryBuilder sBranchCategoryWithCategoryDetailQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
     private static final SQLiteQueryBuilder sCategoryWithChildrenQueryBuilder;
@@ -71,9 +72,9 @@ public class SheketProvider extends ContentProvider {
                         ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ")"
         );
 
-        sBranchItemWithItemDetailQueryBuilder = new SQLiteQueryBuilder();
-        sBranchItemWithItemDetailQueryBuilder.setTables(
-                BranchItemEntry.TABLE_NAME + " inner join " + ItemEntry.TABLE_NAME +
+        sBranchItemFetchOnlyExistingItemQueryBuilder = new SQLiteQueryBuilder();
+        sBranchItemFetchOnlyExistingItemQueryBuilder.setTables(
+                BranchItemEntry.TABLE_NAME + " INNER JOIN " + ItemEntry.TABLE_NAME +
                         " ON ( " +
                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
                         " = " +
@@ -171,9 +172,17 @@ public class SheketProvider extends ContentProvider {
         return true;
     }
 
+    private boolean is_empty(String s) {
+        if (TextUtils.isEmpty(s)) return true;
+        return s.trim().isEmpty();
+    }
+
     String withAppendedSelection(String prev_selection, String new_selection) {
-        return (prev_selection != null ? (prev_selection + " AND ") : "") +
-                new_selection;
+        if (is_empty(prev_selection))
+            return new_selection;
+        if (is_empty(new_selection))
+            return prev_selection;
+        return prev_selection + " AND " + new_selection;
     }
 
     String[] withAppendedSelectionArgs(String[] prev_args, String[] new_args) {
@@ -270,23 +279,31 @@ public class SheketProvider extends ContentProvider {
             case BRANCH_ITEM_WITH_ID:
             case BRANCH_ITEM: {
                 query_db = false;
+                boolean is_fetching_none_existing_items =
+                        BranchItemEntry.isFetchNoneExistingItemsSpecified(uri);
+                long branch_id = BranchItemEntry.getBranchId(uri);
+                long item_id = BranchItemEntry.getItemId(uri);
+
+                boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
+                boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
+
                 if (uri_match == BRANCH_ITEM_WITH_ID) {
-                    long branch_id = BranchItemEntry.getBranchId(uri);
-                    long item_id = BranchItemEntry.getItemId(uri);
-
-                    boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
-                    boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
-
                     String branch_item_selection = "";
                     List<String> args = new ArrayList<>();
-                    if (branch_set) {
+                    /**
+                     * We don't apply the selection if we are fetching none existing items because that
+                     * doesn't work. See the comment below for more detail.
+                     */
+                    if (!is_fetching_none_existing_items &&
+                            branch_set) {
                         branch_item_selection +=
                                 String.format(Locale.US, "%s = ?",
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
                         args.add(Long.toString(branch_id));
                     }
                     if (item_set) {
-                        branch_item_selection += (branch_set ? " AND " : "");
+                        branch_item_selection += ((!is_fetching_none_existing_items && branch_set) ?
+                                " AND " : "");
                         branch_item_selection +=
                                 String.format(Locale.US, "%s = ?",
                                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
@@ -304,14 +321,53 @@ public class SheketProvider extends ContentProvider {
                     }
                 }
 
-                selection = withAppendedCompanyIdSelection(selection, BranchItemEntry._full(BranchItemEntry.COLUMN_COMPANY_ID));
+                /**
+                 * Here we are using the ItemEntry.company_id instead of BranchItemEntry.column id because that
+                 * might be null when LEFT JOINING.
+                 */
+                selection = withAppendedCompanyIdSelection(selection, ItemEntry._full(ItemEntry.COLUMN_COMPANY_ID));
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
 
-                result = sBranchItemWithItemDetailQueryBuilder.query(
-                        mDbHelper.getReadableDatabase(),
-                        projection,
-                        selection, selectionArgs,
-                        null, null, sortOrder);
+                if (is_fetching_none_existing_items) {
+                    SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+                    builder.setTables(
+                            /**
+                             * IMPORTANT: We are first filtering the branch we want from the BranchItemTable
+                             * because if we do that after the selection in a where clause,
+                             * e.g: "select ItemEntry LEFT JOIN BranchItemEntry where branch_id = ?",
+                             * we will be ignoring ALL rows that that NULL values in the BranchItemEntry columns
+                             * that are the result of LEFT JOINING. This is because the where clause is
+                             * applied on the result of the selection. And the comparison "branch_id = ?"
+                             * will be false for the NULL rows and they will be NOT BE IN THE RESULT.
+                             * This is effectively doing an INNER JOIN-ing because the LEFT JOINed results
+                             * that don't have values for the right tables are being removed.
+                             */
+                            ItemEntry.TABLE_NAME + " LEFT JOIN " +
+                                    String.format(Locale.US,
+                                            " (select * from %s where %s = %d) %s ",
+                                            BranchItemEntry.TABLE_NAME,
+                                            BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID),
+                                            branch_id,
+                                            BranchItemEntry.TABLE_NAME) +
+                                    " ON ( " +
+                                    ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) +
+                                    " = " +
+                                    BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
+                                    ") "
+                    );
+                    result = builder.query(
+                            mDbHelper.getReadableDatabase(),
+                            projection,
+                            selection, selectionArgs,
+                            null, null, sortOrder);
+                } else {
+                    result = sBranchItemFetchOnlyExistingItemQueryBuilder.query(
+                            mDbHelper.getReadableDatabase(),
+                            projection,
+                            selection, selectionArgs,
+                            null, null, sortOrder);
+                }
+
                 break;
             }
 
