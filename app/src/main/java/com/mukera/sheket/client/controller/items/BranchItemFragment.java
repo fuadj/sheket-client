@@ -151,6 +151,9 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
         switch (item.getItemId()) {
             case R.id.menu_item_branch_item_list_all_items:
                 mShowAllItems = !mShowAllItems;
+                // This will force the menu to be redrawn, updating the UI
+                getActivity().invalidateOptionsMenu();
+
                 // request the loader to be restarted
                 restartLoader();
                 break;
