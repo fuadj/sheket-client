@@ -2,10 +2,13 @@ package com.mukera.sheket.client.controller.items;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -30,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
@@ -110,13 +114,9 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
             case R.id.all_items_menu_toggle_editing:
                 mIsEditMode = !mIsEditMode;
 
-                // set the appropriate UI
-                ((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
-
                 // for the next round, we start fresh
                 mSelectedCategories.clear();
-
-                updateFloatingButtonsUI();
+                updateEditingUI();
 
                 restartLoader();
                 return true;
@@ -124,7 +124,9 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         return super.onOptionsItemSelected(item);
     }
 
-    void updateFloatingButtonsUI() {
+    void updateEditingUI() {
+        ((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
+        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
         if (!mIsEditMode) {
             mAddBtn.setVisibility(View.VISIBLE);
             mPasteBtn.setVisibility(View.GONE);
@@ -133,8 +135,6 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
             mAddBtn.setVisibility(View.GONE);
             mPasteBtn.setVisibility(View.VISIBLE);
             mDeleteBtn.setVisibility(View.VISIBLE);
-
-
         }
     }
 
@@ -181,7 +181,6 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        mPasteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_paste);
         mAddBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_add);
         mAddBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -189,6 +188,30 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
                 displayAddOptionDialog();
             }
         });
+        mPasteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_paste);
+        mPasteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        moveCategoriesToCurrentCategory();
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mIsEditMode = false;
+                                // update the UI, we aren't using {@code restartLoader} b/c that
+                                // queries the provider again. We shouldn't query again b/c it
+                                // is only a UI update.
+                                updateEditingUI();
+                                initLoader();
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
         mViewSelectAll = rootView.findViewById(R.id.all_items_select_all_layout);
@@ -223,6 +246,43 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         });
 
         return rootView;
+    }
+
+    /**
+     * Moves the selected categories to the current category. Updates them so they
+     * point to this category as their parent.
+     */
+    void moveCategoriesToCurrentCategory() {
+        if (mSelectedCategories.isEmpty()) return;
+
+        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        long current_category = super.getCurrentCategory();
+
+        ArrayList<ContentProviderOperation> operation = new ArrayList<>();
+        for (SCategory category : mSelectedCategories.values()) {
+            category.parent_id = current_category;
+
+            /**
+             * If it is only created(not yet synced), you can't set it to updated b/c
+             * it hasn't yet been "created" at the server side. So trying to update it
+             * will create problems.
+             */
+            if (category.change_status != SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED)
+                category.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_UPDATED;
+
+            operation.add(ContentProviderOperation.newUpdate(
+                    CategoryEntry.buildBaseUri(company_id)).
+                    withValues(category.toContentValues()).
+                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
+                            new String[]{Long.toString(category.category_id)}).build());
+        }
+
+        try {
+            getActivity().getContentResolver().
+                    applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
+        } catch (RemoteException | OperationApplicationException e) {
+
+        }
     }
 
     void displayAddOptionDialog() {
@@ -553,6 +613,9 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
                 holder.selectCheck.setVisibility(View.VISIBLE);
                 holder.editBtn.setVisibility(View.VISIBLE);
 
+                // we should overwrite the previously assigned listener because we
+                // are recycling them it things gets messed up when we call {@code selectCheck.setChecked}
+                holder.selectCheck.setOnCheckedChangeListener(null);
                 holder.selectCheck.setChecked(mListener.isCategorySelected(category));
                 holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
