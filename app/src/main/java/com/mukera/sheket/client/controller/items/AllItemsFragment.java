@@ -609,6 +609,13 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
             }
 
             holder.categoryName.setText(category.name);
+            if (category.childrenCategories.isEmpty()) {
+                holder.subCount.setVisibility(View.GONE);
+            } else {
+                holder.subCount.setVisibility(View.VISIBLE);
+                holder.subCount.setText("" + category.childrenCategories.size());
+            }
+
             if (mIsEditMode) {
                 holder.selectCheck.setVisibility(View.VISIBLE);
                 holder.editBtn.setVisibility(View.VISIBLE);
@@ -655,13 +662,14 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         }
 
         private static class ViewHolder {
-            TextView categoryName;
+            TextView categoryName, subCount;
             CheckBox selectCheck;
             View selectCheckBoxEnclosingView;
             ImageView editBtn;
 
             public ViewHolder(View view) {
                 categoryName = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_category_name);
+                subCount = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_sub_count);
                 selectCheck = (CheckBox) view.findViewById(R.id.list_item_all_items_category_check_box_select);
                 selectCheckBoxEnclosingView = view.findViewById(R.id.list_item_all_items_category_layout_select);
                 editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
