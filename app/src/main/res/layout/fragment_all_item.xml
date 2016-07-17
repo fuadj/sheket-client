@@ -14,10 +14,38 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/all_items_select_all_layout">
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:layout_gravity="center_vertical">
+
+                    <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/all_items_select_all_check_box" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select All"
+                    android:id="@+id/textView2"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/abc_primary_text_material_light"
+                    android:textSize="20dp" />
+            </LinearLayout>
+
             <include layout="@layout/embedded_category_tree_navigation" />
 
             <ListView
-                android:id="@+id/item_list_list_view_items"
+                android:id="@+id/all_items_list_view_items"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:verticalSpacing="5dp"/>
@@ -25,7 +53,7 @@
     </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/float_btn_all_item_paste"
+        android:id="@+id/all_items_float_btn_paste"
         android:layout_width="wrap_content"
         android:clickable="true"
         android:layout_height="wrap_content"
@@ -36,7 +64,7 @@
         app:backgroundTint="@color/branch_item_floating_btn"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/float_btn_all_item_add"
+        android:id="@+id/all_items_float_btn_add"
         android:layout_width="wrap_content"
         android:clickable="true"
         android:layout_height="wrap_content"
@@ -46,7 +74,7 @@
         app:backgroundTint="@color/branch_item_floating_btn"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/float_btn_all_item_delete"
+        android:id="@+id/all_items_float_btn_delete"
         android:layout_width="wrap_content"
         android:clickable="true"
         android:layout_height="wrap_content"

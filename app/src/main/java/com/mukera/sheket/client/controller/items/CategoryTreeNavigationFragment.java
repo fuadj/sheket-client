@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.SwitchCompat;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -350,7 +349,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
             ViewHolder holder;
             if (convertView == null) {
                 LayoutInflater inflater = LayoutInflater.from(getContext());
-                convertView = inflater.inflate(R.layout.list_item_select_category, parent, false);
+                convertView = inflater.inflate(R.layout.list_item_category_tree_navigation, parent, false);
                 holder = new ViewHolder(convertView);
                 convertView.setTag(holder);
             } else {

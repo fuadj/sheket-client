@@ -119,17 +119,17 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        mPasteBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_paste);
-        mAddBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_add);
+        mPasteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_paste);
+        mAddBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_add);
         mAddBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 displayAddOptionDialog();
             }
         });
-        mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.float_btn_all_item_delete);
+        mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
-        mItemList = (ListView) rootView.findViewById(R.id.item_list_list_view_items);
+        mItemList = (ListView) rootView.findViewById(R.id.all_items_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
             @Override
