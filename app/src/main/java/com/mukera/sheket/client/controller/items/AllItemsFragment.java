@@ -44,8 +44,10 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by gamma on 3/4/16.
@@ -69,6 +71,13 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
      */
     private Map<Long, SCategory> mSelectedCategories;
 
+    /**
+     * This holds any parent category of selected categories/items.
+     * Depending on the size this set, the paste/delete button with either
+     * be enabled/disabled when editing.
+     */
+    private Set<Long> mParentCategories;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +89,7 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         setCurrentCategory(mCategoryId);
 
         mSelectedCategories = new HashMap<>();
+        mParentCategories = new HashSet<>();
     }
 
     @Override
@@ -106,10 +116,26 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
                 // for the next round, we start fresh
                 mSelectedCategories.clear();
 
+                updateFloatingButtonsUI();
+
                 restartLoader();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    void updateFloatingButtonsUI() {
+        if (!mIsEditMode) {
+            mAddBtn.setVisibility(View.VISIBLE);
+            mPasteBtn.setVisibility(View.GONE);
+            mDeleteBtn.setVisibility(View.GONE);
+        } else {
+            mAddBtn.setVisibility(View.GONE);
+            mPasteBtn.setVisibility(View.VISIBLE);
+            mDeleteBtn.setVisibility(View.VISIBLE);
+
+
+        }
     }
 
     @Override

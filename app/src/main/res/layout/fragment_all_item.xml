@@ -71,7 +71,7 @@
         android:layout_gravity="bottom|left"
         android:layout_margin="16dp"
         android:visibility="gone"
-        android:src="@drawable/ic_action_add_light_bigger"
+        android:src="@drawable/ic_action_paste"
         app:backgroundTint="@color/branch_item_floating_btn"/>
 
     <android.support.design.widget.FloatingActionButton
@@ -92,7 +92,7 @@
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
         android:visibility="gone"
-        android:src="@drawable/ic_action_add_light_bigger"
+        android:src="@drawable/ic_action_trash"
         app:backgroundTint="@color/branch_item_floating_btn"/>
 </android.support.design.widget.CoordinatorLayout>
 
