@@ -99,11 +99,9 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         switch (item.getItemId()) {
             case R.id.all_items_menu_toggle_editing:
                 mIsEditMode = !mIsEditMode;
-                // Instantiate the adapter if it doesn't already exist
-                getCategoryAdapter();
 
                 // set the appropriate UI
-                ((CategorySelectionEditionAdapter)mCategoryAdapter).setEditMode(mIsEditMode);
+                ((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
 
                 // for the next round, we start fresh
                 mSelectedCategories.clear();
