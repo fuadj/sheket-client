@@ -312,10 +312,6 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
-    }
-
-    @Override
     protected CategoryAdapter getCategoryAdapter() {
         if (mCategoryAdapter == null) {
             CategorySelectionEditionAdapter adapter =
@@ -346,6 +342,18 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     @Override
+    protected boolean onSearchTextChanged(String newText) {
+        restartLoader();
+        return true;
+    }
+
+    @Override
+    protected boolean onSearchTextViewClosed() {
+        restartLoader();
+        return true;
+    }
+
+    @Override
     protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
@@ -353,7 +361,11 @@ public class AllItemsFragment extends SearchableItemFragment {
         String selection = null;
         String[] selectionArgs = null;
 
-        if (super.isShowingCategoryTree()) {
+        if (super.isSearching()) {
+            String search_text = super.getSearchText();
+            selection = "(" + ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " LIKE '%" + search_text + "%' OR " +
+                    ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + search_text + "%' ) ";
+        } else if (super.isShowingCategoryTree()) {
             selection = ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?";
             selectionArgs = new String[]{String.valueOf(mCategoryId)};
         }
@@ -365,6 +377,14 @@ public class AllItemsFragment extends SearchableItemFragment {
                 selectionArgs,
                 sortOrder
         );
+    }
+
+    @Override
+    protected boolean showCategoryNavigation() {
+        /**
+         * If we are searching, we don't what the categories to be displayed!!!
+         */
+        return !super.isSearching();
     }
 
     @Override

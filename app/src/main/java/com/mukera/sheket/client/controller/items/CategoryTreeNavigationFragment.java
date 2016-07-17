@@ -284,7 +284,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
             mCategoryAdapter.setCategoryCursor(data);
-            setCategoryListVisibility(isShowingCategoryTree());
+            setCategoryListVisibility(showCategoryNavigation() &&
+                    isShowingCategoryTree());
         } else {
             onCategoryTreeLoaderFinished(loader, data);
         }
@@ -300,7 +301,19 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         }
     }
 
-    void setCategoryListVisibility(boolean show_list) {
+    /**
+     * Override this method to conditionally control whether the CategoryList visibility.
+     * @return  true if you want, false if not.
+     */
+    protected boolean showCategoryNavigation() {
+        return true;
+    }
+
+    /**
+     * Set the visibility of the category navigation UI(list-view & other stuff).
+     * @param show_list
+     */
+    public void setCategoryListVisibility(boolean show_list) {
         if (show_list) {
             mCategoryList.setVisibility(View.VISIBLE);
             ListUtils.setDynamicHeight(mCategoryList);

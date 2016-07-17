@@ -18,6 +18,9 @@ import com.mukera.sheket.client.R;
  * we have to extend {@code CategoryTreeNavigationFragment}.
  */
 public abstract class SearchableItemFragment extends CategoryTreeNavigationFragment {
+    private boolean mIsSearching = false;
+    private String mCurrentSearch = null;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,27 +34,31 @@ public abstract class SearchableItemFragment extends CategoryTreeNavigationFragm
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem = menu.findItem(R.id.search_item);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
-        Log.d("SearchableItemFragment", "Address: " + searchView);
-        /*
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                mIsSearching = true;
+                mCurrentSearch = query;
                 return onSearchTextSubmitted(query);
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                mIsSearching = true;
+                mCurrentSearch = newText;
                 return onSearchTextChanged(newText);
             }
         });
         searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
+                searchView.onActionViewCollapsed();
+                mIsSearching = false;
+                mCurrentSearch = null;
                 return onSearchTextViewClosed();
             }
         });
-        */
         searchView.setSubmitButtonEnabled(false);
         searchView.setIconifiedByDefault(true);
     }
@@ -71,5 +78,13 @@ public abstract class SearchableItemFragment extends CategoryTreeNavigationFragm
 
     protected boolean onSearchTextViewClosed() {
         return true;
+    }
+
+    public boolean isSearching() {
+        return mIsSearching;
+    }
+
+    public String getSearchText() {
+        return mCurrentSearch;
     }
 }
