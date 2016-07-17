@@ -120,6 +120,13 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         return previous_category;
     }
 
+    /**
+     * Use this to find the category you are in.
+     */
+    public long getCurrentCategory() {
+        return mCurrentCategoryId;
+    }
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         initLoader();
