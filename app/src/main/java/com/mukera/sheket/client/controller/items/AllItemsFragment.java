@@ -23,11 +23,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
@@ -48,6 +51,11 @@ import java.util.List;
 public class AllItemsFragment extends CategoryTreeNavigationFragment {
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
+    private static final String KEY_SAVE_EDIT_MODE = "key_save_edit_mode";
+    private boolean mIsEditMode = false;
+
+    private View mViewSelectAll;
+    private CheckBox mCheckBoxSelectAll;
 
     private FloatingActionButton mPasteBtn, mAddBtn, mDeleteBtn;
 
@@ -56,9 +64,18 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            mIsEditMode = savedInstanceState.getBoolean(KEY_SAVE_EDIT_MODE, false);
+        }
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         setHasOptionsMenu(true);
         setCurrentCategory(mCategoryId);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(KEY_SAVE_EDIT_MODE, mIsEditMode);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -71,6 +88,14 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.all_items_menu_toggle_editing:
+                mIsEditMode = !mIsEditMode;
+                // Instantiate the adapter if it doesn't already exist
+                getCategoryAdapter();
+
+                // set the appropriate UI
+                ((CategorySelectionEditionAdapter)mCategoryAdapter).setEditMode(mIsEditMode);
+
+                restartLoader();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -129,6 +154,16 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         });
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
+        mViewSelectAll = rootView.findViewById(R.id.all_items_select_all_layout);
+        mViewSelectAll.setVisibility(View.GONE);
+        mCheckBoxSelectAll = (CheckBox) rootView.findViewById(R.id.all_items_select_all_check_box);
+        mCheckBoxSelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+            }
+        });
+
         mItemList = (ListView) rootView.findViewById(R.id.all_items_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
@@ -184,6 +219,32 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     }
 
     @Override
+    protected CategoryAdapter getCategoryAdapter() {
+        if (mCategoryAdapter == null) {
+            CategorySelectionEditionAdapter adapter =
+                    new CategorySelectionEditionAdapter(getActivity());
+            adapter.setListener(new CategorySelectionEditionAdapter.SelectionEditionListener() {
+                @Override
+                public boolean isCategorySelected(SCategory category) {
+                    return false;
+                }
+
+                @Override
+                public void categorySelected(SCategory category, boolean state) {
+
+                }
+
+                @Override
+                public void editCategorySelected(SCategory category) {
+
+                }
+            });
+            mCategoryAdapter = adapter;
+        }
+        return mCategoryAdapter;
+    }
+
+    @Override
     protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
@@ -209,12 +270,14 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     protected void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data) {
         mItemDetailAdapter.setItemCursor(data);
         ListUtils.setDynamicHeight(mItemList);
+        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
     }
 
     @Override
     protected void onCategoryTreeLoaderReset(Loader<Cursor> loader) {
         mItemDetailAdapter.setItemCursor(null);
         ListUtils.setDynamicHeight(mItemList);
+        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
     }
 
     public static class SItemDetail {
@@ -385,6 +448,119 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
                 }
 
                 return convertView;
+            }
+        }
+    }
+
+    /**
+     * This adapter allows selecting categories by a {@code CheckBox} and notifies about the event.
+     * It also allows editing a category by providing a UI for that and notifies of the event.
+     *
+     * The adapter can also be used as a normal "viewing" more where the editing options are disabled.
+     */
+    public static class CategorySelectionEditionAdapter extends CategoryTreeNavigationFragment.CategoryChildrenArrayAdapter {
+        public interface SelectionEditionListener {
+            /**
+             * Checks this to set the UI to appropriate state.
+             * @return true if the category needs to be selected.
+             */
+            boolean isCategorySelected(SCategory category);
+
+            /**
+             * This is called for both selection and de-selection.
+             * Use {@code state} to decide the state.
+             *
+             * @param category
+             * @param state    If true, it is being selected, if false it is de-selecting.
+             */
+            void categorySelected(SCategory category, boolean state);
+
+            void editCategorySelected(SCategory category);
+        }
+        private SelectionEditionListener mListener;
+        public void setListener(SelectionEditionListener listener) {
+            mListener = listener;
+        }
+
+        public CategorySelectionEditionAdapter(Context context) {
+            super(context);
+            // NOT-EDITING is the default
+            mIsEditMode = false;
+        }
+
+        private boolean mIsEditMode;
+        public void setEditMode(boolean editMode) {
+            mIsEditMode = editMode;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final SCategory category = getItem(position);
+
+            final ViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                convertView = inflater.inflate(R.layout.list_item_all_items_edit_category, parent, false);
+                holder = new ViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            holder.categoryName.setText(category.name);
+            if (mIsEditMode) {
+                holder.selectCheck.setVisibility(View.VISIBLE);
+                holder.editBtn.setVisibility(View.VISIBLE);
+
+                holder.selectCheck.setChecked(mListener.isCategorySelected(category));
+                holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        mListener.categorySelected(category, isChecked);
+                    }
+                });
+                /**
+                 * It is hard to click the check box, we intercept the enclosing view and simulate a
+                 * click on the checkbox also. If we don't do this, then the list-view will receive the
+                 * click event and that is not the desired behaviour.
+                 */
+                holder.selectCheckBoxEnclosingView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        holder.selectCheck.setChecked(!holder.selectCheck.isChecked());
+                    }
+                });
+
+                holder.editBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mListener.editCategorySelected(category);
+                    }
+                });
+            } else {
+                /**
+                 * We don't make the visibility gone b/c we want its place to be still
+                 * held by it for the different layout to look the same in both modes.
+                 */
+                //
+                holder.selectCheck.setVisibility(View.INVISIBLE);
+
+                holder.editBtn.setVisibility(View.GONE);
+            }
+            return convertView;
+        }
+
+        private static class ViewHolder {
+            TextView categoryName;
+            CheckBox selectCheck;
+            View selectCheckBoxEnclosingView;
+            ImageView editBtn;
+
+            public ViewHolder(View view) {
+                categoryName = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_category_name);
+                selectCheck = (CheckBox) view.findViewById(R.id.list_item_all_items_category_check_box_select);
+                selectCheckBoxEnclosingView = view.findViewById(R.id.list_item_all_items_category_layout_select);
+                editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             }
         }
     }

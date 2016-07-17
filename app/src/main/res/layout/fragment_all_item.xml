@@ -13,33 +13,44 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
             <LinearLayout
-                android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/all_items_select_all_layout">
+                android:orientation="vertical"
+                android:layout_height="wrap_content">
 
-                <FrameLayout
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:layout_gravity="center_vertical">
+                    android:id="@+id/all_items_select_all_layout">
 
-                    <CheckBox
+                    <FrameLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/all_items_select_all_check_box" />
-                </FrameLayout>
+                        android:padding="16dp"
+                        android:layout_gravity="center_vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/all_items_select_all_check_box" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Select All"
+                        android:id="@+id/textView2"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/abc_primary_text_material_light"
+                        android:textSize="20dp" />
+                </LinearLayout>
+
+                <!-- This will be used as the "footer" divider from anything below-->
+                <View
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Select All"
-                    android:id="@+id/textView2"
-                    android:layout_gravity="center_vertical"
-                    android:textColor="@color/abc_primary_text_material_light"
-                    android:textSize="20dp" />
+                    android:background="?android:attr/listDivider"/>
             </LinearLayout>
 
             <include layout="@layout/embedded_category_tree_navigation" />

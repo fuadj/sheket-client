@@ -66,7 +66,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     private List<STransactionItem> mTransactionItemList;
     private List<SBranch> mBranches = null;
 
-    private static final String KEY_SAVE_ALL_ITEMS = "key_save_all_items";
+    private static final String KEY_SAVE_VIEW_ALL_ITEMS = "key_save_all_items";
     private boolean mShowAllItems = false;
 
     public static BranchItemFragment newInstance(long branch_id) {
@@ -111,7 +111,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            mShowAllItems = savedInstanceState.getBoolean(KEY_SAVE_ALL_ITEMS, false);
+            mShowAllItems = savedInstanceState.getBoolean(KEY_SAVE_VIEW_ALL_ITEMS, false);
         }
         Bundle args = getArguments();
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
@@ -126,7 +126,7 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(KEY_SAVE_ALL_ITEMS, mShowAllItems);
+        outState.putBoolean(KEY_SAVE_VIEW_ALL_ITEMS, mShowAllItems);
         super.onSaveInstanceState(outState);
     }
 

@@ -28,7 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="5"
-        android:id="@+id/list_item_select_category_sub_count"
+        android:id="@+id/list_item_category_tree_text_view_sub_count"
         android:layout_toLeftOf="@id/img_sub_category"
         android:textSize="20dp"
         android:textColor="#010321"

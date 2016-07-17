@@ -116,7 +116,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     }
 
     /**
-     * Override this to create your own adapter.
+     * Override this to create your own adapter for the category list.
      */
     protected CategoryAdapter getCategoryAdapter() {
         if (mCategoryAdapter == null) {
@@ -315,7 +315,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
 
             public ViewHolder(View view) {
                 categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
-                childrenCount = (TextView) view.findViewById(R.id.list_item_select_category_sub_count);
+                childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
             }
         }
 
