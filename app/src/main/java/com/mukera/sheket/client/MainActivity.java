@@ -347,7 +347,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     String unsyncedSelector(String column) {
-        return column + " != " + ChangeTraceable.CHANGE_STATUS_SYNCED;
+        return column + " != " + ChangeTraceable.CHANGE_STATUS_SYNCED + " OR " +
+                column + " != " + ChangeTraceable.CHANGE_STATUS_UPDATED;
     }
 
     void deleteAllUnSyncedData() {
