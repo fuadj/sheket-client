@@ -76,8 +76,11 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * this will be called before the LoaderManager is Restarted. This ensures that
      * subclasses have prepared for their Loader's to restart by setting any
      * necessary internal variables to the appropriate state.)
+     *
+     * @param previous_category     This this the last category visited before selecting the category
+     * @param selected_category
      */
-    public void onCategorySelected(long category_id) { }
+    public void onCategorySelected(long previous_category, long selected_category) { }
 
     /**
      * Subclasses can override this to get notified on loader initialization
@@ -100,13 +103,21 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         setHasOptionsMenu(true);
     }
 
-    protected void setCurrentCategory(long category_id) {
+    /**
+     * Sets the category as the current and pushed the previous on the backstack.
+     *
+     * @param category_id
+     * @return  the previous category
+     */
+    protected long setCurrentCategory(long category_id) {
         // the root category is only added to the "bottom" of the stack
         if (category_id == CategoryEntry.ROOT_CATEGORY_ID)
-            return;
+            return mCurrentCategoryId;
 
+        long previous_category = mCurrentCategoryId;
         mCategoryBackstack.push(mCurrentCategoryId);
         mCurrentCategoryId = category_id;
+        return previous_category;
     }
 
     @Override
@@ -156,9 +167,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                 onCategoryTreeViewToggled(state);
 
                 if (state) {
-                    onCategorySelected(mCurrentCategoryId);
+                    onCategorySelected(mCurrentCategoryId, mCurrentCategoryId);
                 } else {
-                    onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID);
+                    onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_ID);
                 }
                 restartLoader();
                 return true;
@@ -187,9 +198,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SCategory category = getCategoryAdapter().getCategoryAt(position);
 
-                setCurrentCategory(category.category_id);
+                long previous_category = setCurrentCategory(category.category_id);
 
-                onCategorySelected(category.category_id);
+                onCategorySelected(previous_category, category.category_id);
                 restartLoader();
             }
         });
@@ -218,8 +229,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                          * If we were inside a sub-category, we should move back to the parent
                          * and notify of that.
                          */
+                        long previous_category = mCategoryBackstack.peek();
                         mCurrentCategoryId = mCategoryBackstack.pop();
-                        onCategorySelected(mCurrentCategoryId);
+                        onCategorySelected(previous_category, mCurrentCategoryId);
                         restartLoader();
                     }
                     return true;

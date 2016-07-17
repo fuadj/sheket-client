@@ -43,7 +43,9 @@ import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by gamma on 3/4/16.
@@ -61,6 +63,12 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
 
+    /**
+     * We hold on to them for finally applying an operation on them AND ALSO
+     * the UI looks at this to figure out which are selected or not.
+     */
+    private Map<Long, SCategory> mSelectedCategories;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +78,8 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         setHasOptionsMenu(true);
         setCurrentCategory(mCategoryId);
+
+        mSelectedCategories = new HashMap<>();
     }
 
     @Override
@@ -95,6 +105,9 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
                 // set the appropriate UI
                 ((CategorySelectionEditionAdapter)mCategoryAdapter).setEditMode(mIsEditMode);
 
+                // for the next round, we start fresh
+                mSelectedCategories.clear();
+
                 restartLoader();
                 return true;
         }
@@ -102,8 +115,8 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
     }
 
     @Override
-    public void onCategorySelected(long category_id) {
-        mCategoryId = category_id;
+    public void onCategorySelected(long previous_category, long selected_category) {
+        mCategoryId = selected_category;
     }
 
     @Override
@@ -226,12 +239,16 @@ public class AllItemsFragment extends CategoryTreeNavigationFragment {
             adapter.setListener(new CategorySelectionEditionAdapter.SelectionEditionListener() {
                 @Override
                 public boolean isCategorySelected(SCategory category) {
-                    return false;
+                    return mSelectedCategories.containsKey(category.category_id);
                 }
 
                 @Override
                 public void categorySelected(SCategory category, boolean state) {
-
+                    if (state == true) {
+                        mSelectedCategories.put(category.category_id, category);
+                    } else {
+                        mSelectedCategories.remove(category.category_id);
+                    }
                 }
 
                 @Override

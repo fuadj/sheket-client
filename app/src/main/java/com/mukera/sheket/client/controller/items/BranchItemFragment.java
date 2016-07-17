@@ -499,8 +499,8 @@ public class BranchItemFragment extends CategoryTreeNavigationFragment {
     }
 
     @Override
-    public void onCategorySelected(long category_id) {
-        mCategoryId = category_id;
+    public void onCategorySelected(long previous_category, long selected_category) {
+        mCategoryId = selected_category;
     }
 
     @Override
