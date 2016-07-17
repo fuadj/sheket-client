@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nike"
-        android:id="@+id/list_item_select_category_name"
+        android:id="@+id/list_item_category_tree_text_view_name"
         android:textSize="22dp"
         android:layout_centerVertical="true"
         android:textColor="#000000" />

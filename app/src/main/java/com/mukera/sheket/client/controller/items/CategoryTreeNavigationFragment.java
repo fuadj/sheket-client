@@ -314,7 +314,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
             TextView categoryName, childrenCount;
 
             public ViewHolder(View view) {
-                categoryName = (TextView) view.findViewById(R.id.list_item_select_category_name);
+                categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
                 childrenCount = (TextView) view.findViewById(R.id.list_item_select_category_sub_count);
             }
         }
