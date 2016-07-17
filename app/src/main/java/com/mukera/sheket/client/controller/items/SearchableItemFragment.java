@@ -2,7 +2,9 @@ package com.mukera.sheket.client.controller.items;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,7 +31,9 @@ public abstract class SearchableItemFragment extends CategoryTreeNavigationFragm
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem = menu.findItem(R.id.search_item);
-        SearchView searchView = (SearchView) menuItem.getActionView();
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
+        Log.d("SearchableItemFragment", "Address: " + searchView);
+        /*
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -47,6 +51,7 @@ public abstract class SearchableItemFragment extends CategoryTreeNavigationFragm
                 return onSearchTextViewClosed();
             }
         });
+        */
         searchView.setSubmitButtonEnabled(false);
         searchView.setIconifiedByDefault(true);
     }

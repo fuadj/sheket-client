@@ -56,7 +56,7 @@ import java.util.Set;
 /**
  * Created by gamma on 3/4/16.
  */
-public class AllItemsFragment extends CategoryTreeNavigationFragment {
+public class AllItemsFragment extends SearchableItemFragment {
     private ListView mItemList;
     private ItemDetailAdapter mItemDetailAdapter;
     private static final String KEY_SAVE_EDIT_MODE = "key_save_edit_mode";

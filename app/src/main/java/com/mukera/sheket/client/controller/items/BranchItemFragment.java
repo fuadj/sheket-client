@@ -52,7 +52,7 @@ import java.util.Locale;
 /**
  * Created by gamma on 3/27/16.
  */
-public class BranchItemFragment extends CategoryTreeNavigationFragment {
+public class BranchItemFragment extends SearchableItemFragment {
     private static final String KEY_BRANCH_ID = "key_branch_id";
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;

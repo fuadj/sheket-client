@@ -2,9 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- android:orderInCategory="2" should be greater than 1 b/c that is the search tool -->
     <item
         android:id="@+id/all_items_menu_toggle_editing"
         android:icon="@drawable/ic_action_edit_white"
+        android:orderInCategory="2"
         android:title="Add Item"
         app:showAsAction="always" />
 
