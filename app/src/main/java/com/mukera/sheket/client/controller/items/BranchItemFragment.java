@@ -480,7 +480,15 @@ public class BranchItemFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
+    protected boolean onSearchTextChanged(String newText) {
+        restartLoader();
+        return true;
+    }
+
+    @Override
+    protected boolean onSearchTextViewClosed() {
+        restartLoader();
+        return true;
     }
 
     @Override
@@ -540,7 +548,11 @@ public class BranchItemFragment extends SearchableItemFragment {
         String selection = null;
         String[] selectionArgs = null;
 
-        if (super.isShowingCategoryTree()) {
+        if (super.isSearching()) {
+            String search_text = super.getSearchText();
+            selection = "(" + ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " LIKE '%" + search_text + "%' OR " +
+                    ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + search_text + "%' ) ";
+        } else if (super.isShowingCategoryTree()) {
             selection = ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?";
             selectionArgs = new String[]{String.valueOf(mCategoryId)};
         }
@@ -555,6 +567,11 @@ public class BranchItemFragment extends SearchableItemFragment {
                 selectionArgs,
                 ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC"
         );
+    }
+
+    @Override
+    protected boolean showCategoryNavigation() {
+        return !super.isSearching();
     }
 
     @Override
