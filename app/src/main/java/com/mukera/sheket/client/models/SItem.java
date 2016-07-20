@@ -2,6 +2,7 @@ package com.mukera.sheket.client.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.util.Pair;
@@ -211,6 +212,43 @@ public class SItem extends UUIDSyncable implements Parcelable {
     }
 
     /**
+     * This cursor is required because the result of the JOINED query with the branch table will
+     * have as many rows of the same item for each branch it exists in. This will result
+     * in duplicate rows in the UI with the same item. To prevent this, we override the methods
+     * in the cursor to only return the "unique" items.
+     */
+    public static class ItemWithAvailableBranchesCursor extends CursorWrapper {
+        /**
+         * This is a mapping from "n-th-unique" item --to--> the starting position in the cursor.
+         * Since we've overloaded the {@code getCount()}, the number of unique items
+         * is <= the total rows inside the cursor. This maps from the "smaller" unique items
+         * to their starting positions. This is because the cursor is the result of LEFT JOINING
+         * the item table to branch table,
+         * there will be many rows with the same item id for different branches. This map
+         * holds the positions of the "starting" positions of the items. The size of this
+         * map also tells us how many "unique" items there are.
+         */
+        private Map<Integer, Integer> mItemStartPosition;
+
+        public ItemWithAvailableBranchesCursor(Cursor cursor) {
+            super(cursor);
+            mItemStartPosition = getItemStartPositionsInCursor(cursor);
+            cursor.moveToFirst();
+        }
+
+        @Override
+        public int getCount() {
+            return mItemStartPosition.size();
+        }
+
+        @Override
+        public boolean moveToPosition(int position) {
+            int n_th_item_start_position = mItemStartPosition.get(position);
+            return super.moveToPosition(n_th_item_start_position);
+        }
+    }
+
+    /**
      * When the cursor is the result of JOINED query, there can be multiple rows with the same item.
      *      (e.g: when fetching items with branch_items, there will be a row with
      *      the same item id for each branch the item exists in).
@@ -218,7 +256,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
      * boundary where the last item finishes and a new item starts.
      * @return      a mapping from the n-th item to the starting position in the cursor.
      */
-    public static Map<Integer, Integer> getItemStartPositionsInCursor(Cursor cursor) {
+    private static Map<Integer, Integer> getItemStartPositionsInCursor(Cursor cursor) {
         Map<Integer, Integer> starting_positions = new HashMap<>();
 
         if (!cursor.moveToFirst())

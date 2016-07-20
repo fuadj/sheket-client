@@ -2,6 +2,7 @@ package com.mukera.sheket.client.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -12,7 +13,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by fuad on 5/21/16.
@@ -162,6 +165,51 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
             childrenCategories = null;
         }
+    }
+
+    /**
+     * See docs for {@code SItem.ItemWithAvailableBranchesCursor}
+     */
+    public static class CategoryWithChildrenCursor extends CursorWrapper {
+        private Map<Integer, Integer> mCategoryStartPosition;
+
+        public CategoryWithChildrenCursor(Cursor cursor) {
+            super(cursor);
+            mCategoryStartPosition = getCategoryStartPositionsInCursor(cursor);
+        }
+
+        @Override
+        public int getCount() {
+            return mCategoryStartPosition.size();
+        }
+
+        @Override
+        public boolean moveToPosition(int position) {
+            int n_th_category_start_position = mCategoryStartPosition.get(position);
+            return super.moveToPosition(n_th_category_start_position);
+        }
+    }
+
+    private static Map<Integer, Integer> getCategoryStartPositionsInCursor(Cursor cursor) {
+        Map<Integer, Integer> starting_positions = new HashMap<>();
+
+        if (!cursor.moveToFirst()) return starting_positions;
+
+        int cursor_index = 0;
+        long prev_category_id = -1;
+        do {
+            if (cursor.isNull(COL_CURRENT_CATEGORY_ID)) break;
+
+            long category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID);
+            if (category_id != prev_category_id) {
+                starting_positions.put(starting_positions.size(), cursor_index);
+                prev_category_id = category_id;
+            }
+            cursor_index++;
+        } while (cursor.moveToNext());
+
+        cursor.moveToFirst();
+        return starting_positions;
     }
 
     public ContentValues toContentValues() {
