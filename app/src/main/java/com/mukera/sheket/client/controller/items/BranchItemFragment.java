@@ -57,8 +57,6 @@ public class BranchItemFragment extends SearchableItemFragment {
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     private long mBranchId;
 
-    private ListView mBranchItemList;
-
     private FloatingActionButton mFinishTransactionBtn;
 
     private List<STransactionItem> mTransactionItemList;
