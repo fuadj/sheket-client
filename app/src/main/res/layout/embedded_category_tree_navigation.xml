@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
-    <ListView
+    <ExpandableListView
+        android:id="@+id/expandable_category_tree_list_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/category_tree_navigation_list_view"/>
-
-    <!-- This will be used as the "footer" divider from anything below-->
-    <View
-        android:id="@+id/embedded_category_list_separator_divider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/listDivider"/>
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

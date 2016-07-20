@@ -15,14 +15,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -31,19 +29,25 @@ import java.util.Stack;
 
 /**
  * Created by fuad on 6/4/16.
- *
+ * <p>
  * <p>This fragment enables traversing category ancestry tree in the UI.
  * By extending this class and overriding its methods, sub classes can be notified
  * of the various states of the traversal. The traversal starts at the root category.
  * When the user selects a category, it will update the UI to look into the category.
  * This fragment keeps a stack of the categories visited so going back is possible.</p>
  */
-public abstract class CategoryTreeNavigationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public abstract class CategoryTreeNavigationFragment extends Fragment
+        implements LoaderManager.LoaderCallbacks<Cursor>,
+        ExpandableCategoryTreeAdapter.ExpandableCategoryTreeListener {
+
     protected long mCurrentCategoryId;
     protected Stack<Long> mCategoryBackstack;
 
-    private ListView mCategoryList;
-    protected CategoryAdapter mCategoryAdapter = null;
+    //private ListView mCategoryList;
+    //protected CategoryAdapter mCategoryAdapter = null;
+    private ExpandableListView mExpandableListView;
+
+    ExpandableCategoryTreeAdapter mExpandableAdapter;
 
     private View mDividerView;
 
@@ -62,6 +66,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * to be inflated.
      * NOTE: the inflated UI should should embed the layout {@code R.layout.embedded_category_tree_navigation},
      * which contains the category navigation list and a divider view.
+     *
      * @return
      */
     protected abstract int getLayoutResId();
@@ -77,20 +82,23 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * subclasses have prepared for their Loader's to restart by setting any
      * necessary internal variables to the appropriate state.)
      *
-     * @param previous_category     This this the last category visited before selecting the category
+     * @param previous_category This this the last category visited before selecting the category
      * @param selected_category
      */
-    public void onCategorySelected(long previous_category, long selected_category) { }
+    public void onCategorySelected(long previous_category, long selected_category) {
+    }
 
     /**
      * Subclasses can override this to get notified on loader initialization
      */
-    public void onInitLoader() { }
+    public void onInitLoader() {
+    }
 
     /**
      * Subclasses can override this to get notified on loader restart
      */
-    public void onRestartLoader() { }
+    public void onRestartLoader() {
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,7 +115,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
      * Sets the category as the current and pushed the previous on the backstack.
      *
      * @param category_id
-     * @return  the previous category
+     * @return the previous category
      */
     protected long setCurrentCategory(long category_id) {
         // the root category is only added to the "bottom" of the stack
@@ -136,24 +144,14 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     /**
      * Override this to create your own adapter for the category list.
      */
+    /*
     protected CategoryAdapter getCategoryAdapter() {
         if (mCategoryAdapter == null) {
             mCategoryAdapter = new CategoryChildrenArrayAdapter(getActivity());
         }
         return mCategoryAdapter;
     }
-
-    /**
-     * Sub-classes can override this and define their own rules. This is then used
-     * to determine whether to show the category navigation list view or not.
-     * @return
-     */
-    protected boolean isShowingCategoryTree() {
-        return PrefUtil.getShowCategoryTreeState(getActivity());
-    }
-
-    protected void onCategoryTreeViewToggled(boolean show_tree_view) {
-    }
+    */
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -171,8 +169,6 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
                 state = !state;
                 PrefUtil.setShowCategoryTreeState(getActivity(), state);
 
-                onCategoryTreeViewToggled(state);
-
                 if (state) {
                     onCategorySelected(mCurrentCategoryId, mCurrentCategoryId);
                 } else {
@@ -187,6 +183,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
 
     /**
      * Override this to disable the toggle view.
+     *
      * @return
      */
     protected boolean displayCategoryToggleActionBarOption() {
@@ -198,8 +195,11 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
 
-        mCategoryList = (ListView) rootView.findViewById(R.id.category_tree_navigation_list_view);
-        mCategoryList.setAdapter(getCategoryAdapter());
+        mExpandableAdapter = ExpandableCategoryTreeAdapter.newAdapter(getActivity(), this);
+        mExpandableListView = (ExpandableListView) rootView.findViewById(R.id.expandable_category_tree_list_view);
+        mExpandableListView.setAdapter(mExpandableAdapter);
+
+        /*
         mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -213,6 +213,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         });
 
         mDividerView = rootView.findViewById(R.id.embedded_category_list_separator_divider);
+        */
 
         /**
          * This handles the "back" button key. If we are in a sub-category
@@ -251,12 +252,45 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
         return rootView;
     }
 
+    public void setItemCursor(Cursor cursor) {
+        mExpandableAdapter.setItemsCursor(cursor);
+    }
+
+    private static class ViewHolder {
+        TextView categoryName, childrenCount;
+
+        public ViewHolder(View view) {
+            categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
+            //childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
+        }
+    }
+
+    @Override
+    public View newCategoryView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View view = inflater.inflate(R.layout.list_item_category_tree_navigation, parent, false);
+
+        ViewHolder holder = new ViewHolder(view);
+        view.setTag(holder);
+        return view;
+    }
+
+    @Override
+    public void bindCategoryView(Context context, Cursor cursor, View view, int position) {
+        SCategory category = new SCategory(cursor);
+
+        ViewHolder holder = (ViewHolder) view.getTag();
+
+        holder.categoryName.setText(category.name);
+        //holder.childrenCount.setVisibility(View.GONE);
+    }
+
     /**
      * Override these 3 methods to load your data.
      */
-    protected abstract Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args);
-    protected abstract void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data);
-    protected abstract void onCategoryTreeLoaderReset(Loader<Cursor> loader);
+    protected abstract Loader<Cursor> onEntityCreateLoader(int id, Bundle args);
+    protected abstract void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data);
+    protected abstract void onEntityLoaderReset(Loader<Cursor> loader);
 
     /**
      * Override this to create another loader.
@@ -264,6 +298,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
         String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
 
+        // TODO: implement a "normal" loader that doesn't fetch in the children, then replace it with it
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
@@ -275,52 +310,62 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (id != getCategoryLoaderId())
-            return onCategoryTreeCreateLoader(id, args);
+            return onEntityCreateLoader(id, args);
 
         return getCategoryTreeLoader(id, args);
     }
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == getCategoryLoaderId()) {
-            mCategoryAdapter.setCategoryCursor(data);
-            setCategoryListVisibility(showCategoryNavigation() &&
-                    isShowingCategoryTree());
-        } else {
-            onCategoryTreeLoaderFinished(loader, data);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        if (loader.getId() != getCategoryLoaderId()) {
-            mCategoryAdapter.setCategoryCursor(null);
-            setCategoryListVisibility(false);
-        } else {
-            onCategoryTreeLoaderReset(loader);
-        }
+    /**
+     * Sub-classes can override this and define their own rules. This is then used
+     * to determine whether to show the category navigation list view or not.
+     *
+     * @return
+     */
+    protected boolean isShowingCategoryTree() {
+        return PrefUtil.getShowCategoryTreeState(getActivity());
     }
 
     /**
      * Override this method to conditionally control whether the CategoryList visibility.
-     * @return  true if you want, false if not.
+     *
+     * @return true if you want, false if not.
      */
     protected boolean showCategoryNavigation() {
         return true;
     }
 
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (loader.getId() == getCategoryLoaderId()) {
+            mExpandableAdapter.setCategoryCursor(data);
+            setCategoryListVisibility(showCategoryNavigation() && isShowingCategoryTree());
+        } else {
+            onEntityLoaderFinished(loader, data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        if (loader.getId() == getCategoryLoaderId()) {
+            mExpandableAdapter.setCategoryCursor(null);
+        } else {
+            onEntityLoaderReset(loader);
+        }
+    }
+
+
     /**
      * Set the visibility of the category navigation UI(list-view & other stuff).
+     *
      * @param show_list
      */
     public void setCategoryListVisibility(boolean show_list) {
-        if (show_list) {
-            mCategoryList.setVisibility(View.VISIBLE);
-            ListUtils.setDynamicHeight(mCategoryList);
-            mDividerView.setVisibility(mCategoryList.getAdapter().getCount() > 0 ? View.VISIBLE : View.GONE);
-        } else {
-            mCategoryList.setVisibility(View.GONE);
-            mDividerView.setVisibility(View.GONE);
+        boolean is_expanded = mExpandableListView.isGroupExpanded(ExpandableCategoryTreeAdapter.GROUP_CATEGORY);
+        // if it is already opened, don't bother
+        if (show_list && !is_expanded) {
+            mExpandableListView.expandGroup(ExpandableCategoryTreeAdapter.GROUP_CATEGORY);
+        } else if (!show_list && is_expanded) {
+            mExpandableListView.collapseGroup(ExpandableCategoryTreeAdapter.GROUP_CATEGORY);
         }
     }
 
@@ -347,7 +392,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
 
             public ViewHolder(View view) {
                 categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
-                childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
+                //childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
             }
         }
 
@@ -389,12 +434,14 @@ public abstract class CategoryTreeNavigationFragment extends Fragment implements
             }
 
             holder.categoryName.setText(category.name);
+            /*
             if (category.childrenCategories.isEmpty()) {
                 holder.childrenCount.setVisibility(View.GONE);
             } else {
                 holder.childrenCount.setVisibility(View.VISIBLE);
                 holder.childrenCount.setText("" + category.childrenCategories.size());
             }
+            */
             return convertView;
         }
     }

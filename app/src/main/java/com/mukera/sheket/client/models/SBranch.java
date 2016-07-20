@@ -43,6 +43,9 @@ public class SBranch extends UUIDSyncable {
     public String branch_name;
     public String branch_location;
 
+    // See docs for {@link SItem.NO_ITEM_FOUND}
+    public static final int NO_BRANCH_FOUND = 0;
+
     public SBranch() {
     }
 
@@ -50,8 +53,12 @@ public class SBranch extends UUIDSyncable {
         this(cursor, 0);
     }
     public SBranch(Cursor cursor, int offset) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        if (cursor.isNull(COL_BRANCH_ID + offset)) {
+            branch_id = NO_BRANCH_FOUND;
+            return;
+        }
         branch_id = cursor.getLong(COL_BRANCH_ID + offset);
+        company_id = cursor.getLong(COL_COMPANY_ID + offset);
         branch_name = cursor.getString(COL_NAME + offset);
         branch_location = cursor.getString(COL_LOCATION + offset);
         change_status = cursor.getInt(COL_CHANGE + offset);

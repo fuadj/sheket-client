@@ -4,12 +4,18 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.util.Pair;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by gamma on 3/3/16.
@@ -118,16 +124,51 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public String bar_code;
     public boolean has_bar_code;
 
+    /**
+     * When joining multiple tables through LEFT/RIGHT joins, if the item
+     * table is the empty table, you can check that by checking if the item_id
+     * is {@code NO_ITEM_FOUND}.
+     */
+    public static final int NO_ITEM_FOUND = 0;
+
+    /**
+     * These fields {total_quantity, available_branches} aren't really stored with the item table,
+     * they are just a convenience when we are fetching it with branch items.
+     */
+    public double total_quantity;
+    public List<Pair<SBranchItem, SBranch>> available_branches;
+
     public SItem() {
     }
 
     public SItem(Cursor cursor) {
-        this(cursor, 0);
+        this(cursor, 0, false);
     }
 
     public SItem(Cursor cursor, int offset) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        this(cursor, offset, false);
+    }
+
+    public SItem(Cursor cursor, boolean fetch_branch_items) {
+        this(cursor, 0, fetch_branch_items);
+    }
+
+    /**
+     * If you are fetching it with branch_items, it is when you've made a left join
+     * with the branch and branch_item tables. Because the left join has many rows
+     * items that exist in many branches, the cursor will be moved.
+     * @param cursor
+     * @param offset
+     * @param fetch_branch_items
+     */
+    public SItem(Cursor cursor, int offset, boolean fetch_branch_items) {
+        if (cursor.isNull(COL_ITEM_ID + offset)) {
+            item_id = NO_ITEM_FOUND;
+            return;
+        }
+
         item_id = cursor.getLong(COL_ITEM_ID + offset);
+        company_id = cursor.getLong(COL_COMPANY_ID + offset);
         name = cursor.getString(COL_NAME + offset);
         item_code = cursor.getString(COL_MANUAL_CODE + offset);
         category = cursor.getLong(COL_CATEGORY + offset);
@@ -145,6 +186,66 @@ public class SItem extends UUIDSyncable implements Parcelable {
         has_bar_code = SheketContract.toBool(cursor.getInt(COL_HAS_BAR_CODE + offset));
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
+
+        total_quantity = 0.d;
+        available_branches = new ArrayList<>();
+
+        if (fetch_branch_items) {
+            while (true) {
+                SBranchItem branchItem = new SBranchItem(cursor, COL_LAST + offset, false);
+                if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND)
+                    break;
+                SBranch branch = new SBranch(cursor, COL_LAST + SBranchItem.COL_LAST);
+                available_branches.add(new Pair<>(branchItem, branch));
+                total_quantity += branchItem.quantity;
+
+                if (!cursor.moveToNext()) // we've hit the end
+                    break;
+                long next_item_id = cursor.getLong(COL_ITEM_ID + offset);
+                if (next_item_id != item_id) {      // we've moved to the territory of another item, get back
+                    cursor.moveToPrevious();
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * When the cursor is the result of JOINED query, there can be multiple rows with the same item.
+     *      (e.g: when fetching items with branch_items, there will be a row with
+     *      the same item id for each branch the item exists in).
+     * This function returns the starting positions for each item. The start position if the
+     * boundary where the last item finishes and a new item starts.
+     * @return      a mapping from the n-th item to the starting position in the cursor.
+     */
+    public static Map<Integer, Integer> getItemStartPositionsInCursor(Cursor cursor) {
+        Map<Integer, Integer> starting_positions = new HashMap<>();
+
+        if (!cursor.moveToFirst())
+            return starting_positions;
+
+        int cursor_index = 0;
+        long prev_item_id = -1;
+
+        do {
+            if (cursor.isNull(COL_ITEM_ID)) break;
+
+            long item_id = cursor.getLong(COL_ITEM_ID);
+            if (item_id != prev_item_id) {
+                /**
+                 * It is a mapping from the n-th item to the position inside the cursor.
+                 * So the n-th item is the "n-th-unique" item we've seen so far.
+                 */
+                starting_positions.put(starting_positions.size(), cursor_index);
+
+                prev_item_id = item_id;
+            }
+            cursor_index++;
+        } while (cursor.moveToNext());
+
+        cursor.moveToFirst();
+
+        return starting_positions;
     }
 
     private SItem(Parcel parcel) {

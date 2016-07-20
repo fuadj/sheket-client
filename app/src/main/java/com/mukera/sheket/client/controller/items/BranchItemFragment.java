@@ -218,6 +218,16 @@ public class BranchItemFragment extends SearchableItemFragment {
         return rootView;
     }
 
+    @Override
+    public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        return null;
+    }
+
+    @Override
+    public void bindItemView(Context context, Cursor cursor, View view, int position) {
+
+    }
+
     void displaySummaryDialog() {
         TransactionSummaryDialog dialog = new TransactionSummaryDialog();
         dialog.setTransactionItems(mTransactionItemList);
@@ -542,7 +552,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
+    protected Loader<Cursor> onEntityCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
 
         String selection = null;
@@ -575,13 +585,13 @@ public class BranchItemFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data) {
+    protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
         mBranchItemAdapter.swapCursor(data);
         ListUtils.setDynamicHeight(mBranchItemList);
     }
 
     @Override
-    protected void onCategoryTreeLoaderReset(Loader<Cursor> loader) {
+    protected void onEntityLoaderReset(Loader<Cursor> loader) {
         mBranchItemAdapter.swapCursor(null);
         ListUtils.setDynamicHeight(mBranchItemList);
     }
@@ -652,7 +662,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                     mListener.itemSelected(branchItem.item);
                 }
             });
-            if (branchItem.branch_id == SBranchItem.ITEM_NOT_FOUND_IN_BRANCH ||
+            if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND ||
                     branchItem.item_location == null ||
                     branchItem.item_location.isEmpty()) {
                 holder.item_loc.setVisibility(View.GONE);
@@ -661,7 +671,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                 holder.item_loc.setText(branchItem.item_location);
             }
 
-            boolean item_exist = branchItem.branch_id != SBranchItem.ITEM_NOT_FOUND_IN_BRANCH;
+            boolean item_exist = branchItem.branch_id != SBranchItem.NO_BRANCH_ITEM_FOUND;
 
             int show_if_exist = item_exist ? View.VISIBLE : View.GONE;
             int show_if_not_exist = item_exist ? View.GONE : View.VISIBLE;

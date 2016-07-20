@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
@@ -125,8 +126,8 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     void updateEditingUI() {
-        ((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
-        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
+        //((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
+        //mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
         if (!mIsEditMode) {
             mAddBtn.setVisibility(View.VISIBLE);
             mPasteBtn.setVisibility(View.GONE);
@@ -214,6 +215,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
+        /*
         mViewSelectAll = rootView.findViewById(R.id.all_items_select_all_layout);
         mViewSelectAll.setVisibility(View.GONE);
         mCheckBoxSelectAll = (CheckBox) rootView.findViewById(R.id.all_items_select_all_check_box);
@@ -223,7 +225,9 @@ public class AllItemsFragment extends SearchableItemFragment {
 
             }
         });
+        */
 
+        /*
         mItemList = (ListView) rootView.findViewById(R.id.all_items_list_view_items);
         mItemDetailAdapter = new ItemDetailAdapter(getActivity());
         mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
@@ -244,9 +248,60 @@ public class AllItemsFragment extends SearchableItemFragment {
                 dialog.show(fm, "Detail");
             }
         });
+        */
 
         return rootView;
     }
+
+    private static class ItemViewHolder {
+        ImageView item_info;
+        TextView item_name;
+        TextView item_code;
+        TextView total_qty;
+
+        public ItemViewHolder(View view) {
+            item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
+            item_name = (TextView) view.findViewById(R.id.list_item_item_detail_name);
+            item_code = (TextView) view.findViewById(R.id.list_item_item_detail_code);
+            total_qty = (TextView) view.findViewById(R.id.list_item_item_detail_total_qty);
+        }
+    }
+
+    @Override
+    public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View view = inflater.inflate(R.layout.list_item_all_items, parent, false);
+        ItemViewHolder holder = new ItemViewHolder(view);
+        view.setTag(holder);
+        return view;
+    }
+
+    @Override
+    public void bindItemView(Context context, Cursor cursor, View view, int position) {
+        cursor.moveToPosition(position);
+        // we also want to fetch the branches it exists in, that is the true argument
+        SItem item = new SItem(cursor, true);
+
+        ItemViewHolder holder = (ItemViewHolder) view.getTag();
+
+        holder.item_name.setText(item.name);
+        boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
+        if (has_code) {
+            holder.item_code.setVisibility(View.VISIBLE);
+            holder.item_code.setText(
+                    item.has_bar_code ? item.bar_code : item.item_code);
+        } else {
+            holder.item_code.setVisibility(View.GONE);
+        }
+        holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
+        holder.item_info.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //mListener.itemInfoSelected(;
+            }
+        });
+    }
+
 
     /**
      * Moves the selected categories to the current category. Updates them so they
@@ -311,6 +366,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         dialog.show();
     }
 
+    /*
     @Override
     protected CategoryAdapter getCategoryAdapter() {
         if (mCategoryAdapter == null) {
@@ -340,21 +396,24 @@ public class AllItemsFragment extends SearchableItemFragment {
         }
         return mCategoryAdapter;
     }
+    */
 
     @Override
     protected boolean onSearchTextChanged(String newText) {
         restartLoader();
+        setCategoryListVisibility(false);
         return true;
     }
 
     @Override
     protected boolean onSearchTextViewClosed() {
         restartLoader();
+        setCategoryListVisibility(true);
         return true;
     }
 
     @Override
-    protected Loader<Cursor> onCategoryTreeCreateLoader(int id, Bundle args) {
+    protected Loader<Cursor> onEntityCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
 
@@ -387,18 +446,51 @@ public class AllItemsFragment extends SearchableItemFragment {
         return !super.isSearching();
     }
 
-    @Override
-    protected void onCategoryTreeLoaderFinished(Loader<Cursor> loader, Cursor data) {
-        mItemDetailAdapter.setItemCursor(data);
-        ListUtils.setDynamicHeight(mItemList);
-        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
+    /**
+     * This cursor is required because the result of the JOINED query with the branch table will
+     * have as many rows of the same item for each branch it exists in. This will result
+     * in duplicate rows in the UI with the same item. To prevent this, we override the methods
+     * in the cursor to only return the "unique" items.
+     */
+    private static class ItemWithAvailableBranchesCursor extends CursorWrapper {
+        /**
+         * This is a mapping from "n-th-unique" item --to--> the starting position in the cursor.
+         * Since we've overloaded the {@code getCount()}, the number of unique items
+         * is <= the total rows inside the cursor. This maps from the "smaller" unique items
+         * to their starting positions. This is because the cursor is the result of LEFT JOINING
+         * the item table to branch table,
+         * there will be many rows with the same item id for different branches. This map
+         * holds the positions of the "starting" positions of the items. The size of this
+         * map also tells us how many "unique" items there are.
+         */
+        private Map<Integer, Integer> mItemStartPosition;
+
+        public ItemWithAvailableBranchesCursor(Cursor cursor) {
+            super(cursor);
+            mItemStartPosition = SItem.getItemStartPositionsInCursor(cursor);
+            cursor.moveToFirst();
+        }
+
+        @Override
+        public int getCount() {
+            return mItemStartPosition.size();
+        }
+
+        @Override
+        public boolean moveToPosition(int position) {
+            int n_th_item_start_position = mItemStartPosition.get(position);
+            return super.moveToPosition(n_th_item_start_position);
+        }
     }
 
     @Override
-    protected void onCategoryTreeLoaderReset(Loader<Cursor> loader) {
-        mItemDetailAdapter.setItemCursor(null);
-        ListUtils.setDynamicHeight(mItemList);
-        mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
+    protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
+        setItemCursor(new ItemWithAvailableBranchesCursor(data));
+    }
+
+    @Override
+    protected void onEntityLoaderReset(Loader<Cursor> loader) {
+        setItemCursor(null);
     }
 
     public static class SItemDetail {

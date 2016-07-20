@@ -42,7 +42,8 @@ public class SBranchItem extends ChangeTraceable {
                 BRANCH_ITEM_COLUMNS.length, SItem.ITEM_COLUMNS.length);
     }
 
-    public static final int ITEM_NOT_FOUND_IN_BRANCH = 0;
+    // See docs for {@link SItem.NO_ITEM_FOUND}
+    public static final int NO_BRANCH_ITEM_FOUND = 0;
 
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_BRANCH_ID = 1;
@@ -85,7 +86,7 @@ public class SBranchItem extends ChangeTraceable {
             item_location = cursor.getString(COL_ITEM_LOCATION + offset);
             change_status = cursor.getInt(COL_CHANGE + offset);
         } else {
-            branch_id = ITEM_NOT_FOUND_IN_BRANCH;
+            branch_id = NO_BRANCH_ITEM_FOUND;
         }
 
         if (fetch_item) {
