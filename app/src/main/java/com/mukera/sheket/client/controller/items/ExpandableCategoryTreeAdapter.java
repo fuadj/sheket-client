@@ -18,9 +18,6 @@ import com.mukera.sheket.client.R;
  * is used to populate items.
  */
 public class ExpandableCategoryTreeAdapter extends CursorTreeAdapter {
-    // These values are used by the CategoryCursorTreeAdapter
-    // Use the {@code COL_GROUP_ID} to check which group is being asked and return appropriate data.
-    private static final int COL_GROUP_ID = 1;
     public static final int GROUP_CATEGORY = 0;
     public static final int GROUP_ITEMS = 1;
 
