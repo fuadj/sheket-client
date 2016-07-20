@@ -7,6 +7,6 @@
         android:id="@+id/list_item_category_group_view_separator"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@android:color/darker_gray" />
+        android:background="@android:color/transparent" />
 
 </FrameLayout>
