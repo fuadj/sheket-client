@@ -25,6 +25,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
 
+import java.util.Locale;
 import java.util.Stack;
 
 /**
@@ -267,7 +268,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
         public ViewHolder(View view) {
             categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
-            //childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
+            childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
         }
     }
 
@@ -283,12 +284,18 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void bindCategoryView(Context context, Cursor cursor, View view, int position) {
-        SCategory category = new SCategory(cursor);
+        SCategory category = new SCategory(cursor, true);
 
         ViewHolder holder = (ViewHolder) view.getTag();
 
         holder.categoryName.setText(category.name);
-        //holder.childrenCount.setVisibility(View.GONE);
+        if (category.childrenCategories.isEmpty()) {
+            holder.childrenCount.setVisibility(View.GONE);
+        } else {
+            holder.childrenCount.setVisibility(View.VISIBLE);
+            holder.childrenCount.setText(String.format(Locale.US,
+                    "%d", category.childrenCategories.size()));
+        }
     }
 
     /**
