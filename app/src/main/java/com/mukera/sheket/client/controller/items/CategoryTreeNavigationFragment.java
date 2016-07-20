@@ -85,7 +85,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * @param previous_category This this the last category visited before selecting the category
      * @param selected_category
      */
-    public void onCategorySelected(long previous_category, long selected_category) {
+    protected void onCategorySelected(long previous_category, long selected_category) {
     }
 
     /**
@@ -199,21 +199,27 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         mExpandableListView = (ExpandableListView) rootView.findViewById(R.id.expandable_category_tree_list_view);
         mExpandableListView.setAdapter(mExpandableAdapter);
 
-        /*
-        mCategoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mExpandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SCategory category = getCategoryAdapter().getCategoryAt(position);
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                Cursor cursor = mExpandableAdapter.getChild(groupPosition, childPosition);
+                if (cursor == null) {
+                    return false;
+                }
 
-                long previous_category = setCurrentCategory(category.category_id);
+                if (groupPosition == ExpandableCategoryTreeAdapter.GROUP_CATEGORY) {
+                    SCategory category = new SCategory(cursor);
 
-                onCategorySelected(previous_category, category.category_id);
-                restartLoader();
+                    long previous_category = setCurrentCategory(category.category_id);
+
+                    onCategorySelected(previous_category, category.category_id);
+                    restartLoader();
+                    return true;
+                } else {
+                    return onEntitySelected(cursor);
+                }
             }
         });
-
-        mDividerView = rootView.findViewById(R.id.embedded_category_list_separator_divider);
-        */
 
         /**
          * This handles the "back" button key. If we are in a sub-category
@@ -252,7 +258,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         return rootView;
     }
 
-    public void setItemCursor(Cursor cursor) {
+    public void setEntityCursor(Cursor cursor) {
         mExpandableAdapter.setItemsCursor(cursor);
     }
 
@@ -292,13 +298,23 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     protected abstract void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data);
     protected abstract void onEntityLoaderReset(Loader<Cursor> loader);
 
+    // Override this to listen for click events for your entity,
+
+    /**
+     * You can listen for non-category list element clicks here. The cursor is the one
+     * the list had been populated with on {@code onEntityLoaderFinished} call. Its position
+     * is 0-index from entities returned on the loader finish call.
+     * @param cursor
+     * @return      True is the click was handled, false otherwise.
+     */
+    protected abstract boolean onEntitySelected(Cursor cursor);
+
     /**
      * Override this to create another loader.
      */
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
         String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
 
-        // TODO: implement a "normal" loader that doesn't fetch in the children, then replace it with it
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
@@ -337,7 +353,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == getCategoryLoaderId()) {
-            mExpandableAdapter.setCategoryCursor(data);
+            mExpandableAdapter.setCategoryCursor(new SCategory.CategoryWithChildrenCursor(data));
+
             setCategoryListVisibility(showCategoryNavigation() && isShowingCategoryTree());
         } else {
             onEntityLoaderFinished(loader, data);
