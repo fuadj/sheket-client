@@ -7,14 +7,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
@@ -25,7 +23,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -38,7 +35,6 @@ import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.data.SheketContract.CategoryEntry;
 import com.mukera.sheket.client.data.SheketContract.ItemEntry;
@@ -253,6 +249,11 @@ public class AllItemsFragment extends SearchableItemFragment {
         return rootView;
     }
 
+    @Override
+    protected boolean onEntitySelected(Cursor cursor) {
+        return true;
+    }
+
     private static class ItemViewHolder {
         ImageView item_info;
         TextView item_name;
@@ -446,51 +447,14 @@ public class AllItemsFragment extends SearchableItemFragment {
         return !super.isSearching();
     }
 
-    /**
-     * This cursor is required because the result of the JOINED query with the branch table will
-     * have as many rows of the same item for each branch it exists in. This will result
-     * in duplicate rows in the UI with the same item. To prevent this, we override the methods
-     * in the cursor to only return the "unique" items.
-     */
-    private static class ItemWithAvailableBranchesCursor extends CursorWrapper {
-        /**
-         * This is a mapping from "n-th-unique" item --to--> the starting position in the cursor.
-         * Since we've overloaded the {@code getCount()}, the number of unique items
-         * is <= the total rows inside the cursor. This maps from the "smaller" unique items
-         * to their starting positions. This is because the cursor is the result of LEFT JOINING
-         * the item table to branch table,
-         * there will be many rows with the same item id for different branches. This map
-         * holds the positions of the "starting" positions of the items. The size of this
-         * map also tells us how many "unique" items there are.
-         */
-        private Map<Integer, Integer> mItemStartPosition;
-
-        public ItemWithAvailableBranchesCursor(Cursor cursor) {
-            super(cursor);
-            mItemStartPosition = SItem.getItemStartPositionsInCursor(cursor);
-            cursor.moveToFirst();
-        }
-
-        @Override
-        public int getCount() {
-            return mItemStartPosition.size();
-        }
-
-        @Override
-        public boolean moveToPosition(int position) {
-            int n_th_item_start_position = mItemStartPosition.get(position);
-            return super.moveToPosition(n_th_item_start_position);
-        }
-    }
-
     @Override
     protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
-        setItemCursor(new ItemWithAvailableBranchesCursor(data));
+        setEntityCursor(new SItem.ItemWithAvailableBranchesCursor(data));
     }
 
     @Override
     protected void onEntityLoaderReset(Loader<Cursor> loader) {
-        setItemCursor(null);
+        setEntityCursor(null);
     }
 
     public static class SItemDetail {

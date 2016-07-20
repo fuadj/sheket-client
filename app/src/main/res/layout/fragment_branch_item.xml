@@ -5,33 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="@dimen/activity_vertical_margin"
     >
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <include layout="@layout/embedded_category_tree_navigation" />
-
-            <ListView
-                android:id="@+id/branch_item_list_view_items"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:drawSelectorOnTop="true"
-                android:gravity="center"
-                android:verticalSpacing="5dp"
-                android:focusable="true"
-                android:clickable="true" />
-
-        </LinearLayout>
-    </ScrollView>
+    <include layout="@layout/embedded_category_tree_navigation" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/float_btn_branch_item_transaction"

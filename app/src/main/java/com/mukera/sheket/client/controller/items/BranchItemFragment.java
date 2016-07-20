@@ -32,7 +32,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -59,7 +58,6 @@ public class BranchItemFragment extends SearchableItemFragment {
     private long mBranchId;
 
     private ListView mBranchItemList;
-    private BranchItemCursorAdapter mBranchItemAdapter;
 
     private FloatingActionButton mFinishTransactionBtn;
 
@@ -199,33 +197,93 @@ public class BranchItemFragment extends SearchableItemFragment {
         });
         updateFinishBtnVisibility();
 
-        mBranchItemList = (ListView) rootView.findViewById(R.id.branch_item_list_view_items);
-        mBranchItemAdapter = new BranchItemCursorAdapter(getActivity());
-        mBranchItemAdapter.setListener(new BranchItemCursorAdapter.ItemSelectionListener() {
-            @Override
-            public void editItemLocationSelected(final SBranchItem branchItem) {
-                displayItemLocationDialog(branchItem);
-            }
-
-            @Override
-            public void itemSelected(SItem item) {
-                displayTransactionQuantityDialog(item, false, -1,
-                        false, null);
-            }
-        });
-        mBranchItemList.setAdapter(mBranchItemAdapter);
-
         return rootView;
     }
 
+    private static class ViewHolder {
+        TextView item_name;
+        TextView item_code;
+        TextView qty_remain;
+        TextView item_loc;
+        ImageButton edit_loc;
+        LinearLayout layout_branch_item;
+        ImageView item_not_exist;
+
+        public ViewHolder(View view) {
+            item_name = (TextView) view.findViewById(R.id.list_item_text_view_b_item_name);
+            item_code = (TextView) view.findViewById(R.id.list_item_text_view_b_item_code);
+            qty_remain = (TextView) view.findViewById(R.id.list_item_text_view_b_item_qty);
+            item_loc = (TextView) view.findViewById(R.id.list_item_text_view_b_item_loc);
+            edit_loc = (ImageButton) view.findViewById(R.id.list_item_img_btn_b_edit_location);
+            layout_branch_item = (LinearLayout) view.findViewById(R.id.layout_branch_item_section);
+            item_not_exist = (ImageView) view.findViewById(R.id.list_item_img_view_b_item_not_exist);
+        }
+    }
+
+
     @Override
     public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
-        return null;
+        View view = LayoutInflater.from(context).inflate(R.layout.list_item_branch_item, parent, false);
+        ViewHolder holder = new ViewHolder(view);
+
+        view.setTag(holder);
+        return view;
     }
 
     @Override
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
+        ViewHolder holder = (ViewHolder) view.getTag();
+        final SBranchItem branchItem = new SBranchItem(cursor, true);
+        final SItem item = branchItem.item;
 
+        holder.item_name.setText(item.name);
+        String code;
+        if (item.has_bar_code) {
+            code = item.bar_code;
+        } else {
+            code = item.item_code;
+        }
+        holder.item_code.setText(code);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayTransactionQuantityDialog(item, false, -1,
+                        false, null);
+            }
+        });
+        if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND ||
+                branchItem.item_location == null ||
+                branchItem.item_location.isEmpty()) {
+            holder.item_loc.setVisibility(View.GONE);
+        } else {
+            holder.item_loc.setVisibility(View.VISIBLE);
+            holder.item_loc.setText(branchItem.item_location);
+        }
+
+        boolean item_exist = branchItem.branch_id != SBranchItem.NO_BRANCH_ITEM_FOUND;
+
+        int show_if_exist = item_exist ? View.VISIBLE : View.GONE;
+        int show_if_not_exist = item_exist ? View.GONE : View.VISIBLE;
+
+        holder.layout_branch_item.setVisibility(show_if_exist);
+        holder.edit_loc.setVisibility(show_if_exist);
+
+        holder.item_not_exist.setVisibility(show_if_not_exist);
+
+        if (item_exist) {
+            holder.edit_loc.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    displayItemLocationDialog(branchItem);
+                }
+            });
+            holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
+        }
+    }
+
+    @Override
+    protected boolean onEntitySelected(Cursor cursor) {
+        return true;
     }
 
     void displaySummaryDialog() {
@@ -586,110 +644,11 @@ public class BranchItemFragment extends SearchableItemFragment {
 
     @Override
     protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
-        mBranchItemAdapter.swapCursor(data);
-        ListUtils.setDynamicHeight(mBranchItemList);
+        setEntityCursor(data);
     }
 
     @Override
     protected void onEntityLoaderReset(Loader<Cursor> loader) {
-        mBranchItemAdapter.swapCursor(null);
-        ListUtils.setDynamicHeight(mBranchItemList);
-    }
-
-    public static class BranchItemCursorAdapter extends android.support.v4.widget.CursorAdapter {
-        public interface ItemSelectionListener {
-            void itemSelected(SItem item);
-
-            void editItemLocationSelected(SBranchItem branchItem);
-        }
-
-        private static class ViewHolder {
-            TextView item_name;
-            TextView item_code;
-            TextView qty_remain;
-            TextView item_loc;
-            ImageButton edit_loc;
-            LinearLayout layout_branch_item;
-            ImageView item_not_exist;
-
-            public ViewHolder(View view) {
-                item_name = (TextView) view.findViewById(R.id.list_item_text_view_b_item_name);
-                item_code = (TextView) view.findViewById(R.id.list_item_text_view_b_item_code);
-                qty_remain = (TextView) view.findViewById(R.id.list_item_text_view_b_item_qty);
-                item_loc = (TextView) view.findViewById(R.id.list_item_text_view_b_item_loc);
-                edit_loc = (ImageButton) view.findViewById(R.id.list_item_img_btn_b_edit_location);
-                layout_branch_item = (LinearLayout) view.findViewById(R.id.layout_branch_item_section);
-                item_not_exist = (ImageView) view.findViewById(R.id.list_item_img_view_b_item_not_exist);
-            }
-        }
-
-        public ItemSelectionListener mListener;
-
-        public void setListener(ItemSelectionListener listener) {
-            mListener = listener;
-        }
-
-        public BranchItemCursorAdapter(Context context) {
-            super(context, null);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.list_item_branch_item, parent, false);
-            ViewHolder holder = new ViewHolder(view);
-
-            view.setTag(holder);
-            return view;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            ViewHolder holder = (ViewHolder) view.getTag();
-            final SBranchItem branchItem = new SBranchItem(cursor, true);
-            SItem item = branchItem.item;
-
-            holder.item_name.setText(item.name);
-            String code;
-            if (item.has_bar_code) {
-                code = item.bar_code;
-            } else {
-                code = item.item_code;
-            }
-            holder.item_code.setText(code);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mListener.itemSelected(branchItem.item);
-                }
-            });
-            if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND ||
-                    branchItem.item_location == null ||
-                    branchItem.item_location.isEmpty()) {
-                holder.item_loc.setVisibility(View.GONE);
-            } else {
-                holder.item_loc.setVisibility(View.VISIBLE);
-                holder.item_loc.setText(branchItem.item_location);
-            }
-
-            boolean item_exist = branchItem.branch_id != SBranchItem.NO_BRANCH_ITEM_FOUND;
-
-            int show_if_exist = item_exist ? View.VISIBLE : View.GONE;
-            int show_if_not_exist = item_exist ? View.GONE : View.VISIBLE;
-
-            holder.layout_branch_item.setVisibility(show_if_exist);
-            holder.edit_loc.setVisibility(show_if_exist);
-
-            holder.item_not_exist.setVisibility(show_if_not_exist);
-
-            if (item_exist) {
-                holder.edit_loc.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mListener.editItemLocationSelected(branchItem);
-                    }
-                });
-                holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
-            }
-        }
+        setEntityCursor(null);
     }
 }
