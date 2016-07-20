@@ -346,7 +346,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      *
      * @return true if you want, false if not.
      */
-    protected boolean showCategoryNavigation() {
+    protected boolean shouldShowCategoryNavigation() {
         return true;
     }
 
@@ -355,7 +355,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         if (loader.getId() == getCategoryLoaderId()) {
             mExpandableAdapter.setCategoryCursor(new SCategory.CategoryWithChildrenCursor(data));
 
-            setCategoryListVisibility(showCategoryNavigation() && isShowingCategoryTree());
+            setCategoryListVisibility(shouldShowCategoryNavigation() && isShowingCategoryTree());
         } else {
             onEntityLoaderFinished(loader, data);
         }

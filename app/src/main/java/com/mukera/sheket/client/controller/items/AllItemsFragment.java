@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
@@ -54,8 +55,6 @@ import java.util.Set;
  * Created by gamma on 3/4/16.
  */
 public class AllItemsFragment extends SearchableItemFragment {
-    private ListView mItemList;
-    private ItemDetailAdapter mItemDetailAdapter;
     private static final String KEY_SAVE_EDIT_MODE = "key_save_edit_mode";
     private boolean mIsEditMode = false;
 
@@ -160,19 +159,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         return R.layout.fragment_all_item;
     }
 
-    void displayOptionToEditItem(final SItemDetail itemDetail) {
-        final Activity activity = getActivity();
-        new AlertDialog.Builder(activity).
-                setTitle("Edit Item").
-                setMessage("Do you want to edit item attributes?").
-                setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, itemDetail.item));
-                    }
-                }).setNegativeButton("No", null).show();
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -211,46 +197,17 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
-        /*
-        mViewSelectAll = rootView.findViewById(R.id.all_items_select_all_layout);
-        mViewSelectAll.setVisibility(View.GONE);
-        mCheckBoxSelectAll = (CheckBox) rootView.findViewById(R.id.all_items_select_all_check_box);
-        mCheckBoxSelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-            }
-        });
-        */
-
-        /*
-        mItemList = (ListView) rootView.findViewById(R.id.all_items_list_view_items);
-        mItemDetailAdapter = new ItemDetailAdapter(getActivity());
-        mItemDetailAdapter.setListener(new ItemDetailAdapter.ItemDetailSelectionListener() {
-            @Override
-            public void itemInfoSelected(SItemDetail itemDetail) {
-                displayOptionToEditItem(itemDetail);
-            }
-        });
-        mItemList.setAdapter(mItemDetailAdapter);
-        mItemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                SItemDetail itemDetail = mItemDetailAdapter.getItem(position);
-                ItemDetailDialog dialog = new ItemDetailDialog();
-                dialog.mItemDetail = itemDetail;
-                dialog.show(fm, "Detail");
-            }
-        });
-        */
-
         return rootView;
     }
 
     @Override
     protected boolean onEntitySelected(Cursor cursor) {
+        FragmentManager fm = getActivity().getSupportFragmentManager();
+
+        SItem item = new SItem(cursor, true);
+        ItemDetailDialog dialog = new ItemDetailDialog();
+        dialog.mItem = item;
+        dialog.show(fm, null);
         return true;
     }
 
@@ -281,7 +238,7 @@ public class AllItemsFragment extends SearchableItemFragment {
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
         cursor.moveToPosition(position);
         // we also want to fetch the branches it exists in, that is the true argument
-        SItem item = new SItem(cursor, true);
+        final SItem item = new SItem(cursor, true);
 
         ItemViewHolder holder = (ItemViewHolder) view.getTag();
 
@@ -298,7 +255,19 @@ public class AllItemsFragment extends SearchableItemFragment {
         holder.item_info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //mListener.itemInfoSelected(;
+                final Activity activity = getActivity();
+                new AlertDialog.Builder(activity).
+                        setTitle("Edit Item").
+                        setMessage("Do you want to edit item attributes?").
+                        setPositiveButton("Yes",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
+                                    }
+                                }).
+                        setNegativeButton("No", null).
+                        show();
             }
         });
     }
@@ -402,14 +371,12 @@ public class AllItemsFragment extends SearchableItemFragment {
     @Override
     protected boolean onSearchTextChanged(String newText) {
         restartLoader();
-        setCategoryListVisibility(false);
         return true;
     }
 
     @Override
     protected boolean onSearchTextViewClosed() {
         restartLoader();
-        setCategoryListVisibility(true);
         return true;
     }
 
@@ -440,7 +407,7 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected boolean showCategoryNavigation() {
+    protected boolean shouldShowCategoryNavigation() {
         /**
          * If we are searching, we don't what the categories to be displayed!!!
          */
@@ -457,120 +424,11 @@ public class AllItemsFragment extends SearchableItemFragment {
         setEntityCursor(null);
     }
 
-    public static class SItemDetail {
-        public SItem item;
-        public double total_quantity;
-        public List<Pair<SBranch, SBranchItem>> available_branches;
-    }
-
-    public static class ItemDetailAdapter extends ArrayAdapter<SItemDetail> {
-        public ItemDetailAdapter(Context context) {
-            super(context, 0);
-        }
-
-        public interface ItemDetailSelectionListener {
-            void itemInfoSelected(SItemDetail itemDetail);
-        }
-
-        private ItemDetailSelectionListener mListener;
-        public void setListener(ItemDetailSelectionListener listener) {
-            mListener = listener;
-        }
-
-        /**
-         * This assumes the items are in ascending order by item id,
-         * that is how is differentiates where one item ends and another starts.
-         */
-        public void setItemCursor(Cursor cursor) {
-            setNotifyOnChange(false);
-
-            clear();
-            if (cursor != null && cursor.moveToFirst()) {
-                long prev_item_id = -1;
-                SItemDetail detail = null;
-                do {
-                    long item_id = cursor.getLong(SItem.COL_ITEM_ID);
-                    if (item_id != prev_item_id) {
-                        if (prev_item_id != -1) {
-                            // add it to the ArrayAdapter
-                            super.add(detail);
-                        }
-                        prev_item_id = item_id;
-                        detail = new SItemDetail();
-                        detail.item = new SItem(cursor);
-                        detail.total_quantity = 0;
-                        detail.available_branches = new ArrayList<>();
-                    }
-                    SBranchItem branchItem = new SBranchItem(cursor, SItem.COL_LAST);
-                    branchItem.item = detail.item;      // they all refer to this item
-                    SBranch branch = new SBranch(cursor, SItem.COL_LAST + SBranchItem.COL_LAST);
-
-                    if (branchItem.branch_id != 0 && branch.branch_id != 0) {
-                        detail.available_branches.add(new Pair<>(branch, branchItem));
-                    }
-                    detail.total_quantity += branchItem.quantity;
-                } while (cursor.moveToNext());
-                if (detail != null) {       // add the last item
-                    super.add(detail);
-                }
-            }
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final SItemDetail detail = getItem(position);
-
-            ItemViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(getContext());
-                convertView = inflater.inflate(R.layout.list_item_all_items, parent, false);
-                holder = new ItemViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ItemViewHolder) convertView.getTag();
-            }
-
-            holder.item_name.setText(detail.item.name);
-            boolean has_code = detail.item.has_bar_code || !detail.item.item_code.isEmpty();
-            if (has_code) {
-                holder.item_code.setVisibility(View.VISIBLE);
-                holder.item_code.setText(
-                        detail.item.has_bar_code ? detail.item.bar_code : detail.item.item_code);
-            } else {
-                holder.item_code.setVisibility(View.GONE);
-            }
-            holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
-            holder.item_info.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mListener.itemInfoSelected(detail);
-                }
-            });
-
-            return convertView;
-        }
-
-        private static class ItemViewHolder {
-            ImageView item_info;
-            TextView item_name;
-            TextView item_code;
-            TextView total_qty;
-
-            public ItemViewHolder(View view) {
-                item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
-                item_name = (TextView) view.findViewById(R.id.list_item_item_detail_name);
-                item_code = (TextView) view.findViewById(R.id.list_item_item_detail_code);
-                total_qty = (TextView) view.findViewById(R.id.list_item_item_detail_total_qty);
-            }
-        }
-    }
-
     /**
      * Shows which branches the items exist in and the location in each.
      */
     public static class ItemDetailDialog extends DialogFragment {
-        public SItemDetail mItemDetail;
+        public SItem mItem;
 
         @NonNull
         @Override
@@ -582,26 +440,25 @@ public class AllItemsFragment extends SearchableItemFragment {
 
             ListView branchesList = (ListView) view.findViewById(R.id.dialog_all_item_list_view_branches);
             DetailDialogAdapter adapter = new DetailDialogAdapter(getActivity());
-            for (Pair<SBranch, SBranchItem> pair : mItemDetail.available_branches) {
+            for (Pair<SBranchItem, SBranch> pair : mItem.available_branches) {
                 adapter.add(pair);
             }
             branchesList.setAdapter(adapter);
 
             TextView qty_text_view = (TextView) view.findViewById(R.id.dialog_all_item_text_view_total_quantity);
-            qty_text_view.setText("Total Qty: " + Utils.formatDoubleForDisplay(mItemDetail.total_quantity));
+            qty_text_view.setText("Total Qty: " + Utils.formatDoubleForDisplay(mItem.total_quantity));
 
-            return builder.setTitle(mItemDetail.item.name).
-                    setView(view).create();
+            return builder.setTitle(mItem.name).setView(view).create();
         }
 
-        public static class DetailDialogAdapter extends ArrayAdapter<Pair<SBranch, SBranchItem>> {
+        private static class DetailDialogAdapter extends ArrayAdapter<Pair<SBranchItem, SBranch>> {
             public DetailDialogAdapter(Context context) {
                 super(context, 0);
             }
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
-                final Pair<SBranch, SBranchItem> pair = getItem(position);
+                final Pair<SBranchItem, SBranch> pair = getItem(position);
 
                 if (convertView == null) {
                     LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -614,11 +471,11 @@ public class AllItemsFragment extends SearchableItemFragment {
                 itemLoc = (TextView) convertView.findViewById(R.id.list_item_all_item_item_detail_text_view_location);
                 itemQty = (TextView) convertView.findViewById(R.id.list_item_all_item_item_detail_text_view_quantity);
 
-                branchName.setText(pair.first.branch_name);
-                SBranchItem branchItem = pair.second;
+                branchName.setText(pair.second.branch_name);
+                SBranchItem branchItem = pair.first;
                 itemQty.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
                 if (branchItem.item_location != null && !branchItem.item_location.isEmpty()) {
-                    itemLoc.setText(pair.second.item_location);
+                    itemLoc.setText(branchItem.item_location);
                     itemLoc.setVisibility(View.VISIBLE);
                 } else {
                     itemLoc.setVisibility(View.GONE);
@@ -632,13 +489,14 @@ public class AllItemsFragment extends SearchableItemFragment {
     /**
      * This adapter allows selecting categories by a {@code CheckBox} and notifies about the event.
      * It also allows editing a category by providing a UI for that and notifies of the event.
-     *
+     * <p/>
      * The adapter can also be used as a normal "viewing" more where the editing options are disabled.
      */
     public static class CategorySelectionEditionAdapter extends CategoryTreeNavigationFragment.CategoryChildrenArrayAdapter {
         public interface SelectionEditionListener {
             /**
              * Checks this to set the UI to appropriate state.
+             *
              * @return true if the category needs to be selected.
              */
             boolean isCategorySelected(SCategory category);
@@ -654,7 +512,9 @@ public class AllItemsFragment extends SearchableItemFragment {
 
             void editCategorySelected(SCategory category);
         }
+
         private SelectionEditionListener mListener;
+
         public void setListener(SelectionEditionListener listener) {
             mListener = listener;
         }
@@ -666,6 +526,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         }
 
         private boolean mIsEditMode;
+
         public void setEditMode(boolean editMode) {
             mIsEditMode = editMode;
         }

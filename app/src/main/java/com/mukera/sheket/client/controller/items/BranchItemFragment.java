@@ -636,7 +636,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     }
 
     @Override
-    protected boolean showCategoryNavigation() {
+    protected boolean shouldShowCategoryNavigation() {
         return !super.isSearching();
     }
 
