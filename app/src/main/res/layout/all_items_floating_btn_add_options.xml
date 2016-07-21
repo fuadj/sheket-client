@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="wrap_content"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="32dp">
 
@@ -9,11 +9,13 @@
         android:layout_height="wrap_content"
         android:id="@+id/all_items_option_add_category"
         android:background="@drawable/ic_action_folder"
-        android:layout_marginRight="8dp" />
+        android:layout_marginRight="8dp"
+        android:layout_alignParentLeft="true" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/all_items_option_add_item"
-        android:background="@android:drawable/ic_input_add" />
-</LinearLayout>
+        android:background="@android:drawable/ic_input_add"
+        android:layout_alignParentRight="true" />
+</RelativeLayout>
