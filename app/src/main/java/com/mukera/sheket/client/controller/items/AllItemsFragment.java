@@ -315,21 +315,22 @@ public class AllItemsFragment extends SearchableItemFragment {
         holder.editBtn.setOnClickListener(null);
         holder.editFrameLayout.setOnClickListener(null);
 
+        int show_if_edit = mIsEditMode ? View.VISIBLE : View.GONE;
+
+        // See the this ViewHolder's inflated layout for more description
+        holder.editFrameLayout.setVisibility(show_if_edit);
+        holder.editBtn.setVisibility(show_if_edit);
+        holder.selectFrameLayout.setVisibility(show_if_edit);
+        holder.selectCheck.setVisibility(show_if_edit);
+        // This padding is used when not editing as a padding for the CategoryName
+        holder.categoryNamePadding.setVisibility(
+                mIsEditMode ? View.GONE : View.VISIBLE);
+
         if (!mIsEditMode) {
-            holder.editFrameLayout.setVisibility(View.GONE);
-            holder.editBtn.setVisibility(View.GONE);
-
-            // TODO: find a better solution for this, the whole UI is being "hijacked" by the checkbox
-            // set it to invisible instead of GONE so it still occupies the space
-            holder.selectCheck.setVisibility(View.INVISIBLE);
-
             return;
         }
 
-        holder.editBtn.setVisibility(View.VISIBLE);
-        holder.selectCheck.setVisibility(View.VISIBLE);
-        holder.selectCheck.setChecked(
-                mSelectedCategories.containsKey(category.category_id));
+        holder.selectCheck.setChecked(mSelectedCategories.containsKey(category.category_id));
         holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -366,6 +367,13 @@ public class AllItemsFragment extends SearchableItemFragment {
         TextView categoryName, subCount;
         CheckBox selectCheck;
         View selectFrameLayout, editFrameLayout;
+
+        // to make category selection easier while moving categories, the
+        // space to left of the category name until the start of the root view
+        // listens to simulate clicking the {@code selectCheck} CheckBox.
+        // When NOT in editing mode, that space is converted to normal padding
+        // for categoryName. This View is the padding used is visible is not in editing mode.
+        View categoryNamePadding;
         ImageView editBtn;
 
         public CategoryViewHolder(View view) {
@@ -375,6 +383,8 @@ public class AllItemsFragment extends SearchableItemFragment {
             selectFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_select);
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
+
+            categoryNamePadding = view.findViewById(R.id.list_item_all_items_category_name_padding);
         }
     }
 

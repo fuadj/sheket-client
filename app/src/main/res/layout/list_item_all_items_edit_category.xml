@@ -4,20 +4,44 @@
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants">
 
-    <FrameLayout
+    <!--
+    This layout is necessary b/c only 1 of its children is visible at any one time.
+    So, we can't set the CategoryName alignment based on something that could be invisible.
+    This holds both views and will always be available for the categoryName to set position relative to.
+    -->
+
+    <LinearLayout
+        android:id="@+id/list_item_all_items_category_layout_static"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:layout_alignParentLeft="true"
-        android:id="@+id/list_item_all_items_category_layout_select">
+        android:layout_height="match_parent">
 
-        <CheckBox
+        <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/list_item_all_items_category_check_box_select" />
-    </FrameLayout>
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:id="@+id/list_item_all_items_category_layout_select"
+            android:padding="16dp">
 
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/list_item_all_items_category_check_box_select"
+                android:layout_gravity="center_vertical" />
+        </FrameLayout>
+
+        <!-- This will be used when not in editing mode as a padding for categoryName -->
+        <View
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:id="@+id/list_item_all_items_category_name_padding"/>
+
+    </LinearLayout>
+
+    <!-- This list_item's height is primarily governed by this TextView's height -->
     <TextView
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nike"
@@ -25,16 +49,17 @@
         android:textSize="22dp"
         android:layout_centerVertical="true"
         android:textColor="#000000"
-        android:layout_toRightOf="@+id/list_item_all_items_category_layout_select"/>
+        android:layout_toRightOf="@+id/list_item_all_items_category_layout_static"/>
 
 
     <FrameLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:id="@+id/list_item_all_items_category_layout_edit"
         android:layout_toLeftOf="@+id/list_item_all_items_category_text_view_sub_count"
         android:layout_centerVertical="true"
-        android:padding="16dp">
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
 
         <ImageButton
             android:layout_width="wrap_content"
@@ -42,7 +67,8 @@
             android:id="@+id/list_item_all_items_category_btn_edit"
             android:layout_toLeftOf="@+id/img_sub_category"
             android:layout_centerVertical="true"
-            android:background="@drawable/ic_action_edit_grey" />
+            android:background="@drawable/ic_action_edit_grey"
+            android:layout_gravity="center_vertical" />
     </FrameLayout>
 
     <ImageView
@@ -52,7 +78,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:background="@drawable/ic_action_next_item"/>
+        android:background="@drawable/ic_action_next_item"
+        android:layout_marginRight="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
