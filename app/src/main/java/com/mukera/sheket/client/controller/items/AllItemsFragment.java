@@ -47,7 +47,6 @@ import com.mukera.sheket.client.utils.PrefUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -187,7 +186,8 @@ public class AllItemsFragment extends SearchableItemFragment {
                                 // queries the provider again. We shouldn't query again b/c it
                                 // is only a UI update.
                                 updateEditingUI();
-                                initLoader();
+                                //initLoader();
+                                restartLoader();
                             }
                         });
                     }
@@ -272,6 +272,97 @@ public class AllItemsFragment extends SearchableItemFragment {
         });
     }
 
+    /**
+     * We are overriding the category view stuff to implement the checkbox selection for
+     * editing purposes.
+     */
+    @Override
+    public View newCategoryView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View view = inflater.inflate(R.layout.list_item_all_items_edit_category, parent, false);
+        final CategoryViewHolder holder = new CategoryViewHolder(view);
+
+        view.setTag(holder);
+        return view;
+    }
+
+    @Override
+    public void bindCategoryView(Context context, Cursor cursor, View view, int position) {
+        final SCategory category = new SCategory(cursor, true);
+
+        final CategoryViewHolder holder = (CategoryViewHolder) view.getTag();
+
+        holder.categoryName.setText(category.name);
+        if (category.childrenCategories.isEmpty()) {
+            holder.subCount.setVisibility(View.GONE);
+        } else {
+            holder.subCount.setVisibility(View.VISIBLE);
+            holder.subCount.setText("" + category.childrenCategories.size());
+        }
+
+        if (!mIsEditMode) {
+            holder.editBtn.setVisibility(View.GONE);
+
+            // TODO: find a better solution for this, the whole UI is being "hijacked" by the checkbox
+            // set it to invisible instead of GONE so it still occupies the space
+            holder.selectCheck.setVisibility(View.INVISIBLE);
+            return;
+        }
+        holder.editBtn.setVisibility(View.VISIBLE);
+        holder.selectCheck.setVisibility(View.VISIBLE);
+
+        /**
+         * since the adapter recycles the list item UI, the checkbox probably has
+         * a listener assigned by its previous "owner". So, we should reset it to null
+         * because calling {@code selectCheck.setChecked} will invoke that listener
+         * and weird shit happens.
+         */
+        holder.selectCheck.setOnCheckedChangeListener(null);
+        holder.selectCheck.setChecked(
+                mSelectedCategories.containsKey(category.category_id));
+        holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked == true) {
+                    mSelectedCategories.put(category.category_id, category);
+                } else {
+                    mSelectedCategories.remove(category.category_id);
+                }
+            }
+        });
+        /**
+         * It is hard to click the check box, we intercept the enclosing view and simulate a
+         * click on the checkbox also. If we don't do this, then the list-view will receive the
+         * click event and that is not the desired behaviour.
+         */
+        holder.selectCheckBoxEnclosingView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                holder.selectCheck.setChecked(!holder.selectCheck.isChecked());
+            }
+        });
+
+        holder.editBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            }
+        });
+    }
+
+    private static class CategoryViewHolder {
+        TextView categoryName, subCount;
+        CheckBox selectCheck;
+        View selectCheckBoxEnclosingView;
+        ImageView editBtn;
+
+        public CategoryViewHolder(View view) {
+            categoryName = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_category_name);
+            subCount = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_sub_count);
+            selectCheck = (CheckBox) view.findViewById(R.id.list_item_all_items_category_check_box_select);
+            selectCheckBoxEnclosingView = view.findViewById(R.id.list_item_all_items_category_layout_select);
+            editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
+        }
+    }
 
     /**
      * Moves the selected categories to the current category. Updates them so they
@@ -335,38 +426,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         });
         dialog.show();
     }
-
-    /*
-    @Override
-    protected CategoryAdapter getCategoryAdapter() {
-        if (mCategoryAdapter == null) {
-            CategorySelectionEditionAdapter adapter =
-                    new CategorySelectionEditionAdapter(getActivity());
-            adapter.setListener(new CategorySelectionEditionAdapter.SelectionEditionListener() {
-                @Override
-                public boolean isCategorySelected(SCategory category) {
-                    return mSelectedCategories.containsKey(category.category_id);
-                }
-
-                @Override
-                public void categorySelected(SCategory category, boolean state) {
-                    if (state == true) {
-                        mSelectedCategories.put(category.category_id, category);
-                    } else {
-                        mSelectedCategories.remove(category.category_id);
-                    }
-                }
-
-                @Override
-                public void editCategorySelected(SCategory category) {
-
-                }
-            });
-            mCategoryAdapter = adapter;
-        }
-        return mCategoryAdapter;
-    }
-    */
 
     @Override
     protected boolean onSearchTextChanged(String newText) {
@@ -482,134 +541,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                 }
 
                 return convertView;
-            }
-        }
-    }
-
-    /**
-     * This adapter allows selecting categories by a {@code CheckBox} and notifies about the event.
-     * It also allows editing a category by providing a UI for that and notifies of the event.
-     * <p/>
-     * The adapter can also be used as a normal "viewing" more where the editing options are disabled.
-     */
-    public static class CategorySelectionEditionAdapter extends CategoryTreeNavigationFragment.CategoryChildrenArrayAdapter {
-        public interface SelectionEditionListener {
-            /**
-             * Checks this to set the UI to appropriate state.
-             *
-             * @return true if the category needs to be selected.
-             */
-            boolean isCategorySelected(SCategory category);
-
-            /**
-             * This is called for both selection and de-selection.
-             * Use {@code state} to decide the state.
-             *
-             * @param category
-             * @param state    If true, it is being selected, if false it is de-selecting.
-             */
-            void categorySelected(SCategory category, boolean state);
-
-            void editCategorySelected(SCategory category);
-        }
-
-        private SelectionEditionListener mListener;
-
-        public void setListener(SelectionEditionListener listener) {
-            mListener = listener;
-        }
-
-        public CategorySelectionEditionAdapter(Context context) {
-            super(context);
-            // NOT-EDITING is the default
-            mIsEditMode = false;
-        }
-
-        private boolean mIsEditMode;
-
-        public void setEditMode(boolean editMode) {
-            mIsEditMode = editMode;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final SCategory category = getItem(position);
-
-            final ViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(getContext());
-                convertView = inflater.inflate(R.layout.list_item_all_items_edit_category, parent, false);
-                holder = new ViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            holder.categoryName.setText(category.name);
-            if (category.childrenCategories.isEmpty()) {
-                holder.subCount.setVisibility(View.GONE);
-            } else {
-                holder.subCount.setVisibility(View.VISIBLE);
-                holder.subCount.setText("" + category.childrenCategories.size());
-            }
-
-            if (mIsEditMode) {
-                holder.selectCheck.setVisibility(View.VISIBLE);
-                holder.editBtn.setVisibility(View.VISIBLE);
-
-                // we should overwrite the previously assigned listener because we
-                // are recycling them it things gets messed up when we call {@code selectCheck.setChecked}
-                holder.selectCheck.setOnCheckedChangeListener(null);
-                holder.selectCheck.setChecked(mListener.isCategorySelected(category));
-                holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        mListener.categorySelected(category, isChecked);
-                    }
-                });
-                /**
-                 * It is hard to click the check box, we intercept the enclosing view and simulate a
-                 * click on the checkbox also. If we don't do this, then the list-view will receive the
-                 * click event and that is not the desired behaviour.
-                 */
-                holder.selectCheckBoxEnclosingView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        holder.selectCheck.setChecked(!holder.selectCheck.isChecked());
-                    }
-                });
-
-                holder.editBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mListener.editCategorySelected(category);
-                    }
-                });
-            } else {
-                /**
-                 * We don't make the visibility gone b/c we want its place to be still
-                 * held by it for the different layout to look the same in both modes.
-                 */
-                //
-                holder.selectCheck.setVisibility(View.INVISIBLE);
-
-                holder.editBtn.setVisibility(View.GONE);
-            }
-            return convertView;
-        }
-
-        private static class ViewHolder {
-            TextView categoryName, subCount;
-            CheckBox selectCheck;
-            View selectCheckBoxEnclosingView;
-            ImageView editBtn;
-
-            public ViewHolder(View view) {
-                categoryName = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_category_name);
-                subCount = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_sub_count);
-                selectCheck = (CheckBox) view.findViewById(R.id.list_item_all_items_category_check_box_select);
-                selectCheckBoxEnclosingView = view.findViewById(R.id.list_item_all_items_category_layout_select);
-                editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             }
         }
     }
