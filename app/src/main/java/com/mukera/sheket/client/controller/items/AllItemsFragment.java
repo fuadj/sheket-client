@@ -3,6 +3,7 @@ package com.mukera.sheket.client.controller.items;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.OperationApplicationException;
@@ -18,6 +19,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,18 +29,18 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.data.SheketContract;
+import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.Utils;
-import com.mukera.sheket.client.data.SheketContract.CategoryEntry;
-import com.mukera.sheket.client.data.SheketContract.ItemEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
@@ -47,8 +49,10 @@ import com.mukera.sheket.client.utils.PrefUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by gamma on 3/4/16.
@@ -300,17 +304,6 @@ public class AllItemsFragment extends SearchableItemFragment {
             holder.subCount.setText("" + category.childrenCategories.size());
         }
 
-        if (!mIsEditMode) {
-            holder.editBtn.setVisibility(View.GONE);
-
-            // TODO: find a better solution for this, the whole UI is being "hijacked" by the checkbox
-            // set it to invisible instead of GONE so it still occupies the space
-            holder.selectCheck.setVisibility(View.INVISIBLE);
-            return;
-        }
-        holder.editBtn.setVisibility(View.VISIBLE);
-        holder.selectCheck.setVisibility(View.VISIBLE);
-
         /**
          * since the adapter recycles the list item UI, the checkbox probably has
          * a listener assigned by its previous "owner". So, we should reset it to null
@@ -318,6 +311,23 @@ public class AllItemsFragment extends SearchableItemFragment {
          * and weird shit happens.
          */
         holder.selectCheck.setOnCheckedChangeListener(null);
+        holder.selectFrameLayout.setOnClickListener(null);
+        holder.editBtn.setOnClickListener(null);
+        holder.editFrameLayout.setOnClickListener(null);
+
+        if (!mIsEditMode) {
+            holder.editFrameLayout.setVisibility(View.GONE);
+            holder.editBtn.setVisibility(View.GONE);
+
+            // TODO: find a better solution for this, the whole UI is being "hijacked" by the checkbox
+            // set it to invisible instead of GONE so it still occupies the space
+            holder.selectCheck.setVisibility(View.INVISIBLE);
+
+            return;
+        }
+
+        holder.editBtn.setVisibility(View.VISIBLE);
+        holder.selectCheck.setVisibility(View.VISIBLE);
         holder.selectCheck.setChecked(
                 mSelectedCategories.containsKey(category.category_id));
         holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -345,6 +355,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         View.OnClickListener editListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                displayCategoryAddEditDialog(category);
             }
         };
         holder.editBtn.setOnClickListener(editListener);
@@ -433,12 +444,98 @@ public class AllItemsFragment extends SearchableItemFragment {
     /**
      * Displays a dialog for setting the name of a category.
      * This is used for both creating and editing category names.
-     * @param category  if of null, it is then editing and the changed name
-     *                  will be set to the category.
-     *                  if null, it is creating a new category.
+     *
+     * @param category if of null, it is then editing and the changed name
+     *                 will be set to the category.
+     *                 if null, it is creating a new category.
      */
-    void displayCategoryAddEditDialog(SCategory category) {
+    void displayCategoryAddEditDialog(final SCategory category) {
+        final EditText editText = new EditText(getActivity());
 
+        final boolean is_editing = category != null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
+                setTitle(is_editing ? "Edit Category" : "New Category").
+                setMessage(is_editing ? category.name : "").
+                setView(editText).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String name = editText.getText().toString().trim();
+
+                        createOrEditCategory(dialog, category, is_editing, name);
+                    }
+                }).setNeutralButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
+
+        if (is_editing)
+            editText.setText(category.name);
+
+        dialog.show();
+    }
+
+    /**
+     * creates or updates a category on a worker-thread and finally dismisses the dialog on the math thread.
+     */
+    void createOrEditCategory(final DialogInterface dialog,
+                              final SCategory category,
+                              final boolean is_editing,
+                              final String category_name) {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+
+                ContentValues values;
+                if (is_editing) {
+                    category.name = category_name;
+                    if (category.change_status != SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED)
+                        category.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_UPDATED;
+
+                    values = category.toContentValues();
+
+                    getActivity().getContentResolver().update(
+                            CategoryEntry.buildBaseUri(company_id),
+                            values,
+                            String.format(Locale.US, "%s = ?", CategoryEntry.COLUMN_CATEGORY_ID),
+                            new String[]{String.valueOf(category.category_id)});
+                } else {
+                    final long new_category_id = PrefUtil.getNewCategoryId(getActivity());
+                    PrefUtil.setNewCategoryId(getActivity(), new_category_id);
+
+                    long current_category = AllItemsFragment.this.getCurrentCategory();
+
+                    values = new ContentValues();
+                    values.put(CategoryEntry.COLUMN_CATEGORY_ID, new_category_id);
+                    values.put(CategoryEntry.COLUMN_NAME, category_name);
+                    values.put(CategoryEntry.COLUMN_PARENT_ID, current_category);
+                    values.put(CategoryEntry.COLUMN_COMPANY_ID, company_id);
+                    values.put(SheketContract.UUIDSyncable.COLUMN_UUID,
+                            UUID.randomUUID().toString());
+                    values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                            ChangeTraceable.CHANGE_STATUS_CREATED);
+
+                    getActivity().getContentResolver().insert(CategoryEntry.buildBaseUri(company_id), values);
+                }
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialog.dismiss();
+                        // TODO: it is strange that if we create a new category, then the item list disappears
+                        // and we have to restart the loader just for it, fix it!!
+                        restartLoader();
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
