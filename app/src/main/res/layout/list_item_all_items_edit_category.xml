@@ -31,10 +31,10 @@
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/layout_edit"
+        android:id="@+id/list_item_all_items_category_layout_edit"
         android:layout_toLeftOf="@+id/list_item_all_items_category_text_view_sub_count"
         android:layout_centerVertical="true"
-        android:layout_marginRight="16dp">
+        android:padding="16dp">
 
         <ImageButton
             android:layout_width="wrap_content"

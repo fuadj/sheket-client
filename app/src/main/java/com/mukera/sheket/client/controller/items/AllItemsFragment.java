@@ -335,32 +335,35 @@ public class AllItemsFragment extends SearchableItemFragment {
          * click on the checkbox also. If we don't do this, then the list-view will receive the
          * click event and that is not the desired behaviour.
          */
-        holder.selectCheckBoxEnclosingView.setOnClickListener(new View.OnClickListener() {
+        holder.selectFrameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 holder.selectCheck.setChecked(!holder.selectCheck.isChecked());
             }
         });
 
-        holder.editBtn.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener editListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
             }
-        });
+        };
+        holder.editBtn.setOnClickListener(editListener);
+        holder.editFrameLayout.setOnClickListener(editListener);
     }
 
     private static class CategoryViewHolder {
         TextView categoryName, subCount;
         CheckBox selectCheck;
-        View selectCheckBoxEnclosingView;
+        View selectFrameLayout, editFrameLayout;
         ImageView editBtn;
 
         public CategoryViewHolder(View view) {
             categoryName = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_category_name);
             subCount = (TextView) view.findViewById(R.id.list_item_all_items_category_text_view_sub_count);
             selectCheck = (CheckBox) view.findViewById(R.id.list_item_all_items_category_check_box_select);
-            selectCheckBoxEnclosingView = view.findViewById(R.id.list_item_all_items_category_layout_select);
+            selectFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_select);
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
+            editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
         }
     }
 
@@ -408,7 +411,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         final ImageButton option_category = (ImageButton) options_view.findViewById(R.id.all_items_option_add_category);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
-                setTitle("What are you adding?").
                 setView(options_view);
         final AlertDialog dialog = builder.create();
         option_item.setOnClickListener(new View.OnClickListener() {
@@ -422,9 +424,21 @@ public class AllItemsFragment extends SearchableItemFragment {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
+                displayCategoryAddEditDialog(null);
             }
         });
         dialog.show();
+    }
+
+    /**
+     * Displays a dialog for setting the name of a category.
+     * This is used for both creating and editing category names.
+     * @param category  if of null, it is then editing and the changed name
+     *                  will be set to the category.
+     *                  if null, it is creating a new category.
+     */
+    void displayCategoryAddEditDialog(SCategory category) {
+
     }
 
     @Override
