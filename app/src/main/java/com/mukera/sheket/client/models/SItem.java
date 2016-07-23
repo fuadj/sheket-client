@@ -219,32 +219,25 @@ public class SItem extends UUIDSyncable implements Parcelable {
      */
     public static class ItemWithAvailableBranchesCursor extends CursorWrapper {
         /**
-         * This is a mapping from "n-th-unique" item --to--> the starting position in the cursor.
-         * Since we've overloaded the {@code getCount()}, the number of unique items
-         * is <= the total rows inside the cursor. This maps from the "smaller" unique items
-         * to their starting positions. This is because the cursor is the result of LEFT JOINING
-         * the item table to branch table,
-         * there will be many rows with the same item id for different branches. This map
-         * holds the positions of the "starting" positions of the items. The size of this
-         * map also tells us how many "unique" items there are.
+         * This contains the start positions of items in the cursor. It is then used to determine
+         * how many "unique" items there are, AND to move to the start index for each unique item.
          */
-        private Map<Integer, Integer> mItemStartPosition;
+        private List<Integer> mItemStartPositions;
 
         public ItemWithAvailableBranchesCursor(Cursor cursor) {
             super(cursor);
-            mItemStartPosition = getItemStartPositionsInCursor(cursor);
+            mItemStartPositions = getItemStartPositionsInCursor(cursor);
             cursor.moveToFirst();
         }
 
         @Override
         public int getCount() {
-            return mItemStartPosition.size();
+            return mItemStartPositions.size();
         }
 
         @Override
         public boolean moveToPosition(int position) {
-            int n_th_item_start_position = mItemStartPosition.get(position);
-            return super.moveToPosition(n_th_item_start_position);
+            return super.moveToPosition(mItemStartPositions.get(position));
         }
     }
 
@@ -252,34 +245,33 @@ public class SItem extends UUIDSyncable implements Parcelable {
      * When the cursor is the result of JOINED query, there can be multiple rows with the same item.
      *      (e.g: when fetching items with branch_items, there will be a row with
      *      the same item id for each branch the item exists in).
-     * This function returns the starting positions for each item. The start position if the
+     * This function returns the starting positions for each item. The start position is the
      * boundary where the last item finishes and a new item starts.
      * @return      a mapping from the n-th item to the starting position in the cursor.
+     *              each element of the list contains the starting position of the item at that
+     *              index.
+     *              (e.g:    if it returns [0, 3, 5] then the items start at indices (0, 3, 5))
      */
-    private static Map<Integer, Integer> getItemStartPositionsInCursor(Cursor cursor) {
-        Map<Integer, Integer> starting_positions = new HashMap<>();
+    private static List<Integer> getItemStartPositionsInCursor(Cursor cursor) {
+        List<Integer> starting_positions = new ArrayList<>();
 
         if (!cursor.moveToFirst())
             return starting_positions;
 
-        int cursor_index = 0;
         long prev_item_id = -1;
 
-        do {
+        for (int i = 0; ; i++) {
             if (cursor.isNull(COL_ITEM_ID)) break;
 
             long item_id = cursor.getLong(COL_ITEM_ID);
             if (item_id != prev_item_id) {
-                /**
-                 * It is a mapping from the n-th item to the position inside the cursor.
-                 * So the n-th item is the "n-th-unique" item we've seen so far.
-                 */
-                starting_positions.put(starting_positions.size(), cursor_index);
+                starting_positions.add(i);
 
                 prev_item_id = item_id;
             }
-            cursor_index++;
-        } while (cursor.moveToNext());
+            if (!cursor.moveToNext())
+                break;
+        }
 
         cursor.moveToFirst();
 
