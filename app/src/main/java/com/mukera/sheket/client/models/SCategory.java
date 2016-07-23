@@ -106,9 +106,13 @@ public class SCategory extends UUIDSyncable implements Parcelable {
         this(cursor, 0, true, fetch_children);
     }
 
-    private static final int NO_CHILD_FOUND = 0;
+    private static final int NO_CATEGORY_FOUND = 0;
     public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
         if (is_parent) {
+            if (cursor.isNull(COL_CURRENT_COMPANY_ID + offset)) {
+                category_id = NO_CATEGORY_FOUND;
+                return;
+            }
             company_id = cursor.getLong(COL_CURRENT_COMPANY_ID + offset);
             category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID + offset);
             name = Utils.toTitleCase(cursor.getString(COL_CURRENT_NAME + offset));
@@ -119,39 +123,24 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
             childrenCategories = new ArrayList<>();
             if (fetch_children) {
-                do {
+                while (true) {
                     SCategory child = new SCategory(cursor, offset, false, false);
-                    if (child.category_id == NO_CHILD_FOUND) {
-                        /**
-                         * There are 2 possible states this can occur in.
-                         * 1.   A parent category doesn't have any(not even 1) children
-                         *      and this do-while loop is entered for the FIRST TIME.
-                         *      It will hit this block. So the thing to do is just finish
-                         *      as we don't have any children.
-                         *
-                         * 2.   A parent category has > 0 children, and we've added them
-                         *      to the {@code childrenCategories} list. We then TRANSITION
-                         *      to a NEW CATEGORY which doesn't have any children and this
-                         *      block is hit. So the thing to do now is backtrack the cursor
-                         *      so the category will be visited on the next round and exit.
-                         */
-                        if (childrenCategories.size() > 0) {
-                            cursor.moveToPrevious();
-                        }
+                    if (child.category_id == NO_CATEGORY_FOUND)
                         break;
-                    }
 
-                    // we've finished this 'parent' category and move to next, so STOP!!!
-                    if (category_id != child.parent_id) {
+                    childrenCategories.add(child);
+                    if (!cursor.moveToNext())       // we've reached the end
+                        break;
+                    long next_category = cursor.getLong(COL_CURRENT_CATEGORY_ID + offset);
+                    if (next_category != category_id) {     // we've moved to the territory of the next category, get back
                         cursor.moveToPrevious();
                         break;
                     }
-                    childrenCategories.add(child);
-                } while (cursor.moveToNext());
+                }
             }
         } else {
-            if (cursor.getType(COL_CHILD_CATEGORY_ID) == Cursor.FIELD_TYPE_NULL) {
-                category_id = NO_CHILD_FOUND;
+            if (cursor.isNull(COL_CHILD_CATEGORY_ID + offset)) {
+                category_id = NO_CATEGORY_FOUND;
                 return;
             }
 
