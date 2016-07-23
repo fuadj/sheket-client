@@ -160,42 +160,41 @@ public class SCategory extends UUIDSyncable implements Parcelable {
      * See docs for {@code SItem.ItemWithAvailableBranchesCursor}
      */
     public static class CategoryWithChildrenCursor extends CursorWrapper {
-        private Map<Integer, Integer> mCategoryStartPosition;
+        private List<Integer> mCategoryStartPositions;
 
         public CategoryWithChildrenCursor(Cursor cursor) {
             super(cursor);
-            mCategoryStartPosition = getCategoryStartPositionsInCursor(cursor);
+            mCategoryStartPositions = getCategoryStartPositionsInCursor(cursor);
         }
 
         @Override
         public int getCount() {
-            return mCategoryStartPosition.size();
+            return mCategoryStartPositions.size();
         }
 
         @Override
         public boolean moveToPosition(int position) {
-            int n_th_category_start_position = mCategoryStartPosition.get(position);
-            return super.moveToPosition(n_th_category_start_position);
+            return super.moveToPosition(mCategoryStartPositions.get(position));
         }
     }
 
-    private static Map<Integer, Integer> getCategoryStartPositionsInCursor(Cursor cursor) {
-        Map<Integer, Integer> starting_positions = new HashMap<>();
+    private static List<Integer> getCategoryStartPositionsInCursor(Cursor cursor) {
+        List<Integer> starting_positions = new ArrayList<>();
 
         if (!cursor.moveToFirst()) return starting_positions;
 
-        int cursor_index = 0;
         long prev_category_id = -1;
-        do {
+        for (int i = 0; ; i++) {
             if (cursor.isNull(COL_CURRENT_CATEGORY_ID)) break;
 
             long category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID);
             if (category_id != prev_category_id) {
-                starting_positions.put(starting_positions.size(), cursor_index);
+                starting_positions.add(i);
                 prev_category_id = category_id;
             }
-            cursor_index++;
-        } while (cursor.moveToNext());
+            if (!cursor.moveToNext())
+                break;
+        }
 
         cursor.moveToFirst();
         return starting_positions;
