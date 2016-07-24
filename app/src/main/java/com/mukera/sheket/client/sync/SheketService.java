@@ -439,6 +439,8 @@ public class SheketService extends IntentService {
                 PrefUtil.getBranchItemRevision(this));
         syncJson.put(this.getString(R.string.sync_json_member_rev),
                 PrefUtil.getMemberRevision(this));
+        syncJson.put(this.getString(R.string.sync_json_branch_category_rev),
+                PrefUtil.getBranchCategoryRevision(this));
 
         JSONArray types = new JSONArray();
 
@@ -447,6 +449,7 @@ public class SheketService extends IntentService {
         String branch_entity = this.getString(R.string.sync_json_entity_type_branch);
         String branchItem_entity = this.getString(R.string.sync_json_entity_type_branch_item);
         String member_entity = this.getString(R.string.sync_json_entity_type_member);
+        String branchCategory_entity = this.getString(R.string.sync_json_entity_type_branch_category);
 
         if (categoryChanges.first) {
             syncJson.put(category_entity, categoryChanges.second);
@@ -467,6 +470,10 @@ public class SheketService extends IntentService {
         if (memberChanges.first) {
             syncJson.put(member_entity, memberChanges.second);
             types.put(member_entity);
+        }
+        if (branchCategoryChanges.first) {
+            syncJson.put(branchCategory_entity, branchCategoryChanges.second);
+            types.put(branchCategory_entity);
         }
 
         syncJson.put(this.getString(R.string.sync_json_entity_types), types);

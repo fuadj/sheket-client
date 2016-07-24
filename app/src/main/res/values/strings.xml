@@ -76,6 +76,7 @@
     <string name="sync_json_entity_type_branch">branch</string>
     <string name="sync_json_entity_type_branch_item">branch_item</string>
     <string name="sync_json_entity_type_member">member</string>
+    <string name="sync_json_entity_type_branch_category">branch_category</string>
 
     <string name="sync_json_key_create">create</string>
     <string name="sync_json_key_update">update</string>
