@@ -263,6 +263,13 @@ public class SheketService extends IntentService {
                     build());
         }
 
+        for (SBranchCategory branch_category : response.syncedBranchCategories) {
+            operationList.add(ContentProviderOperation.newInsert(BranchCategoryEntry.buildBaseUri(company_id)).
+                    withValues(
+                            setStatusSynced(DbUtil.setUpdateOnConflict(branch_category.toContentValues()))).
+                    build());
+        }
+
         try {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
@@ -270,6 +277,7 @@ public class SheketService extends IntentService {
             PrefUtil.setItemRevision(this, response.latest_item_rev);
             PrefUtil.setBranchRevision(this, response.latest_branch_rev);
             PrefUtil.setMemberRevision(this, response.latest_member_rev);
+            PrefUtil.setBranchCategoryRevision(this, response.latest_branch_category_rev);
         } catch (OperationApplicationException | RemoteException e) {
             throw e;
         }
@@ -289,6 +297,7 @@ public class SheketService extends IntentService {
         result.latest_item_rev = rootJson.getInt(getResourceString(R.string.sync_json_item_rev));
         result.latest_branch_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_rev));
         result.latest_member_rev = rootJson.getInt(getResourceString(R.string.sync_json_member_rev));
+        result.latest_branch_category_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_category_rev));
 
         result.updatedCategoryIds = new ArrayList<>();
         result.updatedItemIds = new ArrayList<>();
@@ -298,6 +307,7 @@ public class SheketService extends IntentService {
         result.syncedItems = new ArrayList<>();
         result.syncedBranches = new ArrayList<>();
         result.syncedMembers = new ArrayList<>();
+        result.syncedBranchCategories = new ArrayList<>();
 
         if (rootJson.has(getResourceString(R.string.sync_json_updated_category_ids))) {
             JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_category_ids));
@@ -411,6 +421,26 @@ public class SheketService extends IntentService {
                 result.syncedMembers.add(member);
             }
         }
+
+        if (rootJson.has(getResourceString(R.string.sync_json_sync_branch_categories))) {
+            JSONArray branchCategoryArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_branch_categories));
+
+            final String JSON_BRANCH_ID = "branch_id";
+            final String JSON_CATEGORY_ID = "category_id";
+
+            for (int i = 0; i < branchCategoryArray.length(); i++) {
+                JSONObject object = branchCategoryArray.getJSONObject(i);
+
+                SBranchCategory branchCategory = new SBranchCategory();
+                branchCategory.company_id = result.company_id;
+
+                branchCategory.branch_id = object.getLong(JSON_BRANCH_ID);
+                branchCategory.category_id = object.getLong(JSON_CATEGORY_ID);
+
+                result.syncedBranchCategories.add(branchCategory);
+            }
+        }
+
         return result;
     }
 
@@ -1155,6 +1185,7 @@ public class SheketService extends IntentService {
         int latest_item_rev;
         int latest_branch_rev;
         int latest_member_rev;
+        int latest_branch_category_rev;
 
         // empty if the element doesn't exist in the response
         // or if it is empty
@@ -1166,6 +1197,7 @@ public class SheketService extends IntentService {
         List<SItem> syncedItems;
         List<SBranch> syncedBranches;
         List<SMember> syncedMembers;
+        List<SBranchCategory> syncedBranchCategories;
     }
 
     static class TransactionSyncResponse {

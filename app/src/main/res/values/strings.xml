@@ -111,6 +111,7 @@
     <string name="sync_json_sync_items">sync_items</string>
     <string name="sync_json_sync_branches">sync_branches</string>
     <string name="sync_json_sync_members">sync_members</string>
+    <string name="sync_json_sync_branch_categories">sync_branch_categories</string>
     <!-- End Response of Entity Sync -->
 
     <!-- Response of Transaction Sync -->
