@@ -281,8 +281,9 @@ public class SheketProvider extends ContentProvider {
                 query_db = false;
                 boolean is_fetching_none_existing_items =
                         BranchItemEntry.isFetchNoneExistingItemsSpecified(uri);
-                long branch_id = BranchItemEntry.getBranchId(uri);
-                long item_id = BranchItemEntry.getItemId(uri);
+
+                long branch_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getBranchId(uri);
+                long item_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getItemId(uri);
 
                 boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
                 boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
