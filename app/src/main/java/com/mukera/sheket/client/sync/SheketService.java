@@ -11,6 +11,7 @@ import android.support.annotation.IntDef;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -40,6 +41,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -424,6 +426,7 @@ public class SheketService extends IntentService {
         Pair<Boolean, JSONObject> branchChanges = getBranchChanges();
         Pair<Boolean, JSONObject> branchItemChanges = getBranchItemChanges();
         Pair<Boolean, JSONObject> memberChanges = getMemberChanges();
+        Pair<Boolean, JSONObject> branchCategoryChanges = getBranchCategoryChanges();
 
         JSONObject syncJson = new JSONObject();
         syncJson.put(this.getString(R.string.sync_json_category_rev),
@@ -705,7 +708,7 @@ public class SheketService extends IntentService {
     List<String> getBranchItemIds(List<SBranchItem> branchItems) {
         List<String> result = new ArrayList<>(branchItems.size());
         for (SBranchItem branchItem : branchItems) {
-            result.add(String.format("%d:%d", branchItem.branch_id, branchItem.item_id));
+            result.add(String.format(Locale.US, "%d:%d", branchItem.branch_id, branchItem.item_id));
         }
         return result;
     }
@@ -784,6 +787,77 @@ public class SheketService extends IntentService {
                 stringArrToJson(getBranchItemIds(deletedBranchItems)));
 
         return new Pair<>(Boolean.TRUE, branchesItemJson);
+    }
+
+    List<String> getBranchCategoryIds(List<SBranchCategory> branchCategories) {
+        List<String> result = new ArrayList<>(branchCategories.size());
+        for (SBranchCategory branchCategory : branchCategories) {
+            result.add(String.format(Locale.US, "%d:%d", branchCategory.branch_id, branchCategory.category_id));
+        }
+        return result;
+    }
+
+    Pair<Boolean, JSONObject> getBranchCategoryChanges() throws JSONException {
+        List<SBranchCategory> createdBranchCategories = new ArrayList<>();
+        List<SBranchCategory> updatedBranchCategories = new ArrayList<>();
+        List<SBranchCategory> deletedBranchCategories = new ArrayList<>();
+
+        String change_selector = String.format(Locale.US, "%s != ?", BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
+        String[] args = new String[]{String.valueOf(ChangeTraceable.CHANGE_STATUS_SYNCED)};
+        Cursor cursor = this.getContentResolver().query(
+                BranchCategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                SBranchCategory.BRANCH_CATEGORY_COLUMNS,
+                change_selector,
+                args,
+                null);
+        if (cursor.moveToFirst()) {
+            do {
+                SBranchCategory branchCategory = new SBranchCategory(cursor);
+                switch (branchCategory.change_status) {
+                    case ChangeTraceable.CHANGE_STATUS_CREATED:
+                        createdBranchCategories.add(branchCategory);
+                        break;
+                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
+                        updatedBranchCategories.add(branchCategory);
+                        break;
+                    case ChangeTraceable.CHANGE_STATUS_DELETED:
+                        deletedBranchCategories.add(branchCategory);
+                        break;
+                }
+            } while (cursor.moveToNext());
+        }
+
+        if (createdBranchCategories.isEmpty() && updatedBranchCategories.isEmpty() && deletedBranchCategories.isEmpty()) {
+            return new Pair<>(Boolean.FALSE, null);
+        }
+
+        JSONArray fieldsArray = new JSONArray();
+
+        for (SBranchCategory branchCategory : createdBranchCategories) {
+            fieldsArray.put(branchCategory.toJsonObject());
+        }
+
+        for (SBranchCategory branchCategory : updatedBranchCategories) {
+            fieldsArray.put(branchCategory.toJsonObject());
+        }
+
+        for (SBranchCategory branchCategory : deletedBranchCategories) {
+            fieldsArray.put(branchCategory.toJsonObject());
+        }
+
+        JSONObject branchCategoryJson = new JSONObject();
+
+        branchCategoryJson.put(getResourceString(R.string.sync_json_key_fields),
+                fieldsArray);
+
+        branchCategoryJson.put(getResourceString(R.string.sync_json_key_create),
+                stringArrToJson(getBranchCategoryIds(createdBranchCategories)));
+        branchCategoryJson.put(getResourceString(R.string.sync_json_key_update),
+                stringArrToJson(getBranchCategoryIds(updatedBranchCategories)));
+        branchCategoryJson.put(getResourceString(R.string.sync_json_key_delete),
+                stringArrToJson(getBranchCategoryIds(deletedBranchCategories)));
+
+        return new Pair<>(Boolean.TRUE, branchCategoryJson);
     }
 
     List<Long> getMemberIds(List<SMember> members) {
