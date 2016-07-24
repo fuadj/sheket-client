@@ -108,6 +108,19 @@ public class PrefUtil {
         editor.commit();
     }
 
+    public static int getBranchCategoryRevision(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        int default_rev = context.getResources().getInteger(R.integer.pref_default_revision);
+        return prefs.getInt(context.getString(R.string.pref_branch_category_revision), default_rev);
+    }
+
+    public static void setBranchCategoryRevision(Context context, int revision) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(context.getString(R.string.pref_branch_category_revision), revision);
+        editor.commit();
+    }
+
     public static void setUserRevision(Context context, int revision) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putInt(context.getString(R.string.pref_user_rev), revision);
