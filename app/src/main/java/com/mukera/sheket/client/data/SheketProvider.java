@@ -53,7 +53,8 @@ public class SheketProvider extends ContentProvider {
 
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemFetchOnlyExistingItemQueryBuilder;
-    private static final SQLiteQueryBuilder sBranchCategoryWithCategoryDetailQueryBuilder;
+    private static final SQLiteQueryBuilder sBranchCategoryQueryBuilder;
+    private static final SQLiteQueryBuilder sBranchCategoryWithCategoryChildrenQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
     private static final SQLiteQueryBuilder sCategoryWithChildrenQueryBuilder;
 
@@ -101,8 +102,19 @@ public class SheketProvider extends ContentProvider {
                         CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID))
         );
 
-        sBranchCategoryWithCategoryDetailQueryBuilder = new SQLiteQueryBuilder();
-        sBranchCategoryWithCategoryDetailQueryBuilder.setTables(
+        sBranchCategoryQueryBuilder = new SQLiteQueryBuilder();
+        sBranchCategoryQueryBuilder.setTables(
+                String.format(Locale.US,
+                        "%s %s INNER JOIN %s ON %s = %s",
+                        CategoryEntry.TABLE_NAME,
+                        CategoryEntry.PART_CURRENT,
+                        BranchCategoryEntry.TABLE_NAME,
+                        CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID),
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID))
+        );
+
+        sBranchCategoryWithCategoryChildrenQueryBuilder = new SQLiteQueryBuilder();
+        sBranchCategoryWithCategoryChildrenQueryBuilder.setTables(
                 /**
                  * We are aliasing the Category table so we can use the {@code SCategory}'s
                  * projection. See {@code SCategory} for detail.
@@ -411,7 +423,7 @@ public class SheketProvider extends ContentProvider {
                 selection = withAppendedCompanyIdSelection(selection,
                         BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_COMPANY_ID));
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
-                result = sBranchCategoryWithCategoryDetailQueryBuilder.query(
+                result = sBranchCategoryWithCategoryChildrenQueryBuilder.query(
                         mDbHelper.getReadableDatabase(),
                         projection,
                         selection, selectionArgs,
