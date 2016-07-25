@@ -109,7 +109,7 @@ public class SheketProvider extends ContentProvider {
                         CategoryEntry.TABLE_NAME,
                         CategoryEntry.PART_CURRENT,
                         BranchCategoryEntry.TABLE_NAME,
-                        CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID),
+                        CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID),
                         BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID))
         );
 
