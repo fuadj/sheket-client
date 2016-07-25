@@ -423,7 +423,13 @@ public class SheketProvider extends ContentProvider {
                 selection = withAppendedCompanyIdSelection(selection,
                         BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_COMPANY_ID));
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
-                result = sBranchCategoryWithCategoryChildrenQueryBuilder.query(
+                SQLiteQueryBuilder builder;
+                if (BranchCategoryEntry.isFetchingChildrenCategories(uri)) {
+                    builder = sBranchCategoryWithCategoryChildrenQueryBuilder;
+                } else {
+                    builder = sBranchCategoryQueryBuilder;
+                }
+                result = builder.query(
                         mDbHelper.getReadableDatabase(),
                         projection,
                         selection, selectionArgs,
