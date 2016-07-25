@@ -35,6 +35,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.controller.items.transactions.CategoryUtil;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -420,6 +421,13 @@ public class AllItemsFragment extends SearchableItemFragment {
         try {
             getActivity().getContentResolver().
                     applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
+
+            /**
+             * This needs to be performed after the categories have moved. This is because we
+             * can't efficiently know what the category ancestry of the items will be until the
+             * movement has finished.
+             */
+            CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
         } catch (RemoteException | OperationApplicationException e) {
 
         }

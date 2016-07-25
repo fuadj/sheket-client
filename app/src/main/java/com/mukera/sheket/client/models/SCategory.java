@@ -34,7 +34,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
      * You can use this projection with results from joined queries with Category tables,
      * provided that you ALIASED the category table with {@code CategoryEntry.PART_CURRENT} qualifier.
      * NOTE: if you want to fetch the children categories also, you need to create a joined
-     * query to fetch children and alias that bit with {@code CategoryEntry.PART_CURRENT}. Then
+     * query to fetch children and alias that bit with {@code CategoryEntry.PART_CHILD}. Then
      * you can use {@code SCategory.CATEGORY_WITH_CHILDREN_COLUMNS} with it.
      */
     public static final String[] CATEGORY_COLUMNS = {
