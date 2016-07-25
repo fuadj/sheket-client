@@ -595,11 +595,16 @@ public class BranchItemFragment extends SearchableItemFragment {
              * We are fetching the children so we want to use the CategoryTreeNavigation fragment's
              * UI to display the number of children sub-categories.
              */
-            return new CursorLoader(getActivity(),
-                    BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
+            Uri uri = BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
                             // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
                             // with a particular id.
-                            mBranchId, BranchCategoryEntry.NO_ID_SET),
+                            mBranchId, BranchCategoryEntry.NO_ID_SET);
+
+            // also include children categories in the result
+            uri = BranchCategoryEntry.buildFetchCategoryWithChildrenUri(uri);
+
+            return new CursorLoader(getActivity(),
+                    uri,
                     SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
                     CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
                     new String[]{String.valueOf(mCurrentCategoryId)},
