@@ -25,6 +25,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
 
@@ -44,13 +45,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     protected long mCurrentCategoryId;
     protected Stack<Long> mCategoryBackstack;
 
-    //private ListView mCategoryList;
-    //protected CategoryAdapter mCategoryAdapter = null;
     private ExpandableListView mExpandableListView;
 
     ExpandableCategoryTreeAdapter mExpandableAdapter;
-
-    private View mDividerView;
 
     protected void initLoader() {
         getLoaderManager().initLoader(getCategoryLoaderId(), null, this);
@@ -130,10 +127,26 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     }
 
     /**
+     * Replace the current stack with the this. It won't immediately update
+     * the UI. Sub-classes should handle that when necessary.
+     */
+    protected void setCategoryStack(Stack<Long> category_stack, long current_category) {
+        mCategoryBackstack = new Stack<>();
+        for (Long category_id : category_stack) {
+            mCategoryBackstack.push(category_id);
+        }
+        mCurrentCategoryId = current_category;
+    }
+
+    /**
      * Use this to find the category you are in.
      */
     public long getCurrentCategory() {
         return mCurrentCategoryId;
+    }
+
+    public Stack<Long> getCurrentStack() {
+        return mCategoryBackstack;
     }
 
     @Override
@@ -141,18 +154,6 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         initLoader();
         super.onActivityCreated(savedInstanceState);
     }
-
-    /**
-     * Override this to create your own adapter for the category list.
-     */
-    /*
-    protected CategoryAdapter getCategoryAdapter() {
-        if (mCategoryAdapter == null) {
-            mCategoryAdapter = new CategoryChildrenArrayAdapter(getActivity());
-        }
-        return mCategoryAdapter;
-    }
-    */
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
