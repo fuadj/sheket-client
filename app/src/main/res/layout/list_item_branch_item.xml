@@ -24,15 +24,22 @@
             android:layout_gravity="center_vertical" />
     </FrameLayout>
 
+    <View
+        android:id="@+id/list_item_b_item_padding_if_not_exist_in_branch"
+        android:layout_width="16dp"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:layout_toRightOf="@+id/list_item_b_item_layout_edit_location" />
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         android:id="@+id/layout_item_name_section"
         android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/list_item_b_item_layout_edit_location">
+        android:layout_toRightOf="@+id/list_item_b_item_padding_if_not_exist_in_branch">
 
         <TextView
             android:id="@+id/list_item_b_item_text_view_item_code"

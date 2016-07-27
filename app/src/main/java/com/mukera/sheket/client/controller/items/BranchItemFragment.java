@@ -204,7 +204,9 @@ public class BranchItemFragment extends SearchableItemFragment {
         TextView item_loc;
         ImageButton edit_loc;
         View layout_edit_loc;
-        LinearLayout layout_branch_quantity;
+        View layout_branch_quantity;
+        View name_padding_if_not_exist_in_branch;
+
         ImageView item_not_exist;
 
         public BranchItemViewHolder(View view) {
@@ -214,7 +216,8 @@ public class BranchItemFragment extends SearchableItemFragment {
             item_loc = (TextView) view.findViewById(R.id.list_item_b_item_text_view_item_loc);
             edit_loc = (ImageButton) view.findViewById(R.id.list_item_b_item_img_btn_edit_location);
             layout_edit_loc = view.findViewById(R.id.list_item_b_item_layout_edit_location);
-            layout_branch_quantity = (LinearLayout) view.findViewById(R.id.list_item_b_item_layout_quantity);
+            layout_branch_quantity = view.findViewById(R.id.list_item_b_item_layout_quantity);
+            name_padding_if_not_exist_in_branch = view.findViewById(R.id.list_item_b_item_padding_if_not_exist_in_branch);
             item_not_exist = (ImageView) view.findViewById(R.id.list_item_b_item_img_view_item_not_exist);
         }
     }
@@ -266,8 +269,10 @@ public class BranchItemFragment extends SearchableItemFragment {
 
         holder.layout_branch_quantity.setVisibility(show_if_exist);
         holder.edit_loc.setVisibility(show_if_exist);
+        holder.layout_edit_loc.setVisibility(show_if_exist);
 
         holder.item_not_exist.setVisibility(show_if_not_exist);
+        holder.name_padding_if_not_exist_in_branch.setVisibility(show_if_not_exist);
 
         if (item_exist) {
             View.OnClickListener listener = new View.OnClickListener() {
