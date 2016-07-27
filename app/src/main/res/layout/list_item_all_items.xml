@@ -4,25 +4,34 @@
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:descendantFocusability="blocksDescendants"
-    android:padding="8dp">
+    android:paddingRight="16dp">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/ic_action_info"
-        android:id="@+id/list_item_item_detail_info"
-        android:layout_alignParentRight="false"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="4dp"
-        android:padding="16dp"
+    <FrameLayout
+        android:id="@+id/list_item_item_detail_layout_code"
         android:layout_alignParentLeft="true"
-        android:layout_marginRight="8dp" />
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="8dp"
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_action_info"
+            android:id="@+id/list_item_item_detail_info"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_vertical" />
+    </FrameLayout>
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/list_item_item_detail_info">
+        android:layout_toRightOf="@+id/list_item_item_detail_layout_code"
+        android:layout_centerVertical="true"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
         <LinearLayout
             android:orientation="vertical"

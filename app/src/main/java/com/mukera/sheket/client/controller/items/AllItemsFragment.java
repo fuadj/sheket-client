@@ -281,13 +281,18 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     private static class ItemViewHolder {
-        ImageView item_info;
         TextView item_name;
         TextView item_code;
         TextView total_qty;
 
+        ImageView item_info;
+        // this makes it easier to click on by simulating clicks here
+        View  code_layout;
+
         public ItemViewHolder(View view) {
             item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
+            code_layout = view.findViewById(R.id.list_item_item_detail_layout_code);
+
             item_name = (TextView) view.findViewById(R.id.list_item_item_detail_name);
             item_code = (TextView) view.findViewById(R.id.list_item_item_detail_code);
             total_qty = (TextView) view.findViewById(R.id.list_item_item_detail_total_qty);
@@ -321,7 +326,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             holder.item_code.setVisibility(View.GONE);
         }
         holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
-        holder.item_info.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final Activity activity = getActivity();
@@ -338,7 +343,9 @@ public class AllItemsFragment extends SearchableItemFragment {
                         setNegativeButton("No", null).
                         show();
             }
-        });
+        };
+        holder.item_info.setOnClickListener(listener);
+        holder.code_layout.setOnClickListener(listener);
     }
 
     /**
