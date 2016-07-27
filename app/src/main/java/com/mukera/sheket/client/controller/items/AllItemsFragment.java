@@ -14,12 +14,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -49,10 +49,8 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -61,9 +59,6 @@ import java.util.UUID;
 public class AllItemsFragment extends SearchableItemFragment {
     private static final String KEY_SAVE_EDIT_MODE = "key_save_edit_mode";
     private boolean mIsEditMode = false;
-
-    private View mViewSelectAll;
-    private CheckBox mCheckBoxSelectAll;
 
     private FloatingActionButton mPasteBtn, mAddBtn, mDeleteBtn;
 
@@ -75,25 +70,30 @@ public class AllItemsFragment extends SearchableItemFragment {
      */
     private Map<Long, SCategory> mSelectedCategories;
 
-    /**
-     * This holds any parent category of selected categories/items.
-     * Depending on the size this set, the paste/delete button with either
-     * be enabled/disabled when editing.
-     */
-    private Set<Long> mParentCategories;
+    public static AllItemsFragment newInstance(boolean is_edit_mode) {
+        AllItemsFragment fragment = new AllItemsFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(KEY_SAVE_EDIT_MODE, is_edit_mode);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             mIsEditMode = savedInstanceState.getBoolean(KEY_SAVE_EDIT_MODE, false);
+        } else {
+            Bundle args = getArguments();
+            if (args != null && args.containsKey(KEY_SAVE_EDIT_MODE))
+                mIsEditMode = args.getBoolean(KEY_SAVE_EDIT_MODE);
         }
+
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
         setHasOptionsMenu(true);
         setCurrentCategory(mCategoryId);
 
         mSelectedCategories = new HashMap<>();
-        mParentCategories = new HashSet<>();
     }
 
     @Override
@@ -114,28 +114,20 @@ public class AllItemsFragment extends SearchableItemFragment {
             case R.id.all_items_menu_toggle_editing:
                 mIsEditMode = !mIsEditMode;
 
-                // for the next round, we start fresh
-                mSelectedCategories.clear();
-                updateEditingUI();
-                /**
-                 * this will ensure that the previous types of views
-                 * won't be given to us as "converted-recycled-views".
-                 * This sometimes creates a problem if you are displaying two
-                 * types of views. There will be problems trying to access
-                 * view elements that won't exist and stuff. So, invalidate
-                 * the whole listview and start feeding it new views.
-                 */
-                invalidateListView();
-
-                restartLoader();
+                restartFragmentToApplyEditingChanges();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    void updateEditingUI() {
-        //((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
-        //mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
+    void restartFragmentToApplyEditingChanges() {
+        Fragment newFragment = newInstance(mIsEditMode);
+        getActivity().getSupportFragmentManager().beginTransaction().
+                replace(R.id.main_fragment_container, newFragment).
+                commit();
+    }
+
+    void setUpEditModeUI() {
         if (!mIsEditMode) {
             mAddBtn.setVisibility(View.VISIBLE);
             mPasteBtn.setVisibility(View.GONE);
@@ -196,6 +188,8 @@ public class AllItemsFragment extends SearchableItemFragment {
                             @Override
                             public void run() {
                                 mIsEditMode = false;
+                                restartFragmentToApplyEditingChanges();
+                                /*
                                 updateEditingUI();
 
                                 // we are invalidating the view b/c we are leaving "edit-mode" for
@@ -203,6 +197,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                                 invalidateListView();
 
                                 restartLoader();
+                                */
                             }
                         });
                     }
@@ -212,6 +207,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
+        setUpEditModeUI();
         return rootView;
     }
 
