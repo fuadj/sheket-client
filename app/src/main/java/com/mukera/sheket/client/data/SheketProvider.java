@@ -53,6 +53,7 @@ public class SheketProvider extends ContentProvider {
 
     private static final SQLiteQueryBuilder sTransactionItemsWithTransactionIdAndItemDetailQueryBuilder;
     private static final SQLiteQueryBuilder sBranchItemFetchOnlyExistingItemQueryBuilder;
+    private static final SQLiteQueryBuilder sBranchItemFetchItemInAllBranchesQueryBuilder;
     private static final SQLiteQueryBuilder sBranchCategoryQueryBuilder;
     private static final SQLiteQueryBuilder sBranchCategoryWithCategoryChildrenQueryBuilder;
     private static final SQLiteQueryBuilder sItemWithBranchQueryBuilder;
@@ -80,6 +81,27 @@ public class SheketProvider extends ContentProvider {
                         BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
                         " = " +
                         ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + ") "
+        );
+
+        sBranchItemFetchItemInAllBranchesQueryBuilder = new SQLiteQueryBuilder();
+        sBranchItemFetchItemInAllBranchesQueryBuilder.setTables(
+                /**
+                 * See http://stackoverflow.com/questions/38610739/join-3-tables-without-losing-ability-to-refer-each-table
+                 * for more details.
+                 */
+                String.format(Locale.US,
+                        "%s CROSS JOIN %s LEFT JOIN %s ",
+                        ItemEntry.TABLE_NAME,
+                        BranchEntry.TABLE_NAME,
+                        BranchItemEntry.TABLE_NAME) +
+
+                String.format(Locale.US,
+                        " ON %s = %s AND %s = %s",
+                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID),
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID),
+
+                        BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID),
+                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID))
         );
 
         sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
@@ -323,15 +345,16 @@ public class SheketProvider extends ContentProvider {
                     if (item_set) {
                         if (branch_set) {
                             branch_item_selection += (did_select_branch ? " AND " : "");
-                            branch_item_selection +=
-                                    String.format(Locale.US, "%s = ?",
-                                            BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                            args.add(Long.toString(item_id));
                         } else {
                             // if the branch was NOT set, it means we want to fetch the item
                             // in ALL branches, regardless it if exists in them or NOT
                             fetch_item_in_all_branches = true;
                         }
+
+                        branch_item_selection +=
+                                String.format(Locale.US, "%s = ?",
+                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                        args.add(Long.toString(item_id));
                     }
 
                     selection = withAppendedSelection(selection,
@@ -354,47 +377,7 @@ public class SheketProvider extends ContentProvider {
 
                 SQLiteQueryBuilder builder;
                 if (fetch_item_in_all_branches) {
-                    builder = new SQLiteQueryBuilder();
-                    builder.setTables(
-                            /**
-                             * We want to fetch the item in ALL branches even if it doesn't
-                             * exist in some. We first select the item we want from the item table.
-                             * We are doing it here and not in a "final" where clause because we
-                             * are LEFT JOIN-ing with other tables which results in NULLs in the
-                             * "right" tables for none existing entries. And it is not possible
-                             * to do comparison then because NULL rows will fail the tests.
-                             * NOTE: it isn't absolutely necessary in this case to do the filtering
-                             * initially inside the item table because we are doing the left join
-                             * with the item table being the left. So we are guaranteed for it to
-                             * not contain NULL rows. But, if we also want to have selections
-                             * in the future from stuff from the right table, it will create problems
-                             * then.
-                             */
-                            String.format(Locale.US,
-                                    "(select * from %s where %s = %d) %s ",
-                                    ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID, item_id,
-
-                                    // this is because we need to "alias" the (select *)'s result
-                                    // otherwise it creates problems saying columns.* doesn't exist
-                                    ItemEntry.TABLE_NAME) +
-
-                            // LEFT JOIN with BranchItemTable to get details about item inside branch
-                                    " LEFT JOIN " + BranchItemEntry.TABLE_NAME +
-                                    " ON " +
-                                    "(" +
-                                    ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) +
-                                    " = " +
-                                    BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
-                                    ")" +
-                            // LEFT JOIN with BranchTable to get branch details
-                                    " LEFT JOIN " + BranchEntry.TABLE_NAME +
-                                    " ON " +
-                                    "(" +
-                                    BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) +
-                                    " = " +
-                                    BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) +
-                                    ")"
-                    );
+                    builder = sBranchItemFetchItemInAllBranchesQueryBuilder;
                 } else if (fetch_none_branch_items) {
                     builder = new SQLiteQueryBuilder();
                     builder.setTables(
