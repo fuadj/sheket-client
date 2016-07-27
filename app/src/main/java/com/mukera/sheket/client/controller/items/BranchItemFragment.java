@@ -28,7 +28,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
@@ -198,23 +197,25 @@ public class BranchItemFragment extends SearchableItemFragment {
         return rootView;
     }
 
-    private static class ViewHolder {
+    private static class BranchItemViewHolder {
         TextView item_name;
         TextView item_code;
         TextView qty_remain;
         TextView item_loc;
         ImageButton edit_loc;
-        LinearLayout layout_branch_item;
+        View layout_edit_loc;
+        LinearLayout layout_branch_quantity;
         ImageView item_not_exist;
 
-        public ViewHolder(View view) {
-            item_name = (TextView) view.findViewById(R.id.list_item_text_view_b_item_name);
-            item_code = (TextView) view.findViewById(R.id.list_item_text_view_b_item_code);
-            qty_remain = (TextView) view.findViewById(R.id.list_item_text_view_b_item_qty);
-            item_loc = (TextView) view.findViewById(R.id.list_item_text_view_b_item_loc);
-            edit_loc = (ImageButton) view.findViewById(R.id.list_item_img_btn_b_edit_location);
-            layout_branch_item = (LinearLayout) view.findViewById(R.id.layout_branch_item_section);
-            item_not_exist = (ImageView) view.findViewById(R.id.list_item_img_view_b_item_not_exist);
+        public BranchItemViewHolder(View view) {
+            item_name = (TextView) view.findViewById(R.id.list_item_b_item_text_view_item_name);
+            item_code = (TextView) view.findViewById(R.id.list_item_b_item_text_view_item_code);
+            qty_remain = (TextView) view.findViewById(R.id.list_item_b_item_text_view_item_qty);
+            item_loc = (TextView) view.findViewById(R.id.list_item_b_item_text_view_item_loc);
+            edit_loc = (ImageButton) view.findViewById(R.id.list_item_b_item_img_btn_edit_location);
+            layout_edit_loc = view.findViewById(R.id.list_item_b_item_layout_edit_location);
+            layout_branch_quantity = (LinearLayout) view.findViewById(R.id.list_item_b_item_layout_quantity);
+            item_not_exist = (ImageView) view.findViewById(R.id.list_item_b_item_img_view_item_not_exist);
         }
     }
 
@@ -222,7 +223,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     @Override
     public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
         View view = LayoutInflater.from(context).inflate(R.layout.list_item_branch_item, parent, false);
-        ViewHolder holder = new ViewHolder(view);
+        BranchItemViewHolder holder = new BranchItemViewHolder(view);
 
         view.setTag(holder);
         return view;
@@ -230,7 +231,7 @@ public class BranchItemFragment extends SearchableItemFragment {
 
     @Override
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
-        ViewHolder holder = (ViewHolder) view.getTag();
+        BranchItemViewHolder holder = (BranchItemViewHolder) view.getTag();
         final SBranchItem branchItem = new SBranchItem(cursor, true);
         final SItem item = branchItem.item;
 
@@ -263,18 +264,21 @@ public class BranchItemFragment extends SearchableItemFragment {
         int show_if_exist = item_exist ? View.VISIBLE : View.GONE;
         int show_if_not_exist = item_exist ? View.GONE : View.VISIBLE;
 
-        holder.layout_branch_item.setVisibility(show_if_exist);
+        holder.layout_branch_quantity.setVisibility(show_if_exist);
         holder.edit_loc.setVisibility(show_if_exist);
 
         holder.item_not_exist.setVisibility(show_if_not_exist);
 
         if (item_exist) {
-            holder.edit_loc.setOnClickListener(new View.OnClickListener() {
+            View.OnClickListener listener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     displayItemLocationDialog(branchItem);
                 }
-            });
+            };
+            holder.edit_loc.setOnClickListener(listener);
+            holder.layout_edit_loc.setOnClickListener(listener);
+
             holder.qty_remain.setText(Utils.formatDoubleForDisplay(branchItem.quantity));
         }
     }
