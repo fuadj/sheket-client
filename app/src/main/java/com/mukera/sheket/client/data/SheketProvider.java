@@ -291,8 +291,14 @@ public class SheketProvider extends ContentProvider {
             case BRANCH_ITEM_WITH_ID:
             case BRANCH_ITEM: {
                 query_db = false;
-                boolean is_fetching_none_existing_items =
+
+                // Should we also fetch items that don't exist inside the branch
+                boolean fetch_none_branch_items =
                         BranchItemEntry.isFetchNoneExistingItemsSpecified(uri);
+
+                // should we fetch a particular item in ALL branches, even if it
+                // doesn't exist in them
+                boolean fetch_item_in_all_branches = false;
 
                 long branch_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getBranchId(uri);
                 long item_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getItemId(uri);
@@ -303,31 +309,36 @@ public class SheketProvider extends ContentProvider {
                 if (uri_match == BRANCH_ITEM_WITH_ID) {
                     String branch_item_selection = "";
                     List<String> args = new ArrayList<>();
-                    /**
-                     * We don't apply the selection if we are fetching none existing items because that
-                     * doesn't work. See the comment below for more detail.
-                     */
-                    if (!is_fetching_none_existing_items &&
-                            branch_set) {
-                        branch_item_selection +=
-                                String.format(Locale.US, "%s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
-                        args.add(Long.toString(branch_id));
+
+                    boolean did_select_branch = false;
+                    if (branch_set) {
+                        if (!fetch_none_branch_items) {
+                            did_select_branch = true;
+                            branch_item_selection +=
+                                    String.format(Locale.US, "%s = ?",
+                                            BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
+                            args.add(Long.toString(branch_id));
+                        }
                     }
                     if (item_set) {
-                        branch_item_selection += ((!is_fetching_none_existing_items && branch_set) ?
-                                " AND " : "");
-                        branch_item_selection +=
-                                String.format(Locale.US, "%s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                        args.add(Long.toString(item_id));
+                        if (branch_set) {
+                            branch_item_selection += (did_select_branch ? " AND " : "");
+                            branch_item_selection +=
+                                    String.format(Locale.US, "%s = ?",
+                                            BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                            args.add(Long.toString(item_id));
+                        } else {
+                            // if the branch was NOT set, it means we want to fetch the item
+                            // in ALL branches, regardless it if exists in them or NOT
+                            fetch_item_in_all_branches = true;
+                        }
                     }
 
                     selection = withAppendedSelection(selection,
                             branch_item_selection);
 
                     // if neither is set, why bother
-                    if (branch_set || item_set) {
+                    if (did_select_branch || item_set) {
                         selectionArgs = withAppendedSelectionArgs(selectionArgs,
                                 // use the template-ized method to avoid ClassCastException
                                 args.toArray(new String[args.size()]));
@@ -341,8 +352,51 @@ public class SheketProvider extends ContentProvider {
                 selection = withAppendedCompanyIdSelection(selection, ItemEntry._full(ItemEntry.COLUMN_COMPANY_ID));
                 selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs, company_id);
 
-                if (is_fetching_none_existing_items) {
-                    SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+                SQLiteQueryBuilder builder;
+                if (fetch_item_in_all_branches) {
+                    builder = new SQLiteQueryBuilder();
+                    builder.setTables(
+                            /**
+                             * We want to fetch the item in ALL branches even if it doesn't
+                             * exist in some. We first select the item we want from the item table.
+                             * We are doing it here and not in a "final" where clause because we
+                             * are LEFT JOIN-ing with other tables which results in NULLs in the
+                             * "right" tables for none existing entries. And it is not possible
+                             * to do comparison then because NULL rows will fail the tests.
+                             * NOTE: it isn't absolutely necessary in this case to do the filtering
+                             * initially inside the item table because we are doing the left join
+                             * with the item table being the left. So we are guaranteed for it to
+                             * not contain NULL rows. But, if we also want to have selections
+                             * in the future from stuff from the right table, it will create problems
+                             * then.
+                             */
+                            String.format(Locale.US,
+                                    "(select * from %s where %s = %d) %s ",
+                                    ItemEntry.TABLE_NAME, ItemEntry.COLUMN_ITEM_ID, item_id,
+
+                                    // this is because we need to "alias" the (select *)'s result
+                                    // otherwise it creates problems saying columns.* doesn't exist
+                                    ItemEntry.TABLE_NAME) +
+
+                            // LEFT JOIN with BranchItemTable to get details about item inside branch
+                                    " LEFT JOIN " + BranchItemEntry.TABLE_NAME +
+                                    " ON " +
+                                    "(" +
+                                    ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) +
+                                    " = " +
+                                    BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
+                                    ")" +
+                            // LEFT JOIN with BranchTable to get branch details
+                                    " LEFT JOIN " + BranchEntry.TABLE_NAME +
+                                    " ON " +
+                                    "(" +
+                                    BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID) +
+                                    " = " +
+                                    BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) +
+                                    ")"
+                    );
+                } else if (fetch_none_branch_items) {
+                    builder = new SQLiteQueryBuilder();
                     builder.setTables(
                             /**
                              * IMPORTANT: We are first filtering the branch we want from the BranchItemTable
@@ -368,18 +422,14 @@ public class SheketProvider extends ContentProvider {
                                     BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID) +
                                     ") "
                     );
-                    result = builder.query(
-                            mDbHelper.getReadableDatabase(),
-                            projection,
-                            selection, selectionArgs,
-                            null, null, sortOrder);
                 } else {
-                    result = sBranchItemFetchOnlyExistingItemQueryBuilder.query(
-                            mDbHelper.getReadableDatabase(),
-                            projection,
-                            selection, selectionArgs,
-                            null, null, sortOrder);
+                    builder = sBranchItemFetchOnlyExistingItemQueryBuilder;
                 }
+                result = builder.query(
+                        mDbHelper.getReadableDatabase(),
+                        projection,
+                        selection, selectionArgs,
+                        null, null, sortOrder);
 
                 break;
             }
