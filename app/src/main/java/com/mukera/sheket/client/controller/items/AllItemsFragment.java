@@ -14,12 +14,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -49,21 +49,20 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
 
 /**
  * Created by gamma on 3/4/16.
  */
 public class AllItemsFragment extends SearchableItemFragment {
-    private static final String KEY_SAVE_EDIT_MODE = "key_save_edit_mode";
-    private boolean mIsEditMode = false;
+    private static final String SAVE_KEY_EDIT_MODE = "save_key_edit_mode";
+    private static final String ARG_KEY_EDIT_MODE = "arg_key_edit_mode";
+    private static final String ARG_KEY_CATEGORY_STACK = "arg_key_category_stack";
 
-    private View mViewSelectAll;
-    private CheckBox mCheckBoxSelectAll;
+    private boolean mIsEditMode = false;
 
     private FloatingActionButton mPasteBtn, mAddBtn, mDeleteBtn;
 
@@ -76,29 +75,76 @@ public class AllItemsFragment extends SearchableItemFragment {
     private Map<Long, SCategory> mSelectedCategories;
 
     /**
-     * This holds any parent category of selected categories/items.
-     * Depending on the size this set, the paste/delete button with either
-     * be enabled/disabled when editing.
+     * Creates a new fragment with the editing mode set and the category stack
+     * so the fragment can start with a certain category "opened" with the option
+     * to go through the backstack.
+     *
+     * @param is_edit_mode      Should it show Edit-Mode or Normal mode.
+     * @param category_stack    If you want this fragment to start with some category "opened",
+     *                          pass in the stack of categories that lead to it starting from the
+     *                          root category. If {@code null}, it starts at the root.
+     *                          The category at the top of the stack is the one that will be opened.
+     * @return
      */
-    private Set<Long> mParentCategories;
+    public static AllItemsFragment newInstance(boolean is_edit_mode, Stack<Long> category_stack) {
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_KEY_EDIT_MODE, is_edit_mode);
+
+        if (category_stack == null) {
+            category_stack = new Stack<>();
+        }
+        if (category_stack.isEmpty()) {     // add the root category
+            category_stack.push(CategoryEntry.ROOT_CATEGORY_ID);
+        }
+
+        // Because Stack<Long> can't be put inside a Bundle, convert it to ArrayList<Integer>
+        ArrayList<Integer> int_stack = new ArrayList<>();
+        for (Long category : category_stack) {
+            int_stack.add(category.intValue());
+        }
+
+        args.putIntegerArrayList(ARG_KEY_CATEGORY_STACK, int_stack);
+
+        AllItemsFragment fragment = new AllItemsFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            mIsEditMode = savedInstanceState.getBoolean(KEY_SAVE_EDIT_MODE, false);
+            mIsEditMode = savedInstanceState.getBoolean(SAVE_KEY_EDIT_MODE, false);
+        } else {
+            Bundle args = getArguments();
+            if (args != null) {
+                ArrayList<Integer> int_category_stack = args.getIntegerArrayList(ARG_KEY_CATEGORY_STACK);
+                if (int_category_stack != null) {
+                    Stack<Long> category_stack = new Stack<>();
+                    for (Integer category_id : int_category_stack) {
+                        category_stack.push(category_id.longValue());
+                    }
+                    // the top of the stack is current category, pop it
+                    long current_category = category_stack.pop();
+                    super.setCategoryStack(category_stack, current_category);
+                }
+
+                // this defaults to false, so we are good
+                mIsEditMode = args.getBoolean(ARG_KEY_EDIT_MODE);
+            } else {
+                mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+                setCurrentCategory(mCategoryId);
+            }
         }
-        mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+
         setHasOptionsMenu(true);
-        setCurrentCategory(mCategoryId);
 
         mSelectedCategories = new HashMap<>();
-        mParentCategories = new HashSet<>();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(KEY_SAVE_EDIT_MODE, mIsEditMode);
+        outState.putBoolean(SAVE_KEY_EDIT_MODE, mIsEditMode);
         super.onSaveInstanceState(outState);
     }
 
@@ -114,19 +160,41 @@ public class AllItemsFragment extends SearchableItemFragment {
             case R.id.all_items_menu_toggle_editing:
                 mIsEditMode = !mIsEditMode;
 
-                // for the next round, we start fresh
-                mSelectedCategories.clear();
-                updateEditingUI();
-
-                restartLoader();
+                restartFragmentToApplyEditingChanges();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    void updateEditingUI() {
-        //((CategorySelectionEditionAdapter)getCategoryAdapter()).setEditMode(mIsEditMode);
-        //mViewSelectAll.setVisibility(mIsEditMode ? View.VISIBLE : View.GONE);
+    /**
+     * <p>
+     *     Restarts the fragment inside the current category with the set editing mode.
+     *     This removes the complexity of creating layouts that can support both
+     *     "normal" and "edit" mode UI. You just need to inflate the UI for the appropriate
+     *     mode by checking {@link #mIsEditMode}. Then your layouts are simpler as they
+     *     are designed for only a single mode.
+     * </p>
+     *
+     * <p>
+     *     Without this each of your layouts should be capable of displaying in both modes,
+     *     which means conditionally showing and hiding views.
+     *     This also creates problems if Views are being recycled
+     *     like in a ListView where one type of view can wrongly be recycled for another type.
+     *     This causes the app to crash.
+     * </p>
+     */
+    void restartFragmentToApplyEditingChanges() {
+        Stack<Long> current_stack = super.getCurrentStack();
+        // add the current category to the top.
+        current_stack.push(getCurrentCategory());
+
+        Fragment newFragment = newInstance(mIsEditMode, current_stack);
+        getActivity().getSupportFragmentManager().beginTransaction().
+                replace(R.id.main_fragment_container, newFragment).
+                commit();
+    }
+
+    void setUpEditModeUI() {
         if (!mIsEditMode) {
             mAddBtn.setVisibility(View.VISIBLE);
             mPasteBtn.setVisibility(View.GONE);
@@ -187,12 +255,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                             @Override
                             public void run() {
                                 mIsEditMode = false;
-                                // update the UI, we aren't using {@code restartLoader} b/c that
-                                // queries the provider again. We shouldn't query again b/c it
-                                // is only a UI update.
-                                updateEditingUI();
-                                //initLoader();
-                                restartLoader();
+                                restartFragmentToApplyEditingChanges();
                             }
                         });
                     }
@@ -202,6 +265,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
+        setUpEditModeUI();
         return rootView;
     }
 
@@ -283,6 +347,10 @@ public class AllItemsFragment extends SearchableItemFragment {
      */
     @Override
     public View newCategoryView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        // we only want to override it when we are in "edit-mode"
+        if (!mIsEditMode)
+            return super.newCategoryView(context, parent, cursor, position);
+
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.list_item_all_items_edit_category, parent, false);
         final CategoryViewHolder holder = new CategoryViewHolder(view);
@@ -293,6 +361,12 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     public void bindCategoryView(Context context, Cursor cursor, View view, int position) {
+        // we only want to override it when we are in "edit-mode"
+        if (!mIsEditMode) {
+            super.bindCategoryView(context, cursor, view, position);
+            return;
+        }
+
         final SCategory category = new SCategory(cursor, true);
 
         final CategoryViewHolder holder = (CategoryViewHolder) view.getTag();
@@ -315,21 +389,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         holder.selectFrameLayout.setOnClickListener(null);
         holder.editBtn.setOnClickListener(null);
         holder.editFrameLayout.setOnClickListener(null);
-
-        int show_if_edit = mIsEditMode ? View.VISIBLE : View.GONE;
-
-        // See the this ViewHolder's inflated layout for more description
-        holder.editFrameLayout.setVisibility(show_if_edit);
-        holder.editBtn.setVisibility(show_if_edit);
-        holder.selectFrameLayout.setVisibility(show_if_edit);
-        holder.selectCheck.setVisibility(show_if_edit);
-        // This padding is used when not editing as a padding for the CategoryName
-        holder.categoryNamePadding.setVisibility(
-                mIsEditMode ? View.GONE : View.VISIBLE);
-
-        if (!mIsEditMode) {
-            return;
-        }
 
         holder.selectCheck.setChecked(mSelectedCategories.containsKey(category.category_id));
         holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -368,13 +427,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         TextView categoryName, subCount;
         CheckBox selectCheck;
         View selectFrameLayout, editFrameLayout;
-
-        // to make category selection easier while moving categories, the
-        // space to left of the category name until the start of the root view
-        // listens to simulate clicking the {@code selectCheck} CheckBox.
-        // When NOT in editing mode, that space is converted to normal padding
-        // for categoryName. This View is the padding used is visible is not in editing mode.
-        View categoryNamePadding;
         ImageView editBtn;
 
         public CategoryViewHolder(View view) {
@@ -384,8 +436,6 @@ public class AllItemsFragment extends SearchableItemFragment {
             selectFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_select);
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
-
-            categoryNamePadding = view.findViewById(R.id.list_item_all_items_category_name_padding);
         }
     }
 
