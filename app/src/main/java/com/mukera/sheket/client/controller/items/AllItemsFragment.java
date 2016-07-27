@@ -686,7 +686,10 @@ public class AllItemsFragment extends SearchableItemFragment {
             ListView branchesList = (ListView) view.findViewById(R.id.dialog_all_item_list_view_branches);
             DetailDialogAdapter adapter = new DetailDialogAdapter(getActivity());
             for (Pair<SBranchItem, SBranch> pair : mItem.available_branches) {
-                adapter.add(pair);
+
+                // we show the item if it exists in the branch, otherwise skip that branch
+                if (pair.first != null)
+                    adapter.add(pair);
             }
             branchesList.setAdapter(adapter);
 

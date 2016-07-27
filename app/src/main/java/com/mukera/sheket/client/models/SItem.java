@@ -137,6 +137,10 @@ public class SItem extends UUIDSyncable implements Parcelable {
      * they are just a convenience when we are fetching it with branch items.
      */
     public double total_quantity;
+    /**
+     * The list contains pair of {branch_item and branch}. The branch_item can be null if the
+     * item doesn't exist inside the branch.
+     */
     public List<Pair<SBranchItem, SBranch>> available_branches;
 
     public SItem() {
@@ -194,11 +198,24 @@ public class SItem extends UUIDSyncable implements Parcelable {
         if (fetch_branch_items) {
             while (true) {
                 SBranchItem branchItem = new SBranchItem(cursor, COL_LAST + offset, false);
-                if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND)
-                    break;
+                if (branchItem.branch_id == SBranchItem.NO_BRANCH_ITEM_FOUND) {
+                    /**
+                     * we are assigning null and not breaking because we want to fetch
+                     * all the branches for an item, even if it doesn't exist in some of them.
+                     * NOTE: we check if the branch is also not available, in which case we
+                     * ignore this row. Otherwise, we fetch the branch even though the item
+                     * doesn't exist in it. This is useful in transactions when a user tries
+                     * to receive an item from a branch which doesn't contain the item. We can
+                     * inform the user that it is a non-existent item we are trying to move.
+                     */
+                    branchItem = null;
+                }
                 SBranch branch = new SBranch(cursor, COL_LAST + SBranchItem.COL_LAST);
+                if (branch.branch_id == SBranch.NO_BRANCH_FOUND) {
+                    break;
+                }
                 available_branches.add(new Pair<>(branchItem, branch));
-                total_quantity += branchItem.quantity;
+                total_quantity += (branchItem != null) ? branchItem.quantity : 0.d;
 
                 if (!cursor.moveToNext()) // we've hit the end
                     break;
