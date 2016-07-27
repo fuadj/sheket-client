@@ -117,6 +117,15 @@ public class AllItemsFragment extends SearchableItemFragment {
                 // for the next round, we start fresh
                 mSelectedCategories.clear();
                 updateEditingUI();
+                /**
+                 * this will ensure that the previous types of views
+                 * won't be given to us as "converted-recycled-views".
+                 * This sometimes creates a problem if you are displaying two
+                 * types of views. There will be problems trying to access
+                 * view elements that won't exist and stuff. So, invalidate
+                 * the whole listview and start feeding it new views.
+                 */
+                invalidateListView();
 
                 restartLoader();
                 return true;
@@ -187,11 +196,12 @@ public class AllItemsFragment extends SearchableItemFragment {
                             @Override
                             public void run() {
                                 mIsEditMode = false;
-                                // update the UI, we aren't using {@code restartLoader} b/c that
-                                // queries the provider again. We shouldn't query again b/c it
-                                // is only a UI update.
                                 updateEditingUI();
-                                //initLoader();
+
+                                // we are invalidating the view b/c we are leaving "edit-mode" for
+                                // normal mode, and the two views are different.
+                                invalidateListView();
+
                                 restartLoader();
                             }
                         });
@@ -283,6 +293,10 @@ public class AllItemsFragment extends SearchableItemFragment {
      */
     @Override
     public View newCategoryView(Context context, ViewGroup parent, Cursor cursor, int position) {
+        // we only want to override it when we are in "edit-mode"
+        if (!mIsEditMode)
+            return super.newCategoryView(context, parent, cursor, position);
+
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.list_item_all_items_edit_category, parent, false);
         final CategoryViewHolder holder = new CategoryViewHolder(view);
@@ -293,6 +307,12 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     public void bindCategoryView(Context context, Cursor cursor, View view, int position) {
+        // we only want to override it when we are in "edit-mode"
+        if (!mIsEditMode) {
+            super.bindCategoryView(context, cursor, view, position);
+            return;
+        }
+
         final SCategory category = new SCategory(cursor, true);
 
         final CategoryViewHolder holder = (CategoryViewHolder) view.getTag();
@@ -315,21 +335,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         holder.selectFrameLayout.setOnClickListener(null);
         holder.editBtn.setOnClickListener(null);
         holder.editFrameLayout.setOnClickListener(null);
-
-        int show_if_edit = mIsEditMode ? View.VISIBLE : View.GONE;
-
-        // See the this ViewHolder's inflated layout for more description
-        holder.editFrameLayout.setVisibility(show_if_edit);
-        holder.editBtn.setVisibility(show_if_edit);
-        holder.selectFrameLayout.setVisibility(show_if_edit);
-        holder.selectCheck.setVisibility(show_if_edit);
-        // This padding is used when not editing as a padding for the CategoryName
-        holder.categoryNamePadding.setVisibility(
-                mIsEditMode ? View.GONE : View.VISIBLE);
-
-        if (!mIsEditMode) {
-            return;
-        }
 
         holder.selectCheck.setChecked(mSelectedCategories.containsKey(category.category_id));
         holder.selectCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -368,13 +373,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         TextView categoryName, subCount;
         CheckBox selectCheck;
         View selectFrameLayout, editFrameLayout;
-
-        // to make category selection easier while moving categories, the
-        // space to left of the category name until the start of the root view
-        // listens to simulate clicking the {@code selectCheck} CheckBox.
-        // When NOT in editing mode, that space is converted to normal padding
-        // for categoryName. This View is the padding used is visible is not in editing mode.
-        View categoryNamePadding;
         ImageView editBtn;
 
         public CategoryViewHolder(View view) {
@@ -384,8 +382,6 @@ public class AllItemsFragment extends SearchableItemFragment {
             selectFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_select);
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
-
-            categoryNamePadding = view.findViewById(R.id.list_item_all_items_category_name_padding);
         }
     }
 

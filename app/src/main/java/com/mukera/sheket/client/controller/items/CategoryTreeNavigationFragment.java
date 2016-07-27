@@ -259,6 +259,18 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         return rootView;
     }
 
+    /**
+     * Use this if you want the {@code ExpandableListView} to clear its recycling-view-cache.
+     * This has a high performance penalty as it will recreate views for fresh.
+     * This should only be called if you want to assign a different type of list item views
+     * and don't want the "old-recycled" views getting in your way.
+     */
+    public void invalidateListView() {
+        //mExpandableListView.setAdapter(mExpandableAdapter);
+        mExpandableAdapter.notifyDataSetInvalidated();
+        mExpandableAdapter.notifyDataSetChanged();
+    }
+
     public void setEntityCursor(Cursor cursor) {
         mExpandableAdapter.setItemsCursor(cursor);
     }
