@@ -15,6 +15,7 @@ public class LoaderId {
         public static final int COMPANY_LIST_LOADER = 8;
         public static final int MEMBER_LIST_LOADER = 9;
         public static final int TRANSACTION_HISTORY_LOADER = 10;
+        public static final int QUANTITY_DIALOG_BRANCH_LOADER = 11;
     }
 
     public static class TransactionActivity {

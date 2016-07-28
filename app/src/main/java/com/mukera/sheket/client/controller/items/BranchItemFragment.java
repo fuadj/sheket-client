@@ -59,7 +59,6 @@ public class BranchItemFragment extends SearchableItemFragment {
     private FloatingActionButton mFinishTransactionBtn;
 
     private List<STransactionItem> mTransactionItemList;
-    private List<SBranch> mBranches = null;
 
     private static final String KEY_SAVE_VIEW_ALL_ITEMS = "key_save_all_items";
     private boolean mShowAllItems = false;
@@ -72,34 +71,6 @@ public class BranchItemFragment extends SearchableItemFragment {
         fragment.setArguments(args);
 
         return fragment;
-    }
-
-    /**
-     * Lazily fetch the branches
-     *
-     * @return
-     */
-    List<SBranch> getBranches() {
-        if (mBranches == null) {
-            long company_id = PrefUtil.getCurrentCompanyId(getActivity());
-
-            String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
-            Cursor cursor = getActivity().getContentResolver().
-                    query(BranchEntry.buildBaseUri(company_id),
-                            SBranch.BRANCH_COLUMNS, null, null, sortOrder);
-            if (cursor != null && cursor.moveToFirst()) {
-                mBranches = new ArrayList<>();
-                do {
-                    SBranch branch = new SBranch(cursor);
-
-                    // we don't want the current branch to be in the list of "transfer branches"
-                    if (branch.branch_id != mBranchId) {
-                        mBranches.add(branch);
-                    }
-                } while (cursor.moveToNext());
-            }
-        }
-        return mBranches;
     }
 
     @Override
@@ -453,8 +424,8 @@ public class BranchItemFragment extends SearchableItemFragment {
                                           FragmentTransaction transaction) {
         QuantityDialog dialog = new QuantityDialog();
 
-        dialog.setBranches(getBranches());
         dialog.setItem(item);
+        dialog.setCurrentBranch(mBranchId);
         dialog.setListener(new QuantityDialog.DialogListener() {
             @Override
             public void dialogCancel(DialogFragment dialog) {
