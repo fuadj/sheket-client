@@ -66,8 +66,6 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     private FloatingActionButton mPasteBtn, mAddBtn, mDeleteBtn;
 
-    private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-
     /**
      * We hold on to them for finally applying an operation on them AND ALSO
      * the UI looks at this to figure out which are selected or not.
@@ -125,15 +123,13 @@ public class AllItemsFragment extends SearchableItemFragment {
                         category_stack.push(category_id.longValue());
                     }
                     // the top of the stack is current category, pop it
-                    long current_category = category_stack.pop();
-                    super.setCategoryStack(category_stack, current_category);
+                    super.setCategoryStack(category_stack, category_stack.pop());
                 }
 
                 // this defaults to false, so we are good
                 mIsEditMode = args.getBoolean(ARG_KEY_EDIT_MODE);
             } else {
-                mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-                setCurrentCategory(mCategoryId);
+                setCurrentCategory(CategoryEntry.ROOT_CATEGORY_ID);
             }
         }
 
@@ -208,7 +204,6 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     public void onCategorySelected(long previous_category, long selected_category) {
-        mCategoryId = selected_category;
     }
 
     @Override
@@ -639,7 +634,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                     ItemEntry._full(ItemEntry.COLUMN_NAME) + " LIKE '%" + search_text + "%' ) ";
         } else if (super.isShowingCategoryTree()) {
             selection = ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?";
-            selectionArgs = new String[]{String.valueOf(mCategoryId)};
+            selectionArgs = new String[]{String.valueOf(mCurrentCategoryId)};
         }
 
         return new CursorLoader(getActivity(),
