@@ -308,8 +308,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         ImageButton delete_item_btn;
         View layout_delete_item;
 
-        View layout_right_padding;
-
         public EditItemViewHolder(View view) {
             item_name = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_name);
             item_code = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_code);
@@ -320,58 +318,108 @@ public class AllItemsFragment extends SearchableItemFragment {
 
             delete_item_btn = (ImageButton) view.findViewById(R.id.list_item_edit_item_img_btn_delete_new_item);
             layout_delete_item = view.findViewById(R.id.list_item_edit_item_layout_delete_new_item);
-
-            layout_right_padding = view.findViewById(R.id.list_item_edit_item_layout_right_padding);
         }
     }
 
     @Override
     public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        View view = inflater.inflate(R.layout.list_item_all_items, parent, false);
-        ItemViewHolder holder = new ItemViewHolder(view);
-        view.setTag(holder);
+        View view;
+        if (mIsEditMode) {
+            view = inflater.inflate(R.layout.list_item_all_items_edit_item, parent, false);
+            EditItemViewHolder holder = new EditItemViewHolder(view);
+            view.setTag(holder);
+        } else {
+            view = inflater.inflate(R.layout.list_item_all_items, parent, false);
+            ItemViewHolder holder = new ItemViewHolder(view);
+            view.setTag(holder);
+        }
         return view;
     }
 
     @Override
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
-        cursor.moveToPosition(position);
+        //cursor.moveToPosition(position);
         // we also want to fetch the branches it exists in, that is the true argument
         final SItem item = new SItem(cursor, true);
 
-        ItemViewHolder holder = (ItemViewHolder) view.getTag();
+        if (mIsEditMode) {
+            final EditItemViewHolder holder = (EditItemViewHolder) view.getTag();
 
-        holder.item_name.setText(item.name);
-        boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
-        if (has_code) {
-            holder.item_code.setVisibility(View.VISIBLE);
-            holder.item_code.setText(
-                    item.has_bar_code ? item.bar_code : item.item_code);
-        } else {
-            holder.item_code.setVisibility(View.GONE);
-        }
-        holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Activity activity = getActivity();
-                new AlertDialog.Builder(activity).
-                        setTitle("Edit Item").
-                        setMessage("Do you want to edit item attributes?").
-                        setPositiveButton("Yes",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
-                                    }
-                                }).
-                        setNegativeButton("No", null).
-                        show();
+            holder.item_name.setText(item.name);
+            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
+            if (has_code) {
+                holder.item_code.setVisibility(View.VISIBLE);
+                holder.item_code.setText(
+                        item.has_bar_code ? item.bar_code : item.item_code);
+            } else {
+                holder.item_code.setVisibility(View.GONE);
             }
-        };
-        holder.item_info.setOnClickListener(listener);
-        holder.code_layout.setOnClickListener(listener);
+            holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
+
+            holder.select_item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                }
+            });
+            holder.layout_select.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // simulate a click
+                    holder.select_item.setChecked(!holder.select_item.isChecked());
+                }
+            });
+            boolean is_newly_created = item.change_status == ChangeTraceable.CHANGE_STATUS_CREATED;
+            int show_if_newly_created = is_newly_created ? View.VISIBLE : View.GONE;
+
+            holder.delete_item_btn.setVisibility(show_if_newly_created);
+            holder.layout_delete_item.setVisibility(show_if_newly_created);
+
+            if (is_newly_created) {
+                View.OnClickListener deleteListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // TODO: display confirm to delete, then delete it
+                    }
+                };
+                holder.delete_item_btn.setOnClickListener(deleteListener);
+                holder.layout_delete_item.setOnClickListener(deleteListener);
+            }
+        } else {
+            ItemViewHolder holder = (ItemViewHolder) view.getTag();
+
+            holder.item_name.setText(item.name);
+            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
+            if (has_code) {
+                holder.item_code.setVisibility(View.VISIBLE);
+                holder.item_code.setText(
+                        item.has_bar_code ? item.bar_code : item.item_code);
+            } else {
+                holder.item_code.setVisibility(View.GONE);
+            }
+            holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
+            View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    final Activity activity = getActivity();
+                    new AlertDialog.Builder(activity).
+                            setTitle("Edit Item").
+                            setMessage("Do you want to edit item attributes?").
+                            setPositiveButton("Yes",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
+                                        }
+                                    }).
+                            setNegativeButton("No", null).
+                            show();
+                }
+            };
+            holder.item_info.setOnClickListener(listener);
+            holder.code_layout.setOnClickListener(listener);
+        }
     }
 
     /**
