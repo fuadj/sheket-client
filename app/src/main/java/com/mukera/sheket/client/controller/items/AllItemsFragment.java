@@ -299,6 +299,32 @@ public class AllItemsFragment extends SearchableItemFragment {
         }
     }
 
+    private static class EditItemViewHolder {
+        TextView item_name, item_code, total_qty;
+
+        CheckBox select_item;
+        View layout_select;
+
+        ImageButton delete_item_btn;
+        View layout_delete_item;
+
+        View layout_right_padding;
+
+        public EditItemViewHolder(View view) {
+            item_name = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_name);
+            item_code = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_code);
+            total_qty = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_total_qty);
+
+            select_item = (CheckBox) view.findViewById(R.id.list_item_edit_item_check_box_select);
+            layout_select = view.findViewById(R.id.list_item_edit_item_layout_select);
+
+            delete_item_btn = (ImageButton) view.findViewById(R.id.list_item_edit_item_img_btn_delete_new_item);
+            layout_delete_item = view.findViewById(R.id.list_item_edit_item_layout_delete_new_item);
+
+            layout_right_padding = view.findViewById(R.id.list_item_edit_item_layout_right_padding);
+        }
+    }
+
     @Override
     public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
         LayoutInflater inflater = LayoutInflater.from(getContext());
