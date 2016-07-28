@@ -351,6 +351,11 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (!data.moveToFirst()) {
+            mItem = null;
+            return;
+        }
+
         // We've loaded the item, we now have ALL the branch information
         mItem = new SItem(data, true);
 
