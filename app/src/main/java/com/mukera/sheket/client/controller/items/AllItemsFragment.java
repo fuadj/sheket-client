@@ -72,16 +72,18 @@ public class AllItemsFragment extends SearchableItemFragment {
      */
     private Map<Long, SCategory> mSelectedCategories;
 
+    private Map<Long, SItem> mSelectedItems;
+
     /**
      * Creates a new fragment with the editing mode set and the category stack
      * so the fragment can start with a certain category "opened" with the option
      * to go through the backstack.
      *
-     * @param is_edit_mode      Should it show Edit-Mode or Normal mode.
-     * @param category_stack    If you want this fragment to start with some category "opened",
-     *                          pass in the stack of categories that lead to it starting from the
-     *                          root category. If {@code null}, it starts at the root.
-     *                          The category at the top of the stack is the one that will be opened.
+     * @param is_edit_mode   Should it show Edit-Mode or Normal mode.
+     * @param category_stack If you want this fragment to start with some category "opened",
+     *                       pass in the stack of categories that lead to it starting from the
+     *                       root category. If {@code null}, it starts at the root.
+     *                       The category at the top of the stack is the one that will be opened.
      * @return
      */
     public static AllItemsFragment newInstance(boolean is_edit_mode, Stack<Long> category_stack) {
@@ -136,6 +138,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         setHasOptionsMenu(true);
 
         mSelectedCategories = new HashMap<>();
+        mSelectedItems = new HashMap<>();
     }
 
     @Override
@@ -164,19 +167,19 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     /**
      * <p>
-     *     Restarts the fragment inside the current category with the set editing mode.
-     *     This removes the complexity of creating layouts that can support both
-     *     "normal" and "edit" mode UI. You just need to inflate the UI for the appropriate
-     *     mode by checking {@link #mIsEditMode}. Then your layouts are simpler as they
-     *     are designed for only a single mode.
+     * Restarts the fragment inside the current category with the set editing mode.
+     * This removes the complexity of creating layouts that can support both
+     * "normal" and "edit" mode UI. You just need to inflate the UI for the appropriate
+     * mode by checking {@link #mIsEditMode}. Then your layouts are simpler as they
+     * are designed for only a single mode.
      * </p>
-     *
+     * <p/>
      * <p>
-     *     Without this each of your layouts should be capable of displaying in both modes,
-     *     which means conditionally showing and hiding views.
-     *     This also creates problems if Views are being recycled
-     *     like in a ListView where one type of view can wrongly be recycled for another type.
-     *     This causes the app to crash.
+     * Without this each of your layouts should be capable of displaying in both modes,
+     * which means conditionally showing and hiding views.
+     * This also creates problems if Views are being recycled
+     * like in a ListView where one type of view can wrongly be recycled for another type.
+     * This causes the app to crash.
      * </p>
      */
     void restartFragmentToApplyEditingChanges() {
@@ -245,7 +248,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        moveCategoriesToCurrentCategory();
+                        moveSelectedEntitiesToCurrentCategory();
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -282,7 +285,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         ImageView item_info;
         // this makes it easier to click on by simulating clicks here
-        View  code_layout;
+        View code_layout;
 
         public ItemViewHolder(View view) {
             item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
@@ -294,53 +297,140 @@ public class AllItemsFragment extends SearchableItemFragment {
         }
     }
 
+    private static class EditItemViewHolder {
+        TextView item_name, item_code, total_qty;
+
+        CheckBox select_item;
+        View layout_select;
+
+        ImageButton delete_item_btn;
+        View layout_delete_item;
+
+        public EditItemViewHolder(View view) {
+            item_name = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_name);
+            item_code = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_code);
+            total_qty = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_total_qty);
+
+            select_item = (CheckBox) view.findViewById(R.id.list_item_edit_item_check_box_select);
+            layout_select = view.findViewById(R.id.list_item_edit_item_layout_select);
+
+            delete_item_btn = (ImageButton) view.findViewById(R.id.list_item_edit_item_img_btn_delete_new_item);
+            layout_delete_item = view.findViewById(R.id.list_item_edit_item_layout_delete_new_item);
+        }
+    }
+
     @Override
     public View newItemView(Context context, ViewGroup parent, Cursor cursor, int position) {
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        View view = inflater.inflate(R.layout.list_item_all_items, parent, false);
-        ItemViewHolder holder = new ItemViewHolder(view);
-        view.setTag(holder);
+        View view;
+        if (mIsEditMode) {
+            view = inflater.inflate(R.layout.list_item_all_items_edit_item, parent, false);
+            EditItemViewHolder holder = new EditItemViewHolder(view);
+            view.setTag(holder);
+        } else {
+            view = inflater.inflate(R.layout.list_item_all_items, parent, false);
+            ItemViewHolder holder = new ItemViewHolder(view);
+            view.setTag(holder);
+        }
         return view;
     }
 
     @Override
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
-        cursor.moveToPosition(position);
+        //cursor.moveToPosition(position);
         // we also want to fetch the branches it exists in, that is the true argument
         final SItem item = new SItem(cursor, true);
 
-        ItemViewHolder holder = (ItemViewHolder) view.getTag();
+        if (mIsEditMode) {
+            final EditItemViewHolder holder = (EditItemViewHolder) view.getTag();
 
-        holder.item_name.setText(item.name);
-        boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
-        if (has_code) {
-            holder.item_code.setVisibility(View.VISIBLE);
-            holder.item_code.setText(
-                    item.has_bar_code ? item.bar_code : item.item_code);
-        } else {
-            holder.item_code.setVisibility(View.GONE);
-        }
-        holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Activity activity = getActivity();
-                new AlertDialog.Builder(activity).
-                        setTitle("Edit Item").
-                        setMessage("Do you want to edit item attributes?").
-                        setPositiveButton("Yes",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
-                                    }
-                                }).
-                        setNegativeButton("No", null).
-                        show();
+            holder.item_name.setText(item.name);
+            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
+            if (has_code) {
+                holder.item_code.setVisibility(View.VISIBLE);
+                holder.item_code.setText(
+                        item.has_bar_code ? item.bar_code : item.item_code);
+            } else {
+                holder.item_code.setVisibility(View.GONE);
             }
-        };
-        holder.item_info.setOnClickListener(listener);
-        holder.code_layout.setOnClickListener(listener);
+            holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
+
+            /**
+             * Because the views are recycled, we don't want it to tell the previous listener
+             */
+            holder.select_item.setOnCheckedChangeListener(null);
+            holder.layout_select.setOnClickListener(null);
+            holder.delete_item_btn.setOnClickListener(null);
+            holder.layout_delete_item.setOnClickListener(null);
+
+            holder.select_item.setChecked(mSelectedItems.containsKey(item.item_id));
+            holder.select_item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        mSelectedItems.put(item.item_id, item);
+                    } else {
+                        mSelectedItems.remove(item.item_id);
+                    }
+                }
+            });
+            holder.layout_select.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // simulate a click
+                    holder.select_item.setChecked(!holder.select_item.isChecked());
+                }
+            });
+            boolean is_newly_created = item.change_status == ChangeTraceable.CHANGE_STATUS_CREATED;
+            int show_if_newly_created = is_newly_created ? View.VISIBLE : View.GONE;
+
+            holder.delete_item_btn.setVisibility(show_if_newly_created);
+            holder.layout_delete_item.setVisibility(show_if_newly_created);
+
+            if (is_newly_created) {
+                View.OnClickListener deleteListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // TODO: display confirm to delete, then delete it
+                    }
+                };
+                holder.delete_item_btn.setOnClickListener(deleteListener);
+                holder.layout_delete_item.setOnClickListener(deleteListener);
+            }
+        } else {
+            ItemViewHolder holder = (ItemViewHolder) view.getTag();
+
+            holder.item_name.setText(item.name);
+            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
+            if (has_code) {
+                holder.item_code.setVisibility(View.VISIBLE);
+                holder.item_code.setText(
+                        item.has_bar_code ? item.bar_code : item.item_code);
+            } else {
+                holder.item_code.setVisibility(View.GONE);
+            }
+            holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
+            View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    final Activity activity = getActivity();
+                    new AlertDialog.Builder(activity).
+                            setTitle("Edit Item").
+                            setMessage("Do you want to edit item attributes?").
+                            setPositiveButton("Yes",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
+                                        }
+                                    }).
+                            setNegativeButton("No", null).
+                            show();
+                }
+            };
+            holder.item_info.setOnClickListener(listener);
+            holder.code_layout.setOnClickListener(listener);
+        }
     }
 
     /**
@@ -442,6 +532,20 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     /**
+     * Moves the selected stuff to the current category
+     */
+    void moveSelectedEntitiesToCurrentCategory() {
+        moveCategoriesToCurrentCategory();
+        moveItemsToCurrentCategory();
+
+        /**
+         * This is performed after every thing has moved and "settled". This is an easier
+         * strategy than seeing which is moving and "tracking" it.
+         */
+        CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
+    }
+
+    /**
      * Moves the selected categories to the current category. Updates them so they
      * point to this category as their parent.
      */
@@ -466,20 +570,50 @@ public class AllItemsFragment extends SearchableItemFragment {
             operation.add(ContentProviderOperation.newUpdate(
                     CategoryEntry.buildBaseUri(company_id)).
                     withValues(category.toContentValues()).
-                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
-                            new String[]{Long.toString(category.category_id)}).build());
+                    withSelection(
+                            CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
+                            new String[]{Long.toString(category.category_id)}
+                    ).build());
         }
 
         try {
             getActivity().getContentResolver().
                     applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
+        } catch (RemoteException | OperationApplicationException e) {
+
+        }
+    }
+
+    void moveItemsToCurrentCategory() {
+        if (mSelectedItems.isEmpty()) return;
+
+        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        long current_category = super.getCurrentCategory();
+
+        ArrayList<ContentProviderOperation> operation = new ArrayList<>();
+        for (SItem item : mSelectedItems.values()) {
+            item.category = current_category;
 
             /**
-             * This needs to be performed after the categories have moved. This is because we
-             * can't efficiently know what the category ancestry of the items will be until the
-             * movement has finished.
+             * If it is only created(not yet synced), you can't set it to updated b/c
+             * it hasn't yet been "created" at the server side. So trying to update it
+             * will create problems.
              */
-            CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
+            if (item.change_status != SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED)
+                item.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_UPDATED;
+
+            operation.add(ContentProviderOperation.newUpdate(
+                    ItemEntry.buildBaseUri(company_id)).
+                    withValues(item.toContentValues()).
+                    withSelection(
+                            ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                            new String[]{Long.toString(item.item_id)}
+                    ).build());
+        }
+
+        try {
+            getActivity().getContentResolver().
+                    applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
         } catch (RemoteException | OperationApplicationException e) {
 
         }

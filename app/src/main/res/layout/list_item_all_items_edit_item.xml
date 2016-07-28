@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants">
+
+    <FrameLayout
+        android:id="@+id/list_item_edit_item_layout_select"
+        android:layout_alignParentLeft="true"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:paddingRight="8dp"
+        android:paddingLeft="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/list_item_edit_item_check_box_select"
+            android:layout_gravity="center_vertical" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/list_item_edit_item_layout_select"
+        android:layout_centerVertical="true"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Item Code"
+            android:id="@+id/list_item_edit_item_text_view_item_code"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Item Name"
+            android:id="@+id/list_item_edit_item_text_view_item_name"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:textAppearanceSmall"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/list_item_edit_item_layout_delete_new_item"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/list_item_edit_item_text_view_total_qty"
+        android:paddingLeft="8dp"
+        android:paddingRight="16dp"
+        android:layout_centerVertical="true">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/list_item_edit_item_img_btn_delete_new_item"
+            android:layout_alignParentRight="true"
+            android:background="@android:drawable/ic_menu_close_clear_cancel"
+            android:layout_gravity="center_vertical" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25.3"
+        android:id="@+id/list_item_edit_item_text_view_total_qty"
+        android:fontFamily="sans-serif-light"
+        android:textSize="32dp"
+        android:layout_gravity="center_vertical|right"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="16dp"
+        android:layout_alignParentRight="true"
+         />
+
+
+</RelativeLayout>
