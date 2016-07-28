@@ -74,16 +74,18 @@ public class AllItemsFragment extends SearchableItemFragment {
      */
     private Map<Long, SCategory> mSelectedCategories;
 
+    private Map<Long, SItem> mSelectedItems;
+
     /**
      * Creates a new fragment with the editing mode set and the category stack
      * so the fragment can start with a certain category "opened" with the option
      * to go through the backstack.
      *
-     * @param is_edit_mode      Should it show Edit-Mode or Normal mode.
-     * @param category_stack    If you want this fragment to start with some category "opened",
-     *                          pass in the stack of categories that lead to it starting from the
-     *                          root category. If {@code null}, it starts at the root.
-     *                          The category at the top of the stack is the one that will be opened.
+     * @param is_edit_mode   Should it show Edit-Mode or Normal mode.
+     * @param category_stack If you want this fragment to start with some category "opened",
+     *                       pass in the stack of categories that lead to it starting from the
+     *                       root category. If {@code null}, it starts at the root.
+     *                       The category at the top of the stack is the one that will be opened.
      * @return
      */
     public static AllItemsFragment newInstance(boolean is_edit_mode, Stack<Long> category_stack) {
@@ -140,6 +142,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         setHasOptionsMenu(true);
 
         mSelectedCategories = new HashMap<>();
+        mSelectedItems = new HashMap<>();
     }
 
     @Override
@@ -168,19 +171,19 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     /**
      * <p>
-     *     Restarts the fragment inside the current category with the set editing mode.
-     *     This removes the complexity of creating layouts that can support both
-     *     "normal" and "edit" mode UI. You just need to inflate the UI for the appropriate
-     *     mode by checking {@link #mIsEditMode}. Then your layouts are simpler as they
-     *     are designed for only a single mode.
+     * Restarts the fragment inside the current category with the set editing mode.
+     * This removes the complexity of creating layouts that can support both
+     * "normal" and "edit" mode UI. You just need to inflate the UI for the appropriate
+     * mode by checking {@link #mIsEditMode}. Then your layouts are simpler as they
+     * are designed for only a single mode.
      * </p>
-     *
+     * <p/>
      * <p>
-     *     Without this each of your layouts should be capable of displaying in both modes,
-     *     which means conditionally showing and hiding views.
-     *     This also creates problems if Views are being recycled
-     *     like in a ListView where one type of view can wrongly be recycled for another type.
-     *     This causes the app to crash.
+     * Without this each of your layouts should be capable of displaying in both modes,
+     * which means conditionally showing and hiding views.
+     * This also creates problems if Views are being recycled
+     * like in a ListView where one type of view can wrongly be recycled for another type.
+     * This causes the app to crash.
      * </p>
      */
     void restartFragmentToApplyEditingChanges() {
@@ -250,7 +253,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        moveCategoriesToCurrentCategory();
+                        moveSelectedEntitiesToCurrentCategory();
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -287,7 +290,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         ImageView item_info;
         // this makes it easier to click on by simulating clicks here
-        View  code_layout;
+        View code_layout;
 
         public ItemViewHolder(View view) {
             item_info = (ImageView) view.findViewById(R.id.list_item_item_detail_info);
@@ -357,10 +360,23 @@ public class AllItemsFragment extends SearchableItemFragment {
             }
             holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
 
+            /**
+             * Because the views are recycled, we don't want it to tell the previous listener
+             */
+            holder.select_item.setOnCheckedChangeListener(null);
+            holder.layout_select.setOnClickListener(null);
+            holder.delete_item_btn.setOnClickListener(null);
+            holder.layout_delete_item.setOnClickListener(null);
+
+            holder.select_item.setChecked(mSelectedItems.containsKey(item.item_id));
             holder.select_item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
+                    if (isChecked) {
+                        mSelectedItems.put(item.item_id, item);
+                    } else {
+                        mSelectedItems.remove(item.item_id);
+                    }
                 }
             });
             holder.layout_select.setOnClickListener(new View.OnClickListener() {
@@ -521,6 +537,20 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     /**
+     * Moves the selected stuff to the current category
+     */
+    void moveSelectedEntitiesToCurrentCategory() {
+        moveCategoriesToCurrentCategory();
+        moveItemsToCurrentCategory();
+
+        /**
+         * This is performed after every thing has moved and "settled". This is an easier
+         * strategy than seeing which is moving and "tracking" it.
+         */
+        CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
+    }
+
+    /**
      * Moves the selected categories to the current category. Updates them so they
      * point to this category as their parent.
      */
@@ -545,20 +575,50 @@ public class AllItemsFragment extends SearchableItemFragment {
             operation.add(ContentProviderOperation.newUpdate(
                     CategoryEntry.buildBaseUri(company_id)).
                     withValues(category.toContentValues()).
-                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
-                            new String[]{Long.toString(category.category_id)}).build());
+                    withSelection(
+                            CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
+                            new String[]{Long.toString(category.category_id)}
+                    ).build());
         }
 
         try {
             getActivity().getContentResolver().
                     applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
+        } catch (RemoteException | OperationApplicationException e) {
+
+        }
+    }
+
+    void moveItemsToCurrentCategory() {
+        if (mSelectedItems.isEmpty()) return;
+
+        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        long current_category = super.getCurrentCategory();
+
+        ArrayList<ContentProviderOperation> operation = new ArrayList<>();
+        for (SItem item : mSelectedItems.values()) {
+            item.category = current_category;
 
             /**
-             * This needs to be performed after the categories have moved. This is because we
-             * can't efficiently know what the category ancestry of the items will be until the
-             * movement has finished.
+             * If it is only created(not yet synced), you can't set it to updated b/c
+             * it hasn't yet been "created" at the server side. So trying to update it
+             * will create problems.
              */
-            CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
+            if (item.change_status != SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED)
+                item.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_UPDATED;
+
+            operation.add(ContentProviderOperation.newUpdate(
+                    ItemEntry.buildBaseUri(company_id)).
+                    withValues(item.toContentValues()).
+                    withSelection(
+                            ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                            new String[]{Long.toString(item.item_id)}
+                    ).build());
+        }
+
+        try {
+            getActivity().getContentResolver().
+                    applyBatch(SheketContract.CONTENT_AUTHORITY, operation);
         } catch (RemoteException | OperationApplicationException e) {
 
         }
