@@ -45,11 +45,13 @@ import com.mukera.sheket.client.controller.importer.ParseFileTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
+import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.admin.SettingsActivity;
 import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragment;
+import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
@@ -119,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private ProgressDialog mSyncingProgress = null;
 
+    private LeftNavigation mLeftNav;
+    private RightNavigation mRightNav;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,10 +162,15 @@ public class MainActivity extends AppCompatActivity implements
         menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        View left_nav = inflater.inflate(R.layout.nav_layout_left, null);
-        View right_nav = inflater.inflate(R.layout.nav_layout_right, null);
-        menu.setMenu(left_nav);
-        menu.setSecondaryMenu(right_nav);
+
+        mLeftNav = new LeftNavigation();
+        mLeftNav.setUpNavigation(this, inflater.inflate(R.layout.nav_layout_left, null));
+
+        mRightNav = new RightNavigation();
+        mRightNav.setUpNavigation(this, inflater.inflate(R.layout.nav_layout_right, null));
+
+        menu.setMenu(mLeftNav.getRootView());
+        menu.setSecondaryMenu(mRightNav.getRootView());
 
         int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
         menu.setBehindWidth(width);

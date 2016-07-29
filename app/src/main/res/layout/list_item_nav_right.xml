@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/right_nav_background"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp">
+
+    <LinearLayout
+        android:id="@+id/list_item_nav_right_reference_layout"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true">
+
+        <!-- only one of these 2 will be visible at a time, so the name will always
+            be either 4dp away from the icon or 8dp away from the left of the root -->
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="4dp"
+            android:id="@+id/list_item_nav_right_icon"
+            android:background="@android:drawable/ic_menu_upload" />
+
+        <View
+            android:id="@+id/list_item_nav_right_name_left_padding"
+            android:layout_width="8dp"
+            android:layout_height="10dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Branch Name"
+        android:id="@+id/list_item_nav_right_text_name"
+        android:textColor="@color/right_nav_title_text"
+        android:textSize="20dp"
+        android:layout_toRightOf="@+id/list_item_nav_right_reference_layout"
+        android:layout_centerVertical="true" />
+</RelativeLayout>
