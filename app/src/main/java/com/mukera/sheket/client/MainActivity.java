@@ -31,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.ipaulpro.afilechooser.utils.FileUtils;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
@@ -129,7 +130,8 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_action_list);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        initNavigationDrawer();
+        initSlidingMenuDrawer();
+        //initNavigationDrawer();
     }
 
     void initNavigationDrawer() {
@@ -142,6 +144,14 @@ public class MainActivity extends AppCompatActivity implements
                 replace(R.id.main_navigation_container, new NavigationFragment()).
                 commit();
         openNavDrawer();
+    }
+
+    void initSlidingMenuDrawer() {
+        SlidingMenu menu = new SlidingMenu(this);
+        menu.setMode(SlidingMenu.LEFT);
+        menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+        menu.setFadeDegree(0.35f);
+        menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
     }
 
     void requireLogin() {
