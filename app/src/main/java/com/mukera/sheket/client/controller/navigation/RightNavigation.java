@@ -17,6 +17,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.Utils;
@@ -41,6 +42,9 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         mSyncAdapter = new SyncAdapter(getNavActivity());
 
         mSyncList.setAdapter(mSyncAdapter);
+        if (getUserPermission() == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+            mSyncAdapter.add(StaticNavigationOptions.OPTION_ITEM_LIST);
+        }
         mSyncAdapter.add(StaticNavigationOptions.OPTION_TRANSACTIONS);
         mSyncAdapter.add(StaticNavigationOptions.OPTION_SYNC);
 

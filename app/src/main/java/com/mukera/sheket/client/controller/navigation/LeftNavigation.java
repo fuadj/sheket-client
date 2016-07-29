@@ -20,6 +20,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 
@@ -102,7 +103,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         // check if user has managerial role
         mMangerLayout = getRootView().findViewById(R.id.nav_left_layout_management);
-        if (false) {
+
+        if (getUserPermission() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
             mMangerLayout.setVisibility(View.GONE);
         } else {
             mMangerLayout.setVisibility(View.VISIBLE);

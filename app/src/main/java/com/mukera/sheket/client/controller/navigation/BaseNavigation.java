@@ -6,6 +6,8 @@ import android.view.View;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.HashMap;
 
@@ -22,6 +24,7 @@ public abstract class BaseNavigation {
     private AppCompatActivity mActivity;
     private View mRootView;
     private NavigationCallback mCallback;
+    private int mUserPermission;
 
     /**
      * Setup the navigation UI.
@@ -33,6 +36,10 @@ public abstract class BaseNavigation {
         mActivity = activity;
         mRootView = view;
         mCallback = (NavigationCallback) activity;
+
+        SPermission.setSingletonPermission(PrefUtil.getUserPermission(mActivity));
+        mUserPermission = SPermission.getSingletonPermission().getPermissionType();
+
         onSetup();
     }
 
@@ -48,11 +55,15 @@ public abstract class BaseNavigation {
 
     public NavigationCallback getCallBack() { return mCallback; }
 
+    public int getUserPermission() {
+        return mUserPermission;
+    }
+
     /**
      * Holes the different Static Navigation ids and their Icons.
      */
     public static class StaticNavigationOptions {
-        public static final int OPTION_ALL_ITEMS = 0;
+        public static final int OPTION_ITEM_LIST = 0;
         public static final int OPTION_BRANCHES = 1;
         public static final int OPTION_COMPANIES = 2;
         public static final int OPTION_EMPLOYEES = 3;
@@ -71,8 +82,8 @@ public abstract class BaseNavigation {
 
         static {
             sEntityAndIcon = new HashMap<>();
-            sEntityAndIcon.put(OPTION_ALL_ITEMS,
-                    new Pair<>("All Items", R.mipmap.ic_action_all_items));
+            sEntityAndIcon.put(OPTION_ITEM_LIST,
+                    new Pair<>("Item List", R.mipmap.ic_action_all_items));
             sEntityAndIcon.put(OPTION_IMPORT,
                     new Pair<>("Import", R.mipmap.ic_action_import));
             sEntityAndIcon.put(OPTION_SYNC,

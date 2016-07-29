@@ -47,7 +47,6 @@ import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
 import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
-import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.admin.SettingsActivity;
@@ -261,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements
         removeCustomActionBarViews();
 
         switch (item) {
-            case BaseNavigation.StaticNavigationOptions.OPTION_ALL_ITEMS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_ITEM_LIST:
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
