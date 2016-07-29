@@ -37,12 +37,12 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
 
     @Override
     protected void onSetup() {
-        mSyncList = (ListView) getRootView().findViewById(R.id.layout_right_list_view_sync);
+        mSyncList = (ListView) getRootView().findViewById(R.id.nav_right_list_view_sync);
         mSyncAdapter = new SyncAdapter(getNavActivity());
 
         mSyncList.setAdapter(mSyncAdapter);
-        mSyncAdapter.add(StaticNavigationAdapter.ENTITY_TRANSACTIONS);
-        mSyncAdapter.add(StaticNavigationAdapter.ENTITY_SYNC);
+        mSyncAdapter.add(StaticNavigationEntities.ENTITY_TRANSACTIONS);
+        mSyncAdapter.add(StaticNavigationEntities.ENTITY_SYNC);
 
         mSyncList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -52,7 +52,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         });
         ListUtils.setDynamicHeight(mSyncList);
 
-        mBranchList = (ListView) getRootView().findViewById(R.id.layout_right_list_view_branches);
+        mBranchList = (ListView) getRootView().findViewById(R.id.nav_right_list_view_branches);
         mBranchAdapter = new BranchAdapter(getNavActivity());
         mBranchList.setAdapter(mBranchAdapter);
         mBranchList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -141,8 +141,8 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
             // we don't need padding when we show the icon
             holder.namePadding.setVisibility(View.GONE);
 
-            holder.name.setText(StaticNavigationAdapter.sEntityAndIcon.get(item).first);
-            holder.icon.setImageResource(StaticNavigationAdapter.sEntityAndIcon.get(item).second);
+            holder.name.setText(StaticNavigationEntities.sEntityAndIcon.get(item).first);
+            holder.icon.setImageResource(StaticNavigationEntities.sEntityAndIcon.get(item).second);
 
             return convertView;
         }

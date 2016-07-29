@@ -2,7 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:background="#ff37474f"
+    android:background="@color/right_nav_background"
     android:layout_height="match_parent"
     android:paddingLeft="16dp"
     android:paddingRight="16dp">
@@ -31,7 +31,7 @@
                 android:layout_height="1dp"/>
 
             <ListView
-                android:id="@+id/layout_right_list_view_branches"
+                android:id="@+id/nav_right_list_view_branches"
                 android:divider="@color/right_nav_separator"
                 android:dividerHeight="1dp"
                 android:layout_width="match_parent"
@@ -48,8 +48,8 @@
     </ScrollView>
 
     <ListView
-         android:layout_alignParentBottom="true"
-        android:id="@+id/layout_right_list_view_sync"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/nav_right_list_view_sync"
         android:divider="@color/right_nav_separator"
         android:dividerHeight="1dp"
         android:layout_width="match_parent"

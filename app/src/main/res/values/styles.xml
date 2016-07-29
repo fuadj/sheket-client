@@ -85,4 +85,9 @@
         <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
     </style>
 
+    <style name="left_nav_separator_text">
+        <item name="android:textSize">16dp</item>
+        <item name="android:textColor">@color/left_nav_separator_text</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
 </resources>

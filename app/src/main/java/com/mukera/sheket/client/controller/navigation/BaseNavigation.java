@@ -37,11 +37,14 @@ public abstract class BaseNavigation {
         return mActivity;
     }
 
-    public static class StaticNavigationAdapter extends ArrayAdapter<Integer> {
+    /**
+     * Holes the different Static Navigation ids and their Icons.
+     */
+    public static class StaticNavigationEntities {
         public static final int ENTITY_ALL_ITEMS = 0;
         public static final int ENTITY_BRANCHES = 1;
         public static final int ENTITY_COMPANIES = 2;
-        public static final int ENTITY_MEMBERS = 3;
+        public static final int ENTITY_EMPLOYEES = 3;
         public static final int ENTITY_USER_PROFILE = 4;
         public static final int ENTITY_SETTINGS = 5;
         public static final int ENTITY_SYNC = 6;
@@ -69,8 +72,8 @@ public abstract class BaseNavigation {
                     new Pair<>("Branches", R.mipmap.ic_action_branches));
             sEntityAndIcon.put(ENTITY_COMPANIES,
                     new Pair<>("Companies", R.mipmap.ic_company));
-            sEntityAndIcon.put(ENTITY_MEMBERS,
-                    new Pair<>("Members", R.mipmap.ic_action_members));
+            sEntityAndIcon.put(ENTITY_EMPLOYEES,
+                    new Pair<>("Employees", R.mipmap.ic_action_members));
             sEntityAndIcon.put(ENTITY_HISTORY,
                     new Pair<>("History", R.mipmap.ic_action_history));
             sEntityAndIcon.put(ENTITY_USER_PROFILE,
@@ -83,48 +86,6 @@ public abstract class BaseNavigation {
                     new Pair<>("Delete", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(ENTITY_LOG_OUT,
                     new Pair<>("Logout", R.mipmap.ic_action_logout));
-        }
-
-        private Context mContext;
-
-        public StaticNavigationAdapter(Context context) {
-            super(context, 0);
-            mContext = context;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Integer item = getItem(position);
-
-            StaticNavViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(mContext);
-                convertView = inflater.inflate(R.layout.list_item_static_navigation, parent, false);
-                holder = new StaticNavViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (StaticNavViewHolder) convertView.getTag();
-            }
-            holder.elemName.setText(sEntityAndIcon.get(item).first);
-            holder.elemImage.setImageResource(sEntityAndIcon.get(item).second);
-
-            return convertView;
-        }
-
-        public static class StaticNavViewHolder {
-            ImageView elemImage;
-            TextView elemName;
-            View indentationView;
-            ImageView expandImgView, collapseImgView;
-
-            public StaticNavViewHolder(View view) {
-                elemImage = (ImageView) view.findViewById(R.id.list_item_static_nav_icon);
-                elemName = (TextView) view.findViewById(R.id.list_item_static_nav_name);
-
-                indentationView = view.findViewById(R.id.list_item_static_indentation_view);
-                expandImgView = (ImageView) view.findViewById(R.id.list_item_static_img_expand);
-                collapseImgView = (ImageView) view.findViewById(R.id.list_item_static_img_collapse);
-            }
         }
     }
 
