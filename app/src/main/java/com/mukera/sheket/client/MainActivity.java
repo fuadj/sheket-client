@@ -26,6 +26,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -135,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     void initNavigationDrawer() {
+        /*
         mDrawerLayout = (DrawerLayout) findViewById(R.id.main_drawer_layout);
         //mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
 
@@ -144,14 +146,24 @@ public class MainActivity extends AppCompatActivity implements
                 replace(R.id.main_navigation_container, new NavigationFragment()).
                 commit();
         openNavDrawer();
+        */
     }
 
     void initSlidingMenuDrawer() {
         SlidingMenu menu = new SlidingMenu(this);
-        menu.setMode(SlidingMenu.LEFT);
+        menu.setMode(SlidingMenu.LEFT_RIGHT);
         menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
         menu.setFadeDegree(0.35f);
         menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View left_nav = inflater.inflate(R.layout.nav_layout_left, null);
+        View right_nav = inflater.inflate(R.layout.nav_layout_right, null);
+        menu.setMenu(left_nav);
+        menu.setSecondaryMenu(right_nav);
+
+        int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
+        menu.setBehindWidth(width);
     }
 
     void requireLogin() {
