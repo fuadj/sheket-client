@@ -1,7 +1,6 @@
 package com.mukera.sheket.client.controller.navigation;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -20,9 +19,7 @@ import android.widget.TextView;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
-import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
-import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 
@@ -81,12 +78,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         new CompanyUtil.StateSwitchedListener() {
                             @Override
                             public void runAfterSwitchCompleted() {
-                                /*
-                                TODO: notify company selected
-                                if (mListener != null) {
-                                    mListener.userPermissionChanged();
-                                }
-                                */
+                                getCallBack().onCompanySwitched();
                             }
                         });
 
@@ -95,15 +87,16 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         mPreferenceList = (ListView) getRootView().findViewById(R.id.nav_left_list_view_preference);
         mPrefAdapter = new StaticNavAdapter(getNavActivity());
-
         mPreferenceList.setAdapter(mPrefAdapter);
-        mPrefAdapter.add(StaticNavigationEntities.ENTITY_SETTINGS);
+
+        mPrefAdapter.add(StaticNavigationOptions.OPTION_SETTINGS);
         ListUtils.setDynamicHeight(mPreferenceList);
 
         mPreferenceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // TODO: implement on item click
+                Integer i = mPrefAdapter.getItem(position);
+                getCallBack().onNavigationOptionSelected(i);
             }
         });
 
@@ -118,15 +111,16 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             mManagementAdapter = new StaticNavAdapter(getNavActivity());
 
             mManagerList.setAdapter(mManagementAdapter);
-            mManagementAdapter.add(StaticNavigationEntities.ENTITY_BRANCHES);
-            mManagementAdapter.add(StaticNavigationEntities.ENTITY_EMPLOYEES);
-            mManagementAdapter.add(StaticNavigationEntities.ENTITY_IMPORT);
+            mManagementAdapter.add(StaticNavigationOptions.OPTION_BRANCHES);
+            mManagementAdapter.add(StaticNavigationOptions.OPTION_EMPLOYEES);
+            mManagementAdapter.add(StaticNavigationOptions.OPTION_IMPORT);
             ListUtils.setDynamicHeight(mManagerList);
 
             mManagerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    // TODO: implement on item click
+                    Integer i = mManagementAdapter.getItem(position);
+                    getCallBack().onNavigationOptionSelected(i);
                 }
             });
         }
@@ -217,8 +211,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 holder = (StaticNavViewHolder) convertView.getTag();
             }
 
-            holder.name.setText(StaticNavigationEntities.sEntityAndIcon.get(item).first);
-            holder.icon.setImageResource(StaticNavigationEntities.sEntityAndIcon.get(item).second);
+            holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(item).first);
+            holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(item).second);
 
             return convertView;
         }
@@ -230,6 +224,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             public StaticNavViewHolder(View view) {
                 name = (TextView) view.findViewById(R.id.list_item_nav_left_name);
                 icon = (ImageView) view.findViewById(R.id.list_item_nav_left_icon);
+                icon.setVisibility(View.GONE);
                 view.setTag(this);
             }
         }

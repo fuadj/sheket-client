@@ -45,6 +45,7 @@ import com.mukera.sheket.client.controller.importer.ParseFileTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.navigation.NavigationFragment;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
@@ -68,7 +69,7 @@ import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity implements
-        NavigationFragment.NavigationSelectionCallback,
+        BaseNavigation.NavigationCallback,
         SPermission.PermissionChangeListener,
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
@@ -124,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements
     private LeftNavigation mLeftNav;
     private RightNavigation mRightNav;
 
+    private SlidingMenu mNavigation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,29 +140,14 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initSlidingMenuDrawer();
-        //initNavigationDrawer();
-    }
-
-    void initNavigationDrawer() {
-        /*
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.main_drawer_layout);
-        //mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
-
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.main_navigation_container, new NavigationFragment()).
-                commit();
-        openNavDrawer();
-        */
     }
 
     void initSlidingMenuDrawer() {
-        SlidingMenu menu = new SlidingMenu(this);
-        menu.setMode(SlidingMenu.LEFT_RIGHT);
-        menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
-        menu.setFadeDegree(0.35f);
-        menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+        mNavigation = new SlidingMenu(this);
+        mNavigation.setMode(SlidingMenu.LEFT_RIGHT);
+        mNavigation.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+        mNavigation.setFadeDegree(0.35f);
+        mNavigation.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(this);
 
@@ -169,11 +157,11 @@ public class MainActivity extends AppCompatActivity implements
         mRightNav = new RightNavigation();
         mRightNav.setUpNavigation(this, inflater.inflate(R.layout.nav_layout_right, null));
 
-        menu.setMenu(mLeftNav.getRootView());
-        menu.setSecondaryMenu(mRightNav.getRootView());
+        mNavigation.setMenu(mLeftNav.getRootView());
+        mNavigation.setSecondaryMenu(mRightNav.getRootView());
 
         int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
-        menu.setBehindWidth(width);
+        mNavigation.setBehindWidth(width);
     }
 
     void requireLogin() {
@@ -199,23 +187,19 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     protected boolean isNavDrawerOpen() {
-        return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START);
+        return mNavigation.isMenuShowing() || mNavigation.isSecondaryMenuShowing();
     }
 
     protected boolean isNavDrawerClosed() {
-        return mDrawerLayout != null && !mDrawerLayout.isDrawerOpen(GravityCompat.START);
+        return !isNavDrawerOpen();
     }
 
     protected void closeNavDrawer() {
-        if (mDrawerLayout != null) {
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-        }
+        mNavigation.showContent(true);
     }
 
     protected void openNavDrawer() {
-        if (mDrawerLayout != null) {
-            mDrawerLayout.openDrawer(GravityCompat.START);
-        }
+        mNavigation.showSecondaryMenu(true);
     }
 
     @Override
@@ -239,13 +223,6 @@ public class MainActivity extends AppCompatActivity implements
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    public void onBranchSelected(final SBranch branch) {
-        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id),
-                false);
-        closeNavDrawer();
     }
 
     void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
@@ -272,15 +249,22 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onElementSelected(int item) {
+    public void onBranchSelected(final SBranch branch) {
+        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id),
+                false);
+        closeNavDrawer();
+    }
+
+    @Override
+    public void onNavigationOptionSelected(int item) {
         closeNavDrawer();
         removeCustomActionBarViews();
 
         switch (item) {
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_ALL_ITEMS:
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
                 // Create the ACTION_GET_CONTENT Intent
                 Intent getContentIntent = FileUtils.createGetContentIntent();
 
@@ -288,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements
                 startActivityForResult(intent, REQUEST_FILE_CHOOSER);
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_DELETE: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_DELETE: {
                 new AlertDialog.Builder(this).
                         setTitle("Are You Sure?").
                         setMessage("This will delete all un-synced data, are you sure?").
@@ -306,19 +290,19 @@ public class MainActivity extends AppCompatActivity implements
                 }).show();
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
+            case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
                 replaceMainFragment(new BranchFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_COMPANIES:
+            case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
                 replaceMainFragment(new CompanyFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_HISTORY:
+            case BaseNavigation.StaticNavigationOptions.OPTION_HISTORY:
                 replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_MEMBERS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_EMPLOYEES:
                 replaceMainFragment(new MembersFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
                 mSyncingProgress = ProgressDialog.show(this,
                         "Syncing", "Please Wait...", true);
                 PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCING);
@@ -326,22 +310,39 @@ public class MainActivity extends AppCompatActivity implements
                 startService(intent);
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_TRANSACTIONS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
                 replaceMainFragment(new UnsyncedTranactionHistoryFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_SETTINGS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_DEBUG:
+            case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                 startActivity(new Intent(this, AndroidDatabaseManager.class));
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_USER_PROFILE:
+            case BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE:
                 replaceMainFragment(new ProfileFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_LOG_OUT:
+            case BaseNavigation.StaticNavigationOptions.OPTION_LOG_OUT:
                 logoutUser();
                 break;
         }
+    }
+
+    @Override
+    public void onCompanySwitched() {
+        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    finish();
+                    startActivity(getIntent());
+                } else {
+                    recreate();
+                }
+            }
+        }, 100);
     }
 
     void logoutUser() {

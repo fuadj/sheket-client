@@ -41,13 +41,14 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         mSyncAdapter = new SyncAdapter(getNavActivity());
 
         mSyncList.setAdapter(mSyncAdapter);
-        mSyncAdapter.add(StaticNavigationEntities.ENTITY_TRANSACTIONS);
-        mSyncAdapter.add(StaticNavigationEntities.ENTITY_SYNC);
+        mSyncAdapter.add(StaticNavigationOptions.OPTION_TRANSACTIONS);
+        mSyncAdapter.add(StaticNavigationOptions.OPTION_SYNC);
 
         mSyncList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // TODO: notify listener
+                Integer i = mSyncAdapter.getItem(position);
+                getCallBack().onNavigationOptionSelected(i);
             }
         });
         ListUtils.setDynamicHeight(mSyncList);
@@ -61,7 +62,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 Cursor cursor = mBranchAdapter.getCursor();
                 if (cursor != null && cursor.moveToPosition(position)) {
                     SBranch branch = new SBranch(cursor);
-                    // TODO: notify listener
+                    getCallBack().onBranchSelected(branch);
                 }
             }
         });
@@ -141,8 +142,8 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
             // we don't need padding when we show the icon
             holder.namePadding.setVisibility(View.GONE);
 
-            holder.name.setText(StaticNavigationEntities.sEntityAndIcon.get(item).first);
-            holder.icon.setImageResource(StaticNavigationEntities.sEntityAndIcon.get(item).second);
+            holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(item).first);
+            holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(item).second);
 
             return convertView;
         }
