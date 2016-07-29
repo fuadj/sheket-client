@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ListAdapter;
@@ -222,6 +223,10 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                 }
             }
         });
+
+        View listFooter = new View(getActivity());
+        listFooter.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.FILL_PARENT, 140));
+        mExpandableListView.addFooterView(listFooter);
 
         /**
          * This handles the "back" button key. If we are in a sub-category
