@@ -27,6 +27,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
+import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
@@ -94,62 +95,17 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                 final String permission = cursor.getString(COL_PERMISSION);
                 final String state_bkup = cursor.getString(COL_STATE_BKUP);
 
-                final Context context = getActivity();
-
-                // This isn't just run in the thread below for EFFICIENCY, because
-                // most users only have 1 company, starting a thread is unnecessary
-                // b/c we won't be switching between companies and there is no state backup necessary.
-                if (!PrefUtil.isCompanySet(context)) {
-                    PrefUtil.setCurrentCompanyId(getActivity(), company_id);
-                    PrefUtil.setCurrentCompanyName(getActivity(), company_name);
-                    PrefUtil.setUserPermission(getActivity(), permission);
-                    PrefUtil.restoreStateFromBackup(context, state_bkup);
-
-                    SPermission.setSingletonPermission(permission);
-
-                    if (mListener != null) {
-                        mListener.userPermissionChanged();
-                    }
-                } else {
-                    // save the current company's state, we are switching!!!
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            long current_company = PrefUtil.getCurrentCompanyId(context);
-                            String current_state = PrefUtil.getEncodedStateBackup(context);
-
-                            ContentValues values = new ContentValues();
-                            // Yes, It is valid to only include the values you want to update
-                            values.put(CompanyEntry.COLUMN_STATE_BACKUP, current_state);
-
-                            context.getContentResolver().
-                                    update(
-                                            CompanyEntry.CONTENT_URI,
-                                            values,
-                                            CompanyEntry._full(CompanyEntry.COLUMN_ID) + " = ?",
-                                            new String[]{
-                                                    String.valueOf(current_company)
-                                            }
-                                    );
-
-                            PrefUtil.setCurrentCompanyId(getActivity(), company_id);
-                            PrefUtil.setCurrentCompanyName(getActivity(), company_name);
-                            PrefUtil.setUserPermission(getActivity(), permission);
-                            PrefUtil.restoreStateFromBackup(context, state_bkup);
-
-                            SPermission.setSingletonPermission(permission);
-
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (mListener != null) {
-                                        mListener.userPermissionChanged();
-                                    }
+                CompanyUtil.switchCurrentCompanyInWorkerThread(getActivity(),
+                        company_id, company_name, permission, state_bkup,
+                        new CompanyUtil.StateSwitchedListener() {
+                            @Override
+                            public void runAfterSwitchCompleted() {
+                                if (mListener != null) {
+                                    mListener.userPermissionChanged();
                                 }
-                            });
-                        }
-                    }).start();
-                }
+                            }
+                        });
+
             }
         });
 
@@ -249,7 +205,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
             View view = inflater.inflate(R.layout.dialog_new_company, container);
 
             mCompanyName = (EditText) view.findViewById(R.id.dialog_edit_text_company_name);
-            mCompanyName.addTextChangedListener(new TextWatcherAdapter(){
+            mCompanyName.addTextChangedListener(new TextWatcherAdapter() {
                 @Override
                 public void afterTextChanged(Editable s) {
                     setButtonStatus();
