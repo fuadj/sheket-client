@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:background="#ff37474f"
     android:layout_height="match_parent"
@@ -9,14 +8,14 @@
     android:paddingRight="16dp">
 
     <ScrollView
-        android:id="@+id/navigation_scroll_view_container"
+        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="32dp">
+            android:paddingTop="32dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
             <TextView
                 android:textColor="@color/right_nav_title_text"
@@ -37,29 +36,24 @@
                 android:dividerHeight="1dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:choiceMode="singleChoice" />
+                android:choiceMode="singleChoice"/>
+
 
             <!-- This is like a "footer" divider view for the above listView -->
             <View
                 android:background="@color/right_nav_separator"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"/>
-
-            <!-- we want this to fill the "middle" space -->
-            <View
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:id="@+id/middlePartSpacer" />
-
-            <ListView
-                android:id="@+id/layout_right_list_view_sync"
-                android:divider="@color/right_nav_separator"
-                android:dividerHeight="1dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:choiceMode="singleChoice" />
-
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+
+    <ListView
+         android:layout_alignParentBottom="true"
+        android:id="@+id/layout_right_list_view_sync"
+        android:divider="@color/right_nav_separator"
+        android:dividerHeight="1dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:choiceMode="singleChoice" />
+
+</RelativeLayout>
