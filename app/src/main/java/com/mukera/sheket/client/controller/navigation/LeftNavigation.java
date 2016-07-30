@@ -226,7 +226,6 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             public StaticNavViewHolder(View view) {
                 name = (TextView) view.findViewById(R.id.list_item_nav_left_name);
                 icon = (ImageView) view.findViewById(R.id.list_item_nav_left_icon);
-                icon.setVisibility(View.GONE);
                 view.setTag(this);
             }
         }

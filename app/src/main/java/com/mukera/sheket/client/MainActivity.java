@@ -54,6 +54,7 @@ import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragme
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
+import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -313,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new UnsyncedTranactionHistoryFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
-                startActivity(new Intent(this, SettingsActivity.class));
+                replaceMainFragment(new SettingsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                 startActivity(new Intent(this, AndroidDatabaseManager.class));

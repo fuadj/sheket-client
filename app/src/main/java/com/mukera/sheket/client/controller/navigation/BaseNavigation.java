@@ -76,6 +76,7 @@ public abstract class BaseNavigation {
         public static final int OPTION_IMPORT = 10;
         public static final int OPTION_DELETE = 11;
         public static final int OPTION_TRANSACTIONS = 12;
+        public static final int OPTION_LANGUAGES = 13;
 
         public static final HashMap<Integer,
                         Pair<String, Integer>> sEntityAndIcon;
@@ -90,6 +91,8 @@ public abstract class BaseNavigation {
                     new Pair<>("Sync Now", R.mipmap.ic_action_sync));
             sEntityAndIcon.put(OPTION_TRANSACTIONS,
                     new Pair<>("Transactions", R.mipmap.ic_action_transaction));
+            sEntityAndIcon.put(OPTION_LANGUAGES,
+                    new Pair<>("Languages", R.mipmap.ic_action_transaction));
             sEntityAndIcon.put(OPTION_BRANCHES,
                     new Pair<>("Branches", R.mipmap.ic_action_branches));
             sEntityAndIcon.put(OPTION_COMPANIES,

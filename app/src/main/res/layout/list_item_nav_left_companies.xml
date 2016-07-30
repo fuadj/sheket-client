@@ -22,6 +22,6 @@
         android:layout_alignParentRight="true"
         android:layout_marginRight="8dp"
         android:layout_centerVertical="true"
-        android:background="@drawable/abc_btn_check_to_on_mtrl_015" />
+        android:background="@drawable/abc_btn_check_to_on_mtrl_000" />
 
 </RelativeLayout>
