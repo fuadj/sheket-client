@@ -166,6 +166,8 @@ public class BranchItemFragment extends SearchableItemFragment {
         });
         updateFinishBtnVisibility();
 
+        getActivity().setTitle(Utils.toTitleCase(mBranch.branch_name));
+
         return rootView;
     }
 
