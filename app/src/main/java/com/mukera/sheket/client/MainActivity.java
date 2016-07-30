@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBranchSelected(final SBranch branch) {
-        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id),
+        replaceMainFragment(BranchItemFragment.newInstance(branch),
                 false);
         closeNavDrawer();
     }
