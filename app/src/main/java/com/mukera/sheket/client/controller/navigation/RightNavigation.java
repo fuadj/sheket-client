@@ -70,6 +70,8 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 }
             }
         });
+        ListUtils.setDynamicHeight(mBranchList);
+
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
     }
 
