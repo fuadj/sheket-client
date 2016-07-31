@@ -421,7 +421,8 @@ public class AllItemsFragment extends SearchableItemFragment {
                                     new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            startActivity(ItemCreateEditActivity.createIntent(getActivity(), true, item));
+                                            startActivity(ItemCreateEditActivity.createIntent(getActivity(),
+                                                    getCurrentCategory(), true, item));
                                         }
                                     }).
                             setNegativeButton("No", null).
@@ -632,7 +633,8 @@ public class AllItemsFragment extends SearchableItemFragment {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
-                startActivity(ItemCreateEditActivity.createIntent(getActivity(), false, null));
+                startActivity(ItemCreateEditActivity.createIntent(getActivity(),
+                        getCurrentCategory(), false, null));
             }
         });
         option_category.setOnClickListener(new View.OnClickListener() {

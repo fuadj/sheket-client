@@ -82,21 +82,6 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Category:"
-                    android:textColor="#000000"
-                    app:layout_gravity="center_vertical" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Not Set"
-                    android:id="@+id/btn_new_item_category_selector"
-                    app:layout_row="4"
-                    app:layout_column="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:text="Units:"
                     app:layout_row="5"
                     app:layout_column="0"

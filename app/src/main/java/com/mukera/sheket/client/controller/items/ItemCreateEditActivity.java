@@ -12,7 +12,6 @@ import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -40,11 +39,13 @@ public class ItemCreateEditActivity extends AppCompatActivity {
     public static final String ITEM_ACTIVITY_MODE = "ITEM_ACTIVITY_MODE";
     public static final String ITEM_MODE_CREATE = "item_mode_create";
     public static final String ITEM_MODE_EDIT = "item_mode_edit";
+    public static final String CURRENT_CATEGORY = "current_category";
 
     public static final String ITEM_PARCEL_EXTRA = "item_parcel_extra";
 
-    public static Intent createIntent(Context context, boolean edit_item, SItem item) {
+    public static Intent createIntent(Context context, long current_category, boolean edit_item, SItem item) {
         Intent intent = new Intent(context, ItemCreateEditActivity.class);
+        intent.putExtra(CURRENT_CATEGORY, current_category);
         intent.putExtra(ITEM_ACTIVITY_MODE,
                 edit_item ? ITEM_MODE_EDIT : ITEM_MODE_CREATE);
         if (edit_item) {
@@ -63,6 +64,8 @@ public class ItemCreateEditActivity extends AppCompatActivity {
                 getStringExtra(ITEM_ACTIVITY_MODE);
 
         Bundle arguments = new Bundle();
+        arguments.putLong(ItemCreateEditFragment.KEY_CURRENT_CATEGORY,
+                getIntent().getExtras().getLong(CURRENT_CATEGORY));
         if (mode.equals(ITEM_MODE_CREATE)) {
             arguments.putBoolean(ItemCreateEditFragment.KEY_IS_EDITING_ITEM, false);
         } else {
@@ -81,6 +84,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
     public static class ItemCreateEditFragment extends Fragment {
         public static final String KEY_IS_EDITING_ITEM = "key_is_editing_item";
         public static final String KEY_EDITING_ITEM_PARCEL = "key_editing_item_parcel";
+        public static final String KEY_CURRENT_CATEGORY = "key_current_category";
 
         private EditText mName, mCode, mReorderLevel, mModelYear, mPartNumber;
         private Spinner mUnitsSpinner;
@@ -88,11 +92,9 @@ public class ItemCreateEditActivity extends AppCompatActivity {
         private EditText mDerivedName, mDerivedFactor, mFormula;
         private TextView mTextBundleName, mTextBundleFactor;
 
-        private Button mCategoryBtn;
-
         private Button mCancel, mOk;
 
-        private long mSelectedCategoryId = SheketContract.CategoryEntry.ROOT_CATEGORY_ID;
+        private long mCategoryId;
         private SCategory mSelectedCategory = null;
 
         private boolean mIsEditing;
@@ -103,10 +105,16 @@ public class ItemCreateEditActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
 
             Bundle args = getArguments();
+            mCategoryId = args.getLong(KEY_CURRENT_CATEGORY);
             mIsEditing = args.getBoolean(KEY_IS_EDITING_ITEM);
             if (mIsEditing) {
                 mEditingItem = args.getParcelable(KEY_EDITING_ITEM_PARCEL);
-                mSelectedCategoryId = mEditingItem.category;
+
+                // if we are editing, then user the item's category
+                // this is helpful because we might disable the "category view"
+                // and then edit the item, so we want to use the item's set
+                // category for it
+                mCategoryId = mEditingItem.category;
             }
         }
 
@@ -213,7 +221,6 @@ public class ItemCreateEditActivity extends AppCompatActivity {
             mModelYear = (EditText) rootView.findViewById(R.id.edit_text_new_item_model_year);
             mPartNumber = (EditText) rootView.findViewById(R.id.edit_text_new_item_part_number);
 
-            mCategoryBtn = (Button) rootView.findViewById(R.id.btn_new_item_category_selector);
             mOk = (Button) rootView.findViewById(R.id.btn_new_item_ok);
             mCancel = (Button) rootView.findViewById(R.id.btn_new_item_cancel);
 
@@ -265,39 +272,10 @@ public class ItemCreateEditActivity extends AppCompatActivity {
 
             final AppCompatActivity activity = (AppCompatActivity) getActivity();
 
-            if (mSelectedCategoryId == SheketContract.CategoryEntry.ROOT_CATEGORY_ID ||
+            if (mCategoryId == SheketContract.CategoryEntry.ROOT_CATEGORY_ID ||
                     mSelectedCategory == null) {
-                mCategoryBtn.setText("Not Set");
             } else {
-                mCategoryBtn.setText(mSelectedCategory.name);
             }
-            mCategoryBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(getActivity().getWindow().getDecorView().getWindowToken(), 0);
-
-                    ItemCategorySelectionFragment fragment = ItemCategorySelectionFragment.
-                            newInstance(mSelectedCategoryId);
-                    fragment.setListener(new ItemCategorySelectionFragment.SelectionListener() {
-                        @Override
-                        public void okSelected(long category_id, SCategory category) {
-                            mSelectedCategoryId = category_id;
-                            mSelectedCategory = category;
-                            activity.getSupportFragmentManager().popBackStack();
-                        }
-
-                        @Override
-                        public void cancelSelected() {
-                            activity.getSupportFragmentManager().popBackStack();
-                        }
-                    });
-                    activity.getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.new_item_container, fragment)
-                            .addToBackStack(null)
-                            .commit();
-                }
-            });
 
             mOk.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -319,7 +297,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
                             mHasDerived.isChecked());
                     final String derived_name = t(mDerivedName.getText().toString());
 
-                    final long category_id = mSelectedCategoryId;
+                    final long category_id = mCategoryId;
 
                     String factor = t(mDerivedFactor.getText().toString());
                     final double derived_factor = factor.isEmpty() ? 0 : Double.valueOf(factor);
