@@ -84,7 +84,7 @@ public abstract class BaseNavigation {
         static {
             sEntityAndIcon = new HashMap<>();
             sEntityAndIcon.put(OPTION_ITEM_LIST,
-                    new Pair<>("Item List", R.mipmap.ic_action_all_items));
+                    new Pair<>("Items", R.mipmap.ic_action_all_items));
             sEntityAndIcon.put(OPTION_IMPORT,
                     new Pair<>("Import", R.mipmap.ic_action_import));
             sEntityAndIcon.put(OPTION_SYNC,

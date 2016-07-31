@@ -58,6 +58,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
             }
         });
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
+        getActivity().setTitle("Branches");
         return rootView;
     }
 

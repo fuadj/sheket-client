@@ -158,6 +158,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
         });
 
+        getActivity().setTitle("Transactions");
+
         return rootView;
     }
 

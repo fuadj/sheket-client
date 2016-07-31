@@ -72,6 +72,8 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        getActivity().setTitle("Settings");
+
         return rootView;
     }
 
