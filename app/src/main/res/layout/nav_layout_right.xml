@@ -31,26 +31,18 @@
 
             <ListView
                 android:id="@+id/nav_right_list_view_branches"
-                android:divider="@color/right_nav_separator"
-                android:dividerHeight="1dp"
+                android:dividerHeight="0dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:choiceMode="singleChoice"/>
 
-
-            <!-- This is like a "footer" divider view for the above listView -->
-            <View
-                android:background="@color/right_nav_separator"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"/>
         </LinearLayout>
     </ScrollView>
 
     <ListView
         android:layout_alignParentBottom="true"
         android:id="@+id/nav_right_list_view_sync"
-        android:divider="@color/right_nav_separator"
-        android:dividerHeight="1dp"
+        android:dividerHeight="0dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:choiceMode="singleChoice" />
