@@ -9,4 +9,10 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     -->
+    <item
+        android:id="@+id/main_menu_right_nav"
+        android:icon="@drawable/ic_action_list"
+        android:orderInCategory="10"
+        android:title="Open Drawer"
+        app:showAsAction="always" />
 </menu>

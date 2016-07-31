@@ -77,10 +77,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int REQUEST_FILE_CHOOSER = 1234;
 
-    private ActionBarDrawerToggle mDrawerToggle;
-    private DrawerLayout mDrawerLayout;
-    //private NavigationView mNavigationView;
-
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -136,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_action_list);
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_app_icon);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initSlidingMenuDrawer();
@@ -202,6 +198,13 @@ public class MainActivity extends AppCompatActivity implements
         mNavigation.showSecondaryMenu(true);
     }
 
+    private void toggleDrawerState() {
+        if (isNavDrawerOpen())
+            closeNavDrawer();
+        else
+            openNavDrawer();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -212,27 +215,25 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            /**
-             * IMPORTANT:
-             * home is also the "burger stack" for the navigation drawer, so without overloading the
-             * menu inflater, you can't click the navigation "burger" to slide out the drawer
-             */
-            case android.R.id.home:
-                mDrawerLayout.openDrawer(GravityCompat.START);
+            case R.id.main_menu_right_nav:
+                toggleDrawerState();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
-        removeCustomActionBarViews();
-
+    void emptyBackStack() {
         FragmentManager fm = getSupportFragmentManager();
         for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
             fm.popBackStack();
         }
+    }
 
+    void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
+        removeCustomActionBarViews();
+
+        emptyBackStack();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().
                 replace(R.id.main_fragment_container, fragment);
         if (add_to_back_stack) {
@@ -330,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onCompanySwitched() {
-        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        emptyBackStack();
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
