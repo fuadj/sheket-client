@@ -51,10 +51,10 @@ import java.util.Locale;
  * Created by gamma on 3/27/16.
  */
 public class BranchItemFragment extends SearchableItemFragment {
-    private static final String KEY_BRANCH_ID = "key_branch_id";
+    private static final String KEY_BRANCH = "key_branch";
 
     private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-    private long mBranchId;
+    private SBranch mBranch;
 
     private FloatingActionButton mFinishTransactionBtn;
 
@@ -63,11 +63,11 @@ public class BranchItemFragment extends SearchableItemFragment {
     private static final String KEY_SAVE_VIEW_ALL_ITEMS = "key_save_all_items";
     private boolean mShowAllItems = false;
 
-    public static BranchItemFragment newInstance(long branch_id) {
+    public static BranchItemFragment newInstance(SBranch branch) {
         Bundle args = new Bundle();
 
         BranchItemFragment fragment = new BranchItemFragment();
-        args.putLong(KEY_BRANCH_ID, branch_id);
+        args.putParcelable(KEY_BRANCH, branch);
         fragment.setArguments(args);
 
         return fragment;
@@ -81,7 +81,8 @@ public class BranchItemFragment extends SearchableItemFragment {
         }
         Bundle args = getArguments();
         mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-        mBranchId = args.getLong(KEY_BRANCH_ID);
+
+        mBranch = args.getParcelable(KEY_BRANCH);
 
         mTransactionItemList = new ArrayList<>();
 
@@ -164,6 +165,8 @@ public class BranchItemFragment extends SearchableItemFragment {
             }
         });
         updateFinishBtnVisibility();
+
+        getActivity().setTitle(Utils.toTitleCase(mBranch.branch_name));
 
         return rootView;
     }
@@ -389,7 +392,7 @@ public class BranchItemFragment extends SearchableItemFragment {
             @Override
             public void run() {
                 if (!itemList.isEmpty())
-                    TransactionUtil.createTransactionWithItems(getActivity(), itemList, mBranchId, transactionNote);
+                    TransactionUtil.createTransactionWithItems(getActivity(), itemList, mBranch.branch_id, transactionNote);
 
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
@@ -425,7 +428,7 @@ public class BranchItemFragment extends SearchableItemFragment {
         QuantityDialog dialog = new QuantityDialog();
 
         dialog.setItem(item);
-        dialog.setCurrentBranch(mBranchId);
+        dialog.setCurrentBranch(mBranch.branch_id);
         dialog.setListener(new QuantityDialog.DialogListener() {
             @Override
             public void dialogCancel(DialogFragment dialog) {
@@ -578,7 +581,7 @@ public class BranchItemFragment extends SearchableItemFragment {
             Uri uri = BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
                             // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
                             // with a particular id.
-                            mBranchId, BranchCategoryEntry.NO_ID_SET);
+                            mBranch.branch_id, BranchCategoryEntry.NO_ID_SET);
 
             // also include children categories in the result
             uri = BranchCategoryEntry.buildFetchCategoryWithChildrenUri(uri);
@@ -608,7 +611,7 @@ public class BranchItemFragment extends SearchableItemFragment {
             selectionArgs = new String[]{String.valueOf(mCategoryId)};
         }
 
-        Uri uri = BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranchId);
+        Uri uri = BranchItemEntry.buildAllItemsInBranchUri(company_id, mBranch.branch_id);
         if (mShowAllItems)
             uri = BranchItemEntry.buildFetchNoneExistingItemsUri(uri);
         return new CursorLoader(getActivity(),

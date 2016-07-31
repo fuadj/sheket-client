@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/left_nav_background">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:id="@+id/list_item_nav_left_icon"
+        android:background="@android:drawable/ic_menu_upload"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true" />
+
+    <TextView
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Entity Name"
+        android:id="@+id/list_item_nav_left_name"
+        android:textColor="@color/left_nav_title_text"
+        android:textSize="20dp"
+        android:layout_toRightOf="@+id/list_item_nav_left_icon"
+        android:layout_centerVertical="true" />
+</RelativeLayout>

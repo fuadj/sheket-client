@@ -2,6 +2,8 @@ package com.mukera.sheket.client.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
@@ -11,7 +13,7 @@ import org.json.JSONObject;
 /**
  * Created by gamma on 3/27/16.
  */
-public class SBranch extends UUIDSyncable {
+public class SBranch extends UUIDSyncable implements Parcelable {
 
     public static final String JSON_BRANCH_ID = "branch_id";
     public static final String JSON_BRANCH_UUID = "client_uuid";
@@ -65,6 +67,32 @@ public class SBranch extends UUIDSyncable {
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
     }
 
+    private SBranch(Parcel parcel) {
+        company_id = parcel.readLong();
+        branch_id = parcel.readLong();
+        branch_name = parcel.readString();
+        branch_location = parcel.readString();
+
+        change_status = parcel.readInt();
+        client_uuid = parcel.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return hashCode();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(company_id);
+        dest.writeLong(branch_id);
+        dest.writeString(branch_name);
+        dest.writeString(branch_location);
+
+        dest.writeInt(change_status);
+        dest.writeString(client_uuid);
+    }
+
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
         values.put(BranchEntry.COLUMN_COMPANY_ID, company_id);
@@ -83,4 +111,17 @@ public class SBranch extends UUIDSyncable {
         result.put(JSON_BRANCH_UUID, client_uuid);
         return result;
     }
+
+
+    public static final Parcelable.Creator<SBranch> CREATOR = new Parcelable.Creator<SBranch>() {
+        @Override
+        public SBranch createFromParcel(Parcel source) {
+            return new SBranch(source);
+        }
+
+        @Override
+        public SBranch[] newArray(int size) {
+            return new SBranch[size];
+        }
+    };
 }

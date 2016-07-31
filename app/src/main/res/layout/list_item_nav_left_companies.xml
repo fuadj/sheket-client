@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/left_nav_background"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:id="@+id/list_item_nav_left_company_name"
+        android:textColor="@color/left_nav_title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Company Name"
+        android:textSize="22dp"
+        android:layout_centerVertical="true" />
+
+    <ImageView
+        android:id="@+id/list_item_nav_left_company_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="8dp"
+        android:layout_centerVertical="true"
+        android:background="@drawable/abc_btn_check_to_on_mtrl_000" />
+
+</RelativeLayout>

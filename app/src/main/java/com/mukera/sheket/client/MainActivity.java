@@ -26,11 +26,13 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.ipaulpro.afilechooser.utils.FileUtils;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
@@ -43,13 +45,16 @@ import com.mukera.sheket.client.controller.importer.ParseFileTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
-import com.mukera.sheket.client.controller.navigation.NavigationFragment;
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
+import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.admin.SettingsActivity;
 import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragment;
+import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
+import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -64,17 +69,13 @@ import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity implements
-        NavigationFragment.NavigationSelectionCallback,
+        BaseNavigation.NavigationCallback,
         SPermission.PermissionChangeListener,
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final int REQUEST_FILE_CHOOSER = 1234;
-
-    private ActionBarDrawerToggle mDrawerToggle;
-    private DrawerLayout mDrawerLayout;
-    //private NavigationView mNavigationView;
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -117,6 +118,11 @@ public class MainActivity extends AppCompatActivity implements
 
     private ProgressDialog mSyncingProgress = null;
 
+    private LeftNavigation mLeftNav;
+    private RightNavigation mRightNav;
+
+    private SlidingMenu mNavigation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,22 +132,32 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_action_list);
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_app_icon);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        initNavigationDrawer();
+        initSlidingMenuDrawer();
     }
 
-    void initNavigationDrawer() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.main_drawer_layout);
-        //mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+    void initSlidingMenuDrawer() {
+        mNavigation = new SlidingMenu(this);
+        mNavigation.setMode(SlidingMenu.LEFT_RIGHT);
+        mNavigation.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+        mNavigation.setFadeDegree(0.35f);
+        mNavigation.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.main_navigation_container, new NavigationFragment()).
-                commit();
-        openNavDrawer();
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        mLeftNav = new LeftNavigation();
+        mLeftNav.setUpNavigation(this, inflater.inflate(R.layout.nav_layout_left, null));
+
+        mRightNav = new RightNavigation();
+        mRightNav.setUpNavigation(this, inflater.inflate(R.layout.nav_layout_right, null));
+
+        mNavigation.setMenu(mLeftNav.getRootView());
+        mNavigation.setSecondaryMenu(mRightNav.getRootView());
+
+        int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
+        mNavigation.setBehindWidth(width);
     }
 
     void requireLogin() {
@@ -167,23 +183,26 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     protected boolean isNavDrawerOpen() {
-        return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START);
+        return mNavigation.isMenuShowing() || mNavigation.isSecondaryMenuShowing();
     }
 
     protected boolean isNavDrawerClosed() {
-        return mDrawerLayout != null && !mDrawerLayout.isDrawerOpen(GravityCompat.START);
+        return !isNavDrawerOpen();
     }
 
     protected void closeNavDrawer() {
-        if (mDrawerLayout != null) {
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-        }
+        mNavigation.showContent(true);
     }
 
     protected void openNavDrawer() {
-        if (mDrawerLayout != null) {
-            mDrawerLayout.openDrawer(GravityCompat.START);
-        }
+        mNavigation.showSecondaryMenu(true);
+    }
+
+    private void toggleDrawerState() {
+        if (isNavDrawerOpen())
+            closeNavDrawer();
+        else
+            openNavDrawer();
     }
 
     @Override
@@ -196,34 +215,25 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            /**
-             * IMPORTANT:
-             * home is also the "burger stack" for the navigation drawer, so without overloading the
-             * menu inflater, you can't click the navigation "burger" to slide out the drawer
-             */
-            case android.R.id.home:
-                mDrawerLayout.openDrawer(GravityCompat.START);
+            case R.id.main_menu_right_nav:
+                toggleDrawerState();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    @Override
-    public void onBranchSelected(final SBranch branch) {
-        replaceMainFragment(BranchItemFragment.newInstance(branch.branch_id),
-                false);
-        closeNavDrawer();
+    void emptyBackStack() {
+        FragmentManager fm = getSupportFragmentManager();
+        for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+            fm.popBackStack();
+        }
     }
 
     void replaceMainFragment(Fragment fragment, boolean add_to_back_stack) {
         removeCustomActionBarViews();
 
-        FragmentManager fm = getSupportFragmentManager();
-        for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
-            fm.popBackStack();
-        }
-
+        emptyBackStack();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().
                 replace(R.id.main_fragment_container, fragment);
         if (add_to_back_stack) {
@@ -240,15 +250,22 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onElementSelected(int item) {
+    public void onBranchSelected(final SBranch branch) {
+        replaceMainFragment(BranchItemFragment.newInstance(branch),
+                false);
+        closeNavDrawer();
+    }
+
+    @Override
+    public void onNavigationOptionSelected(int item) {
         closeNavDrawer();
         removeCustomActionBarViews();
 
         switch (item) {
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_ALL_ITEMS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_ITEM_LIST:
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_IMPORT: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
                 // Create the ACTION_GET_CONTENT Intent
                 Intent getContentIntent = FileUtils.createGetContentIntent();
 
@@ -256,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements
                 startActivityForResult(intent, REQUEST_FILE_CHOOSER);
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_DELETE: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_DELETE: {
                 new AlertDialog.Builder(this).
                         setTitle("Are You Sure?").
                         setMessage("This will delete all un-synced data, are you sure?").
@@ -274,19 +291,19 @@ public class MainActivity extends AppCompatActivity implements
                 }).show();
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_BRANCHES:
+            case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
                 replaceMainFragment(new BranchFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_COMPANIES:
+            case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
                 replaceMainFragment(new CompanyFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_HISTORY:
+            case BaseNavigation.StaticNavigationOptions.OPTION_HISTORY:
                 replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_MEMBERS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_EMPLOYEES:
                 replaceMainFragment(new MembersFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_SYNC: {
+            case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
                 mSyncingProgress = ProgressDialog.show(this,
                         "Syncing", "Please Wait...", true);
                 PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCING);
@@ -294,22 +311,39 @@ public class MainActivity extends AppCompatActivity implements
                 startService(intent);
                 break;
             }
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_TRANSACTIONS:
+            case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
                 replaceMainFragment(new UnsyncedTranactionHistoryFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_SETTINGS:
-                startActivity(new Intent(this, SettingsActivity.class));
+            case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
+                replaceMainFragment(new SettingsFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_DEBUG:
+            case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                 startActivity(new Intent(this, AndroidDatabaseManager.class));
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_USER_PROFILE:
+            case BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE:
                 replaceMainFragment(new ProfileFragment(), false);
                 break;
-            case NavigationFragment.StaticNavigationAdapter.ENTITY_LOG_OUT:
+            case BaseNavigation.StaticNavigationOptions.OPTION_LOG_OUT:
                 logoutUser();
                 break;
         }
+    }
+
+    @Override
+    public void onCompanySwitched() {
+        emptyBackStack();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    finish();
+                    startActivity(getIntent());
+                } else {
+                    recreate();
+                }
+            }
+        }, 100);
     }
 
     void logoutUser() {

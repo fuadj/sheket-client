@@ -110,6 +110,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         });
 
         getLoaderManager().initLoader(LoaderId.MainActivity.MEMBER_LIST_LOADER, null, this);
+        getActivity().setTitle("Employees");
         return rootView;
     }
 

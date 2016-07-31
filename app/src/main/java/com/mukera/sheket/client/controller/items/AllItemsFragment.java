@@ -264,6 +264,9 @@ public class AllItemsFragment extends SearchableItemFragment {
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
 
         setUpEditModeUI();
+
+        getActivity().setTitle("Items");
+
         return rootView;
     }
 
