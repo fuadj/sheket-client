@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:columnCount="3"
-    android:padding="16dp">
+    android:padding="16dp"
+    app:columnOrderPreserved="false">
 
     <TextView
         android:layout_width="wrap_content"
@@ -124,23 +125,31 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp">
 
-        <RadioButton
+        <RadioGroup
+            android:orientation="horizontal"
+            android:id="@+id/dialog_qty_radio_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Standard"
-            android:id="@+id/dialog_qty_radio_standard"
-            android:layout_centerVertical="true" />
+            android:layout_centerHorizontal="true">
 
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Derived"
-            android:id="@+id/dialog_qty_radio_derived"
-            app:layout_column="2"
-            app:layout_gravity="right"
-            app:layout_row="4"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true" />
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Standard"
+                android:id="@+id/dialog_qty_radio_standard"
+                android:layout_gravity="left" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Derived"
+                android:id="@+id/dialog_qty_radio_derived"
+                app:layout_column="2"
+                app:layout_gravity="right"
+                app:layout_row="4"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginLeft="32dp" />
+        </RadioGroup>
     </RelativeLayout>
 
     <LinearLayout

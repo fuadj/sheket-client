@@ -27,7 +27,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
@@ -411,7 +410,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     /**
      * Displays a quantity selection dialog for the item. It supports
      * this operation for both new items and editing items already in the transaction.
-     * <p/>
+     * <p>
      * This dialog can be run in a transaction if specified.
      *
      * @param item
@@ -425,28 +424,28 @@ public class BranchItemFragment extends SearchableItemFragment {
                                           final int edit_position,
                                           boolean run_in_transaction,
                                           FragmentTransaction transaction) {
-        QuantityDialog dialog = new QuantityDialog();
+        QuantityDialog dialog = QuantityDialog.newInstance(
+                item,
+                mBranch.branch_id,
+                new QuantityDialog.QuantityListener() {
+                    @Override
+                    public void dialogCancel(DialogFragment dialog) {
+                        dialog.dismiss();
+                    }
 
-        dialog.setItem(item);
-        dialog.setCurrentBranch(mBranch.branch_id);
-        dialog.setListener(new QuantityDialog.DialogListener() {
-            @Override
-            public void dialogCancel(DialogFragment dialog) {
-                dialog.dismiss();
-            }
-
-            @Override
-            public void dialogOk(DialogFragment dialog, STransactionItem transItem) {
-                dialog.dismiss();
-                if (!is_editing) {
-                    mTransactionItemList.add(transItem);
-                } else {
-                    mTransactionItemList.remove(edit_position);
-                    mTransactionItemList.add(edit_position, transItem);
+                    @Override
+                    public void dialogOk(DialogFragment dialog, STransactionItem transItem) {
+                        dialog.dismiss();
+                        if (!is_editing) {
+                            mTransactionItemList.add(transItem);
+                        } else {
+                            mTransactionItemList.remove(edit_position);
+                            mTransactionItemList.add(edit_position, transItem);
+                        }
+                        updateFinishBtnVisibility();
+                    }
                 }
-                updateFinishBtnVisibility();
-            }
-        });
+        );
         if (run_in_transaction) {
             dialog.show(transaction, null);
         } else {
@@ -579,9 +578,9 @@ public class BranchItemFragment extends SearchableItemFragment {
              * UI to display the number of children sub-categories.
              */
             Uri uri = BranchCategoryEntry.buildBranchCategoryUri(PrefUtil.getCurrentCompanyId(getContext()),
-                            // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
-                            // with a particular id.
-                            mBranch.branch_id, BranchCategoryEntry.NO_ID_SET);
+                    // The NO_ID_SET is so we fetch ALL branch categories, not just a single one
+                    // with a particular id.
+                    mBranch.branch_id, BranchCategoryEntry.NO_ID_SET);
 
             // also include children categories in the result
             uri = BranchCategoryEntry.buildFetchCategoryWithChildrenUri(uri);
