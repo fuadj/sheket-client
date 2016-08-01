@@ -1,68 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:minWidth="400dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:columnCount="3"
     android:padding="16dp">
 
-    <android.support.v7.widget.GridLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:columnCount="3"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:text="Action:"
+        android:id="@+id/textView10"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        app:layout_row="0"
+        app:layout_column="0" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Action:"
-            android:id="@+id/textView10"
-            android:textColor="#000000"
-            android:textSize="24dp"
-            app:layout_row="0"
-            app:layout_column="0" />
+    <ImageButton
+        android:id="@+id/dialog_qty_img_btn_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_action_edit_purple"
+        app:layout_row="0"
+        app:layout_column="2"
+        app:layout_gravity="center_vertical|right"
+        android:layout_marginBottom="4dp" />
 
-        <ImageButton
-            android:id="@+id/dialog_qty_img_btn_action"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ic_action_edit_purple"
-            app:layout_row="0"
-            app:layout_column="2"
-            app:layout_gravity="center_vertical|right"
-            android:layout_marginBottom="4dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Source"
+        android:id="@+id/dialog_qty_text_transfer_type"
+        android:textColor="#000000"
+        android:textSize="22dp"
+        app:layout_gravity="center_vertical"
+        app:layout_row="1"
+        app:layout_column="0" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Source"
-            android:id="@+id/dialog_qty_text_transfer_type"
-            android:textColor="#000000"
-            android:textSize="22dp"
-            app:layout_gravity="center_vertical"
-            app:layout_row="1"
-            app:layout_column="0" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Branch"
+        android:id="@+id/dialog_qty_btn_select_branch"
+        app:layout_gravity="center_vertical|right"
+        app:layout_row="1"
+        app:layout_column="2"
+        android:layout_marginBottom="4dp" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select Branch"
-            android:id="@+id/dialog_qty_btn_select_branch"
-            app:layout_gravity="center_vertical|right"
-            app:layout_row="1"
-            app:layout_column="2" />
+    <RelativeLayout
+        app:layout_row="2"
+        app:layout_column="0"
+        app:layout_columnSpan="3"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/dialog_qty_layout_other_branch">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sample Branch"
-            android:id="@+id/dialog_qty_text_selected_branch"
+            android:id="@+id/dialog_qty_text_selected_branch_name"
             android:textSize="20dp"
             android:textColor="#000000"
-            app:layout_row="2"
-            app:layout_column="0"
-            app:layout_gravity="center_vertical" />
+            app:layout_gravity="center_vertical"
+            android:layout_centerVertical="true" />
 
         <LinearLayout
             app:layout_row="2"
@@ -73,7 +75,8 @@
             android:id="@+id/dialog_qty_layout_other_branch_qty"
             android:layout_centerVertical="true"
             app:layout_gravity="right"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            android:layout_alignParentRight="true">
 
             <TextView
                 android:id="@+id/dialog_qty_text_other_branch_qty"
@@ -96,25 +99,37 @@
                 android:layout_gravity="center_vertical|right"
                 android:visibility="visible" />
         </LinearLayout>
+    </RelativeLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Quantity:"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:textSize="20dp"
-            app:layout_row="3"
-            android:layout_marginBottom="4dp"
-            app:layout_column="0" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quantity:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="20dp"
+        app:layout_row="3"
+        android:layout_marginBottom="4dp"
+        app:layout_column="0" />
+
+
+    <RelativeLayout
+        app:layout_row="4"
+        app:layout_column="0"
+        app:layout_columnSpan="3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dialog_qty_layout_unit_selection"
+        android:layout_marginBottom="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Standard"
             android:id="@+id/dialog_qty_radio_standard"
-            app:layout_row="4"
-            app:layout_column="0" />
+            android:layout_centerVertical="true" />
 
         <RadioButton
             android:layout_width="wrap_content"
@@ -122,70 +137,92 @@
             android:text="Derived"
             android:id="@+id/dialog_qty_radio_derived"
             app:layout_column="2"
-            android:layout_marginBottom="8dp"
             app:layout_gravity="right"
-            app:layout_row="4" />
+            app:layout_row="4"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_columnSpan="3"
+        app:layout_column="0"
+        app:layout_row="5">
 
         <EditText android:id="@+id/dialog_qty_edit_text_qty"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLength="20"
             android:inputType="number"
             app:layout_columnSpan="3"
             app:layout_column="0"
-            app:layout_row="5" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="3 Roll = 3 * (150 m) = 1500 m"
-            android:id="@+id/dialog_qty_text_conversion"
-            android:textColor="#000000"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:background="#c7e0ff"
-            app:layout_columnSpan="3"
-            app:layout_row="6"
-            app:layout_column="0" />
+            app:layout_row="5"
+            android:layout_weight="1" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Note:"
-            android:textStyle="bold"
-            app:layout_row="7"
-            android:textColor="#000000"
-            android:layout_marginTop="8dp"
-            android:textSize="20dp" />
+            android:text="m2"
+            android:id="@+id/dialog_qty_text_unit_extension"
+            android:layout_gravity="center_vertical"
+            android:textColor="#000000" />
+    </LinearLayout>
 
-        <EditText android:id="@+id/dialog_qty_edit_text_item_note"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_row="8"
-            app:layout_columnSpan="3"
-            android:maxLength="20"/>
-
-    </android.support.v7.widget.GridLayout>
-
-    <RelativeLayout
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:text="3 Roll = 3 * (150 m) = 1500 m"
+        android:id="@+id/dialog_qty_text_conversion"
+        android:textColor="#000000"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="#bbdefb"
+        app:layout_columnSpan="3"
+        app:layout_row="6"
+        app:layout_column="0"
+        android:paddingLeft="16dp" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cancel"
-            android:id="@+id/dialog_qty_btn_cancel"
-            android:layout_alignParentLeft="true"
-            android:minWidth="100dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Note:"
+        android:textStyle="bold"
+        app:layout_row="7"
+        android:textColor="#000000"
+        android:layout_marginTop="8dp"
+        android:textSize="20dp"
+        app:layout_column="0" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ok"
-            android:id="@+id/dialog_qty_btn_ok"
-            android:layout_alignParentRight="true"
-            android:minWidth="100dp" />
-    </RelativeLayout>
+    <EditText android:id="@+id/dialog_qty_edit_text_item_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_row="8"
+        app:layout_columnSpan="3"
+        android:maxLength="20"
+        app:layout_column="0" />
 
-</LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:id="@+id/dialog_qty_btn_cancel"
+        android:layout_alignParentLeft="true"
+        android:minWidth="100dp"
+        app:layout_row="9"
+        app:layout_column="0" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ok"
+        android:id="@+id/dialog_qty_btn_ok"
+        android:layout_alignParentRight="true"
+        android:minWidth="100dp"
+        app:layout_row="9"
+        app:layout_column="2"
+        app:layout_gravity="center_vertical|right" />
+
+</android.support.v7.widget.GridLayout>
+
