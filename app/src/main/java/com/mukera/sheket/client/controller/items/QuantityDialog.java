@@ -374,6 +374,16 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                         actionDialog.dismiss();
                         mActionType = type;
 
+                        /**
+                         * ALWAYS "reset" the other branch, this prevents some inconsistent states.
+                         *
+                         * e.g:     Because you can send an item to a branch it doesn't already exist
+                         *          in, you can select such a branch to send an item to it. But you
+                         *          shouldn't just change transaction type to "receive from" and
+                         *          still use that branch the item doesn't exist in.
+                         */
+                        mOtherBranchItem = null;
+
                         updateViews();
                     }
                 });
