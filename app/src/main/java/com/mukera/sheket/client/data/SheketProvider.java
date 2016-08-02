@@ -329,14 +329,14 @@ public class SheketProvider extends ContentProvider {
                 boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
 
                 if (uri_match == BRANCH_ITEM_WITH_ID) {
-                    String branch_item_selection = "";
+                    String custom_selection = "";
                     List<String> args = new ArrayList<>();
 
                     boolean did_select_branch = false;
                     if (branch_set) {
                         if (!fetch_none_branch_items) {
                             did_select_branch = true;
-                            branch_item_selection +=
+                            custom_selection +=
                                     String.format(Locale.US, "%s = ?",
                                             BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID));
                             args.add(Long.toString(branch_id));
@@ -344,21 +344,28 @@ public class SheketProvider extends ContentProvider {
                     }
                     if (item_set) {
                         if (branch_set) {
-                            branch_item_selection += (did_select_branch ? " AND " : "");
+                            custom_selection += (did_select_branch ? " AND " : "") +
+                                    String.format(Locale.US, "%s = ?",
+                                            BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
+                            args.add(Long.toString(item_id));
                         } else {
-                            // if the branch was NOT set, it means we want to fetch the item
-                            // in ALL branches, regardless it if exists in them or NOT
+                            /**
+                             * if the branch was NOT set, it means we want to fetch the item
+                             * in ALL branches, regardless it if exists in them or NOT.
+                             * NOTE: we don't select with branch_item as it is null for the
+                             * branches the item doesn't exist in.
+                             */
                             fetch_item_in_all_branches = true;
-                        }
 
-                        branch_item_selection +=
-                                String.format(Locale.US, "%s = ?",
-                                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID));
-                        args.add(Long.toString(item_id));
+                            custom_selection +=
+                                    String.format(Locale.US, "%s = ?",
+                                            ItemEntry._full(ItemEntry.COLUMN_ITEM_ID));
+                            args.add(Long.toString(item_id));
+                        }
                     }
 
                     selection = withAppendedSelection(selection,
-                            branch_item_selection);
+                            custom_selection);
 
                     // if neither is set, why bother
                     if (did_select_branch || item_set) {
