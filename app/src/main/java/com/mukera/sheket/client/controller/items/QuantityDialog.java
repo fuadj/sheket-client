@@ -14,7 +14,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,7 +29,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
@@ -158,7 +156,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         super.onActivityCreated(savedInstanceState);
     }
 
-    void updateOkBtnStatus() {
+    void updateOkBtnEnableStatus() {
         if (mActionType == ActionType.NOT_SET) {
             mBtnOk.setEnabled(false);
             return;
@@ -185,25 +183,12 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateConversionRateDisplay() {
-        if (mItem.has_derived_unit) {
-            mTextUnitExtension.setText(
-                    UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
-            return;
-        }
-
-        String unit;
-        if (isDerivedSelected()) {
-            unit = String.format("  %s  ", mRadioDerived.getText());
-        } else {
-            unit = String.format("  %s  ", mRadioStandard.getText());
-        }
-        mTextUnitExtension.setText(unit);
-
-        if (!isDerivedSelected()) {
+        if (!mItem.has_derived_unit ||
+                !isDerivedSelected() ||
+                !isQuantitySet()) {
             mTextConversionFormula.setVisibility(View.GONE);
-        } else if (isQuantitySet()) {
+        } else {
             mTextConversionFormula.setVisibility(View.VISIBLE);
-
 
             String qty = mQtyEdit.getText().toString().trim();
             String base_unit = UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement);
@@ -218,16 +203,14 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                             qty, derived,
                             qty, factor, base_unit,
                             total, base_unit));
-        } else {
-            mTextConversionFormula.setVisibility(View.GONE);
         }
     }
 
-    void linkMembersToViews(View view) {
+    void linkViews(View view) {
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
         mImgBtnAction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
 
-        mLayoutOtherBranchSelector = view.findViewById(R.id.dialog_qty_layout_other_branch);
+        mLayoutOtherBranchSelector = view.findViewById(R.id.dialog_qty_layout_select_other_branch);
         mTextTransferType = (TextView) view.findViewById(R.id.dialog_qty_text_transfer_type);
         mBtnSelectOtherBranch = (Button) view.findViewById(R.id.dialog_qty_btn_select_branch);
 
@@ -285,11 +268,12 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         mLayoutUnitSelection.setVisibility(
                 mItem.has_derived_unit ? View.VISIBLE : View.GONE);
-        if (!mItem.has_derived_unit)
-            mTextConversionFormula.setVisibility(View.GONE);
+
+        boolean show_conversion_rate = mItem.has_derived_unit && isQuantitySet();
+        mTextConversionFormula.setVisibility(show_conversion_rate ? View.VISIBLE : View.GONE);
     }
 
-    void updateViews() {
+    void updateViewContents() {
         // if we've not yet selected an action, then set the Action Image Btn to an image
         // showing the options available.
         if (mActionType == ActionType.NOT_SET) {
@@ -327,6 +311,27 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 mImgOtherBranchEmpty.setVisibility(View.VISIBLE);
             }
         }
+
+        // update the units extension
+        if (!mItem.has_derived_unit) {
+            mTextUnitExtension.setText(
+                    UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
+        } else {
+            String unit;
+            if (isDerivedSelected()) {
+                unit = String.format("  %s  ", mRadioDerived.getText());
+            } else {
+                unit = String.format("  %s  ", mRadioStandard.getText());
+            }
+            mTextUnitExtension.setText(unit);
+        }
+    }
+
+    void updateViews() {
+        updateVisibility();
+        updateViewContents();
+        updateConversionRateDisplay();
+        updateOkBtnEnableStatus();
     }
 
     @NonNull
@@ -335,22 +340,19 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         View view = getActivity().getLayoutInflater().
                 inflate(R.layout.dialog_quantity, null);
 
-        linkMembersToViews(view);
-        updateVisibility();
-        updateViews();
+        linkViews(view);
 
         mRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                updateConversionRateDisplay();
+                updateViews();
             }
         });
 
         mQtyEdit.addTextChangedListener(new TextWatcherAdapter() {
             @Override
             public void afterTextChanged(Editable s) {
-                updateOkBtnStatus();
-                updateConversionRateDisplay();
+                updateViews();
             }
         });
 
@@ -372,8 +374,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                         actionDialog.dismiss();
                         mActionType = type;
 
-                        updateVisibility();
-                        updateOkBtnStatus();
+                        updateViews();
                     }
                 });
                 dialog.show(getActivity().getSupportFragmentManager(), null);
@@ -410,13 +411,11 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                             } else {
                                 mOtherBranchItem = selected;
                                 dialog.dismiss();
-                                updateVisibility();
                                 updateViews();
                             }
                         } else if (mActionType == ActionType.SEND_TO) {
                             mOtherBranchItem = selected;
                             dialog.dismiss();
-                            updateVisibility();
                             updateViews();
                         }
                     }
@@ -455,7 +454,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         });
 
         // start things off
-        updateOkBtnStatus();
+        updateViews();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle(mItem.name);
