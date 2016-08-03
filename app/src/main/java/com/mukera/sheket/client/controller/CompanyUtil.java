@@ -2,7 +2,6 @@ package com.mukera.sheket.client.controller;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
 
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -59,7 +58,7 @@ public class CompanyUtil {
                             update(
                                     CompanyEntry.CONTENT_URI,
                                     values,
-                                    CompanyEntry._full(SheketContract.CompanyEntry.COLUMN_ID) + " = ?",
+                                    CompanyEntry._full(SheketContract.CompanyEntry.COLUMN_COMPANY_ID) + " = ?",
                                     new String[]{
                                             String.valueOf(current_company)
                                     }

@@ -125,7 +125,18 @@ public class SheketContract {
             return TABLE_NAME + "." + col_name;
         }
 
-        public static final String COLUMN_ID = "_id";
+        public static final String COLUMN_COMPANY_ID = "_id";
+
+        /**
+         * This is only used for locally differentiating different users who
+         * use the same phone to login to different companies.
+         * We have the user id here and in no other place because controlling
+         * the "visible" companies a user can be in controls the rest.(All others
+         * have company_id which is it self controlled by which user is looking at
+         * the data).
+         */
+        public static final String COLUMN_USER_ID = "user_id";
+
         public static final String COLUMN_NAME = "company_name";
         // the user's permission is stored as TEXT
         public static final String COLUMN_PERMISSION = "permission";

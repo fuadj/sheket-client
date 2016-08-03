@@ -53,7 +53,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
     public static final OkHttpClient client = new OkHttpClient();
 
     private static final String[] COMPANY_COLUMNS = {
-            CompanyEntry._full(CompanyEntry.COLUMN_ID),
+            CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID),
             CompanyEntry._full(CompanyEntry.COLUMN_NAME),
             CompanyEntry._full(CompanyEntry.COLUMN_PERMISSION),
             CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP)
@@ -138,7 +138,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = CompanyEntry._full(CompanyEntry.COLUMN_ID) + " ASC";
+        String sortOrder = CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " ASC";
 
         return new CursorLoader(getActivity(),
                 CompanyEntry.CONTENT_URI,
@@ -280,7 +280,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                 String user_permission = result.getString(JSON_USER_PERMISSION);
 
                 ContentValues values = new ContentValues();
-                values.put(CompanyEntry.COLUMN_ID, company_id);
+                values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
                 values.put(CompanyEntry.COLUMN_NAME, company_name);
                 values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
 

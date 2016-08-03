@@ -18,10 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -49,7 +46,6 @@ import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
-import com.mukera.sheket.client.controller.admin.SettingsActivity;
 import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
@@ -363,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements
                         update(
                                 CompanyEntry.CONTENT_URI,
                                 values,
-                                CompanyEntry._full(CompanyEntry.COLUMN_ID) + " = ?",
+                                CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " = ?",
                                 new String[]{
                                         String.valueOf(current_company)
                                 }

@@ -143,7 +143,7 @@ public class SheketService extends IntentService {
                 String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
 
                 ContentValues values = new ContentValues();
-                values.put(SheketContract.CompanyEntry.COLUMN_ID, company_id);
+                values.put(SheketContract.CompanyEntry.COLUMN_COMPANY_ID, company_id);
                 values.put(SheketContract.CompanyEntry.COLUMN_NAME, company_name);
                 values.put(SheketContract.CompanyEntry.COLUMN_PERMISSION, permission);
 
