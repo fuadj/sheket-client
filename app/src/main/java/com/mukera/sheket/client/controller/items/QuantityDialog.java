@@ -98,6 +98,12 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     private SItem mItem;
     private Long mCurrentBranch;
 
+    /**
+     * We use this to determine if we are trying to sell/send beyond
+     * the quantity available in the current branch.
+     */
+    private SBranchItem mCurrentBranchItemQty = null;
+
     private Pair<SBranchItem, SBranch> mOtherBranchItem = null;
 
     private QuantityListener mListener;
@@ -544,10 +550,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildItemInAllBranches(company_id, mItem.item_id),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
-
-                // We don't want the current branch to appear in the result
-                BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " != ?",
-                new String[]{String.valueOf(mCurrentBranch)},
+                null,
+                null,
                 null);
     }
 
@@ -560,6 +564,16 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         }
 
         mItem = new SItem(data, true);
+        for (int i = 0; i < mItem.available_branches.size(); i++) {
+            Pair<SBranchItem, SBranch> branchItemBranchPair = mItem.available_branches.get(i);
+            if (branchItemBranchPair.second.branch_id == mCurrentBranch) {
+                mCurrentBranchItemQty = branchItemBranchPair.first;
+
+                // remove it from the available list so it won't appear in the "other" branch list
+                mItem.available_branches.remove(i);
+                break;
+            }
+        }
 
         updateViews();
     }
