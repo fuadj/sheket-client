@@ -143,7 +143,10 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
         return new CursorLoader(getActivity(),
                 CompanyEntry.CONTENT_URI,
                 COMPANY_COLUMNS,
-                null, null,
+                CompanyEntry.COLUMN_USER_ID + " = ?",
+                new String[]{
+                        String.valueOf(PrefUtil.getUserId(getActivity()))
+                },
                 sortOrder
         );
     }

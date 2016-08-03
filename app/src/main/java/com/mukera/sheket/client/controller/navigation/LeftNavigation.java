@@ -136,7 +136,10 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         return new CursorLoader(getNavActivity(),
                 CompanyEntry.CONTENT_URI,
                 COMPANY_COLUMNS,
-                null, null,
+                CompanyEntry.COLUMN_USER_ID + " = ?",
+                new String[]{
+                        String.valueOf(PrefUtil.getUserId(getNavActivity()))
+                },
                 sortOrder
         );
     }
