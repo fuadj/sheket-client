@@ -3,10 +3,12 @@ package com.mukera.sheket.client.controller.user;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
@@ -53,6 +55,17 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
     @Override
     public void SingUpSuccess() {
         syncUserDataOnLogin();
+        launchMainActivity();
+    }
+
+    @Override
+    public void LoginSuccess() {
+        syncUserDataOnLogin();
+        launchMainActivity();
+    }
+
+    void launchMainActivity() {
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_LOGIN));
         this.finish();
     }
 
@@ -78,12 +91,6 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
     @Override
     public void HaveAccountSelected() {
         replaceWithLogin();
-    }
-
-    @Override
-    public void LoginSuccess() {
-        syncUserDataOnLogin();
-        this.finish();
     }
 
     @Override

@@ -1,23 +1,25 @@
 package com.mukera.sheket.client;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -68,8 +70,7 @@ public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
         SPermission.PermissionChangeListener,
         ImportListener,
-        ActivityCompat.OnRequestPermissionsResultCallback,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int REQUEST_FILE_CHOOSER = 1234;
 
@@ -119,6 +120,19 @@ public class MainActivity extends AppCompatActivity implements
 
     private SlidingMenu mNavigation;
 
+    /**
+     * When there is a configuration change and we restart this activity,
+     * we check these arguments to check for the reason.
+     */
+    private static final String KEY_ARG_REASON = "key_arg_reason";
+    private static final String KEY_ARG_TITLE = "key_arg_title";
+    private static final String KEY_ARG_MSG = "key_arg_msg";
+
+    private static final int LAUNCH_REASON_NONE = -1;
+    private static final int LAUNCH_REASON_RESTART = 0;
+    private static final int LAUNCH_REASON_SYNC_SUCCESS = 1;
+    private static final int LAUNCH_REASON_SYNC_ERROR = 2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,6 +146,10 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initSlidingMenuDrawer();
+
+        if (savedInstanceState == null) {
+            checkLaunchReason();
+        }
     }
 
     void initSlidingMenuDrawer() {
@@ -154,6 +172,35 @@ public class MainActivity extends AppCompatActivity implements
 
         int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
         mNavigation.setBehindWidth(width);
+    }
+
+    void checkLaunchReason() {
+        Intent intent = getIntent();
+        int reason = intent.getIntExtra(KEY_ARG_REASON, LAUNCH_REASON_NONE);
+        switch (reason) {
+            case LAUNCH_REASON_NONE: return;
+
+            // do nothing if it was only wanted for the activity to restart
+            case LAUNCH_REASON_RESTART:
+                break;
+
+            // display sync success dialog
+            case LAUNCH_REASON_SYNC_SUCCESS: {
+                new AlertDialog.Builder(this).
+                        setTitle("Success").
+                        setMessage("You've synced successfully.").show();
+                break;
+            }
+
+            case LAUNCH_REASON_SYNC_ERROR: {
+                String title = intent.getStringExtra(KEY_ARG_TITLE);
+                String msg = intent.getStringExtra(KEY_ARG_MSG);
+
+                new AlertDialog.Builder(this).
+                        setTitle(title).setMessage(msg).show();
+                break;
+            }
+        }
     }
 
     void requireLogin() {
@@ -300,9 +347,6 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new MembersFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
-                mSyncingProgress = ProgressDialog.show(this,
-                        "Syncing", "Please Wait...", true);
-                PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCING);
                 Intent intent = new Intent(this, SheketService.class);
                 startService(intent);
                 break;
@@ -327,19 +371,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onCompanySwitched() {
-        emptyBackStack();
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                    finish();
-                    startActivity(getIntent());
-                } else {
-                    recreate();
-                }
-            }
-        }, 100);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
     }
 
     void logoutUser() {
@@ -478,17 +510,28 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onResume() {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.registerOnSharedPreferenceChangeListener(this);
         super.onResume();
+
+        IntentFilter filter = new IntentFilter();
+
+        filter.addAction(SheketBroadcast.ACTION_SYNC_STARTED);
+        filter.addAction(SheketBroadcast.ACTION_SYNC_SUCCESS);
+        filter.addAction(SheketBroadcast.ACTION_SYNC_SERVER_ERROR);
+        filter.addAction(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR);
+        filter.addAction(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR);
+        filter.addAction(SheketBroadcast.ACTION_LOGIN);
+        filter.addAction(SheketBroadcast.ACTION_CONFIG_CHANGE);
+
+        LocalBroadcastManager.getInstance(this).
+                registerReceiver(mReceiver, filter);
     }
 
     @Override
     protected void onPause() {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.unregisterOnSharedPreferenceChangeListener(this);
         super.onPause();
         mDidResume = false;
+        LocalBroadcastManager.getInstance(this).
+                unregisterReceiver(mReceiver);
     }
 
     void stopImporting(String err_msg) {
@@ -653,72 +696,69 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void userPermissionChanged() {
-        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+    }
+
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Activity activity = MainActivity.this;
+
+            String action = intent.getAction();
+            String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
+
+            if (!action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
+                if (mSyncingProgress != null) {
+                    mSyncingProgress.dismiss();
+                    mSyncingProgress = null;
+                }
+            }
+
+            if (action.equals(SheketBroadcast.ACTION_LOGIN)) {
+                restartMainActivity(LAUNCH_REASON_RESTART);
+            } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+                restartMainActivity(LAUNCH_REASON_RESTART);
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
+                mSyncingProgress = ProgressDialog.show(activity,
+                        "Syncing", "Please Wait...", true);
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_SUCCESS)) {
+                restartMainActivity(LAUNCH_REASON_SYNC_SUCCESS);
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
+                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
+                        "Sync error, Try Again..", error_extra);
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
+                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
+                        "Internet error", "Try Again...");
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
+                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
+                        "Error, Try Again", error_extra);
+            }
+        }
+    };
+
+    void restartMainActivity(final int reason) {
+        restartMainActivity(reason, null, null);
+    }
+    /**
+     * Restarts this activity for the reason. Passes the msg if they are not null.
+     */
+    void restartMainActivity(final int reason, final String msg_title, final String msg_body) {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                    finish();
-                    startActivity(getIntent());
-                } else {
-                    recreate();
+                Intent intent = getIntent();
+                intent.putExtra(KEY_ARG_REASON, reason);
+                if (msg_title != null) {
+                    intent.putExtra(KEY_ARG_TITLE, msg_title);
                 }
+                if (msg_body != null) {
+                    intent.putExtra(KEY_ARG_MSG, msg_body);
+                }
+
+                finish();
+                startActivity(intent);
             }
         }, 100);
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        // if the preference change isn't about syncing
-        if (!key.equals(getString(R.string.sync_status)) ||
-                // or we still haven't finished syncing
-                PrefUtil.getSyncStatus(this) == SheketService.SYNC_STATUS_SYNCING ||
-                // or we've already dismissed the progress dialog, no need to do it again
-                mSyncingProgress == null) {
-            return;
-        }
-
-        mSyncingProgress.dismiss();
-        mSyncingProgress = null;
-
-        boolean is_error = true;
-        String err_title = null, err_msg = null;
-        int sync_status = PrefUtil.getSyncStatus(this);
-        switch (sync_status) {
-            case SheketService.SYNC_STATUS_SYNCED:
-            case SheketService.SYNC_STATUS_SUCCESSFUL:
-                is_error = false;
-                break;
-            case SheketService.SYNC_STATUS_SYNC_ERROR:
-                err_title = "Sync Error, try again";
-                err_msg = PrefUtil.getSyncErrorMessage(this);
-                break;
-            case SheketService.SYNC_STATUS_INTERNET_ERROR:
-                err_title = "Internet Problem";
-                err_msg = "Try Again";
-                break;
-            case SheketService.SYNC_STATUS_GENERAL_ERROR:
-                // TODO: don't know how to display it, just print it for now
-                err_title = "Error, Try again";
-                err_msg = PrefUtil.getSyncErrorMessage(this);
-                break;
-        }
-
-        AlertDialog dialog;
-        if (is_error) {
-            dialog = new AlertDialog.Builder(this).
-                    setTitle(err_title).
-                    setMessage(err_msg).
-                    create();
-        } else {
-            dialog = new AlertDialog.Builder(this).
-                    setTitle("Success").
-                    setMessage("You've synced successfully.").create();
-        }
-        dialog.show();
-
-        // reset it to synced state
-        PrefUtil.setSyncStatus(this, SheketService.SYNC_STATUS_SYNCED);
     }
 }
