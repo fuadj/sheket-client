@@ -15,6 +15,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -301,7 +302,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             SBranchItem branchItem = mOtherBranchItem.first;
             SBranch branch = mOtherBranchItem.second;
 
-            mTextOtherBranchName.setText(branch.branch_name);
+            mTextOtherBranchName.setText(Utils.toTitleCase(branch.branch_name));
             if (branchItem != null) {
                 mTextOtherBranchQty.setVisibility(View.VISIBLE);
                 mImgOtherBranchEmpty.setVisibility(View.GONE);
@@ -492,7 +493,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            holder.branchName.setText(pair.second.branch_name);
+            holder.branchName.setText(Utils.toTitleCase(pair.second.branch_name));
             if (pair.first == null) {       // the branch doesn't contain the item
                 holder.notExist.setVisibility(View.VISIBLE);
                 holder.qty.setVisibility(View.GONE);
