@@ -8,9 +8,11 @@ import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.RemoteException;
 import android.support.annotation.IntDef;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
@@ -72,26 +74,49 @@ public class SheketService extends IntentService {
         super("Sheket");
     }
 
+    /**
+     * Sends the action as a broadcast through {@code LocalBroadcastManager}.
+     * If an {@code extra_msg} is specified, it will send that also using
+     * the {@code extra_key}.
+     */
+    void sendSheketBroadcast(String action, String extra_msg, String extra_key) {
+        Intent intent = new Intent(action);
+        if (extra_msg != null) {
+            intent.putExtra(extra_key, extra_msg);
+        }
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    /**
+     * Send a local broadcast without any extras
+     */
+    void sendSheketBroadcast(String action) {
+        sendSheketBroadcast(action, null, null);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         client.setConnectTimeout(10, TimeUnit.SECONDS);
         try {
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
             syncUser();
             if (!PrefUtil.isCompanySet(this)) {
-                PrefUtil.setSyncStatus(this, SYNC_STATUS_SUCCESSFUL);
+                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
                 return;     // can't sync anything without a company
             }
             syncEntities();
             syncTransactions();
-            PrefUtil.setSyncStatus(this, SYNC_STATUS_SUCCESSFUL);
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
-            PrefUtil.setSyncError(this, e.getMessage());
-            PrefUtil.setSyncStatus(this, SYNC_STATUS_SYNC_ERROR);
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG,
+                    e.getMessage(),
+                    SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Internet Problem", e);
-            PrefUtil.setSyncError(this, "Internet Problem");
-            PrefUtil.setSyncStatus(this, SYNC_STATUS_INTERNET_ERROR);
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG,
+                    "Internet problem",
+                    SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (Exception e) {
             String err = e.getMessage();
             // it usually has the format package.exception_class: error message,
@@ -101,8 +126,9 @@ public class SheketService extends IntentService {
             if (index != -1)
                 err_msg = err.substring(index + "Exception".length());
 
-            PrefUtil.setSyncError(this, "Error " + err_msg);
-            PrefUtil.setSyncStatus(this, SYNC_STATUS_GENERAL_ERROR);
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR,
+                    "Error " + err_msg,
+                    SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         }
     }
 
