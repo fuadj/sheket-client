@@ -552,7 +552,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
                 null,
                 null,
-                null);
+                BranchEntry._full(BranchEntry.COLUMN_NAME) + " ASC");
     }
 
     @Override
