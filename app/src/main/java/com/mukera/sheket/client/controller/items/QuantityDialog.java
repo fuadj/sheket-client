@@ -178,7 +178,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         switch (mActionType) {
             case SELL:
             case SEND_TO:
-                if ((qty - mCurrentBranchItemQty.quantity) < 0) {
+                if ((mCurrentBranchItemQty.quantity - qty) < 0) {
                     return false;
                 }
                 break;
@@ -189,7 +189,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                     return false;
                 SBranchItem other_branch_qty = mOtherBranchItem.first;
 
-                if ((qty - other_branch_qty.quantity) < 0) {
+                if ((other_branch_qty.quantity - qty) < 0) {
                     return false;
                 }
                 break;
@@ -368,15 +368,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                     UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
         } else {
             mTextUnitExtension.setVisibility(View.GONE);
-            /*
-            String unit;
-            if (isDerivedSelected()) {
-                unit = String.format("  %s  ", mRadioDerived.getText());
-            } else {
-                unit = String.format("  %s  ", mRadioStandard.getText());
-            }
-            mTextUnitExtension.setText(unit);
-            */
         }
 
         if (isQuantitySet() &&
