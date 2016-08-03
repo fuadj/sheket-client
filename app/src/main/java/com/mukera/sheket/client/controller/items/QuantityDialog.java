@@ -376,6 +376,14 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
             mTextUnitExtension.setText(unit);
         }
+
+        if (isQuantitySet() &&
+                !isQuantityAllowed()) {
+            mQtyEdit.setError("Invalid Quantity");
+            mQtyEdit.requestFocus();
+        } else {
+            mQtyEdit.setError(null);
+        }
     }
 
     void updateViews() {
