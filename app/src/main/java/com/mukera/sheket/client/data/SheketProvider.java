@@ -84,6 +84,7 @@ public class SheketProvider extends ContentProvider {
         );
 
         sBranchItemFetchItemInAllBranchesQueryBuilder = new SQLiteQueryBuilder();
+
         sBranchItemFetchItemInAllBranchesQueryBuilder.setTables(
                 /**
                  * See http://stackoverflow.com/questions/38610739/join-3-tables-without-losing-ability-to-refer-each-table
@@ -92,16 +93,31 @@ public class SheketProvider extends ContentProvider {
                 String.format(Locale.US,
                         "%s CROSS JOIN %s LEFT JOIN %s ",
                         ItemEntry.TABLE_NAME,
-                        BranchEntry.TABLE_NAME,
+                        /**
+                         * NOTE: Since we are doing a CROSS JOIN between items and branches, the dummy branch
+                         * will also appear in the result. If we don't filter it now,
+                         * we won't be able to remove it from the result by just selecting with
+                         * the company id, since that will only look at the company id from the item table
+                         * which will pass the test even for the dummy branch.
+                         */
+                        String.format(
+                                Locale.US,
+                                " (select * from %s where %s != %s) %s ",
+                                BranchEntry.TABLE_NAME,
+                                BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID),
+                                String.valueOf(BranchEntry.DUMMY_BRANCH_ID),
+                                BranchEntry.TABLE_NAME
+                        ),
                         BranchItemEntry.TABLE_NAME) +
 
-                String.format(Locale.US,
-                        " ON %s = %s AND %s = %s",
-                        ItemEntry._full(ItemEntry.COLUMN_ITEM_ID),
-                        BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID),
+                        // The join conditions.
+                        String.format(Locale.US,
+                                " ON %s = %s AND %s = %s",
+                                ItemEntry._full(ItemEntry.COLUMN_ITEM_ID),
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_ITEM_ID),
 
-                        BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID),
-                        BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID))
+                                BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID),
+                                BranchItemEntry._full(BranchItemEntry.COLUMN_BRANCH_ID))
         );
 
         sItemWithBranchQueryBuilder = new SQLiteQueryBuilder();
