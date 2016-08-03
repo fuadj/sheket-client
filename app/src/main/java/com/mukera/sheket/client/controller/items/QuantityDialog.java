@@ -163,6 +163,43 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         super.onActivityCreated(savedInstanceState);
     }
 
+    /**
+     * Check if the written quantity "makes sense".
+     * It checks if any transaction leaves any quantity(current, sender, receiver)
+     * in a negative quantity value.
+     * @return  true if allowed
+     */
+    boolean isQuantityAllowed() {
+        // if we haven't figured out the current branch's qty, it isn't allowed
+        if (mCurrentBranchItemQty == null)
+            return false;
+
+        double qty = getConvertedItemQuantity();
+
+        switch (mActionType) {
+            case SELL:
+            case SEND_TO:
+                if ((qty - mCurrentBranchItemQty.quantity) < 0) {
+                    return false;
+                }
+                break;
+
+            case RECEIVE_FROM: {
+                if (mOtherBranchItem == null ||
+                        mOtherBranchItem.first == null)
+                    return false;
+                SBranchItem other_branch_qty = mOtherBranchItem.first;
+
+                if ((qty - other_branch_qty.quantity) < 0) {
+                    return false;
+                }
+                break;
+            }
+        }
+
+        return true;
+    }
+
     void updateOkBtnEnableStatus() {
         if (mActionType == ActionType.NOT_SET) {
             mBtnOk.setEnabled(false);
@@ -174,16 +211,23 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             return;
         }
 
+        if (!isQuantityAllowed()) {
+            mBtnOk.setEnabled(false);
+            return;
+        }
+
         switch (mActionType) {
             case SELL:
             case BUY:
                 mBtnOk.setEnabled(true);
                 return;
-        }
 
-        if (mOtherBranchItem == null) {
-            mBtnOk.setEnabled(false);
-            return;
+            case SEND_TO:
+            case RECEIVE_FROM:
+                if (mOtherBranchItem == null) {
+                    mBtnOk.setEnabled(false);
+                    return;
+                }
         }
 
         mBtnOk.setEnabled(true);
