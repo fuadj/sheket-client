@@ -82,7 +82,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     private TextView mTextOtherBranchQty;
     private ImageView mImgOtherBranchEmpty;
 
-    private View mLayoutUnitSelection;
     private RadioGroup mRadioGroup;
     private RadioButton mRadioStandard, mRadioDerived;
 
@@ -270,7 +269,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         mTextOtherBranchQty = (TextView) view.findViewById(R.id.dialog_qty_text_other_branch_qty);
         mImgOtherBranchEmpty = (ImageView) view.findViewById(R.id.dialog_qty_img_item_not_exist);
 
-        mLayoutUnitSelection = view.findViewById(R.id.dialog_qty_layout_unit_selection);
         mRadioGroup = (RadioGroup) view.findViewById(R.id.dialog_qty_radio_group);
 
         mRadioStandard = (RadioButton) view.findViewById(R.id.dialog_qty_radio_standard);
@@ -317,7 +315,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             mLayoutOtherBranchQty.setVisibility(View.GONE);
         }
 
-        mLayoutUnitSelection.setVisibility(
+        mRadioGroup.setVisibility(
                 mItem.has_derived_unit ? View.VISIBLE : View.GONE);
 
         boolean show_conversion_rate = mItem.has_derived_unit && isQuantitySet();
@@ -365,9 +363,12 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         // update the units extension
         if (!mItem.has_derived_unit) {
+            mTextUnitExtension.setVisibility(View.VISIBLE);
             mTextUnitExtension.setText(
                     UnitsOfMeasurement.getUnitSymbol(mItem.unit_of_measurement));
         } else {
+            mTextUnitExtension.setVisibility(View.GONE);
+            /*
             String unit;
             if (isDerivedSelected()) {
                 unit = String.format("  %s  ", mRadioDerived.getText());
@@ -375,6 +376,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 unit = String.format("  %s  ", mRadioStandard.getText());
             }
             mTextUnitExtension.setText(unit);
+            */
         }
 
         if (isQuantitySet() &&

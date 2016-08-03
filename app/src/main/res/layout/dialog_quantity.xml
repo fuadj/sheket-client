@@ -135,23 +135,38 @@
 
 
     <LinearLayout
-        android:orientation="vertical"
-        app:layout_row="4"
-        app:layout_column="0"
-        app:layout_columnSpan="3"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/dialog_qty_layout_unit_selection"
-        android:layout_marginBottom="8dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+        app:layout_columnSpan="3"
+        app:layout_column="0"
+        app:layout_row="4">
+
+        <EditText android:id="@+id/dialog_qty_edit_text_qty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLength="20"
+            android:inputType="number"
+            app:layout_columnSpan="3"
+            app:layout_column="0"
+            app:layout_row="5"
+            android:layout_weight="1"
+            android:layout_gravity="top" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="m2"
+            android:id="@+id/dialog_qty_text_unit_extension"
+            android:textColor="#000000"
+            android:layout_gravity="top" />
 
         <RadioGroup
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:id="@+id/dialog_qty_radio_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal">
+            android:layout_marginTop="6dp">
 
             <RadioButton
                 android:layout_width="wrap_content"
@@ -166,36 +181,9 @@
                 android:id="@+id/dialog_qty_radio_derived"
                 app:layout_column="2"
                 app:layout_gravity="right"
-                app:layout_row="4"
-                android:layout_marginLeft="32dp" />
+                app:layout_row="4" />
+
         </RadioGroup>
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_columnSpan="3"
-        app:layout_column="0"
-        app:layout_row="5">
-
-        <EditText android:id="@+id/dialog_qty_edit_text_qty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLength="20"
-            android:inputType="number"
-            app:layout_columnSpan="3"
-            app:layout_column="0"
-            app:layout_row="5"
-            android:layout_weight="1" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="m2"
-            android:id="@+id/dialog_qty_text_unit_extension"
-            android:layout_gravity="center_vertical"
-            android:textColor="#000000" />
     </LinearLayout>
 
     <TextView
@@ -208,7 +196,7 @@
         android:paddingBottom="8dp"
         android:background="#bbdefb"
         app:layout_columnSpan="3"
-        app:layout_row="6"
+        app:layout_row="5"
         app:layout_column="0"
         android:paddingLeft="16dp" />
 
@@ -217,7 +205,7 @@
         android:layout_height="wrap_content"
         android:text="Note:"
         android:textStyle="bold"
-        app:layout_row="7"
+        app:layout_row="6"
         android:textColor="#000000"
         android:layout_marginTop="8dp"
         android:textSize="20dp"
@@ -226,7 +214,7 @@
     <EditText android:id="@+id/dialog_qty_edit_text_item_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_row="8"
+        app:layout_row="7"
         app:layout_columnSpan="3"
         android:maxLength="20"
         app:layout_column="0" />
@@ -238,7 +226,7 @@
         android:id="@+id/dialog_qty_btn_cancel"
         android:layout_alignParentLeft="true"
         android:minWidth="100dp"
-        app:layout_row="9"
+        app:layout_row="8"
         app:layout_column="0" />
 
     <Button
@@ -248,7 +236,7 @@
         android:id="@+id/dialog_qty_btn_ok"
         android:layout_alignParentRight="true"
         android:minWidth="100dp"
-        app:layout_row="9"
+        app:layout_row="8"
         app:layout_column="2"
         app:layout_gravity="center_vertical|right" />
 
