@@ -375,35 +375,6 @@ public class PrefUtil {
         }
     }
 
-    /**
-     * Sync status
-     */
-
-    public static void setSyncStatus(Context c, @SheketService.SyncStatus int sync_status) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(c).edit();
-        editor.putInt(c.getString(R.string.sync_status), sync_status);
-        editor.commit();
-    }
-
-    @SuppressWarnings("ResourceType")
-    static public
-    @SheketService.SyncStatus
-    int getSyncStatus(Context c) {
-        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
-        return p.getInt(c.getString(R.string.sync_status), SheketService.SYNC_STATUS_SYNCED);
-    }
-
-    public static void setSyncError(Context c, String err) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(c).edit();
-        editor.putString(c.getString(R.string.sync_error), err);
-        editor.commit();
-    }
-
-    public static String getSyncErrorMessage(Context c) {
-        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
-        return p.getString(c.getString(R.string.sync_error), "");
-    }
-
     static String _to_str(int i) {
         return Integer.toString(i);
     }
