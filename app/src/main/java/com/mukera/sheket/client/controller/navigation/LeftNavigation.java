@@ -29,7 +29,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
  */
 public class LeftNavigation extends BaseNavigation implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String[] COMPANY_COLUMNS = {
-            CompanyEntry._full(CompanyEntry.COLUMN_ID),
+            CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID),
             CompanyEntry._full(CompanyEntry.COLUMN_NAME),
             CompanyEntry._full(CompanyEntry.COLUMN_PERMISSION),
             CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP)
@@ -131,12 +131,15 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = CompanyEntry._full(CompanyEntry.COLUMN_ID) + " ASC";
+        String sortOrder = CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " ASC";
 
         return new CursorLoader(getNavActivity(),
                 CompanyEntry.CONTENT_URI,
                 COMPANY_COLUMNS,
-                null, null,
+                CompanyEntry.COLUMN_USER_ID + " = ?",
+                new String[]{
+                        String.valueOf(PrefUtil.getUserId(getNavActivity()))
+                },
                 sortOrder
         );
     }

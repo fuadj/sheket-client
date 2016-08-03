@@ -258,7 +258,7 @@ public class SheketProvider extends ContentProvider {
             case COMPANY: {
                 tableName = CompanyEntry.TABLE_NAME;
                 if (uri_match == COMPANY_WITH_ID) {
-                    selection = CompanyEntry.COLUMN_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
+                    selection = CompanyEntry.COLUMN_COMPANY_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
                     selectionArgs = null;
                 }
                 append_company_id = false;
@@ -650,8 +650,8 @@ public class SheketProvider extends ContentProvider {
         if (match != COMPANY) {
             company_id = CompanyBase.getCompanyId(uri);
         } else {
-            if (values.containsKey(CompanyEntry.COLUMN_ID)) {
-                company_id = values.getAsLong(CompanyEntry.COLUMN_ID);
+            if (values.containsKey(CompanyEntry.COLUMN_COMPANY_ID)) {
+                company_id = values.getAsLong(CompanyEntry.COLUMN_COMPANY_ID);
             }
         }
 

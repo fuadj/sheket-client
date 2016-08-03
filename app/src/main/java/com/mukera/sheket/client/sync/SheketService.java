@@ -135,6 +135,7 @@ public class SheketService extends IntentService {
             final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
             JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
 
+            long user_id = PrefUtil.getUserId(this);
             for (int i = 0; i < companyArr.length(); i++) {
                 JSONObject companyObj = companyArr.getJSONObject(i);
 
@@ -143,9 +144,11 @@ public class SheketService extends IntentService {
                 String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
 
                 ContentValues values = new ContentValues();
-                values.put(SheketContract.CompanyEntry.COLUMN_ID, company_id);
-                values.put(SheketContract.CompanyEntry.COLUMN_NAME, company_name);
-                values.put(SheketContract.CompanyEntry.COLUMN_PERMISSION, permission);
+                values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
+                // tie this company to the current user calling the sync
+                values.put(CompanyEntry.COLUMN_USER_ID, user_id);
+                values.put(CompanyEntry.COLUMN_NAME, company_name);
+                values.put(CompanyEntry.COLUMN_PERMISSION, permission);
 
                 operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
                         withValues(values).build());

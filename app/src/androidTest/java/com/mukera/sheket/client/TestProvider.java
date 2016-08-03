@@ -53,7 +53,7 @@ public class TestProvider extends AndroidTestCase {
 
     public static ContentValues createCompanyValues() {
         ContentValues values = new ContentValues();
-        values.put(CompanyEntry.COLUMN_ID, TEST_COMPANY_ID);
+        values.put(CompanyEntry.COLUMN_COMPANY_ID, TEST_COMPANY_ID);
         values.put(CompanyEntry.COLUMN_NAME, TEST_COMPANY_name);
         values.put(CompanyEntry.COLUMN_PERMISSION, TEST_COMPANY_PERMISSION);
         return values;
@@ -442,7 +442,7 @@ public class TestProvider extends AndroidTestCase {
         updatedValues.put(CompanyEntry.COLUMN_NAME, "Changed name");
 
         int updated = _update(CompanyEntry.CONTENT_URI, updatedValues,
-                CompanyEntry.COLUMN_ID + " = ?",
+                CompanyEntry.COLUMN_COMPANY_ID + " = ?",
                 new String[]{Long.toString(company_id)});
         assertEquals(updated, 1);
         Cursor cursor = _query(CompanyEntry.buildCompanyUri(company_id));
