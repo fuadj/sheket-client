@@ -103,6 +103,11 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
      */
     private SBranchItem mCurrentBranchItemQty = null;
 
+    /**
+     * A pair of the "other" branch item and branch when the transaction is
+     * a transfer(send/receive). If the first element(the branch item) is null,
+     * then the other branch doesn't contain that item.
+     */
     private Pair<SBranchItem, SBranch> mOtherBranchItem = null;
 
     private QuantityListener mListener;
@@ -166,7 +171,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
      * Check if the written quantity "makes sense".
      * It checks if any transaction leaves any quantity(current, sender, receiver)
      * in a negative quantity value.
-     * @return  true if allowed
+     *
+     * @return true if allowed
      */
     boolean isQuantityAllowed() {
         // if we haven't figured out the current branch's qty, it isn't allowed
@@ -370,12 +376,24 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             mTextUnitExtension.setVisibility(View.GONE);
         }
 
-        if (isQuantitySet() &&
-                !isQuantityAllowed()) {
-            mQtyEdit.setError("Invalid Quantity");
-            mQtyEdit.requestFocus();
-        } else {
+        if (!isQuantitySet() || isQuantityAllowed()) {
             mQtyEdit.setError(null);
+        } else {
+            boolean display_error = true;
+
+            // if we are receiving/sending but have not specified the "other" branch
+            // don't show the error message
+            if ((mOtherBranchItem == null) &&
+                    (mActionType == ActionType.RECEIVE_FROM
+                            || mActionType == ActionType.SEND_TO)) {
+                display_error = false;
+            }
+            if (display_error) {
+                mQtyEdit.setError("Invalid Quantity");
+                mQtyEdit.requestFocus();
+            } else {
+                mQtyEdit.setError(null);
+            }
         }
     }
 
