@@ -231,7 +231,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                     Thread t = new Thread() {
                         @Override
                         public void run() {
-                            // TODO: give some feedback if it is success/failiure(maybe no internet)
+                            // TODO: give some feedback if it is success/failure(maybe no internet)
                             createCompany(activity, company_name);
                             activity.runOnUiThread(new Runnable() {
                                 @Override
@@ -281,6 +281,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                 ContentValues values = new ContentValues();
                 values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
+                values.put(CompanyEntry.COLUMN_USER_ID, PrefUtil.getUserId(getActivity()));
                 values.put(CompanyEntry.COLUMN_NAME, company_name);
                 values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
 
