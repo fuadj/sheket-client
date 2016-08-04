@@ -26,7 +26,8 @@
         <View
             android:id="@+id/list_item_nav_right_name_left_padding"
             android:layout_width="8dp"
-            android:layout_height="10dp"/>
+            android:layout_height="10dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 

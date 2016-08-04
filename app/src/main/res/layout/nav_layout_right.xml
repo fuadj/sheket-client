@@ -7,44 +7,61 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp">
 
-    <ScrollView
+    <LinearLayout
         android:layout_alignParentTop="true"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <LinearLayout
-            android:orientation="vertical"
-            android:paddingTop="32dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/left_nav_separator_text"
-                android:text="Branches"
-                android:layout_marginBottom="4dp" />
-
-            <View
-                android:background="@color/right_nav_separator"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"/>
-
-            <ListView
-                android:id="@+id/nav_right_list_view_branches"
-                android:dividerHeight="0dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:choiceMode="singleChoice"/>
-
-        </LinearLayout>
-    </ScrollView>
-
-    <ListView
-        android:layout_alignParentBottom="true"
-        android:id="@+id/nav_right_list_view_sync"
-        android:dividerHeight="0dp"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:choiceMode="singleChoice" />
+        android:layout_marginTop="16dp"
+        android:id="@+id/layout_static">
+
+        <include
+            android:id="@+id/nav_right_sync"
+            layout="@layout/list_item_nav_right"/>
+        <include
+            android:id="@+id/nav_right_transactions"
+            layout="@layout/list_item_nav_right"/>
+        <include
+            android:id="@+id/nav_right_items"
+            layout="@layout/list_item_nav_right"/>
+    </LinearLayout>
+
+    <!--
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+        -->
+    <LinearLayout
+        android:layout_marginTop="16dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layout_static">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/left_nav_separator_text"
+            android:text="Branches"
+            android:layout_marginBottom="4dp"
+            android:layout_above="@+id/separator_view" />
+
+        <View
+            android:background="@color/right_nav_separator"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:id="@+id/separator_view"
+            android:layout_above="@+id/nav_right_list_view_branches" />
+
+        <ListView
+            android:id="@+id/nav_right_list_view_branches"
+            android:dividerHeight="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:choiceMode="singleChoice"
+            android:layout_alignParentBottom="true" />
+    </LinearLayout>
 
 </RelativeLayout>

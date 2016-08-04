@@ -2,6 +2,8 @@ package com.mukera.sheket.client.controller.navigation;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.os.Bundle;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
@@ -33,29 +35,64 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     private ListView mBranchList;
     private BranchAdapter mBranchAdapter;
 
-    private ListView mSyncList;
-    private SyncAdapter mSyncAdapter;
+    private View mViewSync, mViewTransaction, mViewItems;
+
+    void configureStaticOptions() {
+        ViewHolder holder = new ViewHolder(mViewSync);
+        holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_SYNC).first);
+        holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_SYNC).second);
+
+        holder = new ViewHolder(mViewTransaction);
+        holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_TRANSACTIONS).first);
+        holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_TRANSACTIONS).second);
+
+        holder = new ViewHolder(mViewItems);
+        holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_ITEM_LIST).first);
+        holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(
+                StaticNavigationOptions.OPTION_ITEM_LIST).second);
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean option_matched = false;
+                int selected_option = -1;
+                switch (v.getId()) {
+                    case R.id.nav_right_sync:
+                        selected_option = StaticNavigationOptions.OPTION_SYNC;
+                        option_matched = true; break;
+                    case R.id.nav_right_transactions:
+                        selected_option = StaticNavigationOptions.OPTION_TRANSACTIONS;
+                        option_matched = true; break;
+                    case R.id.nav_right_items:
+                        selected_option = StaticNavigationOptions.OPTION_ITEM_LIST;
+                        option_matched = true; break;
+                }
+                if (option_matched) {
+                    getCallBack().onNavigationOptionSelected(selected_option);
+                }
+            }
+        };
+        mViewSync.setOnClickListener(listener);
+        mViewTransaction.setOnClickListener(listener);
+        if (getUserPermission() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+            mViewItems.setVisibility(View.GONE);
+        } else {
+            mViewItems.setOnClickListener(listener);
+        }
+    }
 
     @Override
     protected void onSetup() {
-        mSyncList = (ListView) getRootView().findViewById(R.id.nav_right_list_view_sync);
-        mSyncAdapter = new SyncAdapter(getNavActivity());
+        mViewSync = getRootView().findViewById(R.id.nav_right_sync);
+        mViewTransaction = getRootView().findViewById(R.id.nav_right_transactions);
+        mViewItems = getRootView().findViewById(R.id.nav_right_items);
 
-        mSyncList.setAdapter(mSyncAdapter);
-        if (getUserPermission() == SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            mSyncAdapter.add(StaticNavigationOptions.OPTION_ITEM_LIST);
-        }
-        mSyncAdapter.add(StaticNavigationOptions.OPTION_TRANSACTIONS);
-        mSyncAdapter.add(StaticNavigationOptions.OPTION_SYNC);
-
-        mSyncList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Integer i = mSyncAdapter.getItem(position);
-                getCallBack().onNavigationOptionSelected(i);
-            }
-        });
-        ListUtils.setDynamicHeight(mSyncList);
+        configureStaticOptions();
 
         mBranchList = (ListView) getRootView().findViewById(R.id.nav_right_list_view_branches);
         mBranchAdapter = new BranchAdapter(getNavActivity());
@@ -70,7 +107,6 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 }
             }
         });
-        ListUtils.setDynamicHeight(mBranchList);
 
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
     }
@@ -90,13 +126,11 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mBranchAdapter.swapCursor(data);
-        ListUtils.setDynamicHeight(mBranchList);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mBranchAdapter.swapCursor(null);
-        ListUtils.setDynamicHeight(mBranchList);
     }
 
     static class BranchAdapter extends CursorAdapter {
@@ -120,38 +154,10 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
             ViewHolder holder = (ViewHolder) view.getTag();
             // we don't show an icon for branches
             holder.icon.setVisibility(View.GONE);
+            holder.namePadding.setVisibility(View.VISIBLE);
 
             SBranch branch = new SBranch(cursor);
             holder.name.setText(Utils.toTitleCase(branch.branch_name));
-        }
-    }
-
-    static class SyncAdapter extends ArrayAdapter<Integer> {
-        public SyncAdapter(Context context) {
-            super(context, 0);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Integer item = getItem(position);
-
-            ViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(getContext());
-                convertView = inflater.inflate(R.layout.list_item_nav_right, parent, false);
-                holder = new ViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            // we don't need padding when we show the icon
-            holder.namePadding.setVisibility(View.GONE);
-
-            holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(item).first);
-            holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(item).second);
-
-            return convertView;
         }
     }
 
