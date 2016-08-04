@@ -12,7 +12,7 @@
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:paddingTop="32dp"
+            android:paddingTop="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -34,7 +34,7 @@
             <LinearLayout
                 android:id="@+id/nav_left_layout_management"
                 android:orientation="vertical"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -67,7 +67,7 @@
         android:id="@+id/nav_left_list_view_preference"
         android:dividerHeight="0dp"
         android:paddingLeft="8dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:choiceMode="singleChoice" />
