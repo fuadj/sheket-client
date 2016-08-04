@@ -109,12 +109,12 @@ public class SheketService extends IntentService {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
-            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG,
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SERVER_ERROR,
                     e.getMessage(),
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Internet Problem", e);
-            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG,
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR,
                     "Internet problem",
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (Exception e) {
