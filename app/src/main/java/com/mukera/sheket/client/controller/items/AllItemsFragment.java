@@ -201,7 +201,8 @@ public class AllItemsFragment extends SearchableItemFragment {
         } else {
             mAddBtn.setVisibility(View.GONE);
             mPasteBtn.setVisibility(View.VISIBLE);
-            mDeleteBtn.setVisibility(View.VISIBLE);
+            // TODO: make it visible after you implement delete here and on server
+            mDeleteBtn.setVisibility(View.GONE);
         }
     }
 
