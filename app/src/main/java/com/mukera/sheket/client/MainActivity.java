@@ -12,8 +12,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -24,6 +26,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.AndroidRuntimeException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -120,14 +123,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private SlidingMenu mNavigation;
 
-    /**
-     * When there is a configuration change and we restart this activity,
-     * we check these arguments to check for the reason.
-     */
-    private static final String KEY_ARG_REASON = "key_arg_reason";
-    private static final String KEY_ARG_TITLE = "key_arg_title";
-    private static final String KEY_ARG_MSG = "key_arg_msg";
-
     private static final int LAUNCH_REASON_NONE = -1;
     private static final int LAUNCH_REASON_RESTART = 0;
     private static final int LAUNCH_REASON_SYNC_SUCCESS = 1;
@@ -148,7 +143,15 @@ public class MainActivity extends AppCompatActivity implements
         initSlidingMenuDrawer();
 
         if (savedInstanceState == null) {
-            checkLaunchReason();
+            /**
+             * If we are launching for the first time open either of the navigation drawers.
+             * If we don't have any companies, open the left side. Open the right otherwise.
+             */
+            if (!PrefUtil.isCompanySet(this)) {
+                mNavigation.showMenu();
+            } else {
+                mNavigation.showSecondaryMenu();
+            }
         }
     }
 
@@ -172,35 +175,6 @@ public class MainActivity extends AppCompatActivity implements
 
         int width = getResources().getDimensionPixelSize(R.dimen.navdrawer_width);
         mNavigation.setBehindWidth(width);
-    }
-
-    void checkLaunchReason() {
-        Intent intent = getIntent();
-        int reason = intent.getIntExtra(KEY_ARG_REASON, LAUNCH_REASON_NONE);
-        switch (reason) {
-            case LAUNCH_REASON_NONE: return;
-
-            // do nothing if it was only wanted for the activity to restart
-            case LAUNCH_REASON_RESTART:
-                break;
-
-            // display sync success dialog
-            case LAUNCH_REASON_SYNC_SUCCESS: {
-                new AlertDialog.Builder(this).
-                        setTitle("Success").
-                        setMessage("You've synced successfully.").show();
-                break;
-            }
-
-            case LAUNCH_REASON_SYNC_ERROR: {
-                String title = intent.getStringExtra(KEY_ARG_TITLE);
-                String msg = intent.getStringExtra(KEY_ARG_MSG);
-
-                new AlertDialog.Builder(this).
-                        setTitle(title).setMessage(msg).show();
-                break;
-            }
-        }
     }
 
     void requireLogin() {
@@ -707,57 +681,53 @@ public class MainActivity extends AppCompatActivity implements
             String action = intent.getAction();
             String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
 
-            if (!action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
-                if (mSyncingProgress != null) {
-                    mSyncingProgress.dismiss();
-                    mSyncingProgress = null;
-                }
+            if (mSyncingProgress != null) {
+                mSyncingProgress.dismiss();
+                mSyncingProgress = null;
             }
 
             if (action.equals(SheketBroadcast.ACTION_LOGIN)) {
-                restartMainActivity(LAUNCH_REASON_RESTART);
+                restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
-                restartMainActivity(LAUNCH_REASON_RESTART);
+                restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
                 mSyncingProgress = ProgressDialog.show(activity,
                         "Syncing", "Please Wait...", true);
             } else if (action.equals(SheketBroadcast.ACTION_SYNC_SUCCESS)) {
-                restartMainActivity(LAUNCH_REASON_SYNC_SUCCESS);
-            } else if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
-                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
-                        "Sync error, Try Again..", error_extra);
-            } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
-                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
-                        "Internet error", "Try Again...");
-            } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
-                restartMainActivity(LAUNCH_REASON_SYNC_ERROR,
-                        "Error, Try Again", error_extra);
+                new AlertDialog.Builder(MainActivity.this).
+                        setTitle("Success").
+                        setMessage("You've synced successfully.").show();
+            } else {
+                String err_title = "";
+                String err_body = "";
+                if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
+                    err_title = "Sync error, Try Again...";
+                } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
+                    err_title = "Internet error, Try Again...";
+                } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
+                    err_title = "Error, Try Again...";
+                    err_body = error_extra;
+                }
+
+                new AlertDialog.Builder(MainActivity.this).
+                        setTitle(err_title).setMessage(err_body).
+                        show();
             }
         }
     };
 
-    void restartMainActivity(final int reason) {
-        restartMainActivity(reason, null, null);
-    }
-    /**
-     * Restarts this activity for the reason. Passes the msg if they are not null.
-     */
-    void restartMainActivity(final int reason, final String msg_title, final String msg_body) {
+    void restartMainActivity() {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
+
             @Override
             public void run() {
-                Intent intent = getIntent();
-                intent.putExtra(KEY_ARG_REASON, reason);
-                if (msg_title != null) {
-                    intent.putExtra(KEY_ARG_TITLE, msg_title);
-                }
-                if (msg_body != null) {
-                    intent.putExtra(KEY_ARG_MSG, msg_body);
-                }
-
                 finish();
-                startActivity(intent);
+                startActivity(getIntent());
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                } else {
+                    recreate();
+                }
             }
         }, 100);
     }
