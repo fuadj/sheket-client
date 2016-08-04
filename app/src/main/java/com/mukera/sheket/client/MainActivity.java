@@ -722,12 +722,23 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public void run() {
+                /**
+                 * IMPORTANT: If we are viewing items in either BranchItems for ItemList
+                 * and we try to restart MainActivity, the app will crash 'cause of
+                 * a google ExpandableListView bug.
+                 * So, we remove the fragments before we restart the activity to
+                 * clear any references we have to any ExpandableListViewto any ExpandableListViews.
+                 */
+                emptyBackStack();
+
                 finish();
                 startActivity(getIntent());
+                /*
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 } else {
                     recreate();
                 }
+                */
             }
         }, 100);
     }
