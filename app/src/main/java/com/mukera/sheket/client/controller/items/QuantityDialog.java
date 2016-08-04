@@ -15,7 +15,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -101,7 +100,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
      * We use this to determine if we are trying to sell/send beyond
      * the quantity available in the current branch.
      */
-    private SBranchItem mCurrentBranchItemQty = null;
+    private Pair<SBranchItem, SBranch> mCurrentBranchItemPair = null;
 
     /**
      * A pair of the "other" branch item and branch when the transaction is
@@ -176,7 +175,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
      */
     boolean isQuantityAllowed() {
         // if we haven't figured out the current branch's qty, it isn't allowed
-        if (mCurrentBranchItemQty == null)
+        if (mCurrentBranchItemPair == null)
             return false;
 
         double qty = getConvertedItemQuantity();
@@ -184,7 +183,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         switch (mActionType) {
             case SELL:
             case SEND_TO:
-                if ((mCurrentBranchItemQty.quantity - qty) < 0) {
+                if ((mCurrentBranchItemPair.first.quantity - qty) < 0) {
                     return false;
                 }
                 break;
@@ -389,7 +388,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 display_error = false;
             }
             if (display_error) {
-                mQtyEdit.setError("Invalid Quantity");
+                mQtyEdit.setError("Insufficient Quantity");
                 mQtyEdit.requestFocus();
             } else {
                 mQtyEdit.setError(null);
@@ -630,7 +629,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         for (int i = 0; i < mItem.available_branches.size(); i++) {
             Pair<SBranchItem, SBranch> branchItemBranchPair = mItem.available_branches.get(i);
             if (branchItemBranchPair.second.branch_id == mCurrentBranch) {
-                mCurrentBranchItemQty = branchItemBranchPair.first;
+                mCurrentBranchItemPair = branchItemBranchPair;
 
                 // remove it from the available list so it won't appear in the "other" branch list
                 mItem.available_branches.remove(i);
