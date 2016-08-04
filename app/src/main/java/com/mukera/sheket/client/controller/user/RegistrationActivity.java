@@ -47,20 +47,13 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
                 commit();
     }
 
-    void syncUserDataOnLogin() {
-        Intent intent = new Intent(this, SheketService.class);
-        startService(intent);
-    }
-
     @Override
     public void SingUpSuccess() {
-        syncUserDataOnLogin();
         launchMainActivity();
     }
 
     @Override
     public void LoginSuccess() {
-        syncUserDataOnLogin();
         launchMainActivity();
     }
 
