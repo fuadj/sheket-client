@@ -222,26 +222,35 @@
         app:layout_column="0"
         android:singleLine="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cancel"
-        android:id="@+id/dialog_qty_btn_cancel"
-        android:layout_alignParentLeft="true"
-        android:minWidth="100dp"
+    <RelativeLayout
         app:layout_row="8"
-        app:layout_column="0" />
+        app:layout_columnSpan="3"
+        app:layout_column="0"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ok"
-        android:id="@+id/dialog_qty_btn_ok"
-        android:layout_alignParentRight="true"
-        android:minWidth="100dp"
-        app:layout_row="8"
-        app:layout_column="2"
-        app:layout_gravity="center_vertical|right" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:id="@+id/dialog_qty_btn_cancel"
+            android:layout_alignParentLeft="true" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Continue"
+            android:id="@+id/dialog_qty_btn_continue"
+            android:layout_centerHorizontal="true" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finish"
+            android:id="@+id/dialog_qty_btn_finish"
+            android:layout_alignParentRight="true" />
+
+    </RelativeLayout>
 
 </android.support.v7.widget.GridLayout>
 

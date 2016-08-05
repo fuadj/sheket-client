@@ -91,7 +91,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     private EditText mEditItemNote;
 
-    private Button mBtnOk, mBtnCancel;
+    private Button mBtnCancel;
+    private Button mBtnContinue, mBtnFinish;
 
     private SItem mItem;
     private Long mCurrentBranch;
@@ -204,37 +205,30 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         return true;
     }
 
-    void updateOkBtnEnableStatus() {
-        if (mActionType == ActionType.NOT_SET) {
-            mBtnOk.setEnabled(false);
-            return;
-        }
-
-        if (!isQuantitySet()) {
-            mBtnOk.setEnabled(false);
-            return;
-        }
-
-        if (!isQuantityAllowed()) {
-            mBtnOk.setEnabled(false);
+    void updateAcceptTransactionButtonState() {
+        if ((mActionType == ActionType.NOT_SET) ||
+                !isQuantitySet() ||
+                !isQuantityAllowed()) {
+            mBtnContinue.setEnabled(false);
+            mBtnFinish.setEnabled(false);
             return;
         }
 
         switch (mActionType) {
-            case SELL:
-            case BUY:
-                mBtnOk.setEnabled(true);
-                return;
-
             case SEND_TO:
             case RECEIVE_FROM:
+                /**
+                 * If this transaction is a transfer, we should've selected another branch
+                 */
                 if (mOtherBranchItem == null) {
-                    mBtnOk.setEnabled(false);
+                    mBtnContinue.setEnabled(false);
+                    mBtnFinish.setEnabled(false);
                     return;
                 }
         }
 
-        mBtnOk.setEnabled(true);
+        mBtnContinue.setEnabled(true);
+        mBtnFinish.setEnabled(true);
     }
 
     void updateConversionRateDisplay() {
@@ -293,7 +287,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
 
         mBtnCancel = (Button) view.findViewById(R.id.dialog_qty_btn_cancel);
-        mBtnOk = (Button) view.findViewById(R.id.dialog_qty_btn_ok);
+        mBtnContinue = (Button) view.findViewById(R.id.dialog_qty_btn_continue);
     }
 
     void updateVisibility() {
@@ -400,7 +394,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         updateVisibility();
         updateViewContents();
         updateConversionRateDisplay();
-        updateOkBtnEnableStatus();
+        updateAcceptTransactionButtonState();
     }
 
     @NonNull
@@ -503,7 +497,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
         });
 
-        mBtnOk.setOnClickListener(new View.OnClickListener() {
+        mBtnContinue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 double qty = getConvertedItemQuantity();
