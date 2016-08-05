@@ -120,8 +120,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                         CategoryEntry.TABLE_NAME,
                         CategoryEntry.COLUMN_CATEGORY_ID) +
 
-                ItemEntry.COLUMN_ITEM_CODE + " text not null, " +
-                ItemEntry.COLUMN_NAME + " text, " +
+                ItemEntry.COLUMN_ITEM_CODE + " text, " +
+                ItemEntry.COLUMN_NAME + " text not null, " +
 
                 ItemEntry.COLUMN_UNIT_OF_MEASUREMENT + " integer not null, " +
                 // b/c sqlite doesn't support boolean type
