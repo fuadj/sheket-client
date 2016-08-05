@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,6 +24,7 @@ import android.widget.*;
 
 import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
 import com.mukera.sheket.client.models.SMember;
+import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.Utils;
@@ -41,26 +43,55 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
     private TransDetailAdapter mTransDetailAdapter;
     private Map<Long, SMember> mMembers = null;
 
+    /**
+     * Because we are fetching both un-synced & synced(only if a manager) transactions,
+     * we need to have 2 "types" of cursor data. We could implement this inside ContentProvider
+     * but that would be an overkill. We would either need to implement a query that can
+     * fetch data of both types, that would be a very complex query. Or use {@code MergeCursor}
+     * at the ContentProvider side. But we also want the access control(only managers seeing history)
+     * option to be "easily configurable" from here and not deep down in the content provider.
+     * <p/>
+     * So we hold on these 2 cursors of both types and use {@code MergeCursor} to join them
+     * with the un-synced being on the top.
+     */
+    private Cursor mUn_syncedTransCursor = null;
+    private Cursor mSyncedTransCursor = null;
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         startLoader();
         super.onActivityCreated(savedInstanceState);
     }
 
+    boolean hasUserManagerAccess() {
+        SPermission.setSingletonPermission(PrefUtil.getUserPermission(getActivity()));
+        return SPermission.getSingletonPermission().getPermissionType() == SPermission.PERMISSION_TYPE_ALL_ACCESS;
+    }
+
     void startLoader() {
-        getLoaderManager().initLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
+        getLoaderManager().initLoader(LoaderId.MainActivity.UN_SYNCED_TRANSACTION_HISTORY_LOADER, null, this);
+
+        if (hasUserManagerAccess())
+            getLoaderManager().initLoader(LoaderId.MainActivity.SYNCED_TRANSACTION_HISTORY_LOADER, null, this);
     }
 
     void restartLoader() {
-        getLoaderManager().restartLoader(LoaderId.MainActivity.TRANSACTION_HISTORY_LOADER, null, this);
+        getLoaderManager().restartLoader(LoaderId.MainActivity.UN_SYNCED_TRANSACTION_HISTORY_LOADER, null, this);
+
+        if (hasUserManagerAccess())
+            getLoaderManager().restartLoader(LoaderId.MainActivity.SYNCED_TRANSACTION_HISTORY_LOADER, null, this);
     }
 
-    protected boolean displayUserName() {
-        return true;
+    boolean isUnSyncedTransaction(STransactionDetail transactionDetail) {
+        return transactionDetail.trans.transaction_id < 0;
     }
 
-    protected boolean displayDeleteButton() {
-        return false;
+    protected boolean displayUserName(STransactionDetail transactionDetail) {
+        return !isUnSyncedTransaction(transactionDetail);
+    }
+
+    protected boolean displayDeleteButton(STransactionDetail transactionDetail) {
+        return isUnSyncedTransaction(transactionDetail);
     }
 
     Map<Long, SMember> getMembers() {
@@ -110,7 +141,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         View rootView = inflater.inflate(R.layout.fragment_trans_history, container, false);
 
         mTransList = (ListView) rootView.findViewById(R.id.list_view_trans_history);
-        mTransDetailAdapter = new TransDetailAdapter(getContext(), displayUserName(), displayDeleteButton());
+        mTransDetailAdapter = new TransDetailAdapter(getContext());
         mTransDetailAdapter.setListener(new TransactionDeleteListener() {
             @Override
             public void deleteTransaction(final STransactionDetail transactionDetail) {
@@ -149,7 +180,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
                 STransactionDetail detail = mTransDetailAdapter.getItem(position);
                 TransDetailDialog dialog = new TransDetailDialog();
-                boolean display = displayUserName();
+                boolean display = displayUserName(detail);
                 dialog.setDisplayUsername(display);
                 if (display)
                     dialog.setTransUsername(getMemberName(detail.trans.user_id));
@@ -165,22 +196,61 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // more recent transactions appear on the top
-        String sortOrder = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " DESC";
+        String sortOrder = "", selection = "";
+
+        String column_trans_id = TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID);
+
+        if (id == LoaderId.MainActivity.UN_SYNCED_TRANSACTION_HISTORY_LOADER) {
+            /**
+             * since the un-synced have a decreasing -ve ids, we are basically going down
+             * the number line. So, newer transactions have a more -ve value. To make
+             * the more recent's appear on the top, we should sort in ascending order (i.e:
+             * from the more negative to the less negative).
+             */
+            sortOrder = column_trans_id + " ASC";
+            selection = column_trans_id + " < 0";
+        } else if (id == LoaderId.MainActivity.SYNCED_TRANSACTION_HISTORY_LOADER) {
+            sortOrder = column_trans_id + " DESC";
+            selection = column_trans_id + " > 0";
+        }
+
         return new CursorLoader(getActivity(),
                 TransItemEntry.buildTransactionItemsUri(
                         PrefUtil.getCurrentCompanyId(getContext()),
                         TransItemEntry.NO_TRANS_ID_SET),
                 STransaction.TRANSACTION_JOIN_ITEMS_COLUMNS,
-                // only display the positive(the synced) transactions
-                TransactionEntry._full(TransactionEntry.COLUMN_TRANS_ID) + " > 0",
+                selection,
                 null,
                 sortOrder);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mTransDetailAdapter.setTransCursor(data);
+        switch (loader.getId()) {
+            case LoaderId.MainActivity.UN_SYNCED_TRANSACTION_HISTORY_LOADER:
+                mUn_syncedTransCursor = data;
+                break;
+            case LoaderId.MainActivity.SYNCED_TRANSACTION_HISTORY_LOADER:
+                mSyncedTransCursor = data;
+                break;
+        }
+
+        // the un-synced should necessarily finish loading
+        if (mUn_syncedTransCursor != null) {
+            // the synced list hasn't loaded and the user has the privileges, wait for them
+            if (mSyncedTransCursor == null &&
+                    hasUserManagerAccess()) {
+                return;
+            }
+
+            // if we get here, we can show the data.
+            // NOTE: a null cursor is valid for {@code MergeCursor}
+            mTransDetailAdapter.setTransCursor(new MergeCursor(new Cursor[]{
+                    // the un-synced at the top
+                    mUn_syncedTransCursor,
+                    mSyncedTransCursor
+            }));
+        }
     }
 
     @Override
@@ -200,19 +270,14 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
     }
 
     public class TransDetailAdapter extends ArrayAdapter<STransactionDetail> {
-        private boolean mDisplayUsername;
-        private boolean mDisplayDeleteBtn;
-
         private TransactionDeleteListener mListener;
 
         public void setListener(TransactionDeleteListener listener) {
             mListener = listener;
         }
 
-        public TransDetailAdapter(Context context, boolean display_username, boolean display_delete) {
+        public TransDetailAdapter(Context context) {
             super(context, 0);
-            mDisplayUsername = display_username;
-            mDisplayDeleteBtn = display_delete;
         }
 
         public void setTransCursor(Cursor cursor) {
@@ -220,12 +285,15 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             clear();
 
             if (cursor != null && cursor.moveToFirst()) {
-                long prev_trans_id = -1;
+                // 0 is the only valid sentinel for both un-synced and synced transactions
+                long invalid_trans_id = 0;
+
+                long prev_trans_id = invalid_trans_id;
                 STransactionDetail detail = null;
                 do {
                     long trans_id = cursor.getLong(STransaction.COL_TRANS_ID);
                     if (trans_id != prev_trans_id) {
-                        if (prev_trans_id != -1) {
+                        if (prev_trans_id != invalid_trans_id) {
                             super.add(detail);
                         }
                         prev_trans_id = trans_id;
@@ -264,7 +332,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
             holder.trans_icon.setImageResource(
                     detail.is_buying ? R.drawable.ic_action_add_dark : R.drawable.ic_action_minus_dark);
-            if (mDisplayUsername) {
+            if (displayUserName(detail)) {
                 holder.username.setVisibility(View.VISIBLE);
                 holder.username.setText(getMemberName(detail.trans.user_id));
             } else {
@@ -280,7 +348,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
 
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             holder.date.setText(detail.trans.decodedDate);
-            if (mDisplayDeleteBtn) {
+            if (displayDeleteButton(detail)) {
                 holder.deleteTrans.setVisibility(View.VISIBLE);
                 holder.deleteTrans.setImageResource(R.drawable.ic_action_remove);
                 if (mListener != null) {

@@ -47,7 +47,6 @@ import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
-import com.mukera.sheket.client.controller.admin.UnsyncedTranactionHistoryFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.RegistrationActivity;
@@ -63,7 +62,6 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.regex.Matcher;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
@@ -333,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
-                replaceMainFragment(new UnsyncedTranactionHistoryFragment(), false);
+                replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
                 replaceMainFragment(new SettingsFragment(), false);
