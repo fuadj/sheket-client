@@ -7,6 +7,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
+import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.sync.SheketService;
@@ -58,8 +59,12 @@ public class RegistrationActivity extends AppCompatActivity implements SignupFra
     }
 
     void launchMainActivity() {
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_LOGIN));
+        // We should sync as soon as login is successful
+        PrefUtil.setShouldSyncOnLogin(this, true);
+
         this.finish();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
     }
 
     @Override

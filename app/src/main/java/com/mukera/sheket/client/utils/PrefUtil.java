@@ -16,6 +16,24 @@ import java.util.Vector;
  * Created by gamma on 3/28/16.
  */
 public class PrefUtil {
+    /**
+     * Sync On Login: Check this if you are just loggin in and should sync
+     */
+    private static final String pref_should_sync_on_login = "pref_should_sync_on_login";
+    public static void setShouldSyncOnLogin(Context context, boolean should_sync) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(pref_should_sync_on_login, should_sync);
+        editor.commit();
+    }
+
+    public static boolean getShouldSyncOnLogin(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(pref_should_sync_on_login, false);
+    }
+    /**
+     * END: Sync On Login
+     */
+
     public static void setLoginCookie(Context context, String cookie) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putString(context.getString(R.string.pref_login_cookie), cookie);

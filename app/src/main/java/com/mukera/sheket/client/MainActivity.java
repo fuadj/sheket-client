@@ -9,13 +9,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -26,7 +23,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.AndroidRuntimeException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -68,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
-
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
@@ -124,11 +119,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private SlidingMenu mNavigation;
 
-    private static final int LAUNCH_REASON_NONE = -1;
-    private static final int LAUNCH_REASON_RESTART = 0;
-    private static final int LAUNCH_REASON_SYNC_SUCCESS = 1;
-    private static final int LAUNCH_REASON_SYNC_ERROR = 2;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initSlidingMenuDrawer();
+
+        syncIfIsLoginFirstTime();
 
         if (savedInstanceState == null) {
             /**
@@ -178,8 +170,22 @@ public class MainActivity extends AppCompatActivity implements
         mNavigation.setBehindWidth(width);
     }
 
+    /**
+     * Sync if we are loggin in, so the user can see his companies right away.
+     * Only sync if you have not set any company, we don't want to be here all day!!
+     */
+    void syncIfIsLoginFirstTime() {
+        if (PrefUtil.getShouldSyncOnLogin(this) &&
+                !PrefUtil.isCompanySet(this)) {
+            Intent intent = new Intent(this, SheketService.class);
+            startService(intent);
+        }
+    }
+
     void requireLogin() {
         if (!PrefUtil.isUserSet(this)) {
+            // kill this activity, so it is started anew
+            finish();
             Intent intent = new Intent(this, RegistrationActivity.class);
             startActivity(intent);
         }
@@ -688,31 +694,45 @@ public class MainActivity extends AppCompatActivity implements
             }
 
             if (action.equals(SheketBroadcast.ACTION_LOGIN)) {
-                restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 restartMainActivity();
-            } else if (action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
-                mSyncingProgress = ProgressDialog.show(activity,
-                        "Syncing", "Please Wait...", true);
-            } else if (action.equals(SheketBroadcast.ACTION_SYNC_SUCCESS)) {
-                new AlertDialog.Builder(MainActivity.this).
-                        setTitle("Success").
-                        setMessage("You've synced successfully.").show();
             } else {
-                String err_title = "";
-                String err_body = "";
-                if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
-                    err_title = "Sync error, Try Again...";
-                } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
-                    err_title = "Internet error, Try Again...";
-                } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
-                    err_title = "Error, Try Again...";
-                    err_body = error_extra;
+                /**
+                 * If we are syncing because we just logged in, we don't want
+                 * to display the "sync-progress" dialog
+                 */
+                if (!PrefUtil.getShouldSyncOnLogin(MainActivity.this)) {
+                    if (action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
+                        mSyncingProgress = ProgressDialog.show(activity,
+                                "Syncing", "Please Wait...", true);
+                    } else if (action.equals(SheketBroadcast.ACTION_SYNC_SUCCESS)) {
+                        new AlertDialog.Builder(MainActivity.this).
+                                setTitle("Success").
+                                setMessage("You've synced successfully.").show();
+                    } else {
+                        String err_title = "";
+                        String err_body = "";
+                        if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
+                            err_title = "Sync error, Try Again...";
+                        } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
+                            err_title = "Internet error, Try Again...";
+                        } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
+                            err_title = "Error, Try Again...";
+                            err_body = error_extra;
+                        }
+
+                        new AlertDialog.Builder(MainActivity.this).
+                                setTitle(err_title).setMessage(err_body).
+                                show();
+                    }
                 }
 
-                new AlertDialog.Builder(MainActivity.this).
-                        setTitle(err_title).setMessage(err_body).
-                        show();
+                // reset the "login-sync" if we're done with that, that only happens
+                // after the start-{success|error}. So wait until {success|error}
+                if (!action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
+                    // reset it so the next sync shows the dialogs
+                    PrefUtil.setShouldSyncOnLogin(MainActivity.this, false);
+                }
             }
         }
     };
