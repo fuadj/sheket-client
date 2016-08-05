@@ -434,7 +434,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                     }
 
                     @Override
-                    public void dialogOk(DialogFragment dialog, STransactionItem transItem) {
+                    public void dialogOkContinue(DialogFragment dialog, STransactionItem transItem) {
                         dialog.dismiss();
                         if (!is_editing) {
                             mTransactionItemList.add(transItem);

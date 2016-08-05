@@ -57,7 +57,20 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     public static abstract class QuantityListener implements Parcelable {
         abstract void dialogCancel(DialogFragment dialog);
 
-        abstract void dialogOk(DialogFragment dialog, STransactionItem transItem);
+        /**
+         * Says an item was selected for the transaction and the user wants to continue
+         * to add more items to this transaction.
+         */
+        abstract void dialogOkContinue(DialogFragment dialog, STransactionItem transItem);
+
+        /**
+         * The user has selected the item he wants and wants to finish the transaction.
+         *
+         * It would be good if you check the number of items that have been selected for
+         * the transaction thus far and decide whether to display a "transaction-summary"
+         * or just commit it.
+         */
+        abstract void dialogOkFinish(DialogFragment dialog, STransactionItem transItem);
 
         @Override
         public int describeContents() {
@@ -288,6 +301,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         mBtnCancel = (Button) view.findViewById(R.id.dialog_qty_btn_cancel);
         mBtnContinue = (Button) view.findViewById(R.id.dialog_qty_btn_continue);
+        mBtnFinish = (Button) view.findViewById(R.id.dialog_qty_btn_finish);
     }
 
     void updateVisibility() {
@@ -497,34 +511,25 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
         });
 
-        mBtnContinue.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener acceptTransactionListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                double qty = getConvertedItemQuantity();
-                STransactionItem transItem = new STransactionItem();
-                transItem.item = mItem;
-                transItem.item_id = mItem.item_id;
-                transItem.quantity = qty;
-                transItem.trans_type = getTransactionType();
-                transItem.item_note = mEditItemNote.getText().toString().trim();
-                transItem.company_id = PrefUtil.getCurrentCompanyId(getActivity());
-                transItem.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED;
-                switch (transItem.trans_type) {
-                    case TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
-                    case TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER:
-                        transItem.other_branch_id = mOtherBranchItem.second.branch_id;
-                        break;
-                    default:
-                        transItem.other_branch_id = SheketContract.BranchEntry.DUMMY_BRANCH_ID;
-                }
-
                 // dismiss keyboard
                 InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
 
-                mListener.dialogOk(QuantityDialog.this, transItem);
+                if (v.getId() == mBtnContinue.getId()) {
+                    mListener.dialogOkContinue(QuantityDialog.this,
+                            getTransactionItem());
+                } else if (v.getId() == mBtnFinish.getId()){
+                    mListener.dialogOkFinish(QuantityDialog.this,
+                            getTransactionItem());
+                }
+
             }
-        });
+        };
+        mBtnContinue.setOnClickListener(acceptTransactionListener);
+        mBtnFinish.setOnClickListener(acceptTransactionListener);
 
         // start things off
         updateViews();
@@ -534,6 +539,29 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         Dialog dialog = builder.setView(view).create();
         dialog.setCanceledOnTouchOutside(false);
         return dialog;
+    }
+
+    STransactionItem getTransactionItem() {
+        STransactionItem transItem = new STransactionItem();
+
+        double qty = getConvertedItemQuantity();
+        transItem.item = mItem;
+        transItem.item_id = mItem.item_id;
+        transItem.quantity = qty;
+        transItem.trans_type = getTransactionType();
+        transItem.item_note = mEditItemNote.getText().toString().trim();
+        transItem.company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        transItem.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED;
+        switch (transItem.trans_type) {
+            case TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
+            case TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER:
+                transItem.other_branch_id = mOtherBranchItem.second.branch_id;
+                break;
+            default:
+                transItem.other_branch_id = SheketContract.BranchEntry.DUMMY_BRANCH_ID;
+        }
+
+        return transItem;
     }
 
     static class OtherBranchItemAdapter extends ArrayAdapter<Pair<SBranchItem, SBranch>> {
