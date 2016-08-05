@@ -131,7 +131,7 @@ public class BranchItemFragment extends SearchableItemFragment {
      * Sets visible the finish transaction floating button if
      * there is at least 1 item in the transaction.
      */
-    void updateFinishBtnVisibility() {
+    void updateFloatingActionBtnStatus() {
         mFinishTransactionBtn.setVisibility(
                 mTransactionItemList.isEmpty() ? View.GONE : View.VISIBLE
         );
@@ -163,7 +163,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                 displaySummaryDialog();
             }
         });
-        updateFinishBtnVisibility();
+        updateFloatingActionBtnStatus();
 
         getActivity().setTitle(Utils.toTitleCase(mBranch.branch_name));
 
@@ -281,7 +281,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                                 quitDialog.dismiss();
                                 dialog.dismiss();
                                 mTransactionItemList.clear();
-                                updateFinishBtnVisibility();
+                                updateFloatingActionBtnStatus();
                             }
                         }).setNegativeButton("No",
                         new DialogInterface.OnClickListener() {
@@ -323,7 +323,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                 } else {
                     ((TransactionSummaryDialog) dialog).refreshSummaryDialog();
                 }
-                updateFinishBtnVisibility();
+                updateFloatingActionBtnStatus();
             }
 
             @Override
@@ -353,7 +353,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        updateFinishBtnVisibility();
+                        updateFloatingActionBtnStatus();
                         dialog.dismiss();
                     }
                 }).setNeutralButton("No Reminder",
@@ -397,7 +397,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                     @Override
                     public void run() {
                         mTransactionItemList.clear();
-                        updateFinishBtnVisibility();
+                        updateFloatingActionBtnStatus();
                         progress.dismiss();
                     }
                 });
@@ -442,7 +442,35 @@ public class BranchItemFragment extends SearchableItemFragment {
                             mTransactionItemList.remove(edit_position);
                             mTransactionItemList.add(edit_position, transItem);
                         }
-                        updateFinishBtnVisibility();
+
+                        updateFloatingActionBtnStatus();
+                    }
+
+                    @Override
+                    void dialogOkFinish(DialogFragment dialog, STransactionItem transItem) {
+                        dialog.dismiss();
+                        if (!is_editing) {
+                            mTransactionItemList.add(transItem);
+                        } else {
+                            mTransactionItemList.remove(edit_position);
+                            mTransactionItemList.add(edit_position, transItem);
+                        }
+
+                        /**
+                         * If there is only 1 item, commit the transaction right away.
+                         * There will not be any "transaction-note" since there is only 1 item
+                         * in it. The transaction note is designed so multiple items can share
+                         * some common "reminder" about their transaction. For only a single item,
+                         * item note will suffice.
+                         */
+                        if (mTransactionItemList.size() == 1) {
+                            commitTransaction(mTransactionItemList, "");
+                        } else {
+                            // don't forget to the floating btn with the added item count
+                            updateFloatingActionBtnStatus();
+
+                            displaySummaryDialog();
+                        }
                     }
                 }
         );
