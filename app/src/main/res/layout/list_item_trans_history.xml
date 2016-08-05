@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants"
-    android:padding="16dp">
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
 
     <ImageView
         android:layout_width="wrap_content"
@@ -11,11 +12,8 @@
         android:id="@+id/list_item_trans_history_delete"
         android:focusable="false"
         android:layout_centerVertical="true"
-        android:maxWidth="40dp"
-        android:maxHeight="40dp"
         android:layout_alignParentLeft="true"
-        android:padding="8dp"
-        android:visibility="gone" />
+        android:background="@drawable/ic_action_remove" />
 
     <LinearLayout
         android:orientation="vertical"

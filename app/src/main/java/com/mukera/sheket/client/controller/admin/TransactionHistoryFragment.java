@@ -339,18 +339,29 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 holder.username.setVisibility(View.GONE);
             }
 
-            if (TextUtils.isEmpty(detail.trans.transactionNote)) {
+            String note = detail.trans.transactionNote;
+            /**
+             * If the transaction note is empty and we only have 1 item
+             * in the transaction, display the item's note as the
+             * transaction note.
+             */
+            if (TextUtils.isEmpty(note) &&
+                    (detail.affected_items.size() == 1)) {
+                note = detail.affected_items.get(0).item_note;
+            }
+
+            // If after all that, it is still empty, hide it.
+            if (TextUtils.isEmpty(note)) {
                 holder.transNote.setVisibility(View.GONE);
             } else {
                 holder.transNote.setVisibility(View.VISIBLE);
-                holder.transNote.setText(detail.trans.transactionNote);
+                holder.transNote.setText(note);
             }
 
             holder.total_qty.setText(Utils.formatDoubleForDisplay(detail.total_quantity));
             holder.date.setText(detail.trans.decodedDate);
             if (displayDeleteButton(detail)) {
                 holder.deleteTrans.setVisibility(View.VISIBLE);
-                holder.deleteTrans.setImageResource(R.drawable.ic_action_remove);
                 if (mListener != null) {
                     holder.deleteTrans.setOnClickListener(new View.OnClickListener() {
                         @Override
