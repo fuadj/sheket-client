@@ -134,16 +134,34 @@ public class CategoryUtil {
             }
 
             Set<Long> previous_categories = new HashSet<>();
+
             // if we need to delete them, then the un-synced can be TOTALLY deleted LOCALLY.
             Set<Long> un_synced_categories = new HashSet<>();
+
+            // if we had deleted them, but not yet synced the "delete-action", and we then try
+            // to add them BACK, that should just ignore the "delete-action" altogether
+            Map<Long, SBranchCategory> marked_as_deleted = new HashMap<>();
+
             for (SBranchCategory branchCategory : branchCategories) {
                 previous_categories.add(branchCategory.category_id);
+
                 if (branchCategory.change_status == ChangeTraceable.CHANGE_STATUS_CREATED)
                     un_synced_categories.add(branchCategory.category_id);
+                else if (branchCategory.change_status == ChangeTraceable.CHANGE_STATUS_DELETED)
+                    marked_as_deleted.put(branchCategory.category_id, branchCategory);
             }
 
             // these will be added to the branch
             Set<Long> newly_added_categories = setDifference(visited_categories, previous_categories);
+            // we should restore them.
+            /**
+             * We should restore these branch categories. We had marked them as deleted, but we haven't
+             * synced the "delete-action". We are now trying to "RE-ADD them". So just restore them
+             * to the "un-deleted" state. The un-deleted state is the synced state because if we've marked
+             * them as delete and not actually deleted them. That means they had been synced previously and
+             * can't be just removed locally. So restoring them as "synced" is the "correct" way.
+             */
+            Set<Long> categories_to_restore = setIntersection(visited_categories, marked_as_deleted.keySet());
 
             // these existed before, but are not used now. Will be removed
             Set<Long> unseen_categories = setDifference(previous_categories, visited_categories);
@@ -158,6 +176,22 @@ public class CategoryUtil {
                 operationList.add(ContentProviderOperation.newInsert(
                                 BranchCategoryEntry.buildBaseUri(company_id)).
                                 withValues(values).build());
+            }
+
+            for (Long restore_category_id : categories_to_restore) {
+                SBranchCategory branchCategory = marked_as_deleted.get(restore_category_id);
+                branchCategory.change_status = ChangeTraceable.CHANGE_STATUS_SYNCED;
+
+                String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
+                String[] selectionArgs = new String[] {
+                        String.valueOf(branch.branch_id),
+                        String.valueOf(restore_category_id)
+                };
+                operationList.add(ContentProviderOperation.newUpdate(
+                        BranchCategoryEntry.buildBaseUri(company_id)).
+                        withValues(branchCategory.toContentValues()).
+                        withSelection(selection, selectionArgs).build());
             }
 
             // remove the previously existing, but not currently being used ones
@@ -251,9 +285,23 @@ public class CategoryUtil {
         return branches;
     }
 
+    /**
+     * Does left - right
+     */
     private static Set<Long> setDifference(Set<Long> left, Set<Long> right) {
         Set<Long> left_copy = new HashSet<>(left);
         left_copy.removeAll(right);
         return left_copy;
     }
+
+    private static Set<Long> setIntersection(Set<Long> left, Set<Long> right) {
+        Set<Long> result = new HashSet<>();
+        for (Long l : left) {
+            if (right.contains(l)) {
+                result.add(l);
+            }
+        }
+        return result;
+    }
+
 }
