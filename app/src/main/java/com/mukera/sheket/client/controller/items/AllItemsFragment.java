@@ -202,7 +202,11 @@ public class AllItemsFragment extends SearchableItemFragment {
             mAddBtn.setVisibility(View.GONE);
             mPasteBtn.setVisibility(View.VISIBLE);
             // TODO: make it visible after you implement delete here and on server
-            mDeleteBtn.setVisibility(View.GONE);
+            mDeleteBtn.setVisibility(View.VISIBLE);
+
+            // they both should start disabled only be enabled after some items/categories have been selected
+            mPasteBtn.setEnabled(false);
+            mDeleteBtn.setEnabled(false);
         }
     }
 
@@ -376,6 +380,9 @@ public class AllItemsFragment extends SearchableItemFragment {
                     } else {
                         mSelectedItems.remove(item.item_id);
                     }
+                    boolean enable_paste_delete = !mSelectedItems.isEmpty() || !mSelectedCategories.isEmpty();
+                    mPasteBtn.setEnabled(enable_paste_delete);
+                    mDeleteBtn.setEnabled(enable_paste_delete);
                 }
             });
             holder.layout_select.setOnClickListener(new View.OnClickListener() {
@@ -496,6 +503,9 @@ public class AllItemsFragment extends SearchableItemFragment {
                 } else {
                     mSelectedCategories.remove(category.category_id);
                 }
+                boolean enable_paste_delete = !mSelectedItems.isEmpty() || !mSelectedCategories.isEmpty();
+                mPasteBtn.setEnabled(enable_paste_delete);
+                mDeleteBtn.setEnabled(enable_paste_delete);
             }
         });
         /**
