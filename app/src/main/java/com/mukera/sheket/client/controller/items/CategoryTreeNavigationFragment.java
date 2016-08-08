@@ -328,11 +328,20 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
         String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
 
+        String selection = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ? AND " +
+                // we don't want the deleted to appear(until they are totally removed when syncing)
+                CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?";
+
+        String[] selectionArgs = new String[] {
+                String.valueOf(mCurrentCategoryId),
+                String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)
+        };
+
         return new CursorLoader(getActivity(),
                 CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
-                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
-                new String[]{String.valueOf(mCurrentCategoryId)},
+                selection,
+                selectionArgs,
                 sortOrder);
     }
 
