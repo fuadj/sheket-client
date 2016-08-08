@@ -2,6 +2,7 @@ package com.mukera.sheket.client.controller.items;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Context;
@@ -49,6 +50,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
@@ -267,6 +269,12 @@ public class AllItemsFragment extends SearchableItemFragment {
         });
 
         mDeleteBtn = (FloatingActionButton) rootView.findViewById(R.id.all_items_float_btn_delete);
+        mDeleteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmCategoryDeletion();
+            }
+        });
 
         setUpEditModeUI();
 
@@ -756,6 +764,93 @@ public class AllItemsFragment extends SearchableItemFragment {
                 });
             }
         }).start();
+    }
+
+    /**
+     * Displays a confirmation dialog before deleting the selected categories.
+     */
+    void confirmCategoryDeletion() {
+        // we are converting it to a list because we want to preserve index. THis is because
+        // we want to only delete categories that have been confirmed in the multi-choice dialog
+        final ArrayList<SCategory> categoryList = new ArrayList<>();
+        for (Long category_id : mSelectedCategories.keySet()) {
+            categoryList.add(mSelectedCategories.get(category_id));
+        }
+
+        String[] nameArray = new String[categoryList.size()];
+        for (int i = 0; i < nameArray.length; i++) {
+            nameArray[i] = categoryList.get(i).name;
+        }
+
+        final boolean[] confirmed_names = new boolean[nameArray.length];
+        // we start off with every category approved for deletion, the user can
+        // then remove individual categories OR dismiss all.
+        for (int i = 0; i < confirmed_names.length; i++) {
+            confirmed_names[i] = true;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
+                setMultiChoiceItems(nameArray, confirmed_names,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                confirmed_names[which] = isChecked;
+                                boolean at_least_one_confirmed = false;
+                                for (Boolean confirm : confirmed_names) {
+                                    if (confirm) {
+                                        at_least_one_confirmed = true;
+                                        break;
+                                    }
+                                }
+
+                                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).
+                                        setEnabled(at_least_one_confirmed);
+                            }
+                        }).setCancelable(false).
+                setTitle("Categories To Delete, Please Confirm").
+                setPositiveButton("Delete",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final List<SCategory> confirmedList = new ArrayList<>();
+                                for (int i = 0; i < confirmed_names.length; i++) {
+                                    // the user has "de-selected" it, so ignore it
+                                    if (!confirmed_names[i]) continue;
+
+                                    confirmedList.add(categoryList.get(i));
+                                }
+                                dialog.dismiss();
+
+                                final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(),
+                                        "Deleting categories", "Please wait...", true);
+
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        CategoryUtil.deleteCategoryList(getActivity(), confirmedList);
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                deleteProgress.dismiss();
+                                                mIsEditMode = false;
+                                                restartFragmentToApplyEditingChanges();
+                                            }
+                                        });
+                                    }
+                                }).start();
+                            }
+                        }).
+                setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
     }
 
     @Override

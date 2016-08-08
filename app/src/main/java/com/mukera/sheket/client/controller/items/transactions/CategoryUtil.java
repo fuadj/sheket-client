@@ -14,6 +14,7 @@ import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SCategory;
+import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
@@ -97,6 +98,148 @@ public class CategoryUtil {
     }
 
     /**
+     * Deletes the given categories and moves their "contents" to their respective parent categories.
+     * This has 2 types of behaviour.
+     * <p/>
+     * 1) If the category is a newly created one, it hasn't yet been synced, it can safely be
+     * removed locally. This is ok because the server doesn't know any thing about it and
+     * no-body else either.
+     * <p/>
+     * 2) If the category is a synced one, it should only be marked as deleted and should only
+     * be totally removed after a sync has been performed. If we locally remove it and
+     * don't tell the server about the removal, it will still exist in other people's databases.
+     */
+    public static void deleteCategoryList(Context context, List<SCategory> categoryList) {
+        long company_id = PrefUtil.getCurrentCompanyId(context);
+
+        ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
+        for (SCategory category : categoryList) {
+            // first "move out" its contents to its parent
+            moveOutChildrenCategories(context, operationList, category, company_id);
+            moveOutItemsInsideCategory(context, operationList, category, company_id);
+
+            String selection = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
+            String[] selectionArgs = new String[]{String.valueOf(category.category_id)};
+
+            // it was only created locally and not yet synced, we can remove altogether
+            if (category.change_status == ChangeTraceable.CHANGE_STATUS_CREATED) {
+                operationList.add(ContentProviderOperation.newDelete(
+                        CategoryEntry.buildBaseUri(company_id)).
+                        withSelection(selection, selectionArgs).
+                        build());
+            } else {
+                // if it has been synced, we should only set its delete status.
+                // TODO: i don't know how other change states should be handled, probably should throw an exception
+                if (category.change_status == ChangeTraceable.CHANGE_STATUS_SYNCED ||
+                        category.change_status == ChangeTraceable.CHANGE_STATUS_UPDATED) {
+                    category.change_status = ChangeTraceable.CHANGE_STATUS_DELETED;
+                    operationList.add(ContentProviderOperation.newUpdate(
+                            CategoryEntry.buildBaseUri(company_id)).
+                            withValues(category.toContentValues()).
+                            withSelection(selection, selectionArgs).
+                            build());
+                }
+            }
+
+            try {
+                context.getContentResolver().
+                        applyBatch(SheketContract.CONTENT_AUTHORITY, operationList);
+            } catch (OperationApplicationException | RemoteException e) {
+
+            }
+        }
+    }
+
+    private static void moveOutChildrenCategories(Context context,
+                                                  ArrayList<ContentProviderOperation> operations,
+                                                  SCategory parent_category,
+                                                  long company_id) {
+        /**
+         * TODO: this is a very inefficient implementation, we are fetching EVERY
+         * child category and updating it while what we should be doing is run a single
+         * query to update categories that have their parent set to this particular category.
+         */
+        Cursor cursor = context.getContentResolver().query(CategoryEntry.buildBaseUri(company_id),
+                SCategory.CATEGORY_COLUMNS,
+                CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
+                new String[] {String.valueOf(parent_category.category_id)},
+                null);
+        if (cursor == null)
+            return;
+
+        if (!cursor.moveToFirst())  {
+            cursor.close();
+            return;
+        }
+
+        do {
+            SCategory category = new SCategory(cursor);
+            category.category_id = parent_category.parent_id;
+
+            // we don't want to update deleted and new(un-synced) flag
+            if (category.change_status != ChangeTraceable.CHANGE_STATUS_DELETED &&
+                    category.change_status != ChangeTraceable.CHANGE_STATUS_CREATED) {
+                category.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
+            }
+            // we don't want a conflict to arise
+            ContentValues values = category.toContentValues();
+            values.remove(CategoryEntry.COLUMN_CATEGORY_ID);
+
+            operations.add(ContentProviderOperation.newUpdate(
+                    CategoryEntry.buildBaseUri(company_id)).
+                    withValues(values).
+                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID),
+                            new String[]{String.valueOf(category.category_id)}).
+                    build());
+        } while (cursor.moveToNext());
+        cursor.close();
+    }
+
+    private static void moveOutItemsInsideCategory(Context context,
+                                                   ArrayList<ContentProviderOperation> operations,
+                                                  SCategory parent_category,
+                                                  long company_id) {
+        /**
+         * TODO: this is a very inefficient implementation, we are fetching EVERY
+         * item in the category and updating it. We should be running a single
+         * query to update categories that have their parent set to this particular category.
+         */
+        Cursor cursor = context.getContentResolver().query(ItemEntry.buildBaseUri(company_id),
+                SItem.ITEM_COLUMNS,
+                ItemEntry._full(ItemEntry.COLUMN_CATEGORY_ID) + " = ?",
+                new String[] {String.valueOf(parent_category.category_id)},
+                null);
+        if (cursor == null)
+            return;
+
+        if (!cursor.moveToFirst())  {
+            cursor.close();
+            return;
+        }
+
+        do {
+            SItem item = new SItem(cursor);
+            item.category = parent_category.parent_id;
+
+            if (item.change_status != ChangeTraceable.CHANGE_STATUS_DELETED &&
+                    item.change_status != ChangeTraceable.CHANGE_STATUS_CREATED) {
+                item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
+            }
+            ContentValues values = item.toContentValues();
+            // we don't want a conflict to arise.
+            values.remove(ItemEntry.COLUMN_ITEM_ID);
+
+            operations.add(ContentProviderOperation.newUpdate(
+                    ItemEntry.buildBaseUri(company_id)).
+                    withValues(values).
+                    withSelection(ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                            new String[]{String.valueOf(item.item_id)}).
+                    build());
+        } while (cursor.moveToNext());
+        cursor.close();
+    }
+
+    /**
      * After categories have been moved, we need to update the branch categories to make
      * items visible in the branch, and this is done for all branches as different branches
      * have different items. So, for each item a branch has, its category tree should allow it
@@ -174,8 +317,8 @@ public class CategoryUtil {
                 values.put(BranchCategoryEntry.COLUMN_CATEGORY_ID, category_id);
                 values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_CREATED);
                 operationList.add(ContentProviderOperation.newInsert(
-                                BranchCategoryEntry.buildBaseUri(company_id)).
-                                withValues(values).build());
+                        BranchCategoryEntry.buildBaseUri(company_id)).
+                        withValues(values).build());
             }
 
             for (Long restore_category_id : categories_to_restore) {
@@ -184,7 +327,7 @@ public class CategoryUtil {
 
                 String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
                         BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
-                String[] selectionArgs = new String[] {
+                String[] selectionArgs = new String[]{
                         String.valueOf(branch.branch_id),
                         String.valueOf(restore_category_id)
                 };
