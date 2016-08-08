@@ -691,7 +691,7 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     /**
-     * creates or updates a category on a worker-thread and finally dismisses the dialog on the math thread.
+     * creates or updates a category on a worker-thread and finally dismisses the dialog on the main thread.
      */
     void createOrEditCategory(final DialogInterface dialog,
                               final SCategory category,

@@ -587,6 +587,10 @@ public class BranchItemFragment extends SearchableItemFragment {
         mCategoryId = selected_category;
     }
 
+    /**
+     * We've overloaded it because we should only show categories that have items inside the branch.
+     * The "base-class's" implementation shows all categories.
+     */
     @Override
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
         String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";

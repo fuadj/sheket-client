@@ -160,7 +160,7 @@ public class CategoryUtil {
                                 withValues(values).build());
             }
 
-            // remove the previously existing, but now currently being used ones
+            // remove the previously existing, but not currently being used ones
             for (Long category_id : unseen_categories) {
                 String selection = String.format(Locale.US, "%s = ? AND %s = ?",
                         BranchCategoryEntry.COLUMN_BRANCH_ID, BranchCategoryEntry.COLUMN_CATEGORY_ID);
