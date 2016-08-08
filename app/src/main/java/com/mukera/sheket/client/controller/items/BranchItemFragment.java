@@ -617,11 +617,20 @@ public class BranchItemFragment extends SearchableItemFragment {
             // also include children categories in the result
             uri = BranchCategoryEntry.buildFetchCategoryWithChildrenUri(uri);
 
+            String selection = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ? AND " +
+                    // we don't want the deleted to appear(until they are totally removed when syncing)
+                    BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?";
+
+            String[] selectionArgs = new String[] {
+                    String.valueOf(mCurrentCategoryId),
+                    String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)
+            };
+
             return new CursorLoader(getActivity(),
                     uri,
                     SCategory.CATEGORY_WITH_CHILDREN_COLUMNS,
-                    CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ?",
-                    new String[]{String.valueOf(mCurrentCategoryId)},
+                    selection,
+                    selectionArgs,
                     sortOrder);
         }
     }
