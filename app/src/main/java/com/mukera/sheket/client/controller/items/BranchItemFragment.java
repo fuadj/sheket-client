@@ -399,6 +399,10 @@ public class BranchItemFragment extends SearchableItemFragment {
                         mTransactionItemList.clear();
                         updateFloatingActionBtnStatus();
                         progress.dismiss();
+
+                        // TODO: fix this bug
+                        // Fixme: without this, the category list above the item list disappears,
+                        restartLoader();
                     }
                 });
             }
