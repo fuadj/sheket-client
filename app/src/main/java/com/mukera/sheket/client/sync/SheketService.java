@@ -299,6 +299,27 @@ public class SheketService extends IntentService {
                     build());
         }
 
+        for (Long category_id : response.deletedCategories) {
+            operationList.add(ContentProviderOperation.newDelete(
+                    CategoryEntry.buildBaseUri(company_id)).
+                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
+                            new String[]{String.valueOf(category_id)}).
+                    build());
+        }
+
+        for (Pair<Long, Long> branch_category_pair : response.deletedBranchCategories) {
+            String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
+                    BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
+            String[] selectionArgs = new String[] {
+                    String.valueOf(branch_category_pair.first),
+                    String.valueOf(branch_category_pair.second)
+            };
+            operationList.add(ContentProviderOperation.newDelete(
+                    BranchCategoryEntry.buildBaseUri(company_id)).
+                    withSelection(selection, selectionArgs).
+                    build());
+        }
+
         try {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
@@ -337,6 +358,9 @@ public class SheketService extends IntentService {
         result.syncedBranches = new ArrayList<>();
         result.syncedMembers = new ArrayList<>();
         result.syncedBranchCategories = new ArrayList<>();
+
+        result.deletedCategories = new ArrayList<>();
+        result.deletedBranchCategories = new ArrayList<>();
 
         if (rootJson.has(getResourceString(R.string.sync_json_updated_category_ids))) {
             JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_category_ids));
@@ -454,19 +478,45 @@ public class SheketService extends IntentService {
         if (rootJson.has(getResourceString(R.string.sync_json_sync_branch_categories))) {
             JSONArray branchCategoryArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_branch_categories));
 
-            final String JSON_BRANCH_ID = "branch_id";
-            final String JSON_CATEGORY_ID = "category_id";
-
             for (int i = 0; i < branchCategoryArray.length(); i++) {
                 JSONObject object = branchCategoryArray.getJSONObject(i);
 
                 SBranchCategory branchCategory = new SBranchCategory();
                 branchCategory.company_id = result.company_id;
 
-                branchCategory.branch_id = object.getLong(JSON_BRANCH_ID);
-                branchCategory.category_id = object.getLong(JSON_CATEGORY_ID);
+                branchCategory.branch_id = object.getLong(SBranchCategory.JSON_BRANCH_ID);
+                branchCategory.category_id = object.getLong(SBranchCategory.JSON_CATEGORY_ID);
 
                 result.syncedBranchCategories.add(branchCategory);
+            }
+        }
+
+        if (rootJson.has(getResourceString(R.string.sync_json_delete_categories))) {
+            JSONArray deletedCategoryIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_categories));
+
+            for (int i = 0; i < deletedCategoryIdArray.length(); i++) {
+                result.deletedCategories.add((long)deletedCategoryIdArray.getInt(i));
+            }
+        }
+
+        if (rootJson.has(getResourceString(R.string.sync_json_delete_branch_categories))) {
+            JSONArray deletedBranchCategoryIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_branch_categories));
+
+            for (int i = 0; i < deletedBranchCategoryIdArray.length(); i++) {
+                String branch_category_id = deletedBranchCategoryIdArray.getString(i);
+                long branch_id = -1, category_id = -1;
+                try {
+                    int colon_index = branch_category_id.indexOf(":");
+                    if (colon_index != -1) {
+                        branch_id = Long.parseLong(branch_category_id.substring(0, colon_index));
+                        category_id = Long.parseLong(branch_category_id.substring(colon_index + 1));
+                    }
+                } catch (NumberFormatException e) {
+                    branch_id = -1; category_id = -1;
+                }
+                if (branch_id != -1 && category_id != -1) {
+                    result.deletedBranchCategories.add(new Pair<>(branch_id, category_id));
+                }
             }
         }
 
@@ -1227,6 +1277,9 @@ public class SheketService extends IntentService {
         List<SBranch> syncedBranches;
         List<SMember> syncedMembers;
         List<SBranchCategory> syncedBranchCategories;
+
+        List<Long> deletedCategories;
+        List<Pair<Long, Long>> deletedBranchCategories;
     }
 
     static class TransactionSyncResponse {

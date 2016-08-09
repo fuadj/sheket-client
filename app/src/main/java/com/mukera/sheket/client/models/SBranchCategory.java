@@ -3,7 +3,6 @@ package com.mukera.sheket.client.models;
 import android.content.ContentValues;
 import android.database.Cursor;
 
-import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 
 import org.json.JSONException;
@@ -15,7 +14,9 @@ import java.util.Locale;
  * Created by fuad on 7/14/16.
  */
 public class SBranchCategory extends ChangeTraceable {
-    public static final String JSON_BRANCH_CATEGORY_ID = "branch_category_id";
+    public static final String JSON_BRANCH_CATEGORY_BOTH_ID = "branch_category_id";
+    public static final String JSON_BRANCH_ID = "branch_id";
+    public static final String JSON_CATEGORY_ID = "category_id";
 
     static String _f(String s) { return BranchCategoryEntry._full(s); }
 
@@ -88,7 +89,7 @@ public class SBranchCategory extends ChangeTraceable {
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject json = new JSONObject();
-        json.put(JSON_BRANCH_CATEGORY_ID,
+        json.put(JSON_BRANCH_CATEGORY_BOTH_ID,
                 String.format(Locale.US, "%d:%d", branch_id, category_id));
         return json;
     }

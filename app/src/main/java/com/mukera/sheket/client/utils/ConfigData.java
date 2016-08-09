@@ -11,9 +11,9 @@ import com.mukera.sheket.client.R;
  */
 public class ConfigData {
     public static String getAddress(Context context) {
-        return "http://mukerax.com/api/";
-        //return "http://192.168.0.107:5000/api/";
-        //return "http://172.20.10.8:5000/api/";
+        //return "http://mukerax.com/api/";
+        return "http://192.168.43.119:8080/api/";
+        //return "http://172.20.10.8:8080/api/";
         /*
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String ip_address = prefs.getString(context.getString(R.string.pref_ip_key),

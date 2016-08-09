@@ -112,6 +112,9 @@
     <string name="sync_json_sync_branches">sync_branches</string>
     <string name="sync_json_sync_members">sync_members</string>
     <string name="sync_json_sync_branch_categories">sync_branch_categories</string>
+
+    <string name="sync_json_delete_categories">deleted_categories</string>
+    <string name="sync_json_delete_branch_categories">deleted_branch_categories</string>
     <!-- End Response of Entity Sync -->
 
     <!-- Response of Transaction Sync -->
