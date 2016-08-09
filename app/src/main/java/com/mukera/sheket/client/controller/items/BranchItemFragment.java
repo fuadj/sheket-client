@@ -623,10 +623,12 @@ public class BranchItemFragment extends SearchableItemFragment {
 
             String selection = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ? AND " +
                     // we don't want the deleted to appear(until they are totally removed when syncing)
+                    CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ? AND " +
                     BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?";
 
             String[] selectionArgs = new String[] {
                     String.valueOf(mCurrentCategoryId),
+                    String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED),
                     String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)
             };
 
