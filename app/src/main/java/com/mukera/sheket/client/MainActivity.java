@@ -709,18 +709,16 @@ public class MainActivity extends AppCompatActivity implements
                                 setMessage("You've synced successfully.").show();
                     } else {
                         String err_title = "";
-                        String err_body = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
                             err_title = "Sync error, Try Again...";
                         } else if (action.equals(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR)) {
                             err_title = "Internet error, Try Again...";
                         } else if (action.equals(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR)) {
                             err_title = "Error, Try Again...";
-                            err_body = error_extra;
                         }
 
                         new AlertDialog.Builder(MainActivity.this).
-                                setTitle(err_title).setMessage(err_body).
+                                setTitle(err_title).setMessage(error_extra).
                                 show();
                     }
                 }
