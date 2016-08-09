@@ -128,17 +128,12 @@ public class CategoryUtil {
                         withSelection(selection, selectionArgs).
                         build());
             } else {
-                // if it has been synced, we should only set its delete status.
-                // TODO: i don't know how other change states should be handled, probably should throw an exception
-                if (category.change_status == ChangeTraceable.CHANGE_STATUS_SYNCED ||
-                        category.change_status == ChangeTraceable.CHANGE_STATUS_UPDATED) {
-                    category.change_status = ChangeTraceable.CHANGE_STATUS_DELETED;
-                    operationList.add(ContentProviderOperation.newUpdate(
-                            CategoryEntry.buildBaseUri(company_id)).
-                            withValues(category.toContentValues()).
-                            withSelection(selection, selectionArgs).
-                            build());
-                }
+                category.change_status = ChangeTraceable.CHANGE_STATUS_DELETED;
+                operationList.add(ContentProviderOperation.newUpdate(
+                        CategoryEntry.buildBaseUri(company_id)).
+                        withValues(category.toContentValues()).
+                        withSelection(selection, selectionArgs).
+                        build());
             }
 
             try {
