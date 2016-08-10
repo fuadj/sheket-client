@@ -8,25 +8,22 @@
     android:padding="16dp"
     app:columnOrderPreserved="false">
 
-    <TextView
+    <LinearLayout
+        app:layout_row="0"
+        app:layout_column="0"
+        app:layout_columnSpan="3"
+        android:layout_marginBottom="4dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Action:"
-        android:id="@+id/textView10"
-        android:textColor="#000000"
-        android:textSize="24dp"
-        app:layout_row="0"
-        app:layout_column="0" />
+        app:layout_gravity="center">
 
-    <ImageButton
-        android:id="@+id/dialog_qty_img_btn_action"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/ic_action_edit_purple"
-        app:layout_row="0"
-        app:layout_column="2"
-        app:layout_gravity="center_vertical|right"
-        android:layout_marginBottom="4dp" />
+        <ImageButton
+            android:id="@+id/dialog_qty_img_btn_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_action_edit_purple"
+            android:layout_marginBottom="4dp" />
+    </LinearLayout>
 
     <RelativeLayout
         app:layout_row="1"
