@@ -10,19 +10,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/dialog_action_select_layout_transfer"
-        android:padding="4dp">
+        android:padding="4dp"
+        android:layout_marginBottom="8dp">
 
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/dialog_action_select_img_btn_receive"
-            android:background="@drawable/ic_launcher" />
+            android:background="@drawable/ic_action_receive" />
 
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/dialog_action_select_img_btn_send"
-            android:background="@drawable/ic_launcher"
+            android:background="@drawable/ic_action_send"
             android:layout_marginLeft="8dp" />
     </LinearLayout>
 
@@ -36,13 +37,13 @@
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_launcher"
+            android:background="@drawable/ic_action_buy"
             android:id="@+id/dialog_action_select_img_btn_buy" />
 
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_launcher"
+            android:background="@drawable/ic_action_sell"
             android:id="@+id/dialog_action_select_img_btn_sell"
             android:layout_marginLeft="8dp" />
     </LinearLayout>

@@ -336,16 +336,30 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateViewContents() {
-        // if we've not yet selected an action, then set the Action Image Btn to an image
-        // showing the options available.
-        if (mActionType == ActionType.NOT_SET) {
-            // don't show the transfer options
-            if (mItem.available_branches.isEmpty()) {
-
-            } else {
-
-            }
+        int img_resource = -1;
+        switch (mActionType) {
+            case NOT_SET:
+                if (mItem != null) {
+                    if (mItem.available_branches.isEmpty()) {
+                        img_resource = R.drawable.ic_action_no_action_no_transfer;
+                    } else {
+                        img_resource = R.drawable.ic_action_no_action_transfer;
+                    }
+                }
+                break;
+            case BUY:
+                img_resource = R.drawable.ic_action_choice_buy; break;
+            case SELL:
+                img_resource = R.drawable.ic_action_choice_sell; break;
+            case SEND_TO:
+                img_resource = R.drawable.ic_action_choice_send; break;
+            case RECEIVE_FROM:
+                img_resource = R.drawable.ic_action_choice_receive; break;
         }
+        if (img_resource != -1) {
+            mImgBtnAction.setImageResource(img_resource);
+        }
+
         boolean is_transfer = false;
         switch (mActionType) {
             case SEND_TO:

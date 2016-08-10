@@ -21,7 +21,7 @@
             android:id="@+id/dialog_qty_img_btn_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_action_edit_purple"
+            android:src="@drawable/ic_action_no_action_transfer"
             android:layout_marginBottom="4dp" />
     </LinearLayout>
 
