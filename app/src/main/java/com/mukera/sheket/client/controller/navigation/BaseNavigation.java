@@ -84,27 +84,27 @@ public abstract class BaseNavigation {
         static {
             sEntityAndIcon = new HashMap<>();
             sEntityAndIcon.put(OPTION_ITEM_LIST,
-                    new Pair<>("Items", R.mipmap.ic_action_all_items));
+                    new Pair<>("Items", R.drawable.ic_action_new_all_items));
             sEntityAndIcon.put(OPTION_IMPORT,
-                    new Pair<>("Import", R.mipmap.ic_action_import));
+                    new Pair<>("Import", R.drawable.ic_action_new_import));
             sEntityAndIcon.put(OPTION_SYNC,
-                    new Pair<>("Sync Now", R.mipmap.ic_action_sync));
+                    new Pair<>("Sync", R.drawable.ic_action_new_sync));
             sEntityAndIcon.put(OPTION_TRANSACTIONS,
-                    new Pair<>("Transactions", R.mipmap.ic_action_transaction));
+                    new Pair<>("Transactions", R.drawable.ic_action_new_transactions));
             sEntityAndIcon.put(OPTION_LANGUAGES,
                     new Pair<>("Languages", R.mipmap.ic_action_transaction));
             sEntityAndIcon.put(OPTION_BRANCHES,
-                    new Pair<>("Branches", R.mipmap.ic_action_branches));
+                    new Pair<>("Branches", R.drawable.ic_action_new_branches));
             sEntityAndIcon.put(OPTION_COMPANIES,
                     new Pair<>("Companies", R.mipmap.ic_company));
             sEntityAndIcon.put(OPTION_EMPLOYEES,
-                    new Pair<>("Employees", R.mipmap.ic_action_members));
+                    new Pair<>("Employees", R.drawable.ic_action_new_employees));
             sEntityAndIcon.put(OPTION_HISTORY,
                     new Pair<>("History", R.mipmap.ic_action_history));
             sEntityAndIcon.put(OPTION_USER_PROFILE,
-                    new Pair<>("User Profile", R.mipmap.ic_action_profile));
+                    new Pair<>("User Profile", R.drawable.ic_action_new_profile));
             sEntityAndIcon.put(OPTION_SETTINGS,
-                    new Pair<>("Settings", R.mipmap.ic_action_settings));
+                    new Pair<>("Settings", R.drawable.ic_action_new_settings));
             sEntityAndIcon.put(OPTION_DEBUG,
                     new Pair<>("Debug", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(OPTION_DELETE,
