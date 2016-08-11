@@ -597,7 +597,7 @@ public class BranchItemFragment extends SearchableItemFragment {
      */
     @Override
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " COLLATE NOCASE ASC";
 
         if (mShowAllItems) {
             // the super class's implementation loads ALL categories, not just the ones

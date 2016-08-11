@@ -326,7 +326,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * Override this to create another loader.
      */
     protected Loader<Cursor> getCategoryTreeLoader(int id, Bundle args) {
-        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " ASC";
+        String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_NAME) + " COLLATE NOCASE ASC";
 
         String selection = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_PARENT_ID) + " = ? AND " +
                 // we don't want the deleted to appear(until they are totally removed when syncing)
