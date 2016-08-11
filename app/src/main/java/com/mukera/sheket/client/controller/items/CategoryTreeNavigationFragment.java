@@ -106,8 +106,6 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         mCategoryBackstack = new Stack<>();
         // we start at the root
         mCurrentCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
-
-        setHasOptionsMenu(true);
     }
 
     /**
@@ -158,39 +156,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (displayCategoryToggleActionBarOption()) {
-            inflater.inflate(R.menu.category_navigation_menu, menu);
-        }
         super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_item_category_navigation_toggle: {
-                boolean state = PrefUtil.getShowCategoryTreeState(getActivity());
-                state = !state;
-                PrefUtil.setShowCategoryTreeState(getActivity(), state);
-
-                if (state) {
-                    onCategorySelected(mCurrentCategoryId, mCurrentCategoryId);
-                } else {
-                    onCategorySelected(CategoryEntry.ROOT_CATEGORY_ID, CategoryEntry.ROOT_CATEGORY_ID);
-                }
-                restartLoader();
-                return true;
-            }
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * Override this to disable the toggle view.
-     *
-     * @return
-     */
-    protected boolean displayCategoryToggleActionBarOption() {
-        return true;
     }
 
     @Nullable
@@ -360,7 +326,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * @return
      */
     protected boolean isShowingCategoryTree() {
-        return PrefUtil.getShowCategoryTreeState(getActivity());
+        return true;
+        //return PrefUtil.getShowCategoryTreeState(getActivity());
     }
 
     /**
