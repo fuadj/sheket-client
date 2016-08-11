@@ -24,7 +24,7 @@ public abstract class BaseNavigation {
     private AppCompatActivity mActivity;
     private View mRootView;
     private NavigationCallback mCallback;
-    private int mUserPermission;
+    private SPermission mUserPermission;
 
     /**
      * Setup the navigation UI.
@@ -38,7 +38,7 @@ public abstract class BaseNavigation {
         mCallback = (NavigationCallback) activity;
 
         SPermission.setSingletonPermission(PrefUtil.getUserPermission(mActivity));
-        mUserPermission = SPermission.getSingletonPermission().getPermissionType();
+        mUserPermission = SPermission.getSingletonPermission();
 
         onSetup();
     }
@@ -55,7 +55,7 @@ public abstract class BaseNavigation {
 
     public NavigationCallback getCallBack() { return mCallback; }
 
-    public int getUserPermission() {
+    public SPermission getUserPermission() {
         return mUserPermission;
     }
 

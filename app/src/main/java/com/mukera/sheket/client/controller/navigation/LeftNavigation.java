@@ -104,7 +104,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         // check if user has managerial role
         mMangerLayout = getRootView().findViewById(R.id.nav_left_layout_management);
 
-        if (getUserPermission() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+        if (getUserPermission().getPermissionType() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
             mMangerLayout.setVisibility(View.GONE);
         } else {
             mMangerLayout.setVisibility(View.VISIBLE);

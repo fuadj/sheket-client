@@ -2,21 +2,17 @@ package com.mukera.sheket.client.controller.navigation;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.MergeCursor;
 import android.os.Bundle;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
@@ -27,6 +23,8 @@ import com.mukera.sheket.client.utils.Utils;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+
+import java.util.List;
 
 /**
  * Created by fuad on 7/29/16.
@@ -79,7 +77,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         };
         mViewSync.setOnClickListener(listener);
         mViewTransaction.setOnClickListener(listener);
-        if (getUserPermission() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+        if (getUserPermission().getPermissionType() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
             mViewItems.setVisibility(View.GONE);
         } else {
             mViewItems.setOnClickListener(listener);
@@ -115,10 +113,27 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " ASC";
 
+        String selection = null;
+        String[] selectionArgs = null;
+
+        if (getUserPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+            List<Long> branches = getUserPermission().getAllowedBranches();
+            selection = "";
+            selectionArgs = new String[branches.size()];
+            for (int i = 0; i < branches.size(); i++) {
+                if (i != 0) {
+                    selection += " OR ";
+                }
+                selection += SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
+                selectionArgs[i] = String.valueOf(branches.get(i));
+            }
+        }
+
         return new CursorLoader(getNavActivity(),
                 SheketContract.BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getNavActivity())),
                 SBranch.BRANCH_COLUMNS,
-                null, null,
+                selection,
+                selectionArgs,
                 sortOrder
         );
     }
