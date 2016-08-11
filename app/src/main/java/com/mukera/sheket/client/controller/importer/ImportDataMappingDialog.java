@@ -43,8 +43,8 @@ public class ImportDataMappingDialog extends DialogFragment {
         return dialog;
     }
 
-    public static final int DATA_ITEM_CODE = 1;
-    public static final int DATA_ITEM_NAME = 2;
+    public static final int DATA_ITEM_NAME = 1;
+    public static final int DATA_ITEM_CODE = 2;
     public static final int DATA_CATEGORY = 3;
     public static final int DATA_LOCATION = 4;
     public static final int DATA_BALANCE = 5;
@@ -136,11 +136,12 @@ public class ImportDataMappingDialog extends DialogFragment {
         AdapterView.OnItemSelectedListener clickListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (parent == mItemCodeSpinner) {
+                // tie the OK button's "enabled-state" with the item name being set
+                if (parent == mItemNameSpinner) {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(position != 0);
                 }
-                resetIfNotSelf(mItemCodeSpinner, parent, position);
                 resetIfNotSelf(mItemNameSpinner, parent, position);
+                resetIfNotSelf(mItemCodeSpinner, parent, position);
                 resetIfNotSelf(mCategorySpinner, parent, position);
                 resetIfNotSelf(mLocationSpinner, parent, position);
                 resetIfNotSelf(mBalanceSpinner, parent, position);
