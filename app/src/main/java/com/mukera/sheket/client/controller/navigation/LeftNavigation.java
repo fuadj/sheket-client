@@ -130,6 +130,12 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     }
 
     @Override
+    public void onUserPermissionChanged() {
+        // this will "re-calibrate" the UI
+        onSetup();
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " ASC";
 

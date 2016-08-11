@@ -192,6 +192,7 @@ public class SheketService extends IntentService {
                 if (PrefUtil.isCompanySet(this) &&
                         PrefUtil.getCurrentCompanyId(this) == company_id) {
                     PrefUtil.setUserPermission(this, permission);
+                    sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
                 }
             }
 

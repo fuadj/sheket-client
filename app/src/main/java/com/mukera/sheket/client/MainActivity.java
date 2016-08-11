@@ -694,6 +694,7 @@ public class MainActivity extends AppCompatActivity implements
             if (action.equals(SheketBroadcast.ACTION_LOGIN)) {
             } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 restartMainActivity();
+            } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
             } else {
                 /**
                  * If we are syncing because we just logged in, we don't want
@@ -707,6 +708,15 @@ public class MainActivity extends AppCompatActivity implements
                         new AlertDialog.Builder(MainActivity.this).
                                 setTitle("Success").
                                 setMessage("You've synced successfully.").show();
+
+                        // TODO: was planning to put these 2 inside ACTION_COMPANY_PERMISSION_CHANGE
+                        // but that broadcast isn't working
+                        if (mRightNav != null) {
+                            mRightNav.userPermissionChanged();
+                        }
+                        if (mLeftNav != null) {
+                            mLeftNav.userPermissionChanged();
+                        }
                     } else {
                         String err_title = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {

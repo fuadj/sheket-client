@@ -7,6 +7,7 @@ import android.view.View;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.HashMap;
@@ -42,6 +43,17 @@ public abstract class BaseNavigation {
 
         onSetup();
     }
+
+    /**
+     * Call this if there is a change in user permissions and UI needs to update.
+     */
+    public void userPermissionChanged() {
+        SPermission.setSingletonPermission(PrefUtil.getUserPermission(mActivity));
+        mUserPermission = SPermission.getSingletonPermission();
+        onUserPermissionChanged();
+    }
+
+    protected void onUserPermissionChanged() { }
 
     protected abstract void onSetup();
 

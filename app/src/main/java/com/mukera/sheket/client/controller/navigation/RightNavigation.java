@@ -110,6 +110,12 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     }
 
     @Override
+    public void onUserPermissionChanged() {
+        getNavActivity().getSupportLoaderManager().restartLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
+        onSetup();
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " ASC";
 
