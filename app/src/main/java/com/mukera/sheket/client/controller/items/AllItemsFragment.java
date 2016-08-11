@@ -42,6 +42,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.utils.SheketTextUtils;
 import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -360,15 +361,16 @@ public class AllItemsFragment extends SearchableItemFragment {
         if (mIsEditMode) {
             final EditItemViewHolder holder = (EditItemViewHolder) view.getTag();
 
-            holder.item_name.setText(item.name);
-            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
-            if (has_code) {
-                holder.item_code.setVisibility(View.VISIBLE);
-                holder.item_code.setText(
-                        item.has_bar_code ? item.bar_code : item.item_code);
+            holder.item_code.setVisibility(item.item_code.isEmpty() ? View.GONE : View.VISIBLE);
+
+            if (isSearching()) {
+                SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_name, item.name, getSearchText());
+                SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_code, item.item_code, getSearchText());
             } else {
-                holder.item_code.setVisibility(View.GONE);
+                holder.item_name.setText(item.name);
+                holder.item_code.setText(item.item_code);
             }
+
             holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
 
             /**
@@ -419,15 +421,16 @@ public class AllItemsFragment extends SearchableItemFragment {
         } else {
             ItemViewHolder holder = (ItemViewHolder) view.getTag();
 
-            holder.item_name.setText(item.name);
-            boolean has_code = item.has_bar_code || !item.item_code.isEmpty();
-            if (has_code) {
-                holder.item_code.setVisibility(View.VISIBLE);
-                holder.item_code.setText(
-                        item.has_bar_code ? item.bar_code : item.item_code);
+            holder.item_code.setVisibility(item.item_code.isEmpty() ? View.GONE : View.VISIBLE);
+
+            if (isSearching()) {
+                SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_name, item.name, getSearchText());
+                SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_code, item.item_code, getSearchText());
             } else {
-                holder.item_code.setVisibility(View.GONE);
+                holder.item_name.setText(item.name);
+                holder.item_code.setText(item.item_code);
             }
+
             holder.total_qty.setText(Utils.formatDoubleForDisplay(item.total_quantity));
             View.OnClickListener listener = new View.OnClickListener() {
                 @Override

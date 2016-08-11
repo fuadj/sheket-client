@@ -40,6 +40,7 @@ import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.SheketTextUtils;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.Utils;
 
@@ -212,20 +213,21 @@ public class BranchItemFragment extends SearchableItemFragment {
         return view;
     }
 
+
     @Override
     public void bindItemView(Context context, Cursor cursor, View view, int position) {
         BranchItemViewHolder holder = (BranchItemViewHolder) view.getTag();
         final SBranchItem branchItem = new SBranchItem(cursor, true);
         final SItem item = branchItem.item;
 
-        holder.item_name.setText(item.name);
-        String code;
-        if (item.has_bar_code) {
-            code = item.bar_code;
+        if (isSearching()) {
+            SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_name, item.name, getSearchText());
+            SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_code, item.item_code, getSearchText());
         } else {
-            code = item.item_code;
+            holder.item_name.setText(item.name);
+            holder.item_code.setText(item.item_code);
         }
-        holder.item_code.setText(code);
+
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

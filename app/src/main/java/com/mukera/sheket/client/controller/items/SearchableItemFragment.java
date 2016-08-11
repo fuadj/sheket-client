@@ -39,14 +39,14 @@ public abstract class SearchableItemFragment extends CategoryTreeNavigationFragm
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mIsSearching = true;
-                mCurrentSearch = query;
+                mCurrentSearch = query.toLowerCase();
                 return onSearchTextSubmitted(query);
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
                 mIsSearching = true;
-                mCurrentSearch = newText;
+                mCurrentSearch = newText.toLowerCase();
                 return onSearchTextChanged(newText);
             }
         });
