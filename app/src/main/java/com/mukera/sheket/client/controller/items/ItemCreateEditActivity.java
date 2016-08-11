@@ -123,7 +123,7 @@ public class ItemCreateEditActivity extends AppCompatActivity {
         }
 
         void setOkButtonStatus() {
-            if (isEmpty(mCode.getText())) {
+            if (isEmpty(mName.getText())) {
                 mOk.setEnabled(false);
                 return;
             }
@@ -177,9 +177,9 @@ public class ItemCreateEditActivity extends AppCompatActivity {
          * Use the editing item to setup the UI. Only called if it is editing.
          */
         void setPreviousValuesAsInitialValues() {
-            mCode.setText(non_null(mEditingItem.item_code));
-
             mName.setText(non_null(mEditingItem.name));
+
+            mCode.setText(non_null(mEditingItem.item_code));
             mUnitsSpinner.setSelection(mEditingItem.unit_of_measurement);
             if (mEditingItem.has_derived_unit) {
                 mHasDerived.setChecked(true);
@@ -202,7 +202,8 @@ public class ItemCreateEditActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_new_item, container, false);
 
-            mName = (EditText) rootView.findViewById(R.id.edit_text_new_item_description);
+            mName = (EditText) rootView.findViewById(R.id.edit_text_new_item_name);
+            mCode = (EditText) rootView.findViewById(R.id.edit_text_new_item_manual_code);
 
             mUnitsSpinner = (Spinner) rootView.findViewById(R.id.spinner_new_item_unit_selection);
             mUnitsSpinner.setAdapter(new ArrayAdapter(getActivity(),
@@ -216,7 +217,6 @@ public class ItemCreateEditActivity extends AppCompatActivity {
             mFormula = (EditText) rootView.findViewById(R.id.edt_text_new_item_formula);
             mHasDerived = (CheckBox) rootView.findViewById(R.id.check_box_new_item_has_bundle);
 
-            mCode = (EditText) rootView.findViewById(R.id.edit_text_new_item_manual_code);
             mReorderLevel = (EditText) rootView.findViewById(R.id.edit_text_new_item_reorder_level);
             mModelYear = (EditText) rootView.findViewById(R.id.edit_text_new_item_model_year);
             mPartNumber = (EditText) rootView.findViewById(R.id.edit_text_new_item_part_number);

@@ -24,11 +24,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
-                    android:text="Item Code:"
+                    android:text="Code:"
                     app:layout_gravity="center_vertical"
                     app:layout_rowWeight="1"
                     app:layout_column="0"
-                    app:layout_row="1" />
+                    app:layout_row="2" />
 
                 <EditText
                     android:layout_width="wrap_content"
@@ -38,26 +38,26 @@
                     android:textColor="@color/text_primary"
                     app:layout_gravity="fill_horizontal|center"
                     app:layout_column="1"
-                    app:layout_row="1" />
+                    app:layout_row="2" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Description:"
+                    android:text="Name:"
                     app:layout_rowWeight="1"
                     android:textColor="@color/text_primary"
                     app:layout_column="0"
-                    app:layout_row="2"
+                    app:layout_row="1"
                     app:layout_gravity="center_vertical" />
 
                 <EditText
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/edit_text_new_item_description"
+                    android:id="@+id/edit_text_new_item_name"
                     app:layout_columnWeight="1"
                     android:editable="true"
                     app:layout_column="1"
-                    app:layout_row="2"
+                    app:layout_row="1"
                     app:layout_gravity="fill_horizontal|center_vertical" />
 
                 <TextView
