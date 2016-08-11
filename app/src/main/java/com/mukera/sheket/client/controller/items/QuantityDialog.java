@@ -39,12 +39,15 @@ import com.mukera.sheket.client.data.SheketContract.TransItemEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.UnitsOfMeasurement;
 import com.mukera.sheket.client.utils.Utils;
+
+import java.util.List;
 
 /**
  * Created by fuad on 7/11/16.
@@ -645,11 +648,26 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         long company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
+        String selection = null;
+        String[] selectionArgs = null;
+
+        if (SPermission.getSingletonPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+            List<Long> branches = SPermission.getSingletonPermission().getAllowedBranches();
+            selection = "";
+            selectionArgs = new String[branches.size()];
+            for (int i = 0; i < branches.size(); i++) {
+                if (i != 0) {
+                    selection += " OR ";
+                }
+                selection += SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
+                selectionArgs[i] = String.valueOf(branches.get(i));
+            }
+        }
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildItemInAllBranches(company_id, mItem.item_id),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 BranchEntry._full(BranchEntry.COLUMN_NAME) + " ASC");
     }
 
