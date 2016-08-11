@@ -178,6 +178,21 @@ public class SheketService extends IntentService {
 
                 operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
                         withValues(values).build());
+
+                ContentValues updateValues = new ContentValues(values);
+                // if the user already has this company, we can't insert b/c of the "ON CONFLICT IGNORE"
+                // but we can update it, so we try our luck
+                updateValues.remove(CompanyEntry.COLUMN_COMPANY_ID);
+                operations.add(ContentProviderOperation.newUpdate(CompanyEntry.CONTENT_URI).
+                        withValues(updateValues).
+                        withSelection(CompanyEntry.COLUMN_COMPANY_ID + " = ?", new String[]{
+                                String.valueOf(company_id)
+                        }).build());
+
+                if (PrefUtil.isCompanySet(this) &&
+                        PrefUtil.getCurrentCompanyId(this) == company_id) {
+                    PrefUtil.setUserPermission(this, permission);
+                }
             }
 
             if (!operations.isEmpty())
