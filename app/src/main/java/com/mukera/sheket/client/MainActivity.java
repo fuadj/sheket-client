@@ -134,15 +134,7 @@ public class MainActivity extends AppCompatActivity implements
         syncIfIsLoginFirstTime();
 
         if (savedInstanceState == null) {
-            /**
-             * If we are launching for the first time open either of the navigation drawers.
-             * If we don't have any companies, open the left side. Open the right otherwise.
-             */
-            if (!PrefUtil.isCompanySet(this)) {
-                mNavigation.showMenu();
-            } else {
-                mNavigation.showSecondaryMenu();
-            }
+            openNavDrawer();
         }
     }
 
@@ -217,7 +209,15 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     protected void openNavDrawer() {
-        mNavigation.showSecondaryMenu(true);
+        /**
+         * If we are launching for the first time open either of the navigation drawers.
+         * If we don't have any companies, open the left side. Open the right otherwise.
+         */
+        if (!PrefUtil.isCompanySet(this)) {
+            mNavigation.showMenu();
+        } else {
+            mNavigation.showSecondaryMenu();
+        }
     }
 
     private void toggleDrawerState() {
@@ -717,6 +717,7 @@ public class MainActivity extends AppCompatActivity implements
                         if (mLeftNav != null) {
                             mLeftNav.userPermissionChanged();
                         }
+                        openNavDrawer();
                     } else {
                         String err_title = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
