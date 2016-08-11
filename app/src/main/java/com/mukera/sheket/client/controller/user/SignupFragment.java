@@ -48,7 +48,7 @@ public class SignupFragment extends Fragment {
     }
 
     String getUsername() {
-        return mUserName.getText().toString().trim();
+        return mUserName.getText().toString().trim().toLowerCase();
     }
 
     String getPassword() {

@@ -84,8 +84,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         }
     }
 
-    @Override
-    protected void onSetup() {
+    void loadUI() {
         mViewSync = getRootView().findViewById(R.id.nav_right_sync);
         mViewTransaction = getRootView().findViewById(R.id.nav_right_transactions);
         mViewItems = getRootView().findViewById(R.id.nav_right_items);
@@ -105,14 +104,18 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 }
             }
         });
+    }
 
+    @Override
+    protected void onSetup() {
+        loadUI();
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
     }
 
     @Override
     public void onUserPermissionChanged() {
+        loadUI();
         getNavActivity().getSupportLoaderManager().restartLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
-        onSetup();
     }
 
     @Override
