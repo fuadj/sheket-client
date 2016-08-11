@@ -15,14 +15,16 @@
         android:layout_marginBottom="4dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_gravity="center">
+        app:layout_gravity="center"
+        android:background="#ffffff">
 
         <ImageButton
             android:id="@+id/dialog_qty_img_btn_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_action_no_action_transfer"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="4dp"
+            android:background="#ffffff" />
     </LinearLayout>
 
     <RelativeLayout
