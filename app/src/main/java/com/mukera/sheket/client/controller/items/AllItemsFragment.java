@@ -728,6 +728,9 @@ public class AllItemsFragment extends SearchableItemFragment {
                         category.change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_UPDATED;
 
                     values = category.toContentValues();
+                    // TODO: check why removing this is necessary
+                    // otherwise the categories children will have the default(root) category assigned
+                    values.remove(CategoryEntry.COLUMN_CATEGORY_ID);
 
                     getActivity().getContentResolver().update(
                             CategoryEntry.buildBaseUri(company_id),
