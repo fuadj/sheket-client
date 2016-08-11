@@ -654,7 +654,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         SPermission.setSingletonPermission(PrefUtil.getUserPermission(getActivity()));
         if (SPermission.getSingletonPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
             List<Long> branches = SPermission.getSingletonPermission().getAllowedBranches();
-            selection = "";
+            selection = "(";
             selectionArgs = new String[branches.size()];
             for (int i = 0; i < branches.size(); i++) {
                 if (i != 0) {
@@ -663,6 +663,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 selection += SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
                 selectionArgs[i] = String.valueOf(branches.get(i));
             }
+            selection += ")";
         }
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildItemInAllBranches(company_id, mItem.item_id),
