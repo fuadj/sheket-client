@@ -36,6 +36,7 @@ import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
+import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -104,11 +105,17 @@ public class BranchItemFragment extends SearchableItemFragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.menu_item_branch_item_list_all_items).
-                setIcon(
-                        getActivity().getResources().getDrawable(mShowAllItems ?
-                                R.drawable.ic_action_eye_open :
-                                R.drawable.ic_action_eye_closed));
+        MenuItem menuItem = menu.findItem(R.id.menu_item_branch_item_list_all_items);
+        if (SPermission.getSingletonPermission().getPermissionType() !=
+                SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+            menuItem.setVisible(false);
+        } else {
+            menuItem.setVisible(true);
+            menuItem.setIcon(
+                    getActivity().getResources().getDrawable(mShowAllItems ?
+                            R.drawable.ic_action_eye_open :
+                            R.drawable.ic_action_eye_closed));
+        }
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -414,7 +421,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     /**
      * Displays a quantity selection dialog for the item. It supports
      * this operation for both new items and editing items already in the transaction.
-     * <p>
+     * <p/>
      * This dialog can be run in a transaction if specified.
      *
      * @param item
@@ -626,7 +633,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                     CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ? AND " +
                     BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?";
 
-            String[] selectionArgs = new String[] {
+            String[] selectionArgs = new String[]{
                     String.valueOf(mCurrentCategoryId),
                     String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED),
                     String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)
