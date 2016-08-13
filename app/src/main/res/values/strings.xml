@@ -141,4 +141,7 @@
     <string name="sync_status">key_sync_status</string>
     <string name="sync_error">key_sync_error</string>
     <!-- End Sync Status -->
+
+    <string name="facebook_app_id">313445519010095</string>
+
 </resources>
