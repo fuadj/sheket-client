@@ -1,9 +1,13 @@
 package com.mukera.sheket.client;
 
+import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -14,7 +18,18 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 
 /**
  * Created by fuad on 8/14/16.
@@ -23,6 +38,8 @@ public class LoginActivity extends AppCompatActivity {
     private LoginButton mFacebookSignInButton;
 
     private CallbackManager mFacebookCallbackManager;
+
+    public static final OkHttpClient client = new OkHttpClient();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -39,18 +56,23 @@ public class LoginActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_app_icon);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mFacebookSignInButton = (LoginButton) findViewById(R.id.facebook_sign_in_button);
         mFacebookSignInButton.registerCallback(mFacebookCallbackManager,
                 new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-                        if (loginResult.getAccessToken() != null)
-                            startMainActivity();
+                        if (loginResult.getAccessToken() == null)
+                            return;
+
+                        new SignInTask(loginResult.getAccessToken().getToken()).execute();
                     }
 
                     @Override
                     public void onCancel() {
-                        Toast.makeText(getApplicationContext(), "Login Error", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -73,5 +95,73 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         mFacebookCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    class SignInTask extends AsyncTask<Void, Void, Boolean> {
+        public static final String REQUEST_TOKEN = "token";
+        public static final String RESPONSE_USERNAME = "username";
+        public static final String RESPONSE_USER_ID = "user_id";
+
+        private String mToken;
+        private String errMsg;
+
+        public SignInTask(String token) {
+            super();
+
+            mToken = token;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                Context context = LoginActivity.this;
+
+                Request.Builder builder = new Request.Builder();
+                builder.url(ConfigData.getAddress(context) + "v1/signin/facebook");
+                builder.post(RequestBody.create(MediaType.parse("application/json"),
+                        new JSONObject().put(REQUEST_TOKEN, mToken).toString()));
+                Response response = client.newCall(builder.build()).execute();
+                if (!response.isSuccessful()) {
+                    JSONObject err = new JSONObject(response.body().string());
+                    errMsg = err.getString(context.getString(R.string.json_err_message));
+                    return false;
+                }
+
+                String login_cookie =
+                        response.header(context.getString(R.string.pref_response_key_cookie));
+
+                JSONObject result = new JSONObject(response.body().string());
+
+                long user_id = result.getLong(RESPONSE_USER_ID);
+                String username = result.getString(RESPONSE_USERNAME);
+
+                PrefUtil.setUserName(context, username);
+                PrefUtil.setUserId(context, user_id);
+                PrefUtil.setLoginCookie(context, login_cookie);
+            } catch (JSONException | IOException e) {
+                errMsg = e.getMessage();
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (!success) {
+                // remove any-facebook "logged-in" stuff
+                Toast.makeText(LoginActivity.this, errMsg, Toast.LENGTH_LONG).show();
+                LoginManager.getInstance().logOut();
+                return;
+            }
+
+            // if all goes well, start main activity
+            startMainActivity();
+        }
+
+        @Override
+        protected void onCancelled() {
+            LoginManager.getInstance().logOut();
+        }
     }
 }
