@@ -29,8 +29,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.admin.MembersFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
@@ -62,6 +65,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.LogManager;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
@@ -173,10 +177,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     void requireLogin() {
+        /*
         if (!PrefUtil.isUserSet(this)) {
-            // kill this activity, so it is started anew
             finish();
-            Intent intent = new Intent(this, RegistrationActivity.class);
+
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
+        */
+        if (AccessToken.getCurrentAccessToken() == null) {
+            finish();
+
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
     }
@@ -354,37 +366,20 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     void logoutUser() {
-        final ProgressDialog savingDialog = ProgressDialog.show(this, "Logging out", "Please wait...", true);
-        final Context context = MainActivity.this;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long current_company = PrefUtil.getCurrentCompanyId(context);
-                String current_state = PrefUtil.getEncodedStateBackup(context);
+        final ProgressDialog logoutDialog = ProgressDialog.show(this, "Logging out", "Please wait...", true);
 
-                ContentValues values = new ContentValues();
-                // Yes, It is valid to only include the values you want to update
-                values.put(CompanyEntry.COLUMN_STATE_BACKUP, current_state);
-
-                context.getContentResolver().
-                        update(
-                                CompanyEntry.CONTENT_URI,
-                                values,
-                                CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " = ?",
-                                new String[]{
-                                        String.valueOf(current_company)
-                                }
-                        );
-                PrefUtil.logoutUser(MainActivity.this);
-                MainActivity.this.runOnUiThread(new Runnable() {
+        CompanyUtil.logoutOfCompany(this,
+                new CompanyUtil.LogoutFinishListener() {
                     @Override
-                    public void run() {
-                        savingDialog.dismiss();
+                    public void runAfterLogout() {
+                        logoutDialog.dismiss();
                         requireLogin();
                     }
+
+                    @Override
+                    public void logoutError(String msg) {
+                    }
                 });
-            }
-        }).start();
     }
 
     String unsyncedSelector(String column) {

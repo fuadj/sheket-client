@@ -115,7 +115,7 @@ public class CompanyUtil {
                                     listener.logoutError(err_msg[0]);
                                 }
                             });
-                            return;
+                            //return;
                         }
 
                         new Thread(new Runnable() {
