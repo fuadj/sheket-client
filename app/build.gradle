@@ -52,6 +52,9 @@ dependencies {
     // see https://developers.facebook.com/docs/android/upgrading-4.x#450to451
     compile 'com.facebook.android:facebook-android-sdk:4.5.0'
 
+    // to use a custom "Facebook log-in" button
+    compile 'com.github.medyo:fancybuttons:+'
+
     //compile files('libs/okhttp-3.2.0.jar')
     //compile files('libs/mockwebserver-3.2.0.jar')
     /*

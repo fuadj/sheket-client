@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -30,12 +31,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import mehdi.sakout.fancybuttons.FancyButton;
 
 /**
  * Created by fuad on 8/14/16.
  */
 public class LoginActivity extends AppCompatActivity {
-    private LoginButton mFacebookSignInButton;
+    //private LoginButton mFacebookSignInButton;
+    private FancyButton mFacebookButton;
 
     private CallbackManager mFacebookCallbackManager;
 
@@ -60,26 +65,43 @@ public class LoginActivity extends AppCompatActivity {
         getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_app_icon);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mFacebookSignInButton = (LoginButton) findViewById(R.id.facebook_sign_in_button);
-        mFacebookSignInButton.registerCallback(mFacebookCallbackManager,
-                new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
-                        if (loginResult.getAccessToken() == null)
-                            return;
+        LoginManager.getInstance().registerCallback(mFacebookCallbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                if (loginResult.getAccessToken() == null)
+                    return;
 
-                        new SignInTask(loginResult.getAccessToken().getToken()).execute();
-                    }
+                mFacebookButton.setVisibility(View.GONE);
+                new SignInTask(loginResult.getAccessToken().getToken()).execute();
+            }
 
-                    @Override
-                    public void onCancel() {
-                    }
+            @Override
+            public void onCancel() {
+            }
 
-                    @Override
-                    public void onError(FacebookException error) {
-                        Toast.makeText(getApplicationContext(), "Login Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+            @Override
+            public void onError(FacebookException error) {
+                Toast.makeText(getApplicationContext(), "Login Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        mFacebookButton = (FancyButton) findViewById(R.id.facebook_login);
+        mFacebookButton.setVisibility(View.VISIBLE);
+        mFacebookButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this,
+                        Arrays.asList("public_profile"));
+            }
+        });
+        updateFacebookButtonUI();
+    }
+
+    void updateFacebookButtonUI() {
+        if (AccessToken.getCurrentAccessToken() != null) {
+            mFacebookButton.setText("Logout");
+        } else {
+            mFacebookButton.setText("Login with Facebook");
+        }
     }
 
     void startMainActivity() {
@@ -152,6 +174,7 @@ public class LoginActivity extends AppCompatActivity {
                 // remove any-facebook "logged-in" stuff
                 Toast.makeText(LoginActivity.this, errMsg, Toast.LENGTH_LONG).show();
                 LoginManager.getInstance().logOut();
+                mFacebookButton.setVisibility(View.VISIBLE);
                 return;
             }
 
