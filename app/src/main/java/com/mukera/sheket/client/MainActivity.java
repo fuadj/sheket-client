@@ -177,15 +177,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     void requireLogin() {
-        /*
-        if (!PrefUtil.isUserSet(this)) {
-            finish();
-
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
-        */
-        if (AccessToken.getCurrentAccessToken() == null) {
+        if (AccessToken.getCurrentAccessToken() == null ||
+                !PrefUtil.isUserSet(this)) {
             finish();
 
             Intent intent = new Intent(this, LoginActivity.class);
