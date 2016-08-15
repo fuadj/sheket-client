@@ -47,8 +47,6 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog mProgress = null;
     private CallbackManager mFacebookCallbackManager;
 
-    private AccessTokenTracker mTokenTracker;
-
     public static final OkHttpClient client = new OkHttpClient();
 
     @Override
@@ -76,9 +74,6 @@ public class LoginActivity extends AppCompatActivity {
                 if (loginResult.getAccessToken() == null)
                     return;
 
-                if (mTokenTracker != null)
-                    mTokenTracker.startTracking();
-
                 mFacebookButton.setVisibility(View.GONE);
                 mProgress = ProgressDialog.show(LoginActivity.this,
                         "Logging in", "Please Wait", true);
@@ -95,6 +90,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         mFacebookButton = (FancyButton) findViewById(R.id.facebook_login);
+        mFacebookButton.setText("Login with Facebook");
         mFacebookButton.setVisibility(View.VISIBLE);
         mProgress = null;
         mFacebookButton.setOnClickListener(new View.OnClickListener() {
@@ -104,23 +100,6 @@ public class LoginActivity extends AppCompatActivity {
                         Arrays.asList("public_profile"));
             }
         });
-
-        mTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
-                updateFacebookButtonUI();
-            }
-        };
-
-        updateFacebookButtonUI();
-    }
-
-    void updateFacebookButtonUI() {
-        if (AccessToken.getCurrentAccessToken() != null) {
-            mFacebookButton.setText("Logout");
-        } else {
-            mFacebookButton.setText("Login with Facebook");
-        }
     }
 
     void startMainActivity() {
@@ -202,8 +181,6 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            if (mTokenTracker != null)
-                mTokenTracker.stopTracking();
             // if all goes well, start main activity
             startMainActivity();
         }
