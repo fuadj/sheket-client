@@ -674,12 +674,12 @@ public class MainActivity extends AppCompatActivity implements
             String action = intent.getAction();
             String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
 
-            if (mSyncingProgress != null) {
+            if (mSyncingProgress != null &&
+                    action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
                 mSyncingProgress.dismiss();
                 mSyncingProgress = null;
             }
 
-            Log.d("MainActivity", "Broadcast action: " + action);
             if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
