@@ -483,11 +483,12 @@ public class MainActivity extends AppCompatActivity implements
 
         filter.addAction(SheketBroadcast.ACTION_SYNC_STARTED);
         filter.addAction(SheketBroadcast.ACTION_SYNC_SUCCESS);
+        filter.addAction(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
         filter.addAction(SheketBroadcast.ACTION_SYNC_SERVER_ERROR);
         filter.addAction(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR);
         filter.addAction(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR);
-        filter.addAction(SheketBroadcast.ACTION_LOGIN);
         filter.addAction(SheketBroadcast.ACTION_CONFIG_CHANGE);
+        filter.addAction(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
 
         LocalBroadcastManager.getInstance(this).
                 registerReceiver(mReceiver, filter);
@@ -679,10 +680,16 @@ public class MainActivity extends AppCompatActivity implements
                 mSyncingProgress = null;
             }
 
-            if (action.equals(SheketBroadcast.ACTION_LOGIN)) {
-            } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+            Log.d("MainActivity", "Broadcast action: " + action);
+            if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
+                if (mRightNav != null) {
+                    mRightNav.userPermissionChanged();
+                }
+                if (mLeftNav != null) {
+                    mLeftNav.userPermissionChanged();
+                }
             } else if (action.equals(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS)) {
                 logoutUser();
             } else {
@@ -699,14 +706,6 @@ public class MainActivity extends AppCompatActivity implements
                                 setTitle("Success").
                                 setMessage("You've synced successfully.").show();
 
-                        // TODO: was planning to put these 2 inside ACTION_COMPANY_PERMISSION_CHANGE
-                        // but that broadcast isn't working
-                        if (mRightNav != null) {
-                            mRightNav.userPermissionChanged();
-                        }
-                        if (mLeftNav != null) {
-                            mLeftNav.userPermissionChanged();
-                        }
                         openNavDrawer();
                     } else {
                         String err_title = "";

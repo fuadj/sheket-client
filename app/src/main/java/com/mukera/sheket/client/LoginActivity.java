@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -46,6 +47,8 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog mProgress = null;
     private CallbackManager mFacebookCallbackManager;
 
+    private AccessTokenTracker mTokenTracker;
+
     public static final OkHttpClient client = new OkHttpClient();
 
     @Override
@@ -73,6 +76,9 @@ public class LoginActivity extends AppCompatActivity {
                 if (loginResult.getAccessToken() == null)
                     return;
 
+                if (mTokenTracker != null)
+                    mTokenTracker.startTracking();
+
                 mFacebookButton.setVisibility(View.GONE);
                 mProgress = ProgressDialog.show(LoginActivity.this,
                         "Logging in", "Please Wait", true);
@@ -98,6 +104,14 @@ public class LoginActivity extends AppCompatActivity {
                         Arrays.asList("public_profile"));
             }
         });
+
+        mTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
+                updateFacebookButtonUI();
+            }
+        };
+
         updateFacebookButtonUI();
     }
 
@@ -188,6 +202,8 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            if (mTokenTracker != null)
+                mTokenTracker.stopTracking();
             // if all goes well, start main activity
             startMainActivity();
         }
