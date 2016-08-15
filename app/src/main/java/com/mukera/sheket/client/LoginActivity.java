@@ -55,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         // the user has logged in, start MainActivity
-        if (AccessToken.getCurrentAccessToken() != null) {
+        if (PrefUtil.isUserSet(this)) {
             startMainActivity();
             return;
         }
