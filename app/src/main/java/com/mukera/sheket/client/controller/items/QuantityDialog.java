@@ -87,6 +87,9 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     private ImageButton mImgBtnAction;
 
+    private View mLayoutTransferToOtherBranch;
+    private ImageButton mImgBtnSend, mImgBtnReceive, mImgBtnBuy, mImgBtnSell;
+
     private View mLayoutOtherBranchSelector;
     private TextView mTextTransferType;
     private Button mBtnSelectOtherBranch;
@@ -275,6 +278,12 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
         mImgBtnAction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
 
+        mLayoutTransferToOtherBranch = view.findViewById(R.id.dialog_qty_layout_transfer);
+        mImgBtnSend = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_send);
+        mImgBtnReceive = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_receive);
+        mImgBtnBuy = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_buy);
+        mImgBtnSell = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_sell);
+
         mLayoutOtherBranchSelector = view.findViewById(R.id.dialog_qty_layout_select_other_branch);
         mTextTransferType = (TextView) view.findViewById(R.id.dialog_qty_text_transfer_type);
         mBtnSelectOtherBranch = (Button) view.findViewById(R.id.dialog_qty_btn_select_branch);
@@ -308,21 +317,26 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateVisibility() {
-        int visibility;
         boolean is_transfer;
-
         switch (mActionType) {
             case SEND_TO:
             case RECEIVE_FROM:
-                visibility = View.VISIBLE;
                 is_transfer = true;
                 break;
             default:
-                visibility = View.GONE;
                 is_transfer = false;
         }
 
-        mLayoutOtherBranchSelector.setVisibility(visibility);
+        if (mItem != null) {
+            if (mItem.available_branches.isEmpty()) {
+                mLayoutTransferToOtherBranch.setVisibility(View.GONE);
+            } else {
+                mLayoutTransferToOtherBranch.setVisibility(View.VISIBLE);
+            }
+        }
+
+        mLayoutOtherBranchSelector.setVisibility(is_transfer ? View.VISIBLE : View.GONE);
+
         if (is_transfer &&
                 // you should've also specified another branch
                 mOtherBranchItem != null) {
@@ -342,13 +356,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         int img_resource = -1;
         switch (mActionType) {
             case NOT_SET:
-                if (mItem != null) {
-                    if (mItem.available_branches.isEmpty()) {
-                        img_resource = R.drawable.ic_action_no_action_no_transfer;
-                    } else {
-                        img_resource = R.drawable.ic_action_no_action_transfer;
-                    }
-                }
+                img_resource = -1;
                 break;
             case BUY:
                 img_resource = R.drawable.ic_action_choice_buy; break;
@@ -361,6 +369,9 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         }
         if (img_resource != -1) {
             mImgBtnAction.setImageResource(img_resource);
+            mImgBtnAction.setVisibility(View.VISIBLE);
+        } else {
+            mImgBtnAction.setVisibility(View.INVISIBLE);
         }
 
         boolean is_transfer = false;
@@ -457,33 +468,40 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
         });
 
-        mImgBtnAction.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener clickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ActionSelectDialog dialog = new ActionSelectDialog();
-                dialog.mShowTransferActions = !mItem.available_branches.isEmpty();
-                dialog.setListener(new ActionSelectDialog.OnActionSelectListener() {
-                    @Override
-                    public void onActionSelect(Dialog actionDialog, ActionType type) {
-                        actionDialog.dismiss();
-                        mActionType = type;
+                int view_id = v.getId();
 
-                        /**
-                         * ALWAYS "reset" the other branch, this prevents some inconsistent states.
-                         *
-                         * e.g:     Because you can send an item to a branch it doesn't already exist
-                         *          in, you can select such a branch to send an item to it. But you
-                         *          shouldn't just change transaction type to "receive from" and
-                         *          still use that branch the item doesn't exist in.
-                         */
-                        mOtherBranchItem = null;
+                mActionType = ActionType.NOT_SET;
+                if (view_id == mImgBtnReceive.getId()) {
+                    mActionType = ActionType.RECEIVE_FROM;
+                } else if (view_id == mImgBtnSend.getId()) {
+                    mActionType = ActionType.SEND_TO;
+                } else if (view_id == mImgBtnBuy.getId()) {
+                    mActionType = ActionType.BUY;
+                } else if (view_id == mImgBtnSell.getId()) {
+                    mActionType = ActionType.SELL;
+                }
 
-                        updateViews();
-                    }
-                });
-                dialog.show(getActivity().getSupportFragmentManager(), null);
+                /**
+                 * ALWAYS "reset" the other branch, this prevents some inconsistent states.
+                 *
+                 * e.g:     Because you can send an item to a branch it doesn't already exist
+                 *          in, you can select such a branch to send an item to it. But you
+                 *          shouldn't just change transaction type to "receive from" and
+                 *          still use that branch the item doesn't exist in.
+                 */
+                mOtherBranchItem = null;
+
+                updateViews();
             }
-        });
+        };
+
+        mImgBtnReceive.setOnClickListener(clickListener);
+        mImgBtnSend.setOnClickListener(clickListener);
+        mImgBtnBuy.setOnClickListener(clickListener);
+        mImgBtnSell.setOnClickListener(clickListener);
 
         mBtnSelectOtherBranch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -699,61 +717,5 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     public void onLoaderReset(Loader<Cursor> loader) {
         // we can't show shit if there isn't an item
         //getDialog().dismiss();
-    }
-
-    public static class ActionSelectDialog extends DialogFragment {
-        public boolean mShowTransferActions;
-        public OnActionSelectListener mListener;
-
-        public interface OnActionSelectListener {
-            void onActionSelect(Dialog dialog, ActionType type);
-        }
-
-        public void setListener(OnActionSelectListener listener) {
-            mListener = listener;
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            View view = getActivity().getLayoutInflater().
-                    inflate(R.layout.dialog_action_select, null);
-
-            View layoutTransfer = view.findViewById(R.id.dialog_action_select_layout_transfer);
-            layoutTransfer.setVisibility(mShowTransferActions ? View.VISIBLE : View.GONE);
-
-            final ImageButton btnReceive = (ImageButton) view.findViewById(R.id.dialog_action_select_img_btn_receive);
-            final ImageButton btnSend = (ImageButton) view.findViewById(R.id.dialog_action_select_img_btn_send);
-            final ImageButton btnBuy = (ImageButton) view.findViewById(R.id.dialog_action_select_img_btn_buy);
-            final ImageButton btnSell = (ImageButton) view.findViewById(R.id.dialog_action_select_img_btn_sell);
-
-            View.OnClickListener clickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int view_id = v.getId();
-                    ActionType actionType = ActionType.NOT_SET;
-                    if (view_id == btnReceive.getId()) {
-                        actionType = ActionType.RECEIVE_FROM;
-                    } else if (view_id == btnSend.getId()) {
-                        actionType = ActionType.SEND_TO;
-                    } else if (view_id == btnBuy.getId()) {
-                        actionType = ActionType.BUY;
-                    } else if (view_id == btnSell.getId()) {
-                        actionType = ActionType.SELL;
-                    }
-
-                    mListener.onActionSelect(getDialog(), actionType);
-                }
-            };
-
-            btnReceive.setOnClickListener(clickListener);
-            btnSend.setOnClickListener(clickListener);
-            btnBuy.setOnClickListener(clickListener);
-            btnSell.setOnClickListener(clickListener);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setView(view);
-            return builder.create();
-        }
     }
 }
