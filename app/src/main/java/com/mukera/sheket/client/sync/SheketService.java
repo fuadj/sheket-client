@@ -107,6 +107,8 @@ public class SheketService extends IntentService {
             syncEntities();
             syncTransactions();
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
+        } catch (InvalidLoginCredentialException e) {
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SERVER_ERROR,
@@ -133,77 +135,72 @@ public class SheketService extends IntentService {
     }
 
     void syncUser() throws Exception {
-        try {
-            Log.d(LOG_TAG, "Syncing User started");
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(this) + "v1/company/list");
-            JSONObject json = new JSONObject();
-            json.put(this.getString(R.string.sync_json_user_rev),
-                    PrefUtil.getUserRevision(this));
-            builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(this));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    json.toString()));
+        Log.d(LOG_TAG, "Syncing User started");
+        Request.Builder builder = new Request.Builder();
+        builder.url(ConfigData.getAddress(this) + "v1/company/list");
+        JSONObject json = new JSONObject();
+        json.put(this.getString(R.string.sync_json_user_rev),
+                PrefUtil.getUserRevision(this));
+        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
+                PrefUtil.getLoginCookie(this));
+        builder.post(RequestBody.create(MediaType.parse("application/json"),
+                json.toString()));
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                throw new SyncException(SyncUtil.getErrorMessage(response));
-            }
-
-            JSONObject result = new JSONObject(response.body().string());
-
-            ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-
-            final String USER_JSON_COMPANY_ID = this.getString(R.string.pref_header_key_company_id);
-            final String USER_JSON_COMPANY_NAME = "company_name";
-            final String USER_JSON_COMPANY_PERMISSION = "user_permission";
-
-            final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
-            JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
-
-            long user_id = PrefUtil.getUserId(this);
-            for (int i = 0; i < companyArr.length(); i++) {
-                JSONObject companyObj = companyArr.getJSONObject(i);
-
-                long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
-                String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
-                String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
-
-                ContentValues values = new ContentValues();
-                values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
-                // tie this company to the current user calling the sync
-                values.put(CompanyEntry.COLUMN_USER_ID, user_id);
-                values.put(CompanyEntry.COLUMN_NAME, company_name);
-                values.put(CompanyEntry.COLUMN_PERMISSION, permission);
-
-                operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
-                        withValues(values).build());
-
-                ContentValues updateValues = new ContentValues(values);
-                // if the user already has this company, we can't insert b/c of the "ON CONFLICT IGNORE"
-                // but we can update it, so we try our luck
-                updateValues.remove(CompanyEntry.COLUMN_COMPANY_ID);
-                operations.add(ContentProviderOperation.newUpdate(CompanyEntry.CONTENT_URI).
-                        withValues(updateValues).
-                        withSelection(CompanyEntry.COLUMN_COMPANY_ID + " = ?", new String[]{
-                                String.valueOf(company_id)
-                        }).build());
-
-                if (PrefUtil.isCompanySet(this) &&
-                        PrefUtil.getCurrentCompanyId(this) == company_id) {
-                    PrefUtil.setUserPermission(this, permission);
-                    sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
-                }
-            }
-
-            if (!operations.isEmpty())
-                this.getContentResolver().applyBatch(
-                        SheketContract.CONTENT_AUTHORITY, operations);
-
-        } catch (JSONException | IOException |
-                RemoteException | OperationApplicationException | SyncException e) {
-            throw e;
+        Response response = client.newCall(builder.build()).execute();
+        if (!response.isSuccessful()) {
+            throwAppropriateException(response);
         }
+
+        JSONObject result = new JSONObject(response.body().string());
+
+        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+        final String USER_JSON_COMPANY_ID = this.getString(R.string.pref_header_key_company_id);
+        final String USER_JSON_COMPANY_NAME = "company_name";
+        final String USER_JSON_COMPANY_PERMISSION = "user_permission";
+
+        final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
+        JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
+
+        long user_id = PrefUtil.getUserId(this);
+        for (int i = 0; i < companyArr.length(); i++) {
+            JSONObject companyObj = companyArr.getJSONObject(i);
+
+            long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
+            String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
+            String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
+
+            ContentValues values = new ContentValues();
+            values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
+            // tie this company to the current user calling the sync
+            values.put(CompanyEntry.COLUMN_USER_ID, user_id);
+            values.put(CompanyEntry.COLUMN_NAME, company_name);
+            values.put(CompanyEntry.COLUMN_PERMISSION, permission);
+
+            operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
+                    withValues(values).build());
+
+            ContentValues updateValues = new ContentValues(values);
+            // if the user already has this company, we can't insert b/c of the "ON CONFLICT IGNORE"
+            // but we can update it, so we try our luck
+            updateValues.remove(CompanyEntry.COLUMN_COMPANY_ID);
+            operations.add(ContentProviderOperation.newUpdate(CompanyEntry.CONTENT_URI).
+                    withValues(updateValues).
+                    withSelection(CompanyEntry.COLUMN_COMPANY_ID + " = ?", new String[]{
+                            String.valueOf(company_id)
+                    }).build());
+
+            if (PrefUtil.isCompanySet(this) &&
+                    PrefUtil.getCurrentCompanyId(this) == company_id) {
+                PrefUtil.setUserPermission(this, permission);
+                sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
+            }
+        }
+
+        if (!operations.isEmpty())
+            this.getContentResolver().applyBatch(
+                    SheketContract.CONTENT_AUTHORITY, operations);
+
     }
 
     /**
@@ -212,28 +209,24 @@ public class SheketService extends IntentService {
      * it depends on these elements having a "defined" state.
      */
     void syncEntities() throws Exception {
-        try {
-            Log.d(LOG_TAG, "Syncing Entity started");
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(this) + "v1/sync/entity");
-            JSONObject json = createEntitySyncJSON();
-            builder.addHeader(this.getString(R.string.pref_header_key_company_id),
-                    Long.toString(PrefUtil.getCurrentCompanyId(this)));
-            builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(this));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    json.toString()));
+        Log.d(LOG_TAG, "Syncing Entity started");
+        Request.Builder builder = new Request.Builder();
+        builder.url(ConfigData.getAddress(this) + "v1/sync/entity");
+        JSONObject json = createEntitySyncJSON();
+        builder.addHeader(this.getString(R.string.pref_header_key_company_id),
+                Long.toString(PrefUtil.getCurrentCompanyId(this)));
+        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
+                PrefUtil.getLoginCookie(this));
+        builder.post(RequestBody.create(MediaType.parse("application/json"),
+                json.toString()));
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                throw new SyncException(SyncUtil.getErrorMessage(response));
-            }
-
-            EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
-            applyEntitySync(result);
-        } catch (JSONException | IOException | SyncException e) {
-            throw e;
+        Response response = client.newCall(builder.build()).execute();
+        if (!response.isSuccessful()) {
+            throwAppropriateException(response);
         }
+
+        EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
+        applyEntitySync(result);
     }
 
     ContentValues setStatusSynced(ContentValues values) {
@@ -1063,28 +1056,24 @@ public class SheketService extends IntentService {
     }
 
     void syncTransactions() throws Exception {
-        try {
-            JSONObject json = createTransactionSyncJSON();
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(this) + "v1/sync/transaction");
-            builder.addHeader(this.getString(R.string.pref_header_key_company_id),
-                    Long.toString(PrefUtil.getCurrentCompanyId(this)));
-            builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(this));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    json.toString()));
+        JSONObject json = createTransactionSyncJSON();
+        Request.Builder builder = new Request.Builder();
+        builder.url(ConfigData.getAddress(this) + "v1/sync/transaction");
+        builder.addHeader(this.getString(R.string.pref_header_key_company_id),
+                Long.toString(PrefUtil.getCurrentCompanyId(this)));
+        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
+                PrefUtil.getLoginCookie(this));
+        builder.post(RequestBody.create(MediaType.parse("application/json"),
+                json.toString()));
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                throw new SyncException(SyncUtil.getErrorMessage(response));
-            }
-
-            TransactionSyncResponse result = parseTransactionSyncResponse(
-                    response.body().string());
-            applyTransactionSync(result);
-        } catch (JSONException | IOException | SyncException e) {
-            throw e;
+        Response response = client.newCall(builder.build()).execute();
+        if (!response.isSuccessful()) {
+            throwAppropriateException(response);
         }
+
+        TransactionSyncResponse result = parseTransactionSyncResponse(
+                response.body().string());
+        applyTransactionSync(result);
     }
 
     JSONObject createTransactionSyncJSON() throws JSONException {
@@ -1273,6 +1262,23 @@ public class SheketService extends IntentService {
         }
     }
 
+    /**
+     * Checks the response codes and throws the exception for it.
+     */
+    void throwAppropriateException(Response response) throws InvalidLoginCredentialException, SyncException {
+        // TODO: don't hardcode these constants, use a standard library
+        switch (response.code()) {
+            case 200: return;
+
+            // un-authorized, they don't have valid login credentials
+            case 401:
+                throw new InvalidLoginCredentialException("Invalid login credentials");
+
+            default:
+                throw new SyncException(SyncUtil.getErrorMessage(response));
+        }
+    }
+
     static class EntitySyncResponse {
         long company_id;
 
@@ -1338,6 +1344,24 @@ public class SheketService extends IntentService {
         }
 
         public SyncException(Throwable throwable) {
+            super(throwable);
+        }
+    }
+
+    public static class InvalidLoginCredentialException extends Exception {
+        public InvalidLoginCredentialException() {
+            super();
+        }
+
+        public InvalidLoginCredentialException(String detailMessage) {
+            super(detailMessage);
+        }
+
+        public InvalidLoginCredentialException(String detailMessage, Throwable throwable) {
+            super(detailMessage, throwable);
+        }
+
+        public InvalidLoginCredentialException(Throwable throwable) {
             super(throwable);
         }
     }

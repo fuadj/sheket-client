@@ -10,6 +10,8 @@ public class SheketBroadcast {
     /**
      * These can hold an extra error string, user {@link #ACTION_SYNC_EXTRA_ERROR_MSG}
      */
+    // if we receive this broadcast, we should force the user to logout.
+    public static final String ACTION_SYNC_INVALID_LOGIN_CREDENTIALS = "invalid_credentials";
     public static final String ACTION_SYNC_SERVER_ERROR = "server_error";
     public static final String ACTION_SYNC_INTERNET_ERROR = "internet_error";
     public static final String ACTION_SYNC_GENERAL_ERROR = "general_error";

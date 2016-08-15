@@ -683,6 +683,8 @@ public class MainActivity extends AppCompatActivity implements
             } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
+            } else if (action.equals(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS)) {
+                logoutUser();
             } else {
                 /**
                  * If we are syncing because we just logged in, we don't want
