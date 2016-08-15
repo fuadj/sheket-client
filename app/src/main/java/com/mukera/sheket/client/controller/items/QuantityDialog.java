@@ -554,7 +554,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle(mItem.name);
         Dialog dialog = builder.setView(view).create();
-        dialog.setCanceledOnTouchOutside(false);
         return dialog;
     }
 

@@ -348,10 +348,9 @@ public class BranchItemFragment extends SearchableItemFragment {
         final EditText editText = new EditText(getActivity());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Add a Reminder?")
-                .setMessage("(Optional) Write a reminder to remember the transaction").
+        builder.setTitle("Note").
                 setView(editText).
-                setPositiveButton("Finish", new DialogInterface.OnClickListener() {
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
@@ -365,32 +364,9 @@ public class BranchItemFragment extends SearchableItemFragment {
                         updateFloatingActionBtnStatus();
                         dialog.dismiss();
                     }
-                }).setNeutralButton("No Reminder",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        summaryDialog.dismiss();
-                        commitTransaction(itemList, "");
-                    }
                 }).setCancelable(false);
 
-        final AlertDialog dialog = builder.create();
-        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-            }
-        });
-
-        editText.addTextChangedListener(new TextWatcherAdapter() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(s.toString().trim()));
-            }
-        });
-        dialog.show();
+        builder.create().show();
     }
 
     void commitTransaction(final List<STransactionItem> itemList, final String transactionNote) {
