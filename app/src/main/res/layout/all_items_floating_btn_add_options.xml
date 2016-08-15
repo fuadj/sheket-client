@@ -2,20 +2,27 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="32dp">
+    android:background="#ffffff">
 
-    <ImageButton
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/all_items_option_add_category"
-        android:background="@drawable/ic_action_folder"
-        android:layout_marginRight="8dp"
-        android:layout_alignParentLeft="true" />
+        android:layout_centerInParent="true"
+        android:padding="16dp">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/all_items_option_add_category"
+            android:layout_marginRight="8dp"
+            android:src="@mipmap/ic_action_add_category"
+            android:background="#ffffff" />
 
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/all_items_option_add_item"
-        android:background="@android:drawable/ic_input_add"
-        android:layout_alignParentRight="true" />
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/all_items_option_add_item"
+            android:background="#fff"
+            android:src="@mipmap/ic_action_add_item" />
+    </LinearLayout>
 </RelativeLayout>

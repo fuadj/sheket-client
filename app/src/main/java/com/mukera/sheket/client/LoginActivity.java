@@ -1,5 +1,6 @@
 package com.mukera.sheket.client;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -42,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
     //private LoginButton mFacebookSignInButton;
     private FancyButton mFacebookButton;
 
+    private ProgressDialog mProgress = null;
     private CallbackManager mFacebookCallbackManager;
 
     public static final OkHttpClient client = new OkHttpClient();
@@ -72,6 +74,8 @@ public class LoginActivity extends AppCompatActivity {
                     return;
 
                 mFacebookButton.setVisibility(View.GONE);
+                mProgress = ProgressDialog.show(LoginActivity.this,
+                        "Logging in", "Please Wait", true);
                 new SignInTask(loginResult.getAccessToken().getToken()).execute();
             }
 
@@ -86,6 +90,7 @@ public class LoginActivity extends AppCompatActivity {
         });
         mFacebookButton = (FancyButton) findViewById(R.id.facebook_login);
         mFacebookButton.setVisibility(View.VISIBLE);
+        mProgress = null;
         mFacebookButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -170,6 +175,11 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Boolean success) {
+            if (mProgress != null) {
+                mProgress.dismiss();
+                mProgress = null;
+            }
+
             if (!success) {
                 // remove any-facebook "logged-in" stuff
                 Toast.makeText(LoginActivity.this, errMsg, Toast.LENGTH_LONG).show();
