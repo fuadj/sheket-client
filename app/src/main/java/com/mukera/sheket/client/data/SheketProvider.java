@@ -7,6 +7,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -651,12 +652,13 @@ public class SheketProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-        boolean replace = false;
-        if (values.containsKey(SheketContract.SQL_INSERT_OR_REPLACE)) {
-            replace = values.getAsBoolean(SheketContract.SQL_INSERT_OR_REPLACE);
+        boolean update = false;
+        if (values.containsKey(SheketContract.SQL_INSERT_OR_UPDATE)) {
+            update = values.getAsBoolean(SheketContract.SQL_INSERT_OR_UPDATE);
+            // create a local copy so we won't mess up the user's object
             values = new ContentValues(values);
-            // remove the replace element
-            values.remove(SheketContract.SQL_INSERT_OR_REPLACE);
+            // remove the update element
+            values.remove(SheketContract.SQL_INSERT_OR_UPDATE);
         }
 
         int match = sUriMatcher.match(uri);
@@ -671,178 +673,227 @@ public class SheketProvider extends ContentProvider {
         }
 
         Uri returnUri = null;
-        final long INSERT_ERROR = -1;
-        switch (match) {
-            case COMPANY: {
-                /**
-                 * Since all data is DIRECTLY foreign keyed to the company table, we should be
-                 * EXTREMELY CAREFUL not to delete any row from the table. WHen the user syncs
-                 * with a company that he already is a member of, it will try to add it here.
-                 * We've set an ON CONFLICT IGNORE so as not to delete any existing rows.
-                 * We have tried to add the company using {@code db.insertWithOnConflict} method
-                 * passing in {@code SQLiteDatabase.CONFLICT_IGNORE} conflictResolutionAlgorithm
-                 * to enforce the constraint and return to us the previously added company id.
-                 * But, sadly android is not working and is returning -1 signaling an error.
-                 * This results in a COMPLETE app shutdown as the user can't sync no-more
-                 * thinking there was an error inserting the company. So, the suggested
-                 * solution is to first query the db for the company id and only try to
-                 * insert it if it doesn't exist.
-                 *
-                 * See http://stackoverflow.com/questions/13391915/why-does-insertwithonconflict-conflict-ignore-return-1-error for more.
-                 */
 
-                // first try and query to see if the company already exists
-                Cursor cursor = query(CompanyEntry.buildCompanyUri(company_id),
-                        null, null, null, null);
-                if (cursor != null && cursor.moveToFirst()) { // the company exists!!!
+        if (match == COMPANY) {
+            /**
+             * Since all data is DIRECTLY foreign keyed to the company table, we should be
+             * EXTREMELY CAREFUL not to delete any row from the table. WHen the user syncs
+             * with a company that he already is a member of, it will try to add it here.
+             * We've set an ON CONFLICT IGNORE so as not to delete any existing rows.
+             * We have tried to add the company using {@code db.insertWithOnConflict} method
+             * passing in {@code SQLiteDatabase.CONFLICT_IGNORE} conflictResolutionAlgorithm
+             * to enforce the constraint and return to us the previously added company id.
+             * But, sadly android is not working and is returning -1 signaling an error.
+             * This results in a COMPLETE app shutdown as the user can't sync no-more
+             * thinking there was an error inserting the company. So, the suggested
+             * solution is to first query the db for the company id and only try to
+             * insert it if it doesn't exist.
+             *
+             * See http://stackoverflow.com/questions/13391915/why-does-insertwithonconflict-conflict-ignore-return-1-error for more.
+             */
+
+            // first try and query to see if the company already exists
+            Cursor cursor = query(CompanyEntry.buildCompanyUri(company_id),
+                    null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) { // the company exists!!!
+                cursor.close();
+                returnUri = CompanyEntry.buildCompanyUri(company_id);
+            } else {
+                if (cursor != null) {
                     cursor.close();
+                }
+
+                long _id = db.insertWithOnConflict(CompanyEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                if (_id != -1) {
                     returnUri = CompanyEntry.buildCompanyUri(company_id);
                 } else {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-
-                    long _id = db.insertWithOnConflict(CompanyEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-                    if (_id != INSERT_ERROR) {
-                        returnUri = CompanyEntry.buildCompanyUri(company_id);
-                    } else {
-                        throw new android.database.SQLException("Failed to insert row into " + uri);
-                    }
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
+            }
+        } else {
+            SelectionInfo info = getTableNameAndSelectionForContentValue(match, values);
+            String tableName = info.tableName;
+            String selection = info.selection;
+            String columnId = info.columnId;
 
-                break;
+            // we haven't matched any of the tables
+            if (tableName == null)
+                throw new UnsupportedOperationException("Insert, unknown uri: " + uri);
+
+            /**
+             * Read why we are doing update-then-insert to update rows that already exist.
+             * http://stackoverflow.com/questions/11686645/android-sqlite-insert-update-table-columns-to-keep-the-identifier
+             */
+            if (update) {
+                db.update(tableName, values, selection, null);
             }
 
-            case MEMBER: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(MemberEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(MemberEntry.TABLE_NAME, null, values);
+            long _id = db.insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+
+            // if not found and we can select, try to select it out
+            if (_id == -1 && selection != null && columnId != null) {
+                /**
+                 * Refer to http://stackoverflow.com/questions/13391915/why-does-insertwithonconflict-conflict-ignore-return-1-error
+                 */
+                SQLiteStatement stmt = db.compileStatement(
+                        String.format(Locale.US,
+                                "select %s from %s where %s",
+                                columnId, tableName, selection));
+                try {
+                    _id = stmt.simpleQueryForLong();
+                } finally {
+                    stmt.close();
                 }
-                if (_id != INSERT_ERROR) {
+            }
+
+            // if it is still not known after all this, give up
+            if (_id == -1) {
+                throw new android.database.SQLException("Failed to insert row into " + uri);
+            }
+
+            switch (match) {
+                case MEMBER:
                     returnUri = MemberEntry.buildMemberUri(company_id, _id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                    break;
+                case CATEGORY:
+                    returnUri = CategoryEntry.buildCategoryUri(company_id, _id);
+                    break;
+                case BRANCH:
+                    returnUri = BranchEntry.buildBranchUri(company_id, _id);
+                    break;
+                case BRANCH_ITEM: {
+                    long branch_id = values.getAsLong(BranchItemEntry.COLUMN_BRANCH_ID);
+                    long item_id = values.getAsLong(BranchItemEntry.COLUMN_ITEM_ID);
+                    returnUri = BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id);
+                    break;
+                }
+                case BRANCH_CATEGORY: {
+                    long branch_id = values.getAsLong(BranchCategoryEntry.COLUMN_BRANCH_ID);
+                    long category_id = values.getAsLong(BranchCategoryEntry.COLUMN_CATEGORY_ID);
+                    returnUri = BranchCategoryEntry.buildBranchCategoryUri(company_id, branch_id, category_id);
+                    break;
+                }
+                case ITEM:
+                    returnUri = ItemEntry.buildItemUri(company_id, _id);
+                    break;
+                case TRANSACTION:
+                    returnUri = TransactionEntry.buildTransactionUri(company_id, _id);
+                    break;
+                case TRANSACTION_ITEM: {
+                    long trans_id = values.getAsLong(TransItemEntry.COLUMN_TRANSACTION_ID);
+                    returnUri = TransactionEntry.buildTransactionUri(company_id, trans_id);
+                }
+            }
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+        return returnUri;
+    }
+
+
+    static class SelectionInfo {
+        public String tableName;
+
+        // the name of the column that has the row id(usually the primary key)
+        // for tables with multiple columns as the primary key, one of them will be selected
+        public String columnId;
+
+        // the selection that can be used to identify a particular row
+        public String selection;
+    }
+
+    /**
+     * Returns a {@code SelectionInfo} for the provided ContentValues. It will contain the selection
+     * that can be used to select a particular row with can be uniquely identified by columns
+     * in the ContentValues.
+     */
+    private SelectionInfo getTableNameAndSelectionForContentValue(int uri_match, ContentValues values) {
+        SelectionInfo info = new SelectionInfo();
+        info.tableName = info.columnId = info.selection = null;
+
+        switch (uri_match) {
+            case MEMBER: {
+                info.tableName = MemberEntry.TABLE_NAME;
+                if (values.containsKey(MemberEntry.COLUMN_MEMBER_ID)) {
+                    info.columnId = MemberEntry.COLUMN_MEMBER_ID;
+                    info.selection = MemberEntry.COLUMN_MEMBER_ID + " = " + values.getAsString(MemberEntry.COLUMN_MEMBER_ID);
                 }
                 break;
             }
 
             case CATEGORY: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(CategoryEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(CategoryEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    returnUri = CategoryEntry.buildCategoryUri(company_id, _id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = CategoryEntry.TABLE_NAME;
+                if (values.containsKey(CategoryEntry.COLUMN_CATEGORY_ID)) {
+                    info.columnId = CategoryEntry.COLUMN_CATEGORY_ID;
+                    info.selection = CategoryEntry.COLUMN_CATEGORY_ID + " = " + values.getAsString(CategoryEntry.COLUMN_CATEGORY_ID);
                 }
                 break;
             }
 
             case BRANCH: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(BranchEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(BranchEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    returnUri = BranchEntry.buildBranchUri(company_id, _id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = BranchEntry.TABLE_NAME;
+                if (values.containsKey(BranchEntry.COLUMN_BRANCH_ID)) {
+                    info.columnId = BranchEntry.COLUMN_BRANCH_ID;
+                    info.selection = BranchEntry.COLUMN_BRANCH_ID + " = " + values.getAsString(BranchEntry.COLUMN_BRANCH_ID);
                 }
                 break;
             }
 
             case BRANCH_ITEM: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(BranchItemEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(BranchItemEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    long branch_id = values.getAsLong(BranchItemEntry.COLUMN_BRANCH_ID);
-                    long item_id = values.getAsLong(BranchItemEntry.COLUMN_ITEM_ID);
-                    returnUri = BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = BranchItemEntry.TABLE_NAME;
+                if (values.containsKey(BranchItemEntry.COLUMN_BRANCH_ID) &&
+                        values.containsKey(BranchItemEntry.COLUMN_ITEM_ID)) {
+
+                    // we've can choose either of the columns
+                    info.columnId = BranchItemEntry.COLUMN_BRANCH_ID;
+
+                    info.selection = String.format(Locale.US,
+                            "%s = %s AND %s = %s",
+                            BranchItemEntry.COLUMN_BRANCH_ID, values.getAsString(BranchItemEntry.COLUMN_BRANCH_ID),
+                            BranchItemEntry.COLUMN_ITEM_ID, values.getAsString(BranchItemEntry.COLUMN_ITEM_ID));
                 }
                 break;
             }
 
             case BRANCH_CATEGORY: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(BranchCategoryEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(BranchCategoryEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    long branch_id = values.getAsLong(BranchCategoryEntry.COLUMN_BRANCH_ID);
-                    long category_id = values.getAsLong(BranchCategoryEntry.COLUMN_CATEGORY_ID);
-                    returnUri = BranchCategoryEntry.buildBranchCategoryUri(company_id, branch_id, category_id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = BranchCategoryEntry.TABLE_NAME;
+                if (values.containsKey(BranchCategoryEntry.COLUMN_BRANCH_ID) &&
+                        values.containsKey(BranchCategoryEntry.COLUMN_CATEGORY_ID)) {
+                    info.columnId = BranchCategoryEntry.COLUMN_BRANCH_ID;
+                    info.selection = String.format(Locale.US,
+                            "%s = %s AND %s = %s",
+                            BranchCategoryEntry.COLUMN_BRANCH_ID, values.getAsString(BranchCategoryEntry.COLUMN_BRANCH_ID),
+                            BranchCategoryEntry.COLUMN_CATEGORY_ID, values.getAsString(BranchCategoryEntry.COLUMN_CATEGORY_ID));
                 }
                 break;
             }
 
             case ITEM: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(ItemEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(ItemEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    returnUri = ItemEntry.buildItemUri(company_id, _id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = ItemEntry.TABLE_NAME;
+                if (values.containsKey(ItemEntry.COLUMN_ITEM_ID)) {
+                    info.columnId = ItemEntry.COLUMN_ITEM_ID;
+                    info.selection = ItemEntry.COLUMN_ITEM_ID + " = " + values.getAsString(ItemEntry.COLUMN_ITEM_ID);
                 }
                 break;
             }
 
             case TRANSACTION: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(TransactionEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(TransactionEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    returnUri = TransactionEntry.buildTransactionUri(company_id, _id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                info.tableName = TransactionEntry.TABLE_NAME;
+                if (values.containsKey(TransactionEntry.COLUMN_TRANS_ID)) {
+                    info.columnId = TransactionEntry.COLUMN_TRANS_ID;
+                    info.selection = TransactionEntry.COLUMN_TRANS_ID + " = " + values.getAsString(TransactionEntry.COLUMN_TRANS_ID);
                 }
                 break;
             }
 
             case TRANSACTION_ITEM: {
-                long _id;
-                if (replace) {
-                    _id = db.replace(TransItemEntry.TABLE_NAME, null, values);
-                } else {
-                    _id = db.insert(TransItemEntry.TABLE_NAME, null, values);
-                }
-                if (_id != INSERT_ERROR) {
-                    long trans_id = values.getAsLong(TransItemEntry.COLUMN_TRANSACTION_ID);
-                    returnUri = TransactionEntry.buildTransactionUri(company_id, trans_id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
-                }
+                info.tableName = TransItemEntry.TABLE_NAME;
+                // we can't select a transaction items b/c a transaction doesn't uniquely identify it
                 break;
             }
-
-            default:
-                throw new UnsupportedOperationException("Insert, unknown uri: " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
-        return returnUri;
+
+        return info;
     }
 
     @Override
@@ -944,6 +995,7 @@ public class SheketProvider extends ContentProvider {
     public int bulkInsert(Uri uri, ContentValues[] values) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
+
         String tableName;
         switch (match) {
             case COMPANY:
@@ -983,22 +1035,28 @@ public class SheketProvider extends ContentProvider {
         int returnCount = 0;
         try {
             for (ContentValues value : values) {
-                boolean replace = false;
-                if (value.containsKey(SheketContract.SQL_INSERT_OR_REPLACE)) {
-                    replace = value.getAsBoolean(SheketContract.SQL_INSERT_OR_REPLACE);
+                boolean update = false;
+                String selection = null;
+                if (value.containsKey(SheketContract.SQL_INSERT_OR_UPDATE)) {
+                    update = value.getAsBoolean(SheketContract.SQL_INSERT_OR_UPDATE);
+
+                    SelectionInfo info = getTableNameAndSelectionForContentValue(match, value);
+                    selection = info.selection;
+
                     value = new ContentValues(value);
-                    // remove the replace element
-                    value.remove(SheketContract.SQL_INSERT_OR_REPLACE);
+                    // remove the update element
+                    value.remove(SheketContract.SQL_INSERT_OR_UPDATE);
                 }
 
-                long _id;
-                if (replace) {
-                    _id = db.replace(tableName, null, value);
-                } else {
-                    _id = db.insert(tableName, null, value);
+                int rows_updated = 0;
+                if (update && selection != null) {
+                    rows_updated = db.update(tableName, value, selection, null);
                 }
-                if (_id != -1) {
-                    returnCount++;
+                if (rows_updated == 0) {
+                    long _id = db.insert(tableName, null, value);
+                    if (_id != -1) {
+                        returnCount++;
+                    }
                 }
             }
             db.setTransactionSuccessful();

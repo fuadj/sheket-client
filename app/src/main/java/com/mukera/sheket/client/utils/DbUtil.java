@@ -9,11 +9,11 @@ import com.mukera.sheket.client.data.SheketContract;
  */
 public class DbUtil {
     /**
-     * Adds to the content values the option to replace the item if it already
+     * Adds to the content values the option to update the item if it already
      * exists in the database.
      */
     public static ContentValues setUpdateOnConflict(ContentValues values) {
-        values.put(SheketContract.SQL_INSERT_OR_REPLACE, true);
+        values.put(SheketContract.SQL_INSERT_OR_UPDATE, true);
         return values;
     }
 

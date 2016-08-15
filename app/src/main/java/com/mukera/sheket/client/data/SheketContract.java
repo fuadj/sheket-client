@@ -71,8 +71,19 @@ public class SheketContract {
         }
     }
 
-    // add this to contentvalues and set it to true if you want the insert to replace existing stuff.
-    public static final String SQL_INSERT_OR_REPLACE = "__sql_insert_or_replace__";
+    /**
+     * Since we are syncing with a backend, we will "overwrite" the local stuff with the fetched
+     * data. But this might cause problems in the database when a conflict arises while inserting.
+     * This conflict usually results in either being ignored(which we don't want, we want the updated
+     * values to be added) or it will replace the local with the server version. Replacing also has
+     * problems because a replace is a sequence of "delete - then - insert". When the deletion happens,
+     * foreign key dependencies can be violates and un-known behaviour occurs.
+     *
+     * So, add this to your {@code ContentValues} when inserting if you want the behaviour to be
+     *          if already exist update, otherwise insert
+     * This solves the problems stated above as it won't delete existing rows.
+     */
+    public static final String SQL_INSERT_OR_UPDATE = "__sql_insert_or_update__";
 
     public static class ChangeTraceable {
         // this flag is used while syncing to see what are the changes
