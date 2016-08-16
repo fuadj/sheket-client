@@ -666,6 +666,13 @@ public class MainActivity extends AppCompatActivity implements
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
     }
 
+    void dismissSyncDialog() {
+        if (mSyncingProgress != null) {
+            mSyncingProgress.dismiss();
+            mSyncingProgress = null;
+        }
+    }
+
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -674,13 +681,8 @@ public class MainActivity extends AppCompatActivity implements
             String action = intent.getAction();
             String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
 
-            if (mSyncingProgress != null &&
-                    action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
-                mSyncingProgress.dismiss();
-                mSyncingProgress = null;
-            }
-
             if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+                dismissSyncDialog();
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
                 if (mRightNav != null) {
@@ -690,8 +692,10 @@ public class MainActivity extends AppCompatActivity implements
                     mLeftNav.userPermissionChanged();
                 }
             } else if (action.equals(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS)) {
+                dismissSyncDialog();
                 logoutUser();
             } else {
+                dismissSyncDialog();
                 /**
                  * If we are syncing because we just logged in, we don't want
                  * to display the "sync-progress" dialog
