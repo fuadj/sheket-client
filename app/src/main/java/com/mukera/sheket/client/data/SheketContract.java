@@ -643,10 +643,10 @@ public class SheketContract {
             switch (trans_type) {
                 case TYPE_INCREASE_PURCHASE: return "Buy";
                 case TYPE_INCREASE_RETURN_ITEM: return "Returned";
-                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Receive From Branch";
+                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Receive";
 
                 case TYPE_DECREASE_CURRENT_BRANCH: return "Sell";
-                case TYPE_DECREASE_TRANSFER_TO_OTHER: return "Send To Branch";
+                case TYPE_DECREASE_TRANSFER_TO_OTHER: return "Send";
             }
             return "Undefined TransType";
         }

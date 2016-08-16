@@ -17,6 +17,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.*;
 
@@ -132,7 +133,7 @@ public class TransactionSummaryDialog extends DialogFragment {
                 }
             });
             holder.textItemName.setText(transItem.item.name);
-            // TODO: check source and hide the view
+            holder.textSourceInfo.setText(SheketContract.TransItemEntry.getStringForm(transItem.trans_type));
             holder.textQuantity.setText(Double.toString(transItem.quantity));
             return convertView;
         }
