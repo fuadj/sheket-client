@@ -56,7 +56,8 @@ public class LoginActivity extends AppCompatActivity {
 
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {
-            startMainActivity();
+            // because we've already been logged in, we don't need to sync
+            startMainActivity(false);
             return;
         }
 
@@ -102,9 +103,9 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    void startMainActivity() {
-        // We should sync as soon as login is successful
-        PrefUtil.setShouldSyncOnLogin(this, true);
+    void startMainActivity(boolean sync_on_login) {
+        if (sync_on_login)
+            PrefUtil.setShouldSyncOnLogin(this, true);
 
         this.finish();
         Intent intent = new Intent(this, MainActivity.class);
@@ -182,7 +183,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             // if all goes well, start main activity
-            startMainActivity();
+            startMainActivity(true);
         }
 
         @Override
