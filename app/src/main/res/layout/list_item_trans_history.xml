@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants"
@@ -30,7 +31,8 @@
             android:text="Test Username"
             android:id="@+id/list_item_trans_history_user_name"
             android:textSize="16dp"
-            android:textColor="#4d4d4d" />
+            android:textColor="#4d4d4d"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -38,7 +40,8 @@
             android:text="29/09/2015"
             android:id="@+id/list_item_trans_history_date"
             android:textSize="18dp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -46,7 +49,8 @@
             android:text="Dummy Transaction Reason Note"
             android:id="@+id/list_item_trans_history_trans_note"
             android:textSize="12dp"
-            android:textColor="#4d4d4d" />
+            android:textColor="#4d4d4d"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <TextView
@@ -57,7 +61,8 @@
         android:textSize="24dp"
         android:textColor="#010321"
         android:layout_centerVertical="true"
-        android:layout_toLeftOf="@+id/list_item_trans_history_icon" />
+        android:layout_toLeftOf="@+id/list_item_trans_history_icon"
+        tools:ignore="HardcodedText" />
 
     <ImageView
         android:layout_width="wrap_content"

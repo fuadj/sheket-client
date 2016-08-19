@@ -1,5 +1,6 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight">
@@ -16,7 +17,8 @@
             android:text="Search Item Code"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:id="@+id/list_item_text_view_item_name"
@@ -24,7 +26,8 @@
             android:text="Search Item Name"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-condensed"
-            android:textAppearance="?android:textAppearanceSmall" />
+            android:textAppearance="?android:textAppearanceSmall"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
 </RelativeLayout>

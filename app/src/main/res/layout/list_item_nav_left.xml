@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/left_nav_background">
@@ -23,5 +24,6 @@
         android:textColor="@color/left_nav_title_text"
         android:textSize="20dp"
         android:layout_toRightOf="@+id/list_item_nav_left_icon"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        tools:ignore="HardcodedText" />
 </RelativeLayout>

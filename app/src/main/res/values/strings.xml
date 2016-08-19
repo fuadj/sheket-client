@@ -144,4 +144,65 @@
 
     <string name="facebook_app_id">313445519010095</string>
 
+
+    <!-- UI strings that will be localized -->
+
+    <string name="dialog_all_items_total_quantity">Total Quantity</string>
+    <string name="branch_fragment_create_branch">Create Branch</string>
+    <string name="company_fragment_create_company">Create Company</string>
+    <string name="employee_fragment_add_employee">Add Employee</string>
+    <string name="sign_out">Sign-Out</string>
+    <string name="dialog_trans_total_qty">Total Quantity</string>
+
+    <string name="nav_left_companies">Companies</string>
+    <string name="nav_left_management">Management</string>
+    <string name="nav_left_preferences">Preferences</string>
+
+    <string name="nav_right_branches">Branches</string>
+
+    <string name="employee_dialog_title">Add Member</string>
+    <string name="employee_dialog_member_id">Member Id</string>
+    <string name="employee_dialog_name">Name</string>
+    <string name="employee_dialog_permission">Permission:</string>
+    <string name="employee_dialog_branches">Branches:</string>
+
+    <string name="dialog_new_branch_title">Create Branch</string>
+    <string name="dialog_new_branch_name">Branch Name</string>
+    <string name="dialog_new_branch_cancel">Cancel</string>
+    <string name="dialog_new_branch_ok">Ok</string>
+    <string name="dialog_new_company_title">Create Company</string>
+    <string name="dialog_new_company_name">Create Name</string>
+
+    <string name="dialog_qty_source_branch">Source</string>
+    <string name="dialog_qty_select_branch">Select Branch</string>
+    <string name="dialog_qty_quantity">Quantity:</string>
+    <string name="dialog_qty_note">Note:</string>
+    <string name="dialog_qty_cancel">Cancel</string>
+    <string name="dialog_qty_continue">Continue</string>
+    <string name="dialog_qty_finish">Finish</string>
+
+    <string name="import_dialog_item_name">Name</string>
+    <string name="import_dialog_item_code">Code</string>
+    <string name="import_dialog_item_category">Category</string>
+    <string name="import_dialog_item_balance">Balance</string>
+    <string name="import_dialog_item_location">Location</string>
+
+    <string name="fragment_user_profile_username">Username: </string>
+    <string name="fragment_user_profile_id">User Id: </string>
+    <string name="fragment_user_profile_note">*Note: Use this id when adding a member to your company.</string>
+
+    <string name="dialog_item_c_e_name">Name: </string>
+    <string name="dialog_item_c_e_code">Code: </string>
+    <string name="dialog_item_c_e_units">Units: </string>
+    <string name="dialog_item_c_e_has_bundle">Has Bundle: </string>
+    <string name="dialog_item_c_e_bundle_name">Bundle Name: </string>
+    <string name="dialog_item_c_e_bundle_factor">Factor: </string>
+
+    <!-- Placeholder texts that will be formatted -->
+    <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
+    <string name="placeholder_employee_action_add_member">Edit Member</string>
+    <string name="placeholder_employee_action_edit_member">Edit Member</string>
+    <string name="placeholder_qty_send_to">Send To</string>
+    <string name="placeholder_qty_receive_from">Receive From</string>
+    <string name="placeholder_trans_history_total_qty">Total Qty: %1$s</string>
 </resources>

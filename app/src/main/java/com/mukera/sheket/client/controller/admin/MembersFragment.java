@@ -317,14 +317,14 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
             TextView title = (TextView) view.findViewById(R.id.dialog_text_view_member_action);
             if (is_edit) {
-                title.setText("Edit Member");
+                title.setText(getString(R.string.placeholder_employee_action_edit_member));
                 layout_name.setVisibility(View.VISIBLE);
                 mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
                 mMemberName.setText(mMember.member_name);
                 mEditMemberId.setText(UserUtil.delimitEncodedUserId(UserUtil.encodeUserId(mMember.member_id), 4));
                 mEditMemberId.setEnabled(false);
             } else {
-                title.setText("Add Member");
+                title.setText(getString(R.string.placeholder_employee_action_add_member));
                 layout_name.setVisibility(View.GONE);
                 mEditMemberId.setEnabled(true);
                 mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {

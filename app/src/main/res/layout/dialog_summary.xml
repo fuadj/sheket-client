@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -29,7 +30,8 @@
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:padding="20dp"
-            android:adjustViewBounds="false" />
+            android:adjustViewBounds="false"
+            tools:ignore="HardcodedText" />
 
         <ImageButton
             android:layout_width="wrap_content"
@@ -39,7 +41,8 @@
             android:background="@drawable/ic_action_playback_stop"
             android:layout_gravity="center_vertical"
             android:layout_centerInParent="true"
-            android:padding="20dp" />
+            android:padding="20dp"
+            tools:ignore="HardcodedText" />
 
         <ImageButton
             android:layout_width="wrap_content"
@@ -51,6 +54,7 @@
             android:layout_gravity="center_vertical"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:padding="20dp" />
+            android:padding="20dp"
+            tools:ignore="HardcodedText" />
     </RelativeLayout>
 </LinearLayout>

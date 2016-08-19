@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp">
@@ -12,7 +13,7 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Username:"
+            android:text="@string/fragment_user_profile_username"
             android:id="@+id/textView12"
             android:layout_weight="1"
             android:textColor="#000000"
@@ -25,7 +26,8 @@
             android:id="@+id/profile_text_view_name"
             android:layout_weight="1"
             android:textColor="#000000"
-            android:textSize="24dp" />
+            android:textSize="24dp"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <LinearLayout
@@ -37,7 +39,7 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Member Id:"
+            android:text="@string/fragment_user_profile_id"
             android:id="@+id/textView14"
             android:layout_weight="1"
             android:textColor="#000000"
@@ -50,13 +52,14 @@
             android:id="@+id/profile_text_view_id"
             android:layout_weight="1"
             android:textColor="#000000"
-            android:textSize="24dp" />
+            android:textSize="24dp"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="*Note: Use this id when adding a member to your company."
+        android:text="@string/fragment_user_profile_note"
         android:id="@+id/textView" />
 </LinearLayout>

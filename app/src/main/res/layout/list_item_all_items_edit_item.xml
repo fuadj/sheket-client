@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants">
@@ -35,7 +36,8 @@
             android:layout_height="wrap_content"
             android:text="Test Item Code"
             android:id="@+id/list_item_edit_item_text_view_item_code"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -43,7 +45,8 @@
             android:text="Test Item Name"
             android:id="@+id/list_item_edit_item_text_view_item_name"
             android:fontFamily="sans-serif-condensed"
-            android:textAppearance="?android:textAppearanceSmall"/>
+            android:textAppearance="?android:textAppearanceSmall"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <LinearLayout
@@ -60,7 +63,8 @@
             android:id="@+id/list_item_edit_item_text_view_total_qty"
             android:fontFamily="sans-serif-light"
             android:textSize="32dp"
-            android:layout_marginRight="8dp" />
+            android:layout_marginRight="8dp"
+            tools:ignore="HardcodedText" />
 
         <FrameLayout
             android:id="@+id/list_item_edit_item_layout_delete_new_item"

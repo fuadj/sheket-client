@@ -16,7 +16,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Total Quantity"
+        android:text="@string/dialog_all_items_total_quantity"
         android:id="@+id/dialog_all_item_text_view_total_quantity"
         android:layout_alignParentRight="true"
         android:textColor="#000000"

@@ -52,7 +52,6 @@ import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
-import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.data.SheketContract.*;

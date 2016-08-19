@@ -492,7 +492,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             holder.subCount.setVisibility(View.GONE);
         } else {
             holder.subCount.setVisibility(View.VISIBLE);
-            holder.subCount.setText("" + category.childrenCategories.size());
+            holder.subCount.setText(String.format(Locale.US, "%d", category.childrenCategories.size()));
         }
 
         /**
@@ -944,7 +944,8 @@ public class AllItemsFragment extends SearchableItemFragment {
             branchesList.setAdapter(adapter);
 
             TextView qty_text_view = (TextView) view.findViewById(R.id.dialog_all_item_text_view_total_quantity);
-            qty_text_view.setText("Total Qty: " + Utils.formatDoubleForDisplay(mItem.total_quantity));
+            qty_text_view.setText(
+                    getString(R.string.placeholder_all_items_total_quantity, Utils.formatDoubleForDisplay(mItem.total_quantity)));
 
             return builder.setTitle(mItem.name).setView(view).create();
         }

@@ -435,7 +435,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
 
             TextView total_qty = (TextView) view.findViewById(R.id.dialog_trans_history_total_qty);
-            total_qty.setText("Total Qty: " + Utils.formatDoubleForDisplay(mTransDetail.total_quantity));
+            total_qty.setText(
+                    getString(R.string.placeholder_trans_history_total_qty, Utils.formatDoubleForDisplay(mTransDetail.total_quantity)));
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setView(view);

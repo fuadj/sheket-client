@@ -7,7 +7,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Member"
+        android:text="@string/employee_fragment_add_employee"
         android:id="@+id/member_btn_add" />
 
     <ListView

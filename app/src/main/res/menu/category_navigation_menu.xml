@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
@@ -7,7 +8,8 @@
         android:icon="@drawable/ic_action_list_2"
         android:title="Toggle Category"
         android:orderInCategory="10"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        tools:ignore="HardcodedText" />
     <!--the higher the orderInCategory, the last it will appear-->
 
 </menu>
