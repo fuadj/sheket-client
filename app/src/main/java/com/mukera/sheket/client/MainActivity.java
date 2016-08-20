@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,6 +29,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
@@ -557,7 +559,7 @@ public class MainActivity extends AppCompatActivity implements
         Vector<String> duplicates = null;
 
         // this can't be a single variable b/c it is final
-        final boolean []is_categories = new boolean[]{false};
+        final boolean[] is_categories = new boolean[]{false};
 
         if (!mDuplicateEntities.categoryDuplicates.isEmpty()) {
             found_duplicates = true;
@@ -672,6 +674,86 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    void displayConfigurationIfFirstTime() {
+        // we've already been here
+        //if (!PrefUtil.getIsFirstTime(this)) return;
+        PrefUtil.setIsFirstTime(this, false);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final String[] COMPANY_COLUMNS = {
+                        CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID)
+                };
+                Cursor cursor = getContentResolver().query(
+                        CompanyEntry.CONTENT_URI,
+                        COMPANY_COLUMNS,
+                        CompanyEntry.COLUMN_USER_ID + " = ?",
+                        new String[]{String.valueOf(PrefUtil.getUserId(MainActivity.this))},
+                        null
+                );
+
+                boolean companies_exist = false;
+                if (cursor != null) {
+                    if (cursor.moveToFirst()) {
+                        companies_exist = true;
+                    }
+                    cursor.close();
+                }
+
+                /*
+                if (companies_exist)
+                    // the user has already created a company, probably has already configured
+                    return;
+                    */
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        displayConfigurationDialog();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * This will only be displayed if the user doesn't have any companies(either created or added),
+     * and is opening the app for the first time.
+     */
+    void displayConfigurationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_first_time_configuration, null);
+        builder.setView(view);
+        final Button btnEnglish = (Button) view.findViewById(R.id.dialog_config_btn_english);
+        final Button btnAmharic = (Button) view.findViewById(R.id.dialog_config_btn_amharic);
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int selected_lang = -1;
+                if (v.getId() == btnEnglish.getId()) {
+                    selected_lang = PrefUtil.LANGUAGE_ENGLISH;
+                } else if (v.getId() == btnAmharic.getId()) {
+                    selected_lang = PrefUtil.LANGUAGE_AMHARIC;
+                }
+
+                if (selected_lang == -1 ||
+                        selected_lang == PrefUtil.getUserLanguageId(MainActivity.this)) {
+                    return;
+                }
+
+                PrefUtil.setUserLanguage(MainActivity.this, selected_lang);
+                restartMainActivity();
+            }
+        };
+
+        btnEnglish.setOnClickListener(listener);
+        btnAmharic.setOnClickListener(listener);
+        builder.setCancelable(false);
+        builder.setTitle("Choose Language").show();
+    }
+
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -731,6 +813,7 @@ public class MainActivity extends AppCompatActivity implements
                     // reset it so the next sync shows the dialogs
                     PrefUtil.setShouldSyncOnLogin(MainActivity.this, false);
                 }
+                displayConfigurationIfFirstTime();
             }
         }
     };

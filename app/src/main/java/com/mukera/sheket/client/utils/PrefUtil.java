@@ -2,6 +2,7 @@ package com.mukera.sheket.client.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,6 +11,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.user.UserUtil;
 import com.mukera.sheket.client.sync.SheketService;
 
+import java.util.Locale;
 import java.util.Vector;
 
 /**
@@ -40,7 +42,34 @@ public class PrefUtil {
 
     public static boolean getIsFirstTime(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(pref_is_first_time, false);
+        return prefs.getBoolean(pref_is_first_time, true);
+    }
+
+    public static final int LANGUAGE_ENGLISH = 1;
+    public static final int LANGUAGE_AMHARIC = 2;
+    private static final String pref_user_language = "pref_user_language";
+    public static void setUserLanguage(Context context, int language_id) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(pref_user_language, language_id);
+        editor.commit();
+
+        String code = "";
+        switch (language_id) {
+            case LANGUAGE_ENGLISH: code = "en"; break;
+            case LANGUAGE_AMHARIC: code = "am"; break;
+        }
+
+        Locale locale = new Locale(code);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        context.getResources().updateConfiguration(
+                config, context.getResources().getDisplayMetrics());
+    }
+
+    public static int getUserLanguageId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getInt(pref_user_language, LANGUAGE_ENGLISH);
     }
     /**
      * END: Sync On Login
