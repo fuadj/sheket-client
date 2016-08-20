@@ -676,8 +676,8 @@ public class MainActivity extends AppCompatActivity implements
 
     void displayConfigurationIfFirstTime() {
         // we've already been here
-        //if (!PrefUtil.getIsFirstTime(this)) return;
-        PrefUtil.setIsFirstTime(this, false);
+        if (!PrefUtil.getIsFirstTime(this)) return;
+            PrefUtil.setIsFirstTime(this, false);
 
         new Thread(new Runnable() {
             @Override
@@ -701,58 +701,21 @@ public class MainActivity extends AppCompatActivity implements
                     cursor.close();
                 }
 
-                /*
                 if (companies_exist)
                     // the user has already created a company, probably has already configured
                     return;
-                    */
 
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        displayConfigurationDialog();
+                        SettingsFragment.displayConfigurationDialog(
+                                MainActivity.this);
                     }
                 });
             }
         }).start();
     }
 
-    /**
-     * This will only be displayed if the user doesn't have any companies(either created or added),
-     * and is opening the app for the first time.
-     */
-    void displayConfigurationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_first_time_configuration, null);
-        builder.setView(view);
-        final Button btnEnglish = (Button) view.findViewById(R.id.dialog_config_btn_english);
-        final Button btnAmharic = (Button) view.findViewById(R.id.dialog_config_btn_amharic);
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int selected_lang = -1;
-                if (v.getId() == btnEnglish.getId()) {
-                    selected_lang = PrefUtil.LANGUAGE_ENGLISH;
-                } else if (v.getId() == btnAmharic.getId()) {
-                    selected_lang = PrefUtil.LANGUAGE_AMHARIC;
-                }
-
-                if (selected_lang == -1 ||
-                        selected_lang == PrefUtil.getUserLanguageId(MainActivity.this)) {
-                    return;
-                }
-
-                PrefUtil.setUserLanguage(MainActivity.this, selected_lang);
-                restartMainActivity();
-            }
-        };
-
-        btnEnglish.setOnClickListener(listener);
-        btnAmharic.setOnClickListener(listener);
-        builder.setCancelable(false);
-        builder.setTitle("Choose Language").show();
-    }
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -791,6 +754,7 @@ public class MainActivity extends AppCompatActivity implements
                                 setMessage("You've synced successfully.").show();
 
                         openNavDrawer();
+                        displayConfigurationIfFirstTime();
                     } else {
                         String err_title = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
@@ -813,7 +777,6 @@ public class MainActivity extends AppCompatActivity implements
                     // reset it so the next sync shows the dialogs
                     PrefUtil.setShouldSyncOnLogin(MainActivity.this, false);
                 }
-                displayConfigurationIfFirstTime();
             }
         }
     };

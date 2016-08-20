@@ -154,11 +154,22 @@
     <string name="sign_out">Sign-Out</string>
     <string name="dialog_trans_total_qty">Total Quantity</string>
 
-    <string name="nav_left_companies">Companies</string>
-    <string name="nav_left_management">Management</string>
-    <string name="nav_left_preferences">Preferences</string>
+    <string name="nav_title_left_companies">Companies</string>
+    <string name="nav_title_left_management">Management</string>
+    <string name="nav_title_left_preferences">Preferences</string>
 
-    <string name="nav_right_branches">Branches</string>
+    <string name="nav_title_right_branches">Branches</string>
+
+    <string name="nav_items">Items</string>
+    <string name="nav_import">Import</string>
+    <string name="nav_sync">Sync</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_languages">Languages</string>
+    <string name="nav_branches">Branches</string>
+    <string name="nav_companies">Companies</string>
+    <string name="nav_employees">Employees</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_user_profile">User Profile</string>
 
     <string name="employee_dialog_title">Add Member</string>
     <string name="employee_dialog_member_id">Member Id</string>

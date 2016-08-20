@@ -91,38 +91,38 @@ public abstract class BaseNavigation {
         public static final int OPTION_LANGUAGES = 13;
 
         public static final HashMap<Integer,
-                        Pair<String, Integer>> sEntityAndIcon;
+                        Pair<Integer, Integer>> sEntityAndIcon;
 
         static {
             sEntityAndIcon = new HashMap<>();
             sEntityAndIcon.put(OPTION_ITEM_LIST,
-                    new Pair<>("Items", R.drawable.ic_action_new_all_items));
+                    new Pair<>(R.string.nav_items, R.drawable.ic_action_new_all_items));
             sEntityAndIcon.put(OPTION_IMPORT,
-                    new Pair<>("Import", R.drawable.ic_action_new_import));
+                    new Pair<>(R.string.nav_import, R.drawable.ic_action_new_import));
             sEntityAndIcon.put(OPTION_SYNC,
-                    new Pair<>("Sync", R.drawable.ic_action_new_sync));
+                    new Pair<>(R.string.nav_sync, R.drawable.ic_action_new_sync));
             sEntityAndIcon.put(OPTION_TRANSACTIONS,
-                    new Pair<>("Transactions", R.drawable.ic_action_new_transactions));
+                    new Pair<>(R.string.nav_transactions, R.drawable.ic_action_new_transactions));
             sEntityAndIcon.put(OPTION_LANGUAGES,
-                    new Pair<>("Languages", R.mipmap.ic_action_transaction));
+                    new Pair<>(R.string.nav_languages, R.drawable.ic_action_new_settings));
             sEntityAndIcon.put(OPTION_BRANCHES,
-                    new Pair<>("Branches", R.drawable.ic_action_new_branches));
+                    new Pair<>(R.string.nav_branches, R.drawable.ic_action_new_branches));
             sEntityAndIcon.put(OPTION_COMPANIES,
-                    new Pair<>("Companies", R.mipmap.ic_company));
+                    new Pair<>(R.string.nav_companies, R.mipmap.ic_company));
             sEntityAndIcon.put(OPTION_EMPLOYEES,
-                    new Pair<>("Employees", R.drawable.ic_action_new_employees));
-            sEntityAndIcon.put(OPTION_HISTORY,
-                    new Pair<>("History", R.mipmap.ic_action_history));
-            sEntityAndIcon.put(OPTION_USER_PROFILE,
-                    new Pair<>("User Profile", R.drawable.ic_action_new_profile));
+                    new Pair<>(R.string.nav_employees, R.drawable.ic_action_new_employees));
             sEntityAndIcon.put(OPTION_SETTINGS,
-                    new Pair<>("Settings", R.drawable.ic_action_new_settings));
+                    new Pair<>(R.string.nav_settings, R.drawable.ic_action_new_settings));
+            sEntityAndIcon.put(OPTION_USER_PROFILE,
+                    new Pair<>(R.string.nav_user_profile, R.drawable.ic_action_new_profile));
+            /*
             sEntityAndIcon.put(OPTION_DEBUG,
                     new Pair<>("Debug", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(OPTION_DELETE,
                     new Pair<>("Delete", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(OPTION_LOG_OUT,
                     new Pair<>("Logout", R.mipmap.ic_action_logout));
+                    */
         }
     }
 
