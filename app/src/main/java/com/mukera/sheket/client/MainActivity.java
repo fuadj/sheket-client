@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,6 +64,7 @@ import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -128,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements
 
         requireLogin();
 
+        setUserLanguage();
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
@@ -141,6 +144,15 @@ public class MainActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             openNavDrawer();
         }
+    }
+
+    void setUserLanguage() {
+        Locale locale = new Locale(PrefUtil.getUserLanguageLocale(this));
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        getResources().updateConfiguration(
+                config, getResources().getDisplayMetrics());
     }
 
     void initSlidingMenuDrawer() {

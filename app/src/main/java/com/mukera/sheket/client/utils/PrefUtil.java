@@ -52,24 +52,21 @@ public class PrefUtil {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putInt(pref_user_language, language_id);
         editor.commit();
-
-        String code = "";
-        switch (language_id) {
-            case LANGUAGE_ENGLISH: code = "en"; break;
-            case LANGUAGE_AMHARIC: code = "am"; break;
-        }
-
-        Locale locale = new Locale(code);
-        Locale.setDefault(locale);
-        Configuration config = new Configuration();
-        config.locale = locale;
-        context.getResources().updateConfiguration(
-                config, context.getResources().getDisplayMetrics());
     }
 
     public static int getUserLanguageId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getInt(pref_user_language, LANGUAGE_ENGLISH);
+    }
+
+    public static String getUserLanguageLocale(Context context) {
+        int lang_id = getUserLanguageId(context);
+        String language_code = "en";
+        switch (lang_id) {
+            case LANGUAGE_ENGLISH: language_code = "en"; break;
+            case LANGUAGE_AMHARIC: language_code = "am"; break;
+        }
+        return language_code;
     }
     /**
      * END: Sync On Login
