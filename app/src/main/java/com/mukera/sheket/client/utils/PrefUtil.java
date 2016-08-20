@@ -30,6 +30,18 @@ public class PrefUtil {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(pref_should_sync_on_login, false);
     }
+
+    private static final String pref_is_first_time = "pref_is_first_time";
+    public static void setIsFirstTime(Context context, boolean is_first_time) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(pref_is_first_time, is_first_time);
+        editor.commit();
+    }
+
+    public static boolean getIsFirstTime(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(pref_is_first_time, false);
+    }
     /**
      * END: Sync On Login
      */
