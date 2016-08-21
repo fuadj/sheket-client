@@ -37,6 +37,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.controller.items.transactions.CategoryUtil;
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -279,8 +280,6 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         setUpEditModeUI();
 
-        getActivity().setTitle("Items");
-
         return rootView;
     }
 
@@ -412,6 +411,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                 View.OnClickListener deleteListener = new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        displayItemDeleteConfirmationDialog(item);
                         // TODO: display confirm to delete, then delete it
                     }
                 };
@@ -556,6 +556,42 @@ public class AllItemsFragment extends SearchableItemFragment {
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
         }
+    }
+
+    void displayItemDeleteConfirmationDialog(final SItem item) {
+        new AlertDialog.Builder(getActivity()).
+                setTitle(R.string.dialog_item_delete_title).
+                setMessage(R.string.dialog_item_delete_body).
+                setPositiveButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).
+                // we've made it at this end to remove accidental deletion
+                setNeutralButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(), "Deleting", "Please Wait...", true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                getActivity().getContentResolver().
+                                        delete(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getActivity())),
+                                                ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                                                        new String[]{String.valueOf(item.item_id)});
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        deleteProgress.dismiss();
+                                        restartLoader();
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
+                }).show();
     }
 
     /**

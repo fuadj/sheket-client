@@ -116,8 +116,8 @@ public class ExpandableCategoryTreeAdapter extends CursorTreeAdapter {
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
                              View convertView, ViewGroup parent) {
         switch (groupPosition) {
-            case 0: mViewType = VIEW_TYPE_CATEGORY; break;
-            case 1: mViewType = VIEW_TYPE_ITEM; break;
+            case GROUP_CATEGORY: mViewType = VIEW_TYPE_CATEGORY; break;
+            case GROUP_ITEMS: mViewType = VIEW_TYPE_ITEM; break;
             default: mViewType = VIEW_TYPE_NONE; break;
         }
 

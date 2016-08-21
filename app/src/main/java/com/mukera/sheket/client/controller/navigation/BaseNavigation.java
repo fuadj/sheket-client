@@ -84,7 +84,6 @@ public abstract class BaseNavigation {
         public static final int OPTION_SYNC = 6;
         public static final int OPTION_DEBUG = 7;
         public static final int OPTION_LOG_OUT = 8;
-        public static final int OPTION_HISTORY = 9;
         public static final int OPTION_IMPORT = 10;
         public static final int OPTION_DELETE = 11;
         public static final int OPTION_TRANSACTIONS = 12;
@@ -124,7 +123,9 @@ public abstract class BaseNavigation {
                     new Pair<>("Logout", R.mipmap.ic_action_logout));
                     */
         }
+
+        public static int getOptionString(int id) {
+            return sEntityAndIcon.get(id).first;
+        }
     }
-
-
 }

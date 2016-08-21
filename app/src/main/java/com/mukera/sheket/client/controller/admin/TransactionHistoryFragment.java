@@ -23,6 +23,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
 import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -188,8 +189,6 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 dialog.show(fm, "Detail");
             }
         });
-
-        getActivity().setTitle("Transactions");
 
         return rootView;
     }

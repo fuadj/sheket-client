@@ -59,7 +59,7 @@ public class SettingsFragment extends Fragment {
                         startActivity(new Intent(getContext(), AndroidDatabaseManager.class));
                         break;
                     case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
-                        displayConfigurationDialog(getActivity());
+                        displayConfigurationDialog(getActivity(), true);
                         break;
                 }
                 if (fragment != null) {
@@ -123,13 +123,18 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    public static void displayConfigurationDialog(final Context context) {
+    public static void displayConfigurationDialog(final Context context, boolean is_cancellable) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_first_time_configuration, null);
         builder.setView(view);
         final Button btnEnglish = (Button) view.findViewById(R.id.dialog_config_btn_english);
         final Button btnAmharic = (Button) view.findViewById(R.id.dialog_config_btn_amharic);
 
+        builder.setTitle("Choose Language");
+        builder.setCancelable(is_cancellable);
+        final AlertDialog dialog = builder.create();
+        if (!is_cancellable)
+            dialog.setCanceledOnTouchOutside(false);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -140,6 +145,7 @@ public class SettingsFragment extends Fragment {
                     selected_lang = PrefUtil.LANGUAGE_AMHARIC;
                 }
 
+                dialog.dismiss();
                 if (selected_lang == -1 ||
                         selected_lang == PrefUtil.getUserLanguageId(context)) {
                     return;
@@ -152,6 +158,6 @@ public class SettingsFragment extends Fragment {
 
         btnEnglish.setOnClickListener(listener);
         btnAmharic.setOnClickListener(listener);
-        builder.setTitle("Choose Language").show();
+        dialog.show();
     }
 }

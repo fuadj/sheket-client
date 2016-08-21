@@ -22,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
@@ -58,7 +59,6 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
             }
         });
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
-        getActivity().setTitle("Branches");
         return rootView;
     }
 

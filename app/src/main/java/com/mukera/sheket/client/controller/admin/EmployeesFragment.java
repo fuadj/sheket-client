@@ -34,6 +34,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.user.UserUtil;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -63,7 +64,7 @@ import java.util.List;
 /**
  * Created by gamma on 4/3/16.
  */
-public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class EmployeesFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final OkHttpClient client = new OkHttpClient();
 
     private ListView mMemberList;
@@ -91,7 +92,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     dialog.setBranches(getBranches());
                     dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_EDIT;
                     dialog.mMember = member;
-                    dialog.fragment = MembersFragment.this;
+                    dialog.fragment = EmployeesFragment.this;
                     dialog.show(fm, "Edit Member");
                 }
             }
@@ -105,14 +106,13 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                 AddEditMemberDialog dialog = new AddEditMemberDialog();
                 dialog.setBranches(getBranches());
                 dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_ADD;
-                dialog.fragment = MembersFragment.this;
+                dialog.fragment = EmployeesFragment.this;
                 dialog.mMember = null;
                 dialog.show(fm, "Add Member");
             }
         });
 
         getLoaderManager().initLoader(LoaderId.MainActivity.MEMBER_LIST_LOADER, null, this);
-        getActivity().setTitle("Employees");
         return rootView;
     }
 
@@ -208,7 +208,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         public static final int MEMBER_DIALOG_ADD = 1;
         public static final int MEMBER_DIALOG_EDIT = 2;
 
-        public MembersFragment fragment;
+        public EmployeesFragment fragment;
         public int mDialogType;
         public SMember mMember;
 
