@@ -107,7 +107,7 @@
             android:textSize="20dp"
             android:layout_marginTop="8dp" />
 
-        <com.mukera.sheket.client.controller.admin.MembersFragment.MultiSpinner
+        <com.mukera.sheket.client.controller.admin.MultiSpinner
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/dialog_member_spinner_branch" />
