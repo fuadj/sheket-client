@@ -436,8 +436,8 @@ public class AllItemsFragment extends SearchableItemFragment {
                 public void onClick(View v) {
                     final Activity activity = getActivity();
                     new AlertDialog.Builder(activity).
-                            setTitle("Edit Item").
-                            setMessage("Do you want to edit item attributes?").
+                            setTitle(R.string.dialog_edit_item_title).
+                            setMessage(R.string.dialog_edit_item_msg).
                             setPositiveButton("Yes",
                                     new DialogInterface.OnClickListener() {
                                         @Override
@@ -723,7 +723,9 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         final boolean is_editing = category != null;
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
-                setTitle(is_editing ? "Edit Category" : "New Category").
+                setTitle(is_editing ?
+                        R.string.dialog_category_edit :
+                        R.string.dialog_category_new).
                 setMessage(is_editing ? category.name : "").
                 setView(editText).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {

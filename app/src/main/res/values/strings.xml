@@ -205,12 +205,20 @@
     <string name="fragment_user_profile_id">User Id: </string>
     <string name="fragment_user_profile_note">*Note: Use this id when adding a member to your company.</string>
 
+    <string name="dialog_item_c_e_title_new">Create New Item</string>
+    <string name="dialog_item_c_e_title_edit">Edit Item</string>
     <string name="dialog_item_c_e_name">Name: </string>
     <string name="dialog_item_c_e_code">Code: </string>
     <string name="dialog_item_c_e_units">Units: </string>
     <string name="dialog_item_c_e_has_bundle">Has Bundle: </string>
     <string name="dialog_item_c_e_bundle_name">Bundle Name: </string>
     <string name="dialog_item_c_e_bundle_factor">Factor: </string>
+
+    <string name="dialog_category_new">New Category</string>
+    <string name="dialog_category_edit">Edit Category</string>
+
+    <string name="dialog_edit_item_title">Edit Item</string>
+    <string name="dialog_edit_item_msg">Do you want to edit item?</string>
 
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>

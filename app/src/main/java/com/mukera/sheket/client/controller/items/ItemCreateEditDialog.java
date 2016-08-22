@@ -203,7 +203,9 @@ public class ItemCreateEditDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setView(view).
                 setCancelable(false).
-                setTitle(mIsEditMode ? "Edit Item" : "Create New Item");
+                setTitle(mIsEditMode ?
+                        R.string.dialog_item_c_e_title_edit:
+                        R.string.dialog_item_c_e_title_new);
         builder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialog, int which) {
