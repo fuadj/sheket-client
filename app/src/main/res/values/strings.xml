@@ -195,6 +195,11 @@
     <string name="dialog_qty_continue">Continue</string>
     <string name="dialog_qty_finish">Finish</string>
 
+    <string name="dialog_summary_title">Summary</string>
+    <string name="dialog_summary_finish_note">Note</string>
+    <string name="dialog_summary_quit_transaction_title">Quit Transaction</string>
+    <string name="dialog_summary_quit_transaction_msg">Are you sure?</string>
+
     <string name="import_dialog_item_name">Name</string>
     <string name="import_dialog_item_code">Code</string>
     <string name="import_dialog_item_category">Category</string>

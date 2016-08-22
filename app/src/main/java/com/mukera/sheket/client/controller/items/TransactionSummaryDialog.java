@@ -90,7 +90,7 @@ public class TransactionSummaryDialog extends DialogFragment {
         refreshSummaryDialog();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Summary");
+        builder.setTitle(R.string.dialog_summary_title);
         Dialog dialog = builder.setView(rootView).create();
 
         return dialog;

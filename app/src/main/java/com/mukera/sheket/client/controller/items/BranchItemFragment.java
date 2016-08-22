@@ -280,8 +280,8 @@ public class BranchItemFragment extends SearchableItemFragment {
             @Override
             public void cancelSelected(final DialogFragment dialog) {
                 new AlertDialog.Builder(getActivity()).
-                        setTitle("Quit Transaction?").
-                        setMessage("Are You Sure?").
+                        setTitle(R.string.dialog_summary_quit_transaction_title).
+                        setMessage(R.string.dialog_summary_quit_transaction_msg).
                         setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface quitDialog, int which) {
@@ -346,7 +346,7 @@ public class BranchItemFragment extends SearchableItemFragment {
         final EditText editText = new EditText(getActivity());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Note").
+        builder.setTitle(R.string.dialog_summary_finish_note).
                 setView(editText).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
@@ -362,7 +362,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                         updateFloatingActionBtnStatus();
                         dialog.dismiss();
                     }
-                }).setCancelable(false);
+                });
 
         builder.create().show();
     }
