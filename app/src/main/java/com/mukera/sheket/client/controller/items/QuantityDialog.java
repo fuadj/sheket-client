@@ -424,7 +424,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 display_error = false;
             }
             if (display_error) {
-                mQtyEdit.setError("Insufficient Quantity");
+                mQtyEdit.setError(getActivity().getResources().getString(R.string.placeholder_qty_insufficient_qty));
                 mQtyEdit.requestFocus();
             } else {
                 mQtyEdit.setError(null);
