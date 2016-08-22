@@ -16,7 +16,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
-import android.text.Editable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,7 +40,6 @@ import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.SheketTextUtils;
-import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.Utils;
 
 import java.util.ArrayList;
@@ -129,7 +127,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                 getActivity().invalidateOptionsMenu();
 
                 // request the loader to be restarted
-                restartLoader();
+                restartLoaders();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -384,10 +382,6 @@ public class BranchItemFragment extends SearchableItemFragment {
                         mTransactionItemList.clear();
                         updateFloatingActionBtnStatus();
                         progress.dismiss();
-
-                        // TODO: fix this bug
-                        // Fixme: without this, the category list above the item list disappears,
-                        restartLoader();
                     }
                 });
             }
@@ -546,13 +540,13 @@ public class BranchItemFragment extends SearchableItemFragment {
 
     @Override
     protected boolean onSearchTextChanged(String newText) {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 
     @Override
     protected boolean onSearchTextViewClosed() {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 

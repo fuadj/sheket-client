@@ -7,6 +7,7 @@
     android:background="@color/section_separator_color">
     -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/section_separator_color">
@@ -17,7 +18,8 @@
         android:id="@+id/text_view_separator"
         android:textSize="14sp"
         android:text="Test Separator Text"
-        android:paddingLeft="8dp" />
+        android:paddingLeft="8dp"
+        tools:ignore="HardcodedText" />
 
     <View
         android:layout_width="match_parent"

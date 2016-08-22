@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textColor="#d50000"
-            android:text="Sign-Out"
+            android:text="@string/sign_out"
             android:textSize="24dp"
             android:padding="12dp" />
     </LinearLayout>

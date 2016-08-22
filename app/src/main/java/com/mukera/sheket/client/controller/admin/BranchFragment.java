@@ -22,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
@@ -58,7 +59,6 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
             }
         });
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
-        getActivity().setTitle("Branches");
         return rootView;
     }
 
@@ -121,7 +121,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
     }
 
     public static class BranchCreateDialog extends DialogFragment {
-        private EditText mBranchName, mBranchLocation;
+        private EditText mBranchName;
         private Button mOkBtn, mCancelBtn;
         public BranchFragment fragment;
 
@@ -142,8 +142,6 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                     setButtonStatus();
                 }
             });
-            mBranchLocation = (EditText) view.findViewById(R.id.dialog_edit_text_branch_location);
-
             mOkBtn = (Button) view.findViewById(R.id.dialog_btn_branch_ok);
             mCancelBtn = (Button) view.findViewById(R.id.dialog_btn_branch_cancel);
 
@@ -152,7 +150,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                 public void onClick(View v) {
                     final Activity activity = getActivity();
                     final String branch_name = mBranchName.getText().toString();
-                    final String location = mBranchLocation.getText().toString();
+                    final String location = "";
                     final long company_id = PrefUtil.getCurrentCompanyId(activity);
                     Thread t = new Thread() {
                         @Override

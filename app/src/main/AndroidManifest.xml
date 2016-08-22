@@ -66,24 +66,6 @@
         <activity android:name=".data.AndroidDatabaseManager"
             android:theme="@style/Theme.AppCompat.Light"/>
 
-        <activity
-            android:label="Registration"
-            android:name=".controller.user.RegistrationActivity"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-
-        <activity
-            android:label="Settings"
-            android:name=".controller.admin.SettingsActivity"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-
         <provider
             android:authorities="com.mukera.sheket.client.app"
             android:syncable="true"

@@ -1,147 +1,222 @@
 <resources>
-    <string name="app_name">Sheket</string>
-    <string name="action_settings">Settings</string>
+    <string name="app_name" translatable="false">Sheket</string>
+    <string name="action_settings" translatable="false">Settings</string>
 
-    <string name="drawer_open">Open Drawer</string>
-    <string name="drawer_close">Close Drawer</string>
+    <string name="drawer_open" translatable="false">Open Drawer</string>
+    <string name="drawer_close" translatable="false">Close Drawer</string>
 
-    <string name="scanner_activity">ZBar Scanner - Full Activity</string>
-    <string name="scanner_fragment_activity">ZBar Scanner - Full Fragment Activity</string>
-    <string name="simple_scanner_activity">ZBar Scanner - Simple Activity</string>
-    <string name="simple_scanner_fragment_activity">ZBar Scanner - Simple Fragment Activity</string>
-    <string name="simple_activity_sample">Simple Activity Sample</string>
-    <string name="simple_fragment_sample">Simple Fragment Sample</string>
-    <string name="activity_sample">Full Activity Sample</string>
-    <string name="fragment_sample">Full Fragment Sample</string>
-    <string name="toggle_flash">Flash</string>
-    <string name="flash_on">Flash [ON]</string>
-    <string name="flash_off">Flash [OFF]</string>
-    <string name="auto_focus_on">Auto Focus [ON]</string>
-    <string name="auto_focus_off">Auto Focus [OFF]</string>
-    <string name="formats">Formats</string>
-    <string name="choose_formats">Choose Formats</string>
-    <string name="select_camera">Select a Camera</string>
-    <string name="ok_button">OK</string>
-    <string name="cancel_button">Cancel</string>
+    <string name="scanner_activity" translatable="false">ZBar Scanner - Full Activity</string>
+    <string name="scanner_fragment_activity" translatable="false">ZBar Scanner - Full Fragment Activity</string>
+    <string name="simple_scanner_activity" translatable="false">ZBar Scanner - Simple Activity</string>
+    <string name="simple_scanner_fragment_activity" translatable="false">ZBar Scanner - Simple Fragment Activity</string>
+    <string name="simple_activity_sample" translatable="false">Simple Activity Sample</string>
+    <string name="simple_fragment_sample" translatable="false">Simple Fragment Sample</string>
+    <string name="activity_sample" translatable="false">Full Activity Sample</string>
+    <string name="fragment_sample" translatable="false">Full Fragment Sample</string>
+    <string name="toggle_flash" translatable="false">Flash</string>
+    <string name="flash_on" translatable="false">Flash [ON]</string>
+    <string name="flash_off" translatable="false">Flash [OFF]</string>
+    <string name="auto_focus_on" translatable="false">Auto Focus [ON]</string>
+    <string name="auto_focus_off" translatable="false">Auto Focus [OFF]</string>
+    <string name="formats" translatable="false">Formats</string>
+    <string name="choose_formats" translatable="false">Choose Formats</string>
+    <string name="select_camera" translatable="false">Select a Camera</string>
+    <string name="ok_button" translatable="false">OK</string>
+    <string name="cancel_button" translatable="false">Cancel</string>
 
     <integer name="viewfinder_border_width">4</integer>
     <integer name="viewfinder_border_length">60</integer>
 
     <!-- SyncAdapter related -->
-    <string name="sync_account_type">sheket.mukera.com</string>
-    <string name="content_authority">com.mukera.sheket.client.app</string>
+    <string name="sync_account_type" translatable="false">sheket.mukera.com</string>
+    <string name="content_authority" translatable="false">com.mukera.sheket.client.app</string>
 
-    <string name="pref_ip_label">IP Address: </string>
-    <string name="pref_ip_key">ip_address</string>
-    <string name="pref_ip_default">192.168.0.100</string>
+    <string name="pref_ip_label" translatable="false">IP Address: </string>
+    <string name="pref_ip_key" translatable="false">ip_address</string>
+    <string name="pref_ip_default" translatable="false">192.168.0.100</string>
 
-    <string name="pref_user_id">user_id</string>
-    <string name="pref_user_name">user_name</string>
+    <string name="pref_user_id" translatable="false">user_id</string>
+    <string name="pref_user_name" translatable="false">user_name</string>
 
-    <string name="pref_company_id">company_id</string>
-    <string name="pref_company_name">company_name</string>
-    <string name="pref_company_name_default">No Company Selected</string>
-    <string name="pref_login_cookie">login_cookie</string>
+    <string name="pref_company_id" translatable="false">company_id</string>
+    <string name="pref_company_name" translatable="false">company_name</string>
+    <string name="pref_company_name_default" translatable="false">No Company Selected</string>
+    <string name="pref_login_cookie" translatable="false">login_cookie</string>
 
     // This can't be "company_id" b/c the '_' underscore isn't a proper
     // header byte, only used alphabets and hyphen(-). Otherwise, it is a BUG.
-    <string name="pref_header_key_company_id">company-id</string>
+    <string name="pref_header_key_company_id" translatable="false">company-id</string>
 
     <!-- These revision keys are not what are sent to the server, they are the keys
     used to store in user preference -->
-    <string name="pref_user_rev">user_rev</string>
-    <string name="pref_user_permission">pref_user_permission</string>
+    <string name="pref_user_rev" translatable="false">user_rev</string>
+    <string name="pref_user_permission" translatable="false">pref_user_permission</string>
 
-    <string name="pref_category_revision">category_revision</string>
-    <string name="pref_item_revision">item_revision</string>
-    <string name="pref_branch_revision">branch_revision</string>
-    <string name="pref_branch_item_revision">branch_item_revision</string>
-    <string name="pref_transaction_revision">transaction_revision</string>
-    <string name="pref_member_revision">member_revision</string>
-    <string name="pref_branch_category_revision">branch_category_revision</string>
+    <string name="pref_category_revision" translatable="false">category_revision</string>
+    <string name="pref_item_revision" translatable="false">item_revision</string>
+    <string name="pref_branch_revision" translatable="false">branch_revision</string>
+    <string name="pref_branch_item_revision" translatable="false">branch_item_revision</string>
+    <string name="pref_transaction_revision" translatable="false">transaction_revision</string>
+    <string name="pref_member_revision" translatable="false">member_revision</string>
+    <string name="pref_branch_category_revision" translatable="false">branch_category_revision</string>
     <!-- End Preference parameters -->
 
     <!-- Request json parameters -->
-    <string name="pref_response_key_cookie">Set-Cookie</string>
-    <string name="pref_request_key_cookie">Cookie</string>
+    <string name="pref_response_key_cookie" translatable="false">Set-Cookie</string>
+    <string name="pref_request_key_cookie" translatable="false">Cookie</string>
 
-    <string name="sync_json_user_rev">user_rev</string>
+    <string name="sync_json_user_rev" translatable="false">user_rev</string>
 
-    <string name="sync_json_new_transactions">transactions</string>
+    <string name="sync_json_new_transactions" translatable="false">transactions</string>
 
-    <string name="sync_json_entity_types">types</string>
+    <string name="sync_json_entity_types" translatable="false">types</string>
 
-    <string name="sync_json_entity_type_category">category</string>
-    <string name="sync_json_entity_type_item">item</string>
-    <string name="sync_json_entity_type_branch">branch</string>
-    <string name="sync_json_entity_type_branch_item">branch_item</string>
-    <string name="sync_json_entity_type_member">member</string>
-    <string name="sync_json_entity_type_branch_category">branch_category</string>
+    <string name="sync_json_entity_type_category" translatable="false">category</string>
+    <string name="sync_json_entity_type_item" translatable="false">item</string>
+    <string name="sync_json_entity_type_branch" translatable="false">branch</string>
+    <string name="sync_json_entity_type_branch_item" translatable="false">branch_item</string>
+    <string name="sync_json_entity_type_member" translatable="false">member</string>
+    <string name="sync_json_entity_type_branch_category" translatable="false">branch_category</string>
 
-    <string name="sync_json_key_create">create</string>
-    <string name="sync_json_key_update">update</string>
-    <string name="sync_json_key_delete">delete</string>
-    <string name="sync_json_key_fields">fields</string>
+    <string name="sync_json_key_create" translatable="false">create</string>
+    <string name="sync_json_key_update" translatable="false">update</string>
+    <string name="sync_json_key_delete" translatable="false">delete</string>
+    <string name="sync_json_key_fields" translatable="false">fields</string>
 
-    <string name="sync_json_category_rev">category_rev</string>
-    <string name="sync_json_item_rev">item_rev</string>
-    <string name="sync_json_branch_rev">branch_rev</string>
-    <string name="sync_json_branch_item_rev">branch_item_rev</string>
-    <string name="sync_json_trans_rev">transaction_rev</string>
-    <string name="sync_json_member_rev">member_rev</string>
-    <string name="sync_json_branch_category_rev">branch_category_rev</string>
+    <string name="sync_json_category_rev" translatable="false">category_rev</string>
+    <string name="sync_json_item_rev" translatable="false">item_rev</string>
+    <string name="sync_json_branch_rev" translatable="false">branch_rev</string>
+    <string name="sync_json_branch_item_rev" translatable="false">branch_item_rev</string>
+    <string name="sync_json_trans_rev" translatable="false">transaction_rev</string>
+    <string name="sync_json_member_rev" translatable="false">member_rev</string>
+    <string name="sync_json_branch_category_rev" translatable="false">branch_category_rev</string>
     <!-- End Request json parameters -->
 
     <!-- Common Response Params -->
-    <string name="json_err_message">error_message</string>
-    <string name="json_err_code">error_code</string>
+    <string name="json_err_message" translatable="false">error_message</string>
+    <string name="json_err_code" translatable="false">error_code</string>
     <!-- End-Common Response Params -->
 
     <!-- Response of User Sync -->
-    <string name="sync_json_user_revision_changed">rev_changed</string>
-    <string name="sync_json_companies">companies</string>
+    <string name="sync_json_user_revision_changed" translatable="false">rev_changed</string>
+    <string name="sync_json_companies" translatable="false">companies</string>
     <!-- End Response of User Sync -->
 
     <!-- Response of Entity Sync -->
-    <string name="sync_json_updated_category_ids">updated_category_ids</string>
-    <string name="sync_json_updated_item_ids">updated_item_ids</string>
-    <string name="sync_json_updated_branch_ids">updated_branch_ids</string>
+    <string name="sync_json_updated_category_ids" translatable="false">updated_category_ids</string>
+    <string name="sync_json_updated_item_ids" translatable="false">updated_item_ids</string>
+    <string name="sync_json_updated_branch_ids" translatable="false">updated_branch_ids</string>
 
-    <string name="sync_json_sync_categories">sync_categories</string>
-    <string name="sync_json_sync_items">sync_items</string>
-    <string name="sync_json_sync_branches">sync_branches</string>
-    <string name="sync_json_sync_members">sync_members</string>
-    <string name="sync_json_sync_branch_categories">sync_branch_categories</string>
+    <string name="sync_json_sync_categories" translatable="false">sync_categories</string>
+    <string name="sync_json_sync_items" translatable="false">sync_items</string>
+    <string name="sync_json_sync_branches" translatable="false">sync_branches</string>
+    <string name="sync_json_sync_members" translatable="false">sync_members</string>
+    <string name="sync_json_sync_branch_categories" translatable="false">sync_branch_categories</string>
 
-    <string name="sync_json_delete_categories">deleted_categories</string>
-    <string name="sync_json_delete_branch_categories">deleted_branch_categories</string>
+    <string name="sync_json_delete_categories" translatable="false">deleted_categories</string>
+    <string name="sync_json_delete_branch_categories" translatable="false">deleted_branch_categories</string>
     <!-- End Response of Entity Sync -->
 
     <!-- Response of Transaction Sync -->
-    <string name="sync_json_updated_trans_ids">updated_trans_ids</string>
+    <string name="sync_json_updated_trans_ids" translatable="false">updated_trans_ids</string>
 
-    <string name="sync_json_sync_branch_items">sync_branch_items</string>
-    <string name="sync_json_sync_trans">sync_transactions</string>
+    <string name="sync_json_sync_branch_items" translatable="false">sync_branch_items</string>
+    <string name="sync_json_sync_trans" translatable="false">sync_transactions</string>
     <!-- End Response of Transaction Sync -->
 
     <!-- Locally generated id trackers -->
-    <string name="local_last_branch_id">last_branch_id</string>
-    <string name="local_last_item_id">last_item_id</string>
-    <string name="local_last_trans_id">last_trans_id</string>
-    <string name="local_last_category_id">last_category_id</string>
+    <string name="local_last_branch_id" translatable="false">last_branch_id</string>
+    <string name="local_last_item_id" translatable="false">last_item_id</string>
+    <string name="local_last_trans_id" translatable="false">last_trans_id</string>
+    <string name="local_last_category_id" translatable="false">last_category_id</string>
 
-    <string name="empty_directory">Empty Directory</string>
-    <string name="storage_removed">Storage was removed or unmounted.</string>
-    <string name="choose_file">Select a file</string>
-    <string name="error_selecting_file">Error selecting File</string>
-    <string name="internal_storage">Internal storage</string>
-    <string name="chooser_title">Choose item list file</string>
+    <string name="empty_directory" translatable="false">Empty Directory</string>
+    <string name="storage_removed" translatable="false">Storage was removed or unmounted.</string>
+    <string name="choose_file" translatable="false">Select a file</string>
+    <string name="error_selecting_file" translatable="false">Error selecting File</string>
+    <string name="internal_storage" translatable="false">Internal storage</string>
+    <string name="chooser_title" translatable="false">Choose item list file</string>
 
     <!-- Sync Status -->
-    <string name="sync_status">key_sync_status</string>
-    <string name="sync_error">key_sync_error</string>
+    <string name="sync_status" translatable="false">key_sync_status</string>
+    <string name="sync_error" translatable="false">key_sync_error</string>
     <!-- End Sync Status -->
 
-    <string name="facebook_app_id">313445519010095</string>
+    <string name="facebook_app_id" translatable="false">313445519010095</string>
 
+
+    <!-- UI strings that will be localized -->
+
+    <string name="dialog_all_items_total_quantity">Total Quantity</string>
+    <string name="branch_fragment_create_branch">Create Branch</string>
+    <string name="company_fragment_create_company">Create Company</string>
+    <string name="employee_fragment_add_employee">Add Employee</string>
+    <string name="sign_out">Sign-Out</string>
+    <string name="dialog_trans_total_qty">Total Quantity</string>
+
+    <string name="dialog_item_delete_title" translatable="false">Delete Item</string>
+    <string name="dialog_item_delete_body" translatable="false">Are you sure you want to delete the item?</string>
+
+    <string name="nav_title_left_companies">Companies</string>
+    <string name="nav_title_left_management">Management</string>
+    <string name="nav_title_left_preferences">Preferences</string>
+
+    <string name="nav_title_right_branches">Branches</string>
+
+    <string name="nav_items">Items</string>
+    <string name="nav_import">Import</string>
+    <string name="nav_sync">Sync</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_languages">Languages</string>
+    <string name="nav_branches">Branches</string>
+    <string name="nav_companies">Companies</string>
+    <string name="nav_employees">Employees</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_user_profile" translatable="false">User Profile</string>
+
+    <string name="employee_dialog_title">Add Member</string>
+    <string name="employee_dialog_member_id">Member Id</string>
+    <string name="employee_dialog_name">Name</string>
+    <string name="employee_dialog_permission">Permission:</string>
+    <string name="employee_dialog_branches">Branches:</string>
+
+    <string name="dialog_new_branch_title">Create Branch</string>
+    <string name="dialog_new_branch_name">Branch Name</string>
+    <string name="dialog_new_branch_cancel">Cancel</string>
+    <string name="dialog_new_branch_ok">Ok</string>
+    <string name="dialog_new_company_title">Create Company</string>
+    <string name="dialog_new_company_name">Create Name</string>
+
+    <string name="dialog_qty_source_branch">Source</string>
+    <string name="dialog_qty_select_branch">Select Branch</string>
+    <string name="dialog_qty_quantity">Quantity:</string>
+    <string name="dialog_qty_note">Note:</string>
+    <string name="dialog_qty_cancel">Cancel</string>
+    <string name="dialog_qty_continue">Continue</string>
+    <string name="dialog_qty_finish">Finish</string>
+
+    <string name="import_dialog_item_name">Name</string>
+    <string name="import_dialog_item_code">Code</string>
+    <string name="import_dialog_item_category">Category</string>
+    <string name="import_dialog_item_balance">Balance</string>
+    <string name="import_dialog_item_location">Location</string>
+
+    <string name="fragment_user_profile_username">Username: </string>
+    <string name="fragment_user_profile_id">User Id: </string>
+    <string name="fragment_user_profile_note">*Note: Use this id when adding a member to your company.</string>
+
+    <string name="dialog_item_c_e_name">Name: </string>
+    <string name="dialog_item_c_e_code">Code: </string>
+    <string name="dialog_item_c_e_units">Units: </string>
+    <string name="dialog_item_c_e_has_bundle">Has Bundle: </string>
+    <string name="dialog_item_c_e_bundle_name">Bundle Name: </string>
+    <string name="dialog_item_c_e_bundle_factor">Factor: </string>
+
+    <!-- Placeholder texts that will be formatted -->
+    <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
+    <string name="placeholder_employee_action_add_member">Edit Member</string>
+    <string name="placeholder_employee_action_edit_member">Edit Member</string>
+    <string name="placeholder_qty_send_to">Send To</string>
+    <string name="placeholder_qty_receive_from">Receive From</string>
+    <string name="placeholder_trans_history_total_qty">Total Qty: %1$s</string>
 </resources>

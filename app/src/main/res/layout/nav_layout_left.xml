@@ -18,7 +18,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:text="Companies"
+                android:text="@string/nav_title_left_companies"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/left_nav_separator_text"/>
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:text="Management"
+                    android:text="@string/nav_title_left_management"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     style="@style/left_nav_separator_text"/>
@@ -56,7 +56,7 @@
     </ScrollView>
 
     <TextView
-        android:text="Preference"
+        android:text="@string/nav_title_left_preferences"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/left_nav_separator_text"

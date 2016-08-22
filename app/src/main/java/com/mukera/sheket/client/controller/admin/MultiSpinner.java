@@ -13,7 +13,7 @@ import java.util.List;
  * http://stackoverflow.com/questions/5015686/android-spinner-with-multiple-choice
  */
 public class MultiSpinner extends Spinner implements
-        DialogInterface.OnMultiChoiceClickListener, DialogInterface.OnCancelListener {
+            DialogInterface.OnMultiChoiceClickListener, DialogInterface.OnCancelListener {
 
     private List<String> items;
     private boolean[] selected;

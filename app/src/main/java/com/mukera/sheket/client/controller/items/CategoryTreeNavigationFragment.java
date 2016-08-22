@@ -12,7 +12,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -26,7 +25,6 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
 
@@ -50,13 +48,21 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     ExpandableCategoryTreeAdapter mExpandableAdapter;
 
-    protected void initLoader() {
+    private void initCategoryLoader() {
         getLoaderManager().initLoader(getCategoryLoaderId(), null, this);
+    }
+
+    private void restartCategoryLoader() {
+        getLoaderManager().restartLoader(getCategoryLoaderId(), null, this);
+    }
+
+    protected void initLoaders() {
+        initCategoryLoader();
         onInitLoader();
     }
 
-    protected void restartLoader() {
-        getLoaderManager().restartLoader(getCategoryLoaderId(), null, this);
+    protected void restartLoaders() {
+        restartCategoryLoader();
         onRestartLoader();
     }
 
@@ -150,7 +156,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        initLoader();
+        initLoaders();
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -182,7 +188,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                     long previous_category = setCurrentCategory(category.category_id);
 
                     onCategorySelected(previous_category, category.category_id);
-                    restartLoader();
+                    restartLoaders();
                     return true;
                 } else {
                     return onEntitySelected(cursor);
@@ -219,7 +225,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                         long previous_category = mCategoryBackstack.peek();
                         mCurrentCategoryId = mCategoryBackstack.pop();
                         onCategorySelected(previous_category, mCurrentCategoryId);
-                        restartLoader();
+                        restartLoaders();
                     }
                     return true;
                 }
@@ -233,6 +239,24 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     public void setEntityCursor(Cursor cursor) {
         mExpandableAdapter.setItemsCursor(cursor);
+    }
+
+    @Override
+    public void onGetGroupChildrenCursor(int group) {
+        /**
+         * I don't know why we need to restart the loader,
+         * if we only do initLoader, sometimes the category cursor
+         * isn't correctly returned. It will only return a cursor.
+         * that has been closed which doesn't work.
+         */
+        switch (group) {
+            case ExpandableCategoryTreeAdapter.GROUP_CATEGORY:
+                restartCategoryLoader();
+                break;
+            case ExpandableCategoryTreeAdapter.GROUP_ITEMS:
+                onRestartLoader();
+                break;
+        }
     }
 
     private static class ViewHolder {
@@ -341,6 +365,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data.isClosed())
+            return;
+
         if (loader.getId() == getCategoryLoaderId()) {
             mExpandableAdapter.setCategoryCursor(new SCategory.CategoryWithChildrenCursor(data));
 
@@ -372,83 +399,6 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
             mExpandableListView.expandGroup(ExpandableCategoryTreeAdapter.GROUP_CATEGORY);
         } else if (!show_list && is_expanded) {
             mExpandableListView.collapseGroup(ExpandableCategoryTreeAdapter.GROUP_CATEGORY);
-        }
-    }
-
-    /**
-     * The adapter the {@code CategoryTreeNavigationFragment} uses to load
-     * the category data should implement this. The underlying implementation can
-     * be {@code CursorAdapter}, {@code ArrayAdapter} OR what ever.
-     */
-    public interface CategoryAdapter extends ListAdapter {
-        SCategory getCategoryAt(int position);
-
-        /**
-         * The data is populated through this method.
-         */
-        void setCategoryCursor(Cursor cursor);
-    }
-
-    /**
-     * This adapter loads the categories 2-level, so the parent are loaded along with their children.
-     */
-    public static class CategoryChildrenArrayAdapter extends ArrayAdapter<SCategory> implements CategoryAdapter {
-        private static class ViewHolder {
-            TextView categoryName, childrenCount;
-
-            public ViewHolder(View view) {
-                categoryName = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_name);
-                //childrenCount = (TextView) view.findViewById(R.id.list_item_category_tree_text_view_sub_count);
-            }
-        }
-
-        public CategoryChildrenArrayAdapter(Context context) {
-            super(context, 0);
-        }
-
-        @Override
-        public SCategory getCategoryAt(int position) {
-            return super.getItem(position);
-        }
-
-        @Override
-        public void setCategoryCursor(Cursor cursor) {
-            setNotifyOnChange(false);
-
-            clear();
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    SCategory parent_category = new SCategory(cursor, true);
-                    super.add(parent_category);
-                } while (cursor.moveToNext());
-            }
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            SCategory category = getItem(position);
-
-            ViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(getContext());
-                convertView = inflater.inflate(R.layout.list_item_category_tree_navigation, parent, false);
-                holder = new ViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            holder.categoryName.setText(category.name);
-            /*
-            if (category.childrenCategories.isEmpty()) {
-                holder.childrenCount.setVisibility(View.GONE);
-            } else {
-                holder.childrenCount.setVisibility(View.VISIBLE);
-                holder.childrenCount.setText("" + category.childrenCategories.size());
-            }
-            */
-            return convertView;
         }
     }
 }

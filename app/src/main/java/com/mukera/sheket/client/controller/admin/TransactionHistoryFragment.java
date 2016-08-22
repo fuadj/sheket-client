@@ -23,6 +23,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
 import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
+import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -188,8 +189,6 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
                 dialog.show(fm, "Detail");
             }
         });
-
-        getActivity().setTitle("Transactions");
 
         return rootView;
     }
@@ -435,7 +434,8 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
             }
 
             TextView total_qty = (TextView) view.findViewById(R.id.dialog_trans_history_total_qty);
-            total_qty.setText("Total Qty: " + Utils.formatDoubleForDisplay(mTransDetail.total_quantity));
+            total_qty.setText(
+                    getString(R.string.placeholder_trans_history_total_qty, Utils.formatDoubleForDisplay(mTransDetail.total_quantity)));
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setView(view);

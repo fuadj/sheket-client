@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants">
@@ -27,7 +28,8 @@
             android:text="Test Member Name"
             android:id="@+id/member_text_view_name"
             android:textSize="20dp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -35,7 +37,8 @@
             android:text="2105634"
             android:id="@+id/member_text_view_id"
             android:textSize="16dp"
-            android:textColor="#4d4d4d" />
+            android:textColor="#4d4d4d"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <TextView
@@ -46,5 +49,6 @@
         android:layout_alignParentRight="true"
         android:textSize="20dp"
         android:textColor="#010321"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"
+        tools:ignore="HardcodedText" />
 </RelativeLayout>

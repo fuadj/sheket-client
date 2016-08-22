@@ -7,7 +7,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create Company"
+        android:text="@string/company_fragment_create_company"
         android:id="@+id/companies_btn_create" />
 
     <ListView

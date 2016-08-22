@@ -4,12 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,12 +28,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.facebook.AccessToken;
-import com.facebook.login.LoginManager;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.CompanyUtil;
-import com.mukera.sheket.client.controller.admin.MembersFragment;
+import com.mukera.sheket.client.controller.admin.EmployeesFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
 import com.mukera.sheket.client.controller.importer.DuplicateReplacementDialog;
@@ -52,20 +49,18 @@ import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
-import com.mukera.sheket.client.controller.user.RegistrationActivity;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
-import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.sync.SheketService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.LogManager;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
@@ -127,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements
 
         requireLogin();
 
+        setUserLanguage();
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
@@ -140,6 +136,15 @@ public class MainActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             openNavDrawer();
         }
+    }
+
+    void setUserLanguage() {
+        Locale locale = new Locale(PrefUtil.getUserLanguageLocale(this));
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        getResources().updateConfiguration(
+                config, getResources().getDisplayMetrics());
     }
 
     void initSlidingMenuDrawer() {
@@ -287,6 +292,8 @@ public class MainActivity extends AppCompatActivity implements
         closeNavDrawer();
         removeCustomActionBarViews();
 
+        boolean change_title = true;
+
         switch (item) {
             case BaseNavigation.StaticNavigationOptions.OPTION_ITEM_LIST:
                 replaceMainFragment(new AllItemsFragment(), false);
@@ -297,24 +304,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 Intent intent = Intent.createChooser(getContentIntent, "Select a file");
                 startActivityForResult(intent, REQUEST_FILE_CHOOSER);
-                break;
-            }
-            case BaseNavigation.StaticNavigationOptions.OPTION_DELETE: {
-                new AlertDialog.Builder(this).
-                        setTitle("Are You Sure?").
-                        setMessage("This will delete all un-synced data, are you sure?").
-                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                deleteAllUnSyncedData();
-                            }
-                        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }).show();
+                change_title = false;
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
@@ -323,15 +313,13 @@ public class MainActivity extends AppCompatActivity implements
             case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
                 replaceMainFragment(new CompanyFragment(), false);
                 break;
-            case BaseNavigation.StaticNavigationOptions.OPTION_HISTORY:
-                replaceMainFragment(new TransactionHistoryFragment(), false);
-                break;
             case BaseNavigation.StaticNavigationOptions.OPTION_EMPLOYEES:
-                replaceMainFragment(new MembersFragment(), false);
+                replaceMainFragment(new EmployeesFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
                 Intent intent = new Intent(this, SheketService.class);
                 startService(intent);
+                change_title = false;
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
@@ -342,13 +330,19 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                 startActivity(new Intent(this, AndroidDatabaseManager.class));
+                change_title = false;
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE:
                 replaceMainFragment(new ProfileFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_LOG_OUT:
                 logoutUser();
+                change_title = false;
                 break;
+        }
+        if (change_title) {
+            setTitle(
+                    BaseNavigation.StaticNavigationOptions.getOptionString(item));
         }
     }
 
@@ -372,45 +366,6 @@ public class MainActivity extends AppCompatActivity implements
                     public void logoutError(String msg) {
                     }
                 });
-    }
-
-    String unsyncedSelector(String column) {
-        return column + " != " + ChangeTraceable.CHANGE_STATUS_SYNCED + " OR " +
-                column + " != " + ChangeTraceable.CHANGE_STATUS_UPDATED;
-    }
-
-    void deleteAllUnSyncedData() {
-        long company_id = PrefUtil.getCurrentCompanyId(this);
-        getContentResolver().delete(
-                TransItemEntry.buildBaseUri(company_id),
-                unsyncedSelector(TransItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
-        getContentResolver().delete(
-                TransactionEntry.buildBaseUri(company_id),
-                unsyncedSelector(TransactionEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
-        getContentResolver().delete(
-                BranchItemEntry.buildBaseUri(company_id),
-                unsyncedSelector(BranchItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
-        getContentResolver().delete(
-                CategoryEntry.buildBaseUri(company_id),
-                unsyncedSelector(CategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
-        getContentResolver().delete(
-                ItemEntry.buildBaseUri(company_id),
-                unsyncedSelector(ItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
-        getContentResolver().delete(
-                BranchEntry.buildBaseUri(company_id),
-                unsyncedSelector(BranchEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
-                null
-        );
     }
 
     @Override
@@ -558,7 +513,7 @@ public class MainActivity extends AppCompatActivity implements
         Vector<String> duplicates = null;
 
         // this can't be a single variable b/c it is final
-        final boolean []is_categories = new boolean[]{false};
+        final boolean[] is_categories = new boolean[]{false};
 
         if (!mDuplicateEntities.categoryDuplicates.isEmpty()) {
             found_duplicates = true;
@@ -673,6 +628,15 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    void displayConfigurationIfFirstTime() {
+        // we've already been here
+        if (!PrefUtil.getIsFirstTime(this)) return;
+        PrefUtil.setIsFirstTime(this, false);
+
+        SettingsFragment.displayConfigurationDialog(this, false);
+    }
+
+
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -710,6 +674,7 @@ public class MainActivity extends AppCompatActivity implements
                                 setMessage("You've synced successfully.").show();
 
                         openNavDrawer();
+                        displayConfigurationIfFirstTime();
                     } else {
                         String err_title = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {

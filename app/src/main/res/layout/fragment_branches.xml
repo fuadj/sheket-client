@@ -7,7 +7,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create Branch"
+        android:text="@string/branch_fragment_create_branch"
         android:id="@+id/branches_btn_create" />
 
     <ListView

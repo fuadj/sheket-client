@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:layout_height="wrap_content">
@@ -29,7 +30,8 @@
             android:text="Branch Name"
             android:id="@+id/list_item_all_item_item_detail_text_view_branch_name"
             android:textSize="18dp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -37,7 +39,8 @@
             android:text="Item Location"
             android:id="@+id/list_item_all_item_item_detail_text_view_location"
             android:textSize="16dp"
-            android:textColor="#4d4d4d" />
+            android:textColor="#4d4d4d"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <TextView
@@ -48,6 +51,7 @@
         android:layout_alignParentRight="true"
         android:textSize="24dp"
         android:textColor="#010321"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        tools:ignore="HardcodedText" />
 
 </RelativeLayout>

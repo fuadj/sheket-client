@@ -2,6 +2,7 @@
 <android.support.v7.widget.GridLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:columnCount="2"
@@ -19,7 +20,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Name: "
+            android:text="@string/dialog_item_c_e_name"
             android:textColor="#000000"
             android:textSize="20dp"
             app:layout_gravity="center_vertical" />
@@ -39,7 +40,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Code: "
+        android:text="@string/dialog_item_c_e_code"
         android:textColor="#000000"
         android:textSize="20dp"
         app:layout_row="1"
@@ -62,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#000000"
-        android:text="Units: "
+        android:text="@string/dialog_item_c_e_units"
         android:textSize="20dp"
         app:layout_row="2"
         app:layout_column="0"
@@ -92,7 +93,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#000000"
-        android:text="Has Bundle: "
+        android:text="@string/dialog_item_c_e_has_bundle"
         android:textSize="20dp"
         app:layout_row="3"
         app:layout_column="0"
@@ -130,7 +131,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textColor="#000000"
-                android:text="Bundle Name: "
+                android:text="@string/dialog_item_c_e_bundle_name"
                 android:textSize="20dp"
                 android:layout_weight="2"
                 android:id="@+id/text_bundle_name" />
@@ -154,7 +155,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textColor="#000000"
-                android:text="Multiply By: "
+                android:text="@string/dialog_item_c_e_bundle_factor"
                 android:textSize="20dp"
                 android:id="@+id/text_multiply_by"
                 android:layout_weight="2" />
@@ -179,7 +180,8 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:background="#e0e0e0"
-            android:paddingLeft="16dp" />
+            android:paddingLeft="16dp"
+            tools:ignore="HardcodedText" />
 
     </LinearLayout>
 </android.support.v7.widget.GridLayout>

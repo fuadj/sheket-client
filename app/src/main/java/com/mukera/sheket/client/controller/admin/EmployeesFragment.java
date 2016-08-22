@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -30,20 +31,21 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.support.v4.app.Fragment;
 
-import com.mukera.sheket.client.controller.user.UserUtil;
-import com.mukera.sheket.client.utils.ConfigData;
-import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.utils.SyncUtil;
-import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.controller.user.UserUtil;
+import com.mukera.sheket.client.data.SheketContract.BranchEntry;
+import com.mukera.sheket.client.data.SheketContract.ChangeTraceable;
+import com.mukera.sheket.client.data.SheketContract.MemberEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
+import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.SyncUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -61,7 +63,7 @@ import java.util.List;
 /**
  * Created by gamma on 4/3/16.
  */
-public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class EmployeesFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final OkHttpClient client = new OkHttpClient();
 
     private ListView mMemberList;
@@ -89,7 +91,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                     dialog.setBranches(getBranches());
                     dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_EDIT;
                     dialog.mMember = member;
-                    dialog.fragment = MembersFragment.this;
+                    dialog.fragment = EmployeesFragment.this;
                     dialog.show(fm, "Edit Member");
                 }
             }
@@ -103,14 +105,13 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
                 AddEditMemberDialog dialog = new AddEditMemberDialog();
                 dialog.setBranches(getBranches());
                 dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_ADD;
-                dialog.fragment = MembersFragment.this;
+                dialog.fragment = EmployeesFragment.this;
                 dialog.mMember = null;
                 dialog.show(fm, "Add Member");
             }
         });
 
         getLoaderManager().initLoader(LoaderId.MainActivity.MEMBER_LIST_LOADER, null, this);
-        getActivity().setTitle("Employees");
         return rootView;
     }
 
@@ -206,7 +207,7 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
         public static final int MEMBER_DIALOG_ADD = 1;
         public static final int MEMBER_DIALOG_EDIT = 2;
 
-        public MembersFragment fragment;
+        public EmployeesFragment fragment;
         public int mDialogType;
         public SMember mMember;
 
@@ -317,14 +318,14 @@ public class MembersFragment extends Fragment implements LoaderCallbacks<Cursor>
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
             TextView title = (TextView) view.findViewById(R.id.dialog_text_view_member_action);
             if (is_edit) {
-                title.setText("Edit Member");
+                title.setText(getString(R.string.placeholder_employee_action_edit_member));
                 layout_name.setVisibility(View.VISIBLE);
                 mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
                 mMemberName.setText(mMember.member_name);
                 mEditMemberId.setText(UserUtil.delimitEncodedUserId(UserUtil.encodeUserId(mMember.member_id), 4));
                 mEditMemberId.setEnabled(false);
             } else {
-                title.setText("Add Member");
+                title.setText(getString(R.string.placeholder_employee_action_add_member));
                 layout_name.setVisibility(View.GONE);
                 mEditMemberId.setEnabled(true);
                 mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {

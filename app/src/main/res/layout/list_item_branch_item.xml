@@ -1,5 +1,6 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight"
@@ -48,7 +49,8 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
             android:layout_marginLeft="8dp"
             android:layout_weight="2"
-            android:text="sh_20_50" />
+            android:text="sh_20_50"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:id="@+id/list_item_b_item_text_view_item_name"
@@ -58,7 +60,8 @@
             android:textAppearance="?android:textAppearanceSmall"
             android:layout_marginLeft="8dp"
             android:layout_weight="1"
-            android:text="Shell 20-50 Oil" />
+            android:text="Shell 20-50 Oil"
+            tools:ignore="HardcodedText" />
 
     </LinearLayout>
 
@@ -84,14 +87,16 @@
                 android:fontFamily="sans-serif-light"
                 android:textSize="32dp"
                 android:layout_gravity="center_vertical|right"
-                android:text="204.3" />
+                android:text="204.3"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="A-10"
                 android:id="@+id/list_item_b_item_text_view_item_loc"
-                android:layout_gravity="center_vertical|right" />
+                android:layout_gravity="center_vertical|right"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <ImageView

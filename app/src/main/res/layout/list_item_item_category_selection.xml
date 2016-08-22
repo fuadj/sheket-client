@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants"
@@ -28,7 +29,8 @@
         android:layout_toRightOf="@+id/check_box_container"
         android:textSize="22dp"
         android:layout_centerVertical="true"
-        android:textColor="#000000" />
+        android:textColor="#000000"
+        tools:ignore="HardcodedText" />
 
 
     <ImageView
@@ -48,5 +50,6 @@
         android:layout_toLeftOf="@id/img_sub_category"
         android:textSize="20dp"
         android:textColor="#010321"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        tools:ignore="HardcodedText" />
 </RelativeLayout>

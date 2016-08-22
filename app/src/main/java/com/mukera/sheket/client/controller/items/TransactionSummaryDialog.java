@@ -20,6 +20,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.models.STransaction.*;
+import com.mukera.sheket.client.utils.Utils;
 
 import java.util.List;
 
@@ -134,7 +135,7 @@ public class TransactionSummaryDialog extends DialogFragment {
             });
             holder.textItemName.setText(transItem.item.name);
             holder.textSourceInfo.setText(SheketContract.TransItemEntry.getStringForm(transItem.trans_type));
-            holder.textQuantity.setText(Double.toString(transItem.quantity));
+            holder.textQuantity.setText(Utils.formatDoubleForDisplay(transItem.quantity));
             return convertView;
         }
 

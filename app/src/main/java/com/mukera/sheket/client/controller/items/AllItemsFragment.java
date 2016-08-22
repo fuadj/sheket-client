@@ -279,8 +279,6 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         setUpEditModeUI();
 
-        getActivity().setTitle("Items");
-
         return rootView;
     }
 
@@ -412,6 +410,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                 View.OnClickListener deleteListener = new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        displayItemDeleteConfirmationDialog(item);
                         // TODO: display confirm to delete, then delete it
                     }
                 };
@@ -492,7 +491,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             holder.subCount.setVisibility(View.GONE);
         } else {
             holder.subCount.setVisibility(View.VISIBLE);
-            holder.subCount.setText("" + category.childrenCategories.size());
+            holder.subCount.setText(String.format(Locale.US, "%d", category.childrenCategories.size()));
         }
 
         /**
@@ -556,6 +555,41 @@ public class AllItemsFragment extends SearchableItemFragment {
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
         }
+    }
+
+    void displayItemDeleteConfirmationDialog(final SItem item) {
+        new AlertDialog.Builder(getActivity()).
+                setTitle(R.string.dialog_item_delete_title).
+                setMessage(R.string.dialog_item_delete_body).
+                setPositiveButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).
+                // we've made it at this end to remove accidental deletion
+                setNeutralButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(), "Deleting", "Please Wait...", true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                getActivity().getContentResolver().
+                                        delete(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getActivity())),
+                                                ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                                                        new String[]{String.valueOf(item.item_id)});
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        deleteProgress.dismiss();
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
+                }).show();
     }
 
     /**
@@ -767,9 +801,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                     @Override
                     public void run() {
                         dialog.dismiss();
-                        // TODO: it is strange that if we create a new category, then the item list disappears
-                        // and we have to restart the loader just for it, fix it!!
-                        restartLoader();
                     }
                 });
             }
@@ -865,13 +896,13 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     protected boolean onSearchTextChanged(String newText) {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 
     @Override
     protected boolean onSearchTextViewClosed() {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 
@@ -911,7 +942,8 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
-        setEntityCursor(new SItem.ItemWithAvailableBranchesCursor(data));
+        if (!data.isClosed())
+            setEntityCursor(new SItem.ItemWithAvailableBranchesCursor(data));
     }
 
     @Override
@@ -944,7 +976,8 @@ public class AllItemsFragment extends SearchableItemFragment {
             branchesList.setAdapter(adapter);
 
             TextView qty_text_view = (TextView) view.findViewById(R.id.dialog_all_item_text_view_total_quantity);
-            qty_text_view.setText("Total Qty: " + Utils.formatDoubleForDisplay(mItem.total_quantity));
+            qty_text_view.setText(
+                    getString(R.string.placeholder_all_items_total_quantity, Utils.formatDoubleForDisplay(mItem.total_quantity)));
 
             return builder.setTitle(mItem.name).setView(view).create();
         }

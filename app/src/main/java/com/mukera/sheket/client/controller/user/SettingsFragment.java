@@ -5,21 +5,26 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
+import com.mukera.sheket.client.utils.PrefUtil;
 
 /**
  * Created by fuad on 7/30/16.
@@ -35,6 +40,7 @@ public class SettingsFragment extends Fragment {
         listSettings.setAdapter(adapter);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE);
+        adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
         //adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_DEBUG);
 
         listSettings.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -51,6 +57,9 @@ public class SettingsFragment extends Fragment {
                         break;
                     case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                         startActivity(new Intent(getContext(), AndroidDatabaseManager.class));
+                        break;
+                    case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
+                        displayConfigurationDialog(getActivity(), true);
                         break;
                 }
                 if (fragment != null) {
@@ -112,5 +121,43 @@ public class SettingsFragment extends Fragment {
                 view.setTag(this);
             }
         }
+    }
+
+    public static void displayConfigurationDialog(final Context context, boolean is_cancellable) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_first_time_configuration, null);
+        builder.setView(view);
+        final Button btnEnglish = (Button) view.findViewById(R.id.dialog_config_btn_english);
+        final Button btnAmharic = (Button) view.findViewById(R.id.dialog_config_btn_amharic);
+
+        builder.setTitle("Choose Language");
+        builder.setCancelable(is_cancellable);
+        final AlertDialog dialog = builder.create();
+        if (!is_cancellable)
+            dialog.setCanceledOnTouchOutside(false);
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int selected_lang = -1;
+                if (v.getId() == btnEnglish.getId()) {
+                    selected_lang = PrefUtil.LANGUAGE_ENGLISH;
+                } else if (v.getId() == btnAmharic.getId()) {
+                    selected_lang = PrefUtil.LANGUAGE_AMHARIC;
+                }
+
+                dialog.dismiss();
+                if (selected_lang == -1 ||
+                        selected_lang == PrefUtil.getUserLanguageId(context)) {
+                    return;
+                }
+
+                PrefUtil.setUserLanguage(context, selected_lang);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+            }
+        };
+
+        btnEnglish.setOnClickListener(listener);
+        btnAmharic.setOnClickListener(listener);
+        dialog.show();
     }
 }

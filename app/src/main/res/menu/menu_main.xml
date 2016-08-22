@@ -7,5 +7,6 @@
         android:icon="@drawable/ic_action_list"
         android:orderInCategory="100"
         android:title="Open Drawer"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        tools:ignore="HardcodedText" />
 </menu>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:layout_height="wrap_content">
@@ -17,7 +18,8 @@
             android:text="Test Item Name"
             android:id="@+id/list_item_trans_history_dialog_item_name"
             android:textSize="18dp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -25,7 +27,8 @@
             android:text="Item Location"
             android:id="@+id/list_item_trans_history_dialog_source_detail"
             android:textSize="16dp"
-            android:textColor="#4d4d4d" />
+            android:textColor="#4d4d4d"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <LinearLayout
@@ -44,7 +47,8 @@
             android:textSize="24dp"
             android:layout_gravity="center_vertical|right"
             android:textColor="#010321"
-            android:layout_centerVertical="true" />
+            android:layout_centerVertical="true"
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -54,7 +58,8 @@
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:textAppearanceMedium"
             android:layout_marginTop="8dp"
-            android:layout_gravity="center_vertical|right" />
+            android:layout_gravity="center_vertical|right"
+            tools:ignore="HardcodedText" />
 
     </LinearLayout>
 

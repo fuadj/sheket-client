@@ -377,11 +377,11 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         boolean is_transfer = false;
         switch (mActionType) {
             case SEND_TO:
-                mTextTransferType.setText("Send To");
+                mTextTransferType.setText(getString(R.string.placeholder_qty_send_to));
                 is_transfer = true;
                 break;
             case RECEIVE_FROM:
-                mTextTransferType.setText("Receive From");
+                mTextTransferType.setText(getString(R.string.placeholder_qty_receive_from));
                 is_transfer = true;
                 break;
         }
