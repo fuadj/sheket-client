@@ -90,10 +90,8 @@ public class TransactionSummaryDialog extends DialogFragment {
         refreshSummaryDialog();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Summary").
-                setCancelable(false);
+        builder.setTitle("Summary");
         Dialog dialog = builder.setView(rootView).create();
-        dialog.setCanceledOnTouchOutside(false);
 
         return dialog;
     }
