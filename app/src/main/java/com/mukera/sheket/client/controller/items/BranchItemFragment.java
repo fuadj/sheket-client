@@ -490,7 +490,7 @@ public class BranchItemFragment extends SearchableItemFragment {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
-                }).setCancelable(false);
+                });
 
         final AlertDialog dialog = builder.create();
 
