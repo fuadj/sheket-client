@@ -12,7 +12,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -26,7 +25,6 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.PrefUtil;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
 
@@ -50,13 +48,21 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     ExpandableCategoryTreeAdapter mExpandableAdapter;
 
-    protected void initLoader() {
+    private void initCategoryLoader() {
         getLoaderManager().initLoader(getCategoryLoaderId(), null, this);
+    }
+
+    private void restartCategoryLoader() {
+        getLoaderManager().restartLoader(getCategoryLoaderId(), null, this);
+    }
+
+    protected void initLoaders() {
+        initCategoryLoader();
         onInitLoader();
     }
 
-    protected void restartLoader() {
-        getLoaderManager().restartLoader(getCategoryLoaderId(), null, this);
+    protected void restartLoaders() {
+        restartCategoryLoader();
         onRestartLoader();
     }
 
@@ -150,7 +156,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        initLoader();
+        initLoaders();
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -182,7 +188,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                     long previous_category = setCurrentCategory(category.category_id);
 
                     onCategorySelected(previous_category, category.category_id);
-                    restartLoader();
+                    restartLoaders();
                     return true;
                 } else {
                     return onEntitySelected(cursor);
@@ -219,7 +225,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                         long previous_category = mCategoryBackstack.peek();
                         mCurrentCategoryId = mCategoryBackstack.pop();
                         onCategorySelected(previous_category, mCurrentCategoryId);
-                        restartLoader();
+                        restartLoaders();
                     }
                     return true;
                 }
@@ -233,6 +239,24 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     public void setEntityCursor(Cursor cursor) {
         mExpandableAdapter.setItemsCursor(cursor);
+    }
+
+    @Override
+    public void onGetGroupChildrenCursor(int group) {
+        /**
+         * I don't know why we need to restart the loader,
+         * if we only do initLoader, sometimes the category cursor
+         * isn't correctly returned. It will only return a cursor.
+         * that has been closed which doesn't work.
+         */
+        switch (group) {
+            case ExpandableCategoryTreeAdapter.GROUP_CATEGORY:
+                restartCategoryLoader();
+                break;
+            case ExpandableCategoryTreeAdapter.GROUP_ITEMS:
+                onRestartLoader();
+                break;
+        }
     }
 
     private static class ViewHolder {
@@ -341,6 +365,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data.isClosed())
+            return;
+
         if (loader.getId() == getCategoryLoaderId()) {
             mExpandableAdapter.setCategoryCursor(new SCategory.CategoryWithChildrenCursor(data));
 

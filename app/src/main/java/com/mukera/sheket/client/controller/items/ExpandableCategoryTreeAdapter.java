@@ -40,6 +40,16 @@ public class ExpandableCategoryTreeAdapter extends CursorTreeAdapter {
     private ExpandableCategoryTreeListener mListener;
     public interface ExpandableCategoryTreeListener {
         /**
+         * This notifies the listener that the given group has been requested to fetch in its cursor.
+         * This is called when the adapter's {@code getChildrenCursor(groupCursor)} is called, so
+         * you should instantiate your loader to load the appropriate cursor asynchronously and call
+         * {@code setChildrenCursor}. Therefore, getChildrenCursor ALWAYS returns null.
+         *
+         * @param group       The group the cursor was queried for.
+         */
+        void onGetGroupChildrenCursor(int group);
+
+        /**
          * Create a new category view for the cursor at the position.
          */
         View newCategoryView(Context context, ViewGroup parent, Cursor cursor, int position);
@@ -91,8 +101,8 @@ public class ExpandableCategoryTreeAdapter extends CursorTreeAdapter {
 
     @Override
     protected Cursor getChildrenCursor(Cursor groupCursor) {
-        // we return nil now so when the data is ready(e.g: after onLoaderFinished)
-        // it can be set to the valid cursor
+        mListener.onGetGroupChildrenCursor(groupCursor.getPosition());
+
         return null;
     }
 

@@ -37,7 +37,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.controller.items.transactions.CategoryUtil;
-import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
@@ -585,7 +584,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                                     @Override
                                     public void run() {
                                         deleteProgress.dismiss();
-                                        restartLoader();
                                     }
                                 });
                             }
@@ -803,9 +801,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                     @Override
                     public void run() {
                         dialog.dismiss();
-                        // TODO: it is strange that if we create a new category, then the item list disappears
-                        // and we have to restart the loader just for it, fix it!!
-                        restartLoader();
                     }
                 });
             }
@@ -901,13 +896,13 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     protected boolean onSearchTextChanged(String newText) {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 
     @Override
     protected boolean onSearchTextViewClosed() {
-        restartLoader();
+        restartLoaders();
         return true;
     }
 
@@ -947,7 +942,8 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     protected void onEntityLoaderFinished(Loader<Cursor> loader, Cursor data) {
-        setEntityCursor(new SItem.ItemWithAvailableBranchesCursor(data));
+        if (!data.isClosed())
+            setEntityCursor(new SItem.ItemWithAvailableBranchesCursor(data));
     }
 
     @Override
