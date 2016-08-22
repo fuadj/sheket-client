@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/all_items_option_add_category"
             android:layout_marginRight="8dp"
-            android:src="@mipmap/ic_action_add_category"
+            android:src="@drawable/ic_action_add_category"
             android:background="#ffffff" />
 
         <ImageButton
@@ -23,6 +23,6 @@
             android:layout_height="wrap_content"
             android:id="@+id/all_items_option_add_item"
             android:background="#fff"
-            android:src="@mipmap/ic_action_add_item" />
+            android:src="@drawable/ic_action_add_item" />
     </LinearLayout>
 </RelativeLayout>
