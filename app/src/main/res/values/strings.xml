@@ -235,6 +235,6 @@
     <string name="placeholder_qty_insufficient_qty">Insufficient Quantity</string>
     <string name="placeholder_select_language">Select Language</string>
 
-    <string name="supported_language_en">English</string>
-    <string name="supported_language_amh">አማርኛ</string>
+    <string name="supported_language_en" translatable="false">English</string>
+    <string name="supported_language_amh" translatable="false">አማርኛ</string>
 </resources>
