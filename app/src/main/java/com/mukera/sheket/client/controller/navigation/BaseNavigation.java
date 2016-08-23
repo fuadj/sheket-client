@@ -107,7 +107,7 @@ public abstract class BaseNavigation {
             sEntityAndIcon.put(OPTION_BRANCHES,
                     new Pair<>(R.string.nav_branches, R.drawable.ic_action_new_branches));
             sEntityAndIcon.put(OPTION_COMPANIES,
-                    new Pair<>(R.string.nav_companies, R.mipmap.ic_company));
+                    new Pair<>(R.string.nav_companies, R.drawable.ic_company));
             sEntityAndIcon.put(OPTION_EMPLOYEES,
                     new Pair<>(R.string.nav_employees, R.drawable.ic_action_new_employees));
             sEntityAndIcon.put(OPTION_SETTINGS,
