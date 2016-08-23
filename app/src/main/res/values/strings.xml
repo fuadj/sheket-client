@@ -172,7 +172,7 @@
     <string name="nav_companies">Companies</string>
     <string name="nav_employees">Employees</string>
     <string name="nav_settings">Settings</string>
-    <string name="nav_user_profile" translatable="false">User Profile</string>
+    <string name="nav_user_profile">User Profile</string>
 
     <string name="employee_dialog_title">Add Member</string>
     <string name="employee_dialog_member_id">Member Id</string>
