@@ -94,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
         mFacebookButton.setText("Login with Facebook");
         mFacebookButton.setVisibility(View.VISIBLE);
         mProgress = null;
+        setTitle(R.string.app_name);
         mFacebookButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

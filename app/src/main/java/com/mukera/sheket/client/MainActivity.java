@@ -665,7 +665,9 @@ public class MainActivity extends AppCompatActivity implements
                  * If we are syncing because we just logged in, we don't want
                  * to display the "sync-progress" dialog
                  */
-                if (!PrefUtil.getShouldSyncOnLogin(MainActivity.this)) {
+                if (PrefUtil.getShouldSyncOnLogin(MainActivity.this)) {
+                    displayConfigurationIfFirstTime();
+                } else {
                     if (action.equals(SheketBroadcast.ACTION_SYNC_STARTED)) {
                         mSyncingProgress = ProgressDialog.show(activity,
                                 "Syncing", "Please Wait...", true);
@@ -675,7 +677,6 @@ public class MainActivity extends AppCompatActivity implements
                                 setMessage("You've synced successfully.").show();
 
                         openNavDrawer();
-                        displayConfigurationIfFirstTime();
                     } else {
                         String err_title = "";
                         if (action.equals(SheketBroadcast.ACTION_SYNC_SERVER_ERROR)) {
