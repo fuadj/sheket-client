@@ -39,7 +39,6 @@ import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction.STransactionItem;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketTextUtils;
 import com.mukera.sheket.client.utils.Utils;
 
 import java.util.ArrayList;
@@ -218,13 +217,13 @@ public class BranchItemFragment extends SearchableItemFragment {
         final SBranchItem branchItem = new SBranchItem(cursor, true);
         final SItem item = branchItem.item;
 
-        if (isSearching()) {
-            SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_name, item.name, getSearchText());
-            SheketTextUtils.showMatchedTextAsBoldItalic(holder.item_code, item.item_code, getSearchText());
-        } else {
-            holder.item_name.setText(item.name);
-            holder.item_code.setText(item.item_code);
-        }
+        boolean is_searching = isSearching();
+        NameCodeDisplayUtil.displayItemNameAndCode(
+                getActivity(),
+                holder.item_name, holder.item_code,
+                item.name, item.item_code,
+                is_searching,
+                is_searching ? getSearchText() : null);
 
         view.setOnClickListener(new View.OnClickListener() {
             @Override
