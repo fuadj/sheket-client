@@ -233,4 +233,8 @@
     <string name="placeholder_qty_receive_from">Receive From</string>
     <string name="placeholder_trans_history_total_qty">Total Qty: %1$s</string>
     <string name="placeholder_qty_insufficient_qty">Insufficient Quantity</string>
+    <string name="placeholder_select_language">Select Language</string>
+
+    <string name="supported_language_en">English</string>
+    <string name="supported_language_amh">አማርኛ</string>
 </resources>

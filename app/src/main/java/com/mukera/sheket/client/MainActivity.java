@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements
         initSlidingMenuDrawer();
 
         syncIfIsLoginFirstTime();
+        setTitle(R.string.app_name);
 
         if (savedInstanceState == null) {
             openNavDrawer();

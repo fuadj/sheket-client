@@ -7,14 +7,14 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="English"
+        android:text="@string/supported_language_en"
         android:id="@+id/dialog_config_btn_english"
         android:layout_gravity="center_horizontal" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Amharic"
+        android:text="@string/supported_language_amh"
         android:id="@+id/dialog_config_btn_amharic"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="32dp" />

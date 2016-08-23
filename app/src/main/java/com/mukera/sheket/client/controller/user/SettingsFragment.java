@@ -130,7 +130,7 @@ public class SettingsFragment extends Fragment {
         final Button btnEnglish = (Button) view.findViewById(R.id.dialog_config_btn_english);
         final Button btnAmharic = (Button) view.findViewById(R.id.dialog_config_btn_amharic);
 
-        builder.setTitle("Choose Language");
+        builder.setTitle(R.string.placeholder_select_language);
         builder.setCancelable(is_cancellable);
         final AlertDialog dialog = builder.create();
         if (!is_cancellable)
