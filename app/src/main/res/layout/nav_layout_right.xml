@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/left_nav_separator_text"
-            android:text="@string/nav_title_left_companies"
+            android:text="@string/nav_title_right_branches"
             android:layout_marginBottom="4dp" />
 
         <View
