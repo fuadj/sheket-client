@@ -55,6 +55,9 @@ dependencies {
     // to use a custom "Facebook log-in" button
     compile 'com.github.medyo:fancybuttons:+'
 
+    // google analytics requires this dependency
+    compile 'com.google.android.gms:play-services:6.5.+'
+
     //compile files('libs/okhttp-3.2.0.jar')
     //compile files('libs/mockwebserver-3.2.0.jar')
     /*

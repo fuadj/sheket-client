@@ -28,6 +28,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.CompanyUtil;
@@ -120,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Tracker tracker = ((SheketApplication) getApplication()).getTracker();
         requireLogin();
 
         setUserLanguage();
@@ -341,6 +344,13 @@ public class MainActivity extends AppCompatActivity implements
                 change_title = false;
                 break;
         }
+
+        Tracker tracker = ((SheketApplication) getApplication()).getTracker();
+        if (tracker != null) {
+            tracker.setScreenName("Main Activity");
+            tracker.send(new HitBuilders.ScreenViewBuilder().build());
+        }
+
         if (change_title) {
             setTitle(
                     BaseNavigation.StaticNavigationOptions.getOptionString(item));
