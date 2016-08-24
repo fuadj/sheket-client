@@ -2,14 +2,8 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <string name="ga_trackingId">UA-83063927-1</string>
-    <string name="ga_autoActivityTracking">true</string>
+    <string name="ga_autoActivityTracking">false</string>
 
-    <!--
-    <resources>
-        <string name="ga_trackingId">UA-83063927-1</string>
-        <string name="ga_autoActivityTracking">true</string>
-    </resources>
-    -->
     <screenName name="com.mukera.sheket.client.MainActivity">
         Main Activity
     </screenName>
