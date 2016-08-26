@@ -122,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Tracker tracker = ((SheketApplication) getApplication()).getTracker();
         requireLogin();
 
         setUserLanguage();
@@ -298,8 +297,10 @@ public class MainActivity extends AppCompatActivity implements
 
         boolean change_title = true;
 
+        String new_screen = "";
         switch (item) {
             case BaseNavigation.StaticNavigationOptions.OPTION_ITEM_LIST:
+                new_screen = "Items Fragment";
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
@@ -309,27 +310,44 @@ public class MainActivity extends AppCompatActivity implements
                 Intent intent = Intent.createChooser(getContentIntent, "Select a file");
                 startActivityForResult(intent, REQUEST_FILE_CHOOSER);
                 change_title = false;
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                                setAction("importing file").
+                                build());
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
+                new_screen = "Branches Fragment";
                 replaceMainFragment(new BranchFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
+                new_screen = "Companies Fragment";
                 replaceMainFragment(new CompanyFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_EMPLOYEES:
+                new_screen = "Employees Fragment";
                 replaceMainFragment(new EmployeesFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                                setAction("sync started").
+                                build());
                 Intent intent = new Intent(this, SheketService.class);
                 startService(intent);
                 change_title = false;
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
+                new_screen = "Transaction Summary";
                 replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
+                new_screen = "Settings";
                 replaceMainFragment(new SettingsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
@@ -337,21 +355,29 @@ public class MainActivity extends AppCompatActivity implements
                 change_title = false;
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE:
+                new_screen = "User Profile";
                 replaceMainFragment(new ProfileFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_LOG_OUT:
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                                setAction("logout selected").
+                                build());
                 logoutUser();
                 change_title = false;
                 break;
         }
 
-        Tracker tracker = ((SheketApplication) getApplication()).getTracker();
-        if (tracker != null) {
-            tracker.setScreenName("Main Activity");
-            tracker.send(new HitBuilders.ScreenViewBuilder().build());
-        }
-
         if (change_title) {
+            SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+            SheketTracker.sendTrackingData(this,
+                    new HitBuilders.EventBuilder().
+                            setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                            setAction("screen changed").
+                            setLabel(new_screen).
+                            build());
             setTitle(
                     BaseNavigation.StaticNavigationOptions.getOptionString(item));
         }
@@ -359,6 +385,12 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onCompanySwitched() {
+        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+        SheketTracker.sendTrackingData(this,
+                new HitBuilders.EventBuilder().
+                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                        setAction("company changed").
+                        build());
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
     }
 
@@ -397,6 +429,14 @@ public class MainActivity extends AppCompatActivity implements
 
                 if (verifyStoragePermissions()) {
                     startImporterTask();
+                } else {
+                    SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                    SheketTracker.sendTrackingData(this,
+                            new HitBuilders.EventBuilder().
+                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                    setAction("importing").
+                                    setLabel("don't have permission to read file").
+                                    build());
                 }
 
                 break;
