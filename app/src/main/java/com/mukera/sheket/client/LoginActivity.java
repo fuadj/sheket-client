@@ -51,6 +51,9 @@ public class LoginActivity extends AppCompatActivity {
 
     public static final OkHttpClient client = new OkHttpClient();
 
+    // used to measure how long it takes to login with facebook
+    private long mStartTime = 0;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +89,7 @@ public class LoginActivity extends AppCompatActivity {
                 mFacebookButton.setVisibility(View.GONE);
                 mProgress = ProgressDialog.show(LoginActivity.this,
                         "Logging in", "Please Wait", true);
+                mStartTime = System.nanoTime();
                 new SignInTask(loginResult.getAccessToken().getToken()).execute();
             }
 
@@ -211,6 +215,17 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            long stop_time = System.nanoTime();
+            long second_duration = (stop_time - mStartTime) / 1000000000;
+
+            SheketTracker.setScreenName(LoginActivity.this, SheketTracker.SCREEN_NAME_LOGIN);
+            SheketTracker.sendTrackingData(LoginActivity.this,
+                    new HitBuilders.TimingBuilder().
+                            setCategory(SheketTracker.CATEGORY_LOGIN).
+                            setValue(second_duration).
+                            setLabel("login duration").
+                            setVariable("facebook login").
+                            build());
             // if all goes well, start main activity
             startMainActivity(true);
         }
