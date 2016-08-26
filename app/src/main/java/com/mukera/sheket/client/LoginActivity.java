@@ -21,6 +21,8 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.games.appcontent.AppContents;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.squareup.okhttp.MediaType;
@@ -56,6 +58,12 @@ public class LoginActivity extends AppCompatActivity {
 
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {
+            SheketTracker.setScreenName(this, SheketTracker.SCREEN_NAME_LOGIN);
+            SheketTracker.sendTrackingData(this,
+                    new HitBuilders.EventBuilder().
+                            setCategory(SheketTracker.CATEGORY_LOGIN).
+                            setAction("User already logged in").
+                            build());
             // because we've already been logged in, we don't need to sync
             startMainActivity(false);
             return;
@@ -83,11 +91,24 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onCancel() {
+                SheketTracker.setScreenName(LoginActivity.this, SheketTracker.SCREEN_NAME_LOGIN);
+                SheketTracker.sendTrackingData(LoginActivity.this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_LOGIN).
+                                setAction("Login cancelled").
+                                build());
             }
 
             @Override
             public void onError(FacebookException error) {
                 Toast.makeText(getApplicationContext(), "Login Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                SheketTracker.setScreenName(LoginActivity.this, SheketTracker.SCREEN_NAME_LOGIN);
+                SheketTracker.sendTrackingData(LoginActivity.this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_LOGIN).
+                                setAction("Facebook login error").
+                                setLabel(error.toString()).
+                                build());
             }
         });
         mFacebookButton = (FancyButton) findViewById(R.id.facebook_login);
@@ -176,6 +197,13 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             if (!success) {
+                SheketTracker.setScreenName(LoginActivity.this, SheketTracker.SCREEN_NAME_LOGIN);
+                SheketTracker.sendTrackingData(LoginActivity.this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_LOGIN).
+                                setAction("Login Un-successful").
+                                setLabel(errMsg).
+                                build());
                 // remove any-facebook "logged-in" stuff
                 Toast.makeText(LoginActivity.this, errMsg, Toast.LENGTH_LONG).show();
                 LoginManager.getInstance().logOut();
