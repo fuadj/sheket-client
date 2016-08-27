@@ -53,7 +53,7 @@ dependencies {
     compile 'com.facebook.android:facebook-android-sdk:4.5.0'
 
     // to use a custom "Facebook log-in" button
-    compile 'com.github.medyo:fancybuttons:+'
+    compile 'com.github.medyo:fancybuttons:1.8.1'
 
     // google analytics requires this dependency
     compile 'com.google.android.gms:play-services:6.5.+'
