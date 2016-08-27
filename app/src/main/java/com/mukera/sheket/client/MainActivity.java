@@ -2,6 +2,8 @@ package com.mukera.sheket.client;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -54,6 +56,7 @@ import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.services.PaymentService;
 import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
@@ -132,12 +135,34 @@ public class MainActivity extends AppCompatActivity implements
 
         initSlidingMenuDrawer();
 
+        startPaymentServiceIfNotRunning();
+
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
 
         if (savedInstanceState == null) {
             openNavDrawer();
         }
+    }
+
+    void startPaymentServiceIfNotRunning() {
+        if (PrefUtil.isPaymentServiceRunning(this))
+            return;
+
+        Intent paymentIntent = new Intent(this, PaymentService.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, paymentIntent, 0);
+
+        /**
+         * Schedule a half a day alarm that will start payment service.
+         */
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(),
+                AlarmManager.INTERVAL_HALF_DAY,
+                pendingIntent);
+
+        PrefUtil.setPaymentServiceRunning(this, true);
     }
 
     void setUserLanguage() {
