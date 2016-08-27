@@ -29,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.CompanyUtil;
@@ -55,7 +54,7 @@ import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
-import com.mukera.sheket.client.sync.SheketService;
+import com.mukera.sheket.client.sync.SheketSyncService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
@@ -179,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements
     void syncIfIsLoginFirstTime() {
         if (PrefUtil.getShouldSyncOnLogin(this) &&
                 !PrefUtil.isCompanySet(this)) {
-            Intent intent = new Intent(this, SheketService.class);
+            Intent intent = new Intent(this, SheketSyncService.class);
             startService(intent);
         }
     }
@@ -337,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements
                                 setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
                                 setAction("sync started").
                                 build());
-                Intent intent = new Intent(this, SheketService.class);
+                Intent intent = new Intent(this, SheketSyncService.class);
                 startService(intent);
                 change_title = false;
                 break;

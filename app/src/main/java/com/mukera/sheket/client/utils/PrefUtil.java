@@ -2,16 +2,13 @@ package com.mukera.sheket.client.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.user.UserUtil;
-import com.mukera.sheket.client.sync.SheketService;
 
-import java.util.Locale;
 import java.util.Vector;
 
 /**

@@ -49,8 +49,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by gamma on 4/13/16.
  */
-public class SheketService extends IntentService {
-    private final String LOG_TAG = SheketService.class.getSimpleName();
+public class SheketSyncService extends IntentService {
+    private final String LOG_TAG = SheketSyncService.class.getSimpleName();
 
     public static final int SYNC_ROOT_CATEGORY_ID = -1;
 
@@ -70,7 +70,7 @@ public class SheketService extends IntentService {
 
     private String error_msg;
 
-    public SheketService() {
+    public SheketSyncService() {
         super("Sheket");
     }
 
