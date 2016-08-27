@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements
 
         AlarmReceiver.startPeriodicPaymentAlarm(this);
 
-        PrefUtil.setPaymentServiceRunning(this, true);
+        PrefUtil.setIsPaymentServiceRunning(this, true);
     }
 
     void setUserLanguage() {

@@ -84,7 +84,7 @@ public class PrefUtil {
         return prefs.getBoolean(pref_is_payment_service_running, false);
     }
 
-    public static void setPaymentServiceRunning(Context context, boolean is_running) {
+    public static void setIsPaymentServiceRunning(Context context, boolean is_running) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean(pref_is_payment_service_running, is_running);
         editor.commit();
