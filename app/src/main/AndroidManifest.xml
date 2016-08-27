@@ -74,23 +74,6 @@
             android:exported="false"
             android:name=".data.SheketProvider" />
 
-        <service android:name=".sync.SheketAuthenticatorService" >
-            <intent-filter>
-                <action android:name="android.accounts.AccountAuthenticator"/>
-            </intent-filter>
-            <meta-data android:name="android.accounts.AccountAuthenticator"
-                android:resource="@xml/authenticator"/>
-        </service>
-
-        <service android:name=".sync.SheketSyncService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.content.SyncADapter"/>
-            </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter"
-                android:resource="@xml/syncadapter"/>
-        </service>
-
         <service android:name=".sync.SheketService"/>
 
     </application>
