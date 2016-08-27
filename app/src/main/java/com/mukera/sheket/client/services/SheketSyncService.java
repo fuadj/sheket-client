@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.sync;
+package com.mukera.sheket.client.services;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -97,16 +97,23 @@ public class SheketSyncService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         client.setConnectTimeout(10, TimeUnit.SECONDS);
+        PrefUtil.setIsSyncRunning(this, true);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
             syncUser();
-            if (!PrefUtil.isCompanySet(this)) {
-                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
-                return;     // can't sync anything without a company
+            // can only sync if there is a company selected
+            if (PrefUtil.isCompanySet(this)) {
+                syncEntities();
+                syncTransactions();
             }
-            syncEntities();
-            syncTransactions();
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
+
+            // we've actually finished syncing, so set it here
+            // so the payment service doesn't assume we are still syncing
+            PrefUtil.setIsSyncRunning(this, false);
+
+            // start the check company has enough payments service
+            startService(new Intent(this, PaymentService.class));
         } catch (InvalidLoginCredentialException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
         } catch (SyncException e) {
@@ -132,6 +139,7 @@ public class SheketSyncService extends IntentService {
                     "Error " + err_msg,
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         }
+        PrefUtil.setIsSyncRunning(this, false);
     }
 
     void syncUser() throws Exception {

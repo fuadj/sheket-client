@@ -74,7 +74,9 @@
             android:exported="false"
             android:name=".data.SheketProvider" />
 
-        <service android:name=".sync.SheketSyncService"/>
+        <service android:name=".services.SheketSyncService"/>
+
+        <service android:name=".services.PaymentService"/>
 
     </application>
 

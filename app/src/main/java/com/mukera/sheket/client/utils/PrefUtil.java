@@ -65,8 +65,19 @@ public class PrefUtil {
         }
         return language_code;
     }
+
+    private static final String pref_is_sync_running = "pref_is_sync_running";
+    public static boolean isSyncRunning(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(pref_is_sync_running, false);
+    }
+
+    public static void setIsSyncRunning(Context context, boolean is_running) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(pref_is_sync_running, is_running);
+        editor.commit();
+    }
     /**
-     * END: Sync On Login
      */
 
     public static void setLoginCookie(Context context, String cookie) {

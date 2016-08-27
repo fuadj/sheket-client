@@ -54,7 +54,7 @@ import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
-import com.mukera.sheket.client.sync.SheketSyncService;
+import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
