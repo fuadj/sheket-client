@@ -108,11 +108,10 @@ public class SheketSyncService extends IntentService {
             }
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
 
-            // we've actually finished syncing, so set it here
+            // we've finished syncing, so set it here
             // so the payment service doesn't assume we are still syncing
             PrefUtil.setIsSyncRunning(this, false);
 
-            // start the check company has enough payments service
             startService(new Intent(this, PaymentService.class));
         } catch (InvalidLoginCredentialException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
