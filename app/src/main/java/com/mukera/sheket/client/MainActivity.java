@@ -133,23 +133,12 @@ public class MainActivity extends AppCompatActivity implements
 
         initSlidingMenuDrawer();
 
-        startPaymentServiceIfNotRunning();
-
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
 
         if (savedInstanceState == null) {
             openNavDrawer();
         }
-    }
-
-    void startPaymentServiceIfNotRunning() {
-        if (PrefUtil.isPaymentServiceRunning(this))
-            return;
-
-        AlarmReceiver.startPeriodicPaymentAlarm(this);
-
-        PrefUtil.setIsPaymentServiceRunning(this, true);
     }
 
     void setUserLanguage() {

@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <!-- Our payment service needs to run even when the device is trying to sleep, we need to lock it form doing that -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
     <!-- Permission to start Alarm on device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
@@ -80,6 +83,8 @@
         <service android:name=".services.SheketSyncService"/>
 
         <service android:name=".services.PaymentService"/>
+
+        <receiver android:name=".services.AlarmReceiver"/>
 
         <!-- Will not be called unless the application explicitly enables it -->
         <receiver android:name=".services.DeviceBootReceiver">
