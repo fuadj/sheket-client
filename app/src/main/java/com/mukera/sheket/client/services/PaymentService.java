@@ -14,5 +14,7 @@ public class PaymentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
+        // release the WAKE-LOCK
+        AlarmReceiver.completeWakefulIntent(intent);
     }
 }
