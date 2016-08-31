@@ -100,6 +100,7 @@ public class PaymentContract {
 
     // this delimiter is valid b/c the signature is a base64 encoded string,
     // which can only be of [0-9a-zA-Z/=+] characters.
+    // see for more info: http://stackoverflow.com/a/5350618/5753416
     private static final String delimiter = "_||_";
     /**
      * Breaks up the contract into its components.
