@@ -21,7 +21,19 @@ public class PaymentContract {
     public String device_id;
     public long user_id;
     public long company_id;
-    public String date_issued;
+
+    /**
+     * Having 2 dates for the issue of the certificate is necessary. It is because the phone
+     * might not have its date set correctly, might be in the past. Which means we can't rely
+     * on server's date for any local checks. We use the local's date for checking if the
+     * current phones date is "before, past" relative to issued date.
+     * the date of the
+     */
+    // this holds the server's date payment certificate was generated.
+    public String server_date_issued;
+    // this is the date, as it was on the phone, when the certificate was issued.
+    public String local_date_issued;
+
     public String duration;
     public int contract_type;
 
@@ -37,18 +49,19 @@ public class PaymentContract {
     // initialize this object from contents of the contract
     public PaymentContract(String contract) {
         String[] subs = contract.split(";");
-        if (subs.length != 9)
+        if (subs.length != 10)
             return;
 
         device_id = subs[0];
         user_id = Long.parseLong(subs[1]);
         company_id = Long.parseLong(subs[2]);
-        date_issued = subs[3];
-        duration = subs[4];
-        contract_type = Integer.parseInt(subs[5]);
-        limit_employees = Integer.parseInt(subs[6]);
-        limit_branches = Integer.parseInt(subs[7]);
-        limit_items = Integer.parseInt(subs[8]);
+        server_date_issued = subs[3];
+        local_date_issued = subs[4];
+        duration = subs[5];
+        contract_type = Integer.parseInt(subs[6]);
+        limit_employees = Integer.parseInt(subs[7]);
+        limit_branches = Integer.parseInt(subs[8]);
+        limit_items = Integer.parseInt(subs[9]);
     }
 
     @Override
@@ -57,14 +70,16 @@ public class PaymentContract {
                         "device_id:%s;" +
                         "user_id:%d;" +
                         "company_id:%d;" +
-                        "date_issued:%s;" +
+                        "server_date_issued:%s;" +
+                        "local_date_issued:%s;" +
                         "duration:%s;" +
                         "contract_type:%d;" +
                         "employees:%d;" +
                         "branches:%d;" +
                         "items:%d",
                 device_id, user_id, company_id,
-                date_issued, duration, contract_type,
+                server_date_issued, local_date_issued,
+                duration, contract_type,
                 limit_employees, limit_branches, limit_items);
     }
 
@@ -102,6 +117,7 @@ public class PaymentContract {
     // which can only be of [0-9a-zA-Z/=+] characters.
     // see for more info: http://stackoverflow.com/a/5350618/5753416
     private static final String delimiter = "_||_";
+
     /**
      * Breaks up the contract into its components.
      */
