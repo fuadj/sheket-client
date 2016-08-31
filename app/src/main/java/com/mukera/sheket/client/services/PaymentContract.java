@@ -111,7 +111,7 @@ public class PaymentContract {
         int index = signed_contract.indexOf(delimiter);
         if (index != -1) {
             components.contract = signed_contract.substring(0, index);
-            components.signature = signed_contract.substring(index);
+            components.signature = signed_contract.substring(index + delimiter.length());
         }
         return components;
     }
