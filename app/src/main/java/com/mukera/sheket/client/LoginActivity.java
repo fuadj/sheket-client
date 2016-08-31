@@ -55,15 +55,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
 
-        /**
-         * IMPORTANT: we only want to start it once not to screw it up because every "tick"
-         * is considered a passage of 1 hour. We only want 1 of that "tick" in EVERY hour.
-         * The alarm will be scheduled to fire after exactly 1 hour from now.
-         */
-        if (!PrefUtil.isPaymentServiceRunning(this)) {
-            AlarmReceiver.startPeriodicPaymentAlarm(this);
-            PrefUtil.setIsPaymentServiceRunning(this, true);
-        }
+        AlarmReceiver.startPeriodicPaymentAlarm(this);
 
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {

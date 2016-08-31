@@ -133,6 +133,8 @@ public class MainActivity extends AppCompatActivity implements
 
         initSlidingMenuDrawer();
 
+        AlarmReceiver.startPeriodicPaymentAlarm(this);
+
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
 
