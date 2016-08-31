@@ -70,17 +70,14 @@ public class PaymentContract {
 
     /**
      * Returns true if the signature is valid.
-     *
-     * NOTE: The {@arg signature} should be in Base64 encoded form.
+     * NOTE: The {arg signature} should be in Base64 encoded form.
      */
-    public boolean isSignatureValid(String signature) {
+    public static boolean isSignatureValid(String message, String signature) {
         // we couldn't load the public key
         if (sSheketPublicKey == null)
             return false;
 
-        String encoded_contract = toString();
-
-        InputStream contractStream = new ByteArrayInputStream(encoded_contract.getBytes(Charset.forName("UTF-8")));
+        InputStream messageStream = new ByteArrayInputStream(message.getBytes(Charset.forName("UTF-8")));
         InputStream signatureStream = new ByteArrayInputStream(Base64.decode(signature));
 
         try {
@@ -89,7 +86,7 @@ public class PaymentContract {
 
             int read = -1;
             byte[] buffer = new byte[16 * 1024];
-            while ((read = contractStream.read(buffer)) != -1) {
+            while ((read = messageStream.read(buffer)) != -1) {
                 computed_signature.update(buffer, 0, read);
             }
 
@@ -101,11 +98,12 @@ public class PaymentContract {
         }
     }
 
+    // this delimiter is valid b/c the signature is a base64 encoded string,
+    // which can only be of [0-9a-zA-Z/=+] characters.
+    private static final String delimiter = "_||_";
     /**
      * Breaks up the contract into its components.
      */
-    private static final String delimiter = "_||_";
-
     public static ContractComponents extractContractComponents(String signed_contract) {
         ContractComponents components = new ContractComponents();
 
