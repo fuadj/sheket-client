@@ -15,18 +15,26 @@ public class SCompany {
             f(CompanyEntry.COLUMN_COMPANY_ID),
             f(CompanyEntry.COLUMN_NAME),
             f(CompanyEntry.COLUMN_PERMISSION),
-            f(CompanyEntry.COLUMN_STATE_BACKUP)
+            f(CompanyEntry.COLUMN_STATE_BACKUP),
+            f(CompanyEntry.COLUMN_PAYMENT_CERTIFICATE),
+            f(CompanyEntry.COLUMN_REMAINING_PAYMENT_PERIOD)
     };
 
     public static final int COL_COMPANY_ID = 0;
     public static final int COL_COMPANY_NAME = 1;
     public static final int COL_PERMISSION = 2;
     public static final int COL_STATE_BKUP = 3;
+    public static final int COL_PAYMENT_CERTIFICATE = 4;
+    public static final int COL_REMAINING_PERIOD = 5;
+
+    public static final int COL_LAST = 6;
 
     public long company_id;
     public String name;
     public String encoded_permission;
     public String state_bkup;
+    public String payment_certificate;
+    public String remaining_period;
 
     public SCompany() {}
 
@@ -39,6 +47,8 @@ public class SCompany {
         name = cursor.getString(COL_COMPANY_NAME + offset);
         encoded_permission = cursor.getString(COL_PERMISSION + offset);
         state_bkup = cursor.getString(COL_STATE_BKUP + offset);
+        payment_certificate = cursor.getString(COL_PAYMENT_CERTIFICATE + offset);
+        remaining_period = cursor.getString(COL_REMAINING_PERIOD + offset);
     }
 
     public ContentValues toContentValues() {
@@ -47,6 +57,9 @@ public class SCompany {
         values.put(CompanyEntry.COLUMN_NAME, name);
         values.put(CompanyEntry.COLUMN_PERMISSION, encoded_permission);
         values.put(CompanyEntry.COLUMN_STATE_BACKUP, state_bkup);
+        values.put(CompanyEntry.COLUMN_PAYMENT_CERTIFICATE, payment_certificate);
+        values.put(CompanyEntry.COLUMN_REMAINING_PAYMENT_PERIOD, remaining_period);
+
         return values;
     }
 }
