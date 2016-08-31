@@ -1,10 +1,13 @@
 package com.mukera.sheket.client.services;
 
+import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.io.pem.PemObject;
 import org.spongycastle.util.io.pem.PemReader;
 
-import java.io.StringBufferInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.security.KeyFactory;
 import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
@@ -67,16 +70,18 @@ public class PaymentContract {
 
     /**
      * Returns true if the signature is valid.
+     *
+     * NOTE: The {@arg signature} should be in Base64 encoded form.
      */
-    public boolean isSignatureValid(String proposed_signature) {
+    public boolean isSignatureValid(String signature) {
         // we couldn't load the public key
         if (sSheketPublicKey == null)
             return false;
 
         String encoded_contract = toString();
 
-        StringBufferInputStream contractStream = new StringBufferInputStream(encoded_contract);
-        StringBufferInputStream signatureStream = new StringBufferInputStream(proposed_signature);
+        InputStream contractStream = new ByteArrayInputStream(encoded_contract.getBytes(Charset.forName("UTF-8")));
+        InputStream signatureStream = new ByteArrayInputStream(Base64.decode(signature));
 
         try {
             final Signature computed_signature = Signature.getInstance("SHA256withRSA");
