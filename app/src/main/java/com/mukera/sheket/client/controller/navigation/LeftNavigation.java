@@ -65,7 +65,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 }
 
                 final long company_id = cursor.getLong(COL_COMPANY_ID);
-                if (PrefUtil.getCurrentCategoryId(getNavActivity()) == company_id) {
+                if (PrefUtil.getCurrentCompanyId(getNavActivity()) == company_id) {
                     // there is nothing to do, we are already viewing that company
                     return;
                 }
