@@ -157,6 +157,21 @@ public class SheketContract {
         // the naming has stuck-ed.
         public static final String COLUMN_STATE_BACKUP = "revision";
 
+        // The signed payment that was generated for
+        // {this device, company, user, ...} by the server is stored here
+        // If this signature isn't valid, the user isn't allowed to use the
+        // company until the payment is verified.
+        public static final String COLUMN_PAYMENT_CERTIFICATE = "p_c";
+
+        // Once a user has confirmed their payment, the remaining payment period
+        // is stored here and continually decremented until it reaches 0. When
+        // that happens, the user is required to pay to extend usage.
+        // This field is always updated on sync to the "correct" payment duration
+        // from server.
+        // This field is a string because we won't only be saving the remaining time,
+        // but also some meta-data to prevent some types of errors.
+        public static final String COLUMN_REMAINING_PAYMENT_PERIOD = "r_p_p";
+
         public static Uri buildCompanyUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
