@@ -91,9 +91,9 @@
         <receiver android:name=".services.DeviceConfigurationChangeReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-            <intent-filter>
                 <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_TICK" />
             </intent-filter>
         </receiver>
 
