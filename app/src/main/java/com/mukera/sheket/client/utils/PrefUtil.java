@@ -78,16 +78,17 @@ public class PrefUtil {
         editor.commit();
     }
 
-    private static final String pref_is_payment_service_running = "pref_is_payment_service_running";
-    public static boolean isPaymentServiceRunning(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(pref_is_payment_service_running, false);
+    private static final String pref_last_seen_time = "pref_last_seen_time";
+    public static void setLastSeenTime(Context context, long time) {
+        PreferenceManager.getDefaultSharedPreferences(context).
+                edit().
+                putLong(pref_last_seen_time, time).
+                commit();
     }
 
-    public static void setIsPaymentServiceRunning(Context context, boolean is_running) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean(pref_is_payment_service_running, is_running);
-        editor.commit();
+    public static long getLastSeenTime(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context).
+                getLong(pref_last_seen_time, -1);
     }
     /**
      */
