@@ -26,7 +26,13 @@ public class DeviceConfigurationChangeReceiver extends BroadcastReceiver {
          *
          * See this for more details {@link http://stackoverflow.com/a/26905894/5753416}
          */
-        if (intent.getAction().equals("android.intent.action.TIME_SET")) {
+        if (intent.getAction().equals(Intent.ACTION_TIME_CHANGED) ||
+                /**
+                 * There is an android bug that causes the intent {@code ACTION_DATE_CHANGED} to be
+                 * broadcast if only we are going to the future. If the user goes back, it won't
+                 * broadcast this.
+                 */
+                intent.getAction().equals(Intent.ACTION_DATE_CHANGED)) {
             final String PREF_TIME_ZONE = "pref_time_zone_change";
             final String PREF_PREVIOUS_TIME = "pref_previous_time";
 
