@@ -53,6 +53,7 @@ import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.services.SheketSyncService;
@@ -286,6 +287,32 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onCompanySelected(SCompany company) {
+        if (PrefUtil.getCurrentCompanyId(this) == company.company_id) {
+            // there is nothing to do, we are already viewing that company
+            return;
+        }
+
+        CompanyUtil.switchCurrentCompanyInWorkerThread(this,
+                company.company_id, company.name, company.encoded_permission, company.state_bkup,
+                new CompanyUtil.StateSwitchedListener() {
+                    @Override
+                    public void runAfterSwitchCompleted() {
+                        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                        SheketTracker.sendTrackingData(MainActivity.this,
+                                new HitBuilders.EventBuilder().
+                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                        setAction("company changed").
+                                        build());
+
+
+                        LocalBroadcastManager.getInstance(MainActivity.this).
+                                sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+                    }
+                });
+    }
+
+    @Override
     public void onBranchSelected(final SBranch branch) {
         replaceMainFragment(BranchItemFragment.newInstance(branch),
                 false);
@@ -383,17 +410,6 @@ public class MainActivity extends AppCompatActivity implements
             setTitle(
                     BaseNavigation.StaticNavigationOptions.getOptionString(item));
         }
-    }
-
-    @Override
-    public void onCompanySwitched() {
-        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-        SheketTracker.sendTrackingData(this,
-                new HitBuilders.EventBuilder().
-                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                        setAction("company changed").
-                        build());
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
     }
 
     void logoutUser() {

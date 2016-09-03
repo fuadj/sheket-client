@@ -2,6 +2,7 @@ package com.mukera.sheket.client.controller.navigation;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -20,6 +21,7 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -63,26 +65,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         !cursor.moveToPosition(position)) {
                     return;
                 }
-
-                final long company_id = cursor.getLong(COL_COMPANY_ID);
-                if (PrefUtil.getCurrentCompanyId(getNavActivity()) == company_id) {
-                    // there is nothing to do, we are already viewing that company
-                    return;
-                }
-
-                final String company_name = cursor.getString(COL_NAME);
-                final String permission = cursor.getString(COL_PERMISSION);
-                final String state_bkup = cursor.getString(COL_STATE_BKUP);
-
-                CompanyUtil.switchCurrentCompanyInWorkerThread(getNavActivity(),
-                        company_id, company_name, permission, state_bkup,
-                        new CompanyUtil.StateSwitchedListener() {
-                            @Override
-                            public void runAfterSwitchCompleted() {
-                                getCallBack().onCompanySwitched();
-                            }
-                        });
-
+                SCompany company = new SCompany(cursor);
+                getCallBack().onCompanySelected(company);
             }
         });
 

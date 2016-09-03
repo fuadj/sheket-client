@@ -6,6 +6,7 @@ import android.view.View;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -19,7 +20,7 @@ public abstract class BaseNavigation {
     public interface NavigationCallback {
         void onBranchSelected(SBranch branch);
         void onNavigationOptionSelected(int item);
-        void onCompanySwitched();
+        void onCompanySelected(SCompany company);
     }
 
     private AppCompatActivity mActivity;
