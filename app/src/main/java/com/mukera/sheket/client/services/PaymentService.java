@@ -11,7 +11,6 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by fuad on 8/27/16.
@@ -44,17 +43,12 @@ public class PaymentService extends IntentService {
                 continue;
             }
 
-            int payment_validity = checkPaymentValidity(company, now);
-            switch (payment_validity) {
-                case PAYMENT_VALID:
-                    updateRemainingPaymentPeriod(company);
-                    break;
+            int payment_state = checkPaymentState(company, now);
+            switch (payment_state) {
                 case PAYMENT_ENDED:
-                    revokePaymentCertificate(company, PAYMENT_ENDED);
-                    break;
                 case PAYMENT_INVALID:
-                default:
-                    revokePaymentCertificate(company, PAYMENT_INVALID);
+                    revokePaymentCertificate(company, payment_state);
+                    break;
             }
         }
 
@@ -76,7 +70,7 @@ public class PaymentService extends IntentService {
      *
      * @return one of the PAYMENT_* constants
      */
-    int checkPaymentValidity(SCompany company, long current_time) {
+    int checkPaymentState(SCompany company, long current_time) {
         PaymentContract.ContractComponents contractAndSignature =
                 PaymentContract.extractContractComponents(company.payment_certificate);
 
@@ -97,42 +91,17 @@ public class PaymentService extends IntentService {
         if (!is_signature_valid)
             return PAYMENT_INVALID;
 
-        try {
-            DurationLeft durationLeft = new DurationLeft(contract.duration);
-            if (durationLeft.last_seen_time > current_time) {
-                return PAYMENT_INVALID;
-            } else if (durationLeft.hours_left < 0) {
-                return PAYMENT_ENDED;
-            }
+        final long MINUTE = 60 * 1000;      // in milliseconds
+        final long HOUR = 60 * MINUTE;
+        final long DAY = 24 * HOUR;
 
-        } catch (IllegalArgumentException e) {
-            return PAYMENT_INVALID;
+        long days_since_payment = (current_time - Long.parseLong(contract.local_date_issued)) / DAY;
+
+        if (days_since_payment > Long.parseLong(contract.duration)) {
+            return PAYMENT_ENDED;
         }
 
         return PAYMENT_VALID;
-    }
-
-    void updateRemainingPaymentPeriod(SCompany company) {
-
-    }
-
-    public static class DurationLeft {
-        long hours_left;
-        long last_seen_time;
-
-        public DurationLeft(String payment_duration) throws IllegalArgumentException {
-            int index = payment_duration.indexOf(":");
-            if (index == -1)
-                throw new IllegalArgumentException("invalid duration encoding: " + payment_duration);
-
-            hours_left = Long.parseLong(payment_duration.substring(0, index));
-            last_seen_time = Long.parseLong(payment_duration.substring(index + 1));
-        }
-
-        @Override
-        public String toString() {
-            return String.format(Locale.US, "%d:%d", hours_left, last_seen_time);
-        }
     }
 
     /**
