@@ -4,7 +4,9 @@ import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.support.v4.content.LocalBroadcastManager;
 
+import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.utils.DeviceId;
@@ -50,6 +52,7 @@ public class PaymentService extends IntentService {
                 case CompanyEntry.PAYMENT_INVALID:
                 case CompanyEntry.PAYMENT_ENDED:
                     setPaymentState(company, payment_state);
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_PAYMENT_REQUIRED));
                     break;
             }
         }

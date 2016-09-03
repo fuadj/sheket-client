@@ -496,6 +496,7 @@ public class MainActivity extends AppCompatActivity implements
         filter.addAction(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR);
         filter.addAction(SheketBroadcast.ACTION_CONFIG_CHANGE);
         filter.addAction(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
+        filter.addAction(SheketBroadcast.ACTION_PAYMENT_REQUIRED);
 
         LocalBroadcastManager.getInstance(this).
                 registerReceiver(mReceiver, filter);
@@ -698,7 +699,10 @@ public class MainActivity extends AppCompatActivity implements
             String action = intent.getAction();
             String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
 
-            if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+            if (action.equals(SheketBroadcast.ACTION_PAYMENT_REQUIRED)) {
+                dismissSyncDialog();
+                restartMainActivity();
+            } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 dismissSyncDialog();
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
