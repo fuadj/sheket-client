@@ -39,14 +39,14 @@ public class PaymentService extends IntentService {
         List<SCompany> companies = getAllCompanies();
         for (SCompany company : companies) {
             if (invalidate_all_certificates) {
-                revokePaymentCertificate(company, PAYMENT_INVALID);
+                revokePaymentCertificate(company, CompanyEntry.PAYMENT_INVALID);
                 continue;
             }
 
             int payment_state = checkPaymentState(company, now);
             switch (payment_state) {
-                case PAYMENT_ENDED:
-                case PAYMENT_INVALID:
+                case CompanyEntry.PAYMENT_INVALID:
+                case CompanyEntry.PAYMENT_ENDED:
                     revokePaymentCertificate(company, payment_state);
                     break;
             }
@@ -56,19 +56,11 @@ public class PaymentService extends IntentService {
         AlarmReceiver.completeWakefulIntent(intent);
     }
 
-    // user has a valid payment, can continue using the pp
-    public static final int PAYMENT_VALID = 1;
-    // user had a valid payment, but it has expired
-    public static final int PAYMENT_ENDED = 2;
-    // there is a problem with the payment signature, force user to RE-CONFIRM
-    public static final int PAYMENT_INVALID = 3;
     /**
      * Checks if payment certificate of the company is valid for this user.
      * This involves comparing the signature received from server with the
      * locally computed value, using the payment public key.
      * It also checks if the payment duration is still valid(not expired).
-     *
-     * @return one of the PAYMENT_* constants
      */
     int checkPaymentState(SCompany company, long current_time) {
         PaymentContract.ContractComponents contractAndSignature =
@@ -89,7 +81,7 @@ public class PaymentService extends IntentService {
         boolean is_signature_valid = PaymentContract.
                 isSignatureValid(contract.toString(), contractAndSignature.signature);
         if (!is_signature_valid)
-            return PAYMENT_INVALID;
+            return CompanyEntry.PAYMENT_INVALID;
 
         final long MINUTE = 60 * 1000;      // in milliseconds
         final long HOUR = 60 * MINUTE;
@@ -98,10 +90,10 @@ public class PaymentService extends IntentService {
         long days_since_payment = (current_time - Long.parseLong(contract.local_date_issued)) / DAY;
 
         if (days_since_payment > Long.parseLong(contract.duration)) {
-            return PAYMENT_ENDED;
+            return CompanyEntry.PAYMENT_ENDED;
         }
 
-        return PAYMENT_VALID;
+        return CompanyEntry.PAYMENT_VALID;
     }
 
     /**
