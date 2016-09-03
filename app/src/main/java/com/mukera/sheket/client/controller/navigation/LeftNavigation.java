@@ -30,18 +30,6 @@ import com.mukera.sheket.client.utils.PrefUtil;
  * Created by fuad on 7/29/16.
  */
 public class LeftNavigation extends BaseNavigation implements LoaderManager.LoaderCallbacks<Cursor> {
-    private static final String[] COMPANY_COLUMNS = {
-            CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID),
-            CompanyEntry._full(CompanyEntry.COLUMN_NAME),
-            CompanyEntry._full(CompanyEntry.COLUMN_PERMISSION),
-            CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP)
-    };
-
-    private static final int COL_COMPANY_ID = 0;
-    private static final int COL_NAME = 1;
-    private static final int COL_PERMISSION = 2;
-    private static final int COL_STATE_BKUP = 3;
-
     private ListView mCompanyList;
     private CompanyAdapter mCompanyAdapter;
 
@@ -125,7 +113,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         return new CursorLoader(getNavActivity(),
                 CompanyEntry.CONTENT_URI,
-                COMPANY_COLUMNS,
+                SCompany.COMPANY_COLUMNS,
                 CompanyEntry.COLUMN_USER_ID + " = ?",
                 new String[]{
                         String.valueOf(PrefUtil.getUserId(getNavActivity()))
@@ -164,11 +152,12 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            SCompany company = new SCompany(cursor);
+
             CompanyViewHolder holder = (CompanyViewHolder) view.getTag();
-            holder.name.setText(cursor.getString(COL_NAME));
-            long company_id = cursor.getLong(COL_COMPANY_ID);
+            holder.name.setText(company.name);
             int icon_res;
-            if (company_id == mCurrentCompanyId) {
+            if (company.company_id == mCurrentCompanyId) {
                 icon_res = R.drawable.abc_btn_check_to_on_mtrl_015;
             } else {
                 icon_res = R.drawable.abc_btn_check_to_on_mtrl_000;

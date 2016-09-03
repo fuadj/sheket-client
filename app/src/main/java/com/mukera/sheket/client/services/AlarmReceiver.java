@@ -22,6 +22,10 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
                 new Intent(context, PaymentService.class));
     }
 
+    /**
+     * Starts the alarm to fire the payment service at the START of the next hour.
+     * @param context
+     */
     public static void startPeriodicPaymentAlarm(Context context) {
         Intent paymentIntent = new Intent(context, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
