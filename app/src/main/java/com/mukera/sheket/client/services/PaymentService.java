@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.services;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 
@@ -11,6 +12,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by fuad on 8/27/16.
@@ -39,7 +41,7 @@ public class PaymentService extends IntentService {
         List<SCompany> companies = getAllCompanies();
         for (SCompany company : companies) {
             if (invalidate_all_certificates) {
-                revokePaymentCertificate(company, CompanyEntry.PAYMENT_INVALID);
+                setPaymentState(company, CompanyEntry.PAYMENT_INVALID);
                 continue;
             }
 
@@ -47,7 +49,7 @@ public class PaymentService extends IntentService {
             switch (payment_state) {
                 case CompanyEntry.PAYMENT_INVALID:
                 case CompanyEntry.PAYMENT_ENDED:
-                    revokePaymentCertificate(company, payment_state);
+                    setPaymentState(company, payment_state);
                     break;
             }
         }
@@ -96,11 +98,18 @@ public class PaymentService extends IntentService {
         return CompanyEntry.PAYMENT_VALID;
     }
 
-    /**
-     * Revokes the payment certificate for the company.
-     */
-    void revokePaymentCertificate(SCompany company, int revokation) {
-
+    void setPaymentState(SCompany company, int payment_state) {
+        company.payment_state = payment_state;
+        ContentValues values = company.toContentValues();
+        // setting this value fks up the foreign keys by resetting them, check it
+        // probably update is short for "delete-insert". And when you
+        // delete while being foreign keyed, you remove the referring columns also.
+        values.remove(CompanyEntry.COLUMN_COMPANY_ID);
+        getContentResolver().update(
+                CompanyEntry.buildCompanyUri(company.company_id),
+                values,
+                String.format(Locale.US, "%s = ?", CompanyEntry.COLUMN_COMPANY_ID),
+                new String[]{String.valueOf(company.company_id)});
     }
 
     List<SCompany> getAllCompanies() {
