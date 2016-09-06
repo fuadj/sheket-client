@@ -293,23 +293,21 @@ public class MainActivity extends AppCompatActivity implements
             return;
         }
 
-        CompanyUtil.switchCurrentCompanyInWorkerThread(this,
-                company.company_id, company.name, company.encoded_permission, company.state_bkup,
-                new CompanyUtil.StateSwitchedListener() {
-                    @Override
-                    public void runAfterSwitchCompleted() {
-                        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-                        SheketTracker.sendTrackingData(MainActivity.this,
-                                new HitBuilders.EventBuilder().
-                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                                        setAction("company changed").
-                                        build());
+        CompanyUtil.switchCurrentCompanyInWorkerThread(this, company, new CompanyUtil.StateSwitchedListener() {
+            @Override
+            public void runAfterSwitchCompleted() {
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(MainActivity.this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                setAction("company changed").
+                                build());
 
 
-                        LocalBroadcastManager.getInstance(MainActivity.this).
-                                sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
-                    }
-                });
+                LocalBroadcastManager.getInstance(MainActivity.this).
+                        sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+            }
+        });
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.data.SheketContract;
@@ -36,21 +37,18 @@ public class CompanyUtil {
      * the listener will be called in the main thread.
      */
     public static void switchCurrentCompanyInWorkerThread(final Activity context,
-                                                          final long new_company_id,
-                                                          final String new_company_name,
-                                                          final String new_permission,
-                                                          final String new_state_bkup,
+                                                          final SCompany switch_company,
                                                           final StateSwitchedListener listener) {
-        // if a company hasn't been set previously, we don't any state to save
+        // if a company hasn't been set previously, we don't have any state to save
         // just do the switching. Otherwise, save the current company's state to the
         // db, then switch.
         if (!PrefUtil.isCompanySet(context)) {
-            PrefUtil.setCurrentCompanyId(context, new_company_id);
-            PrefUtil.setCurrentCompanyName(context, new_company_name);
-            PrefUtil.setUserPermission(context, new_permission);
-            PrefUtil.restoreStateFromBackup(context, new_state_bkup);
+            PrefUtil.setCurrentCompanyId(context, switch_company.company_id);
+            PrefUtil.setCurrentCompanyName(context, switch_company.name);
+            PrefUtil.setUserPermission(context, switch_company.encoded_permission);
+            PrefUtil.restoreStateFromBackup(context, switch_company.state_bkup);
 
-            SPermission.setSingletonPermission(new_permission);
+            SPermission.setSingletonPermission(switch_company.encoded_permission);
 
             listener.runAfterSwitchCompleted();
         } else {
@@ -76,12 +74,12 @@ public class CompanyUtil {
                                     }
                             );
 
-                    PrefUtil.setCurrentCompanyId(context, new_company_id);
-                    PrefUtil.setCurrentCompanyName(context, new_company_name);
-                    PrefUtil.setUserPermission(context, new_permission);
-                    PrefUtil.restoreStateFromBackup(context, new_state_bkup);
+                    PrefUtil.setCurrentCompanyId(context, switch_company.company_id);
+                    PrefUtil.setCurrentCompanyName(context, switch_company.name);
+                    PrefUtil.setUserPermission(context, switch_company.encoded_permission);
+                    PrefUtil.restoreStateFromBackup(context, switch_company.state_bkup);
 
-                    SPermission.setSingletonPermission(new_permission);
+                    SPermission.setSingletonPermission(switch_company.encoded_permission);
 
                     context.runOnUiThread(new Runnable() {
                         @Override
