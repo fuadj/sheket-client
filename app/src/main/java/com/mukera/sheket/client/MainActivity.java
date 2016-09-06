@@ -52,6 +52,7 @@ import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
+import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
@@ -288,6 +289,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onCompanySelected(SCompany company) {
+        if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
+            PaymentDialog.displayPaymentRequestDialog(MainActivity.this, company);
+            return;
+        }
+
         if (PrefUtil.getCurrentCompanyId(this) == company.company_id) {
             // there is nothing to do, we are already viewing that company
             return;
