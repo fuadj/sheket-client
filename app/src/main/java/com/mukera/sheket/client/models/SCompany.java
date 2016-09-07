@@ -2,14 +2,18 @@ package com.mukera.sheket.client.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
 
 /**
  * Created by fuad on 8/30/16.
  */
-public class SCompany {
-    static String f(String s) { return CompanyEntry._full(s); }
+public class SCompany implements Parcelable {
+    static String f(String s) {
+        return CompanyEntry._full(s);
+    }
 
     public static final String[] COMPANY_COLUMNS = {
             f(CompanyEntry.COLUMN_COMPANY_ID),
@@ -39,7 +43,8 @@ public class SCompany {
     public String payment_certificate;
     public int payment_state;
 
-    public SCompany() {}
+    public SCompany() {
+    }
 
     public SCompany(Cursor cursor) {
         this(cursor, 0);
@@ -67,4 +72,42 @@ public class SCompany {
 
         return values;
     }
+
+    private SCompany(Parcel parcel) {
+        company_id = parcel.readLong();
+        user_id = parcel.readLong();
+        name = parcel.readString();
+        encoded_permission = parcel.readString();
+        state_bkup = parcel.readString();
+        payment_certificate = parcel.readString();
+        payment_state = parcel.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(company_id);
+        dest.writeLong(user_id);
+        dest.writeString(name);
+        dest.writeString(encoded_permission);
+        dest.writeString(state_bkup);
+        dest.writeString(payment_certificate);
+        dest.writeInt(payment_state);
+    }
+
+    @Override
+    public int describeContents() {
+        return hashCode();
+    }
+
+    public static final Parcelable.Creator<SCompany> CREATOR = new Parcelable.Creator<SCompany>() {
+        @Override
+        public SCompany createFromParcel(Parcel source) {
+            return new SCompany(source);
+        }
+
+        @Override
+        public SCompany[] newArray(int size) {
+            return new SCompany[size];
+        }
+    };
 }
