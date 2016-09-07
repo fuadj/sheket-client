@@ -225,6 +225,18 @@
     <string name="dialog_edit_item_title">Edit Item</string>
     <string name="dialog_edit_item_msg">Do you want to edit item?</string>
 
+    <string name="dialog_payment_title_payment_ended">Payment Ended</string>
+    <string name="dialog_payment_body_payment_ended">Your contract period has ended, please extend your contract by purchasing a package. Thank You.</string>
+
+    <string name="dialog_payment_title_payment_invalid">Confirmation Required</string>
+    <string name="dialog_payment_body_payment_invalid">
+        Payment Confirmation Required. Please Select the Verify Button to Confirm.
+        Thank You.
+    </string>
+    <string name="dialog_payment_confirm_button">Confirm Payment</string>
+    <string name="dialog_payment_title_payment_number">Payment #:</string>
+    <string name="dialog_payment_desc_payment_number">*Use the payment number to pay for the service.</string>
+
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Edit Member</string>

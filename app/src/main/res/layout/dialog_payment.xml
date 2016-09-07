@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/dialog_payment_text_reason_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dialog_payment_body_payment_ended" />
+
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/dialog_payment_btn_verify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="10dp"
+        app:fb_defaultColor="#039be5"
+        app:fb_focusColor="#0288d1"
+        app:fb_radius="3dp"
+        app:fb_text="@string/dialog_payment_confirm_button"
+        app:fb_textColor="#fff"
+        app:fb_textSize="16sp"/>
+
+    <LinearLayout
+        android:id="@+id/dialog_payment_layout_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:background="#e0f2f1"
+        android:layout_marginTop="16dp"
+        android:padding="4dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/dialog_payment_text_title_payment_num"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dialog_payment_title_payment_number"
+                android:textColor="#000"
+                android:textSize="20dp" />
+
+            <TextView
+                android:id="@+id/dialog_payment_text_payment_num"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:background="#cfd8dc"
+                android:padding="4dp"
+                android:text="213kj2198ds"
+                android:textColor="#111"
+                android:textSize="18dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/dialog_payment_text_payment_num_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dialog_payment_desc_payment_number"
+            android:paddingRight="8dp"
+            android:paddingLeft="8dp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+</LinearLayout>
