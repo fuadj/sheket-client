@@ -237,6 +237,9 @@
     <string name="dialog_payment_title_payment_number">Payment #:</string>
     <string name="dialog_payment_desc_payment_number">*Use the payment number to pay for the service.</string>
 
+    <string name="dialog_payment_verification_progress_title">Confirming Payment</string>
+    <string name="dialog_payment_verification_progress_body">Please Wait&#8230;</string>
+
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Edit Member</string>
