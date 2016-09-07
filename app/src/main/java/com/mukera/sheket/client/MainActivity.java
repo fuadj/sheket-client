@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onCompanySelected(SCompany company) {
         if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
-            PaymentDialog.displayPaymentRequestDialog(MainActivity.this, company);
+            PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
             return;
         }
 
