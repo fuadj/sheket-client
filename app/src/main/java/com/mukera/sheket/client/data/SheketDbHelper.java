@@ -55,7 +55,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 CompanyEntry.COLUMN_STATE_BACKUP + " text, " +
 
                 CompanyEntry.COLUMN_PAYMENT_CERTIFICATE + " text, " +
-                CompanyEntry.COLUMN_PAYMENT_STATE + " integer not null);";
+                CompanyEntry.COLUMN_PAYMENT_STATE +
+                String.format(Locale.US, " integer DEFAULT %d);", CompanyEntry.PAYMENT_INVALID);
 
         final String COMPANY_FOREIGN_KEY_REFERENCE = String.format(Locale.US,
                 " integer references %s(%s) ON DELETE CASCADE, ", CompanyEntry.TABLE_NAME, CompanyEntry.COLUMN_COMPANY_ID);
