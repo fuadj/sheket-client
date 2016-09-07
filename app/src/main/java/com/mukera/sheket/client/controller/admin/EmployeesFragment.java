@@ -44,7 +44,7 @@ import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SyncUtil;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -506,7 +506,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
 
                 Response response = client.newCall(builder.build()).execute();
                 if (!response.isSuccessful()) {
-                    throw new MemberException(SyncUtil.getErrorMessage(response));
+                    throw new MemberException(SheketNetworkUtil.getErrorMessage(response));
                 }
 
                 JSONObject json = new JSONObject(response.body().string());

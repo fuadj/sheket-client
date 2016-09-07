@@ -12,7 +12,7 @@ import java.io.IOException;
  *
  * Helper methods related to server responses.
  */
-public class SyncUtil {
+public class SheketNetworkUtil {
     public static String getErrorMessage(Response response) {
         final String JSON_ERROR_MSG = "error_message";
         try {

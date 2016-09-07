@@ -27,7 +27,7 @@ import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SyncUtil;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -1282,7 +1282,7 @@ public class SheketSyncService extends IntentService {
                 throw new InvalidLoginCredentialException("Invalid login credentials");
 
             default:
-                throw new SyncException(SyncUtil.getErrorMessage(response));
+                throw new SyncException(SheketNetworkUtil.getErrorMessage(response));
         }
     }
 
