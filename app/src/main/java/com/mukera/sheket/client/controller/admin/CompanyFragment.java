@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
 import com.mukera.sheket.client.controller.CompanyUtil;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
@@ -52,18 +53,6 @@ import java.io.IOException;
 public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor> {
     public static final OkHttpClient client = new OkHttpClient();
 
-    private static final String[] COMPANY_COLUMNS = {
-            CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID),
-            CompanyEntry._full(CompanyEntry.COLUMN_NAME),
-            CompanyEntry._full(CompanyEntry.COLUMN_PERMISSION),
-            CompanyEntry._full(CompanyEntry.COLUMN_STATE_BACKUP)
-    };
-
-    private static final int COL_COMPANY_ID = 0;
-    private static final int COL_NAME = 1;
-    private static final int COL_PERMISSION = 2;
-    private static final int COL_STATE_BKUP = 3;
-
     private ListView mCompanies;
     private CompanyAdapter mAdapter;
     private SPermission.PermissionChangeListener mListener;
@@ -84,19 +73,15 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                         !cursor.moveToPosition(position)) {
                     return;
                 }
+                SCompany company = new SCompany(cursor);
 
-                final long company_id = cursor.getLong(COL_COMPANY_ID);
-                if (PrefUtil.getCurrentCategoryId(getActivity()) == company_id) {
+                if (PrefUtil.getCurrentCategoryId(getActivity()) == company.company_id) {
                     // there is nothing to do, we are already viewing that company
                     return;
                 }
 
-                final String company_name = cursor.getString(COL_NAME);
-                final String permission = cursor.getString(COL_PERMISSION);
-                final String state_bkup = cursor.getString(COL_STATE_BKUP);
-
                 CompanyUtil.switchCurrentCompanyInWorkerThread(getActivity(),
-                        company_id, company_name, permission, state_bkup,
+                        company,
                         new CompanyUtil.StateSwitchedListener() {
                             @Override
                             public void runAfterSwitchCompleted() {
@@ -142,7 +127,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
         return new CursorLoader(getActivity(),
                 CompanyEntry.CONTENT_URI,
-                COMPANY_COLUMNS,
+                SCompany.COMPANY_COLUMNS,
                 CompanyEntry.COLUMN_USER_ID + " = ?",
                 new String[]{
                         String.valueOf(PrefUtil.getUserId(getActivity()))
@@ -186,8 +171,9 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            SCompany company = new SCompany(cursor);
             CompanyViewHolder holder = (CompanyViewHolder) view.getTag();
-            holder.companyName.setText(cursor.getString(COL_NAME));
+            holder.companyName.setText(company.name);
         }
 
     }
