@@ -10,8 +10,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -72,7 +74,8 @@ public class MainActivity extends AppCompatActivity implements
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final int REQUEST_FILE_CHOOSER = 1234;
+    private static final int REQUEST_FILE_CHOOSER = 1;
+    private static final int REQUEST_READ_PHONE_STATE = 2;
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -290,7 +293,24 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onCompanySelected(SCompany company) {
         if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
-            PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                /**
+                 * There is a "Screen Overlay" problem in Android M(v23).
+                 * We require read_phone_state permissions, which we've already requested
+                 * in the manifest but not granted if there is a screen overlay.
+                 *
+                 * Read http://stackoverflow.com/a/32065680/5753416
+                 */
+                if (!Settings.canDrawOverlays(this)) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, REQUEST_READ_PHONE_STATE);
+                } else {
+                    PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+                }
+            } else {
+                PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+            }
             return;
         }
 
