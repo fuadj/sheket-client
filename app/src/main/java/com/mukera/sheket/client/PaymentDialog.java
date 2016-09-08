@@ -123,7 +123,7 @@ public class PaymentDialog extends DialogFragment {
                                 } else {
                                     new AlertDialog.Builder(getActivity()).
                                             setIcon(android.R.drawable.ic_dialog_alert).
-                                            setTitle(R.string.dialog_payment_result_ok).
+                                            setTitle(R.string.dialog_payment_result_error).
                                             setMessage(result.second).show();
                                 }
                             }
