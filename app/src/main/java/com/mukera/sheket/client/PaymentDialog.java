@@ -143,8 +143,21 @@ public class PaymentDialog extends DialogFragment {
             builder.setTitle(R.string.dialog_payment_title_payment_invalid);
             mTextReasonDesc.setText(R.string.dialog_payment_body_payment_invalid);
         }
+        Dialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                SheketTracker.setScreenName(getActivity(), SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(getActivity(),
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_DIALOG).
+                                setAction("payment dialog shown").
+                                setLabel(mCompany.payment_state == CompanyEntry.PAYMENT_INVALID ? "invalid payment" : "expired payment").
+                                build());
+            }
+        });
 
-        return builder.create();
+        return dialog;
     }
 
     public static final OkHttpClient client = new OkHttpClient();

@@ -302,6 +302,13 @@ public class MainActivity extends AppCompatActivity implements
                  * Read http://stackoverflow.com/a/32065680/5753416
                  */
                 if (!Settings.canDrawOverlays(this)) {
+                    SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                    SheketTracker.sendTrackingData(MainActivity.this,
+                            new HitBuilders.EventBuilder().
+                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                    setAction("screen overlay disable requested").
+                                    build());
+
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:" + getPackageName()));
                     startActivityForResult(intent, REQUEST_READ_PHONE_STATE);
