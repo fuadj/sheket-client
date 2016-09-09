@@ -182,7 +182,8 @@ public class PaymentDialog extends DialogFragment {
             JSONObject jsonObject = new JSONObject();
 
             jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceId.getUniqueDeviceId(getActivity()));
-            jsonObject.put(REQUEST_JSON_LOCAL_USER_TIME, System.currentTimeMillis());
+            // we must 'cast' the time to a string as the encoding is different and server is expecting a string
+            jsonObject.put(REQUEST_JSON_LOCAL_USER_TIME, String.valueOf(System.currentTimeMillis()));
 
             Request.Builder builder = new Request.Builder();
             builder.url(ConfigData.getAddress(getActivity()) + "v1/payment/verify");
@@ -210,7 +211,7 @@ public class PaymentDialog extends DialogFragment {
             updated_values.remove(CompanyEntry.COLUMN_COMPANY_ID);
 
             int rows_updated = getContext().getContentResolver().
-                    update(CompanyEntry.buildCompanyUri(company.company_id),
+                    update(CompanyEntry.CONTENT_URI,
                             updated_values,
                             CompanyEntry.COLUMN_COMPANY_ID + " = ?",
                             new String[]{String.valueOf(company.company_id)});
