@@ -33,7 +33,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.user.UserUtil;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.BranchEntry;
 import com.mukera.sheket.client.data.SheketContract.ChangeTraceable;
 import com.mukera.sheket.client.data.SheketContract.MemberEntry;
@@ -267,8 +267,8 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     // also remove any non-alphanumeric characters
                             replaceAll("\\W+", "");
 
-            String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited_id);
-            if (!UserUtil.isValidEncodedId(delimiter_removed)) {
+            String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited_id);
+            if (!IdEncoderUtil.isValidEncodedUserId(delimiter_removed)) {
                 mBtnAddEditMember.setEnabled(false);
                 return;
             }
@@ -322,7 +322,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 layout_name.setVisibility(View.VISIBLE);
                 mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
                 mMemberName.setText(mMember.member_name);
-                mEditMemberId.setText(UserUtil.delimitEncodedUserId(UserUtil.encodeUserId(mMember.member_id), 4));
+                mEditMemberId.setText(IdEncoderUtil.delimitEncodedId(IdEncoderUtil.encodeId(mMember.member_id, IdEncoderUtil.ID_TYPE_USER), 4));
                 mEditMemberId.setEnabled(false);
             } else {
                 title.setText(getString(R.string.placeholder_employee_action_add_member));
@@ -339,8 +339,8 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                                 // also remove any non-alphanumeric characters
                                         replaceAll("\\W+", "");
 
-                        String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited_id);
-                        if (UserUtil.isValidEncodedId(delimiter_removed)) {
+                        String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited_id);
+                        if (IdEncoderUtil.isValidEncodedUserId(delimiter_removed)) {
                             // I know it is weird to call {@code setError} for telling success
                             // but we don't have an API for the success.
                             mEditMemberId.setError("Correct ID", successIcon);
@@ -411,7 +411,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
                         String id = mEditMemberId.getText().toString().trim();
-                        member.member_id = UserUtil.decodeUserId(UserUtil.removeDelimiterOnEncodedId(id));
+                        member.member_id = IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
                         mProgressDialog = ProgressDialog.show(getActivity(),
                                 "Adding Member", "Please wait...", true);
                     } else {

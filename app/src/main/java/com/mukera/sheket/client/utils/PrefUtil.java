@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.user.UserUtil;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 
 import java.util.Vector;
 
@@ -286,8 +286,8 @@ public class PrefUtil {
     private static final String ENCODED_DELIMITED_USER_ID = "encoded_delimited_user_id";
     private static final int USER_ID_GROUPING = 4;
     public static void setEncodedDelimitedUserId(Context context, long user_id) {
-        String encoded = UserUtil.encodeUserId(user_id);
-        String delimited = UserUtil.delimitEncodedUserId(encoded, USER_ID_GROUPING);
+        String encoded = IdEncoderUtil.encodeId(user_id, IdEncoderUtil.ID_TYPE_USER);
+        String delimited = IdEncoderUtil.delimitEncodedId(encoded, USER_ID_GROUPING);
 
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putString(ENCODED_DELIMITED_USER_ID, delimited);
