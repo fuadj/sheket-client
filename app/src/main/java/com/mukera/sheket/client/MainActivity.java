@@ -19,6 +19,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -122,6 +123,12 @@ public class MainActivity extends AppCompatActivity implements
     private RightNavigation mRightNav;
 
     private SlidingMenu mNavigation;
+
+    /**
+     * we need to have a reference to the company if we need to ask the user to access PHONE_STATE.
+     * We then "go-on with businees" if we are granted the permission with this company.
+     */
+    private SCompany mPermissionRequestedCompany = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -293,26 +300,18 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onCompanySelected(SCompany company) {
         if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                /**
-                 * There is a "Screen Overlay" problem in Android M(v23).
-                 * We require read_phone_state permissions, which we've already requested
-                 * in the manifest but not granted if there is a screen overlay.
-                 *
-                 * Read http://stackoverflow.com/a/32065680/5753416
-                 */
-                if (!Settings.canDrawOverlays(this)) {
-                    SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-                    SheketTracker.sendTrackingData(MainActivity.this,
-                            new HitBuilders.EventBuilder().
-                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                                    setAction("screen overlay disable requested").
-                                    build());
 
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent, REQUEST_READ_PHONE_STATE);
+            // there is a bug in android M, declaring the permission in the manifest isn't enough
+            // see: http://stackoverflow.com/a/38782876/5753416
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    // get a hold of the company so we may continue from here if we are granted permission
+                    mPermissionRequestedCompany = company;
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
                 } else {
+                    // if we've already got the permission, show payment dialog
                     PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
                 }
             } else {
@@ -510,6 +509,21 @@ public class MainActivity extends AppCompatActivity implements
                     startImporterTask();
                 }
                 break;
+            case REQUEST_READ_PHONE_STATE: {
+                if ((grantResults.length > 0) &&
+                        (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    /*
+                    // TODO: we've been granted permission, go do something with it
+                    // FIXME: but trying to show a dialog *here* causes an exception saying
+                    // java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
+
+                    if (mPermissionRequestedCompany != null)
+                        PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+                    */
+                }
+
+                break;
+            }
         }
     }
 

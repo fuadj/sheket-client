@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
@@ -76,6 +77,9 @@ public class PaymentDialog extends DialogFragment {
 
         mTextTitleNum = (TextView) view.findViewById(R.id.dialog_payment_text_title_payment_num);
         mTextNum = (TextView) view.findViewById(R.id.dialog_payment_text_payment_num);
+
+        mTextNum.setText(IdEncoderUtil.encodeAndDelimitId(mCompany.company_id, IdEncoderUtil.ID_TYPE_COMPANY));
+
         mTextDescNum = (TextView) view.findViewById(R.id.dialog_payment_text_payment_num_desc);
 
         mBtnVerify.setOnClickListener(new View.OnClickListener() {

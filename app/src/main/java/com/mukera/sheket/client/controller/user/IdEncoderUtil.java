@@ -28,6 +28,13 @@ public class IdEncoderUtil {
     public static final int ID_TYPE_COMPANY = 2;
 
     /**
+     * A wrapper method to combine encoding and delimiting steps.
+     */
+    public static String encodeAndDelimitId(long id, @ID_TYPE int id_type) {
+        return delimitEncodedId(encodeId(id, id_type), 4);
+    }
+
+    /**
      * To make it more readable, the id is delimited as numbers are with commas.
      * @param encoded_id
      * @return
