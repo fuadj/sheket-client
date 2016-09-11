@@ -128,7 +128,7 @@ public class PaymentContract {
      * Checks if the signature is generated from the message.
      * NOTE: The signature should be in Base64 encoded form.
      */
-    private static boolean isMessageSignatureValid(String message, String signature) {
+    public static boolean isMessageSignatureValid(String message, String signature) {
         // we couldn't load the public key
         if (sSheketPublicKey == null)
             return false;

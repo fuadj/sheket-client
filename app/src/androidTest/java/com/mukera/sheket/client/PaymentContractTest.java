@@ -17,7 +17,7 @@ public class PaymentContractTest extends AndroidTestCase {
 
     public void testSignatureVerification() {
         assertTrue("Signature verification failure",
-                PaymentContract.isSignatureValid(TEST_CONTRACT, TEST_SIGNATURE));
+                PaymentContract.isMessageSignatureValid(TEST_CONTRACT, TEST_SIGNATURE));
     }
 
     public void testContractEncoding() {
