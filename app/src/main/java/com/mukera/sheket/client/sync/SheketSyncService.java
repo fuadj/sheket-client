@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.models.SBranchCategory;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -42,8 +43,12 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -99,13 +104,18 @@ public class SheketSyncService extends IntentService {
         client.setConnectTimeout(10, TimeUnit.SECONDS);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
-            syncUser();
-            if (!PrefUtil.isCompanySet(this)) {
-                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
-                return;     // can't sync anything without a company
+            // we don't remove the deleted companies right away as they might have
+            // "un-synced" data. so delete them after entities + transactions have synced.
+            Set<Long> removed_companies = syncUser();
+
+            // can only sync if there is a company selected
+            if (PrefUtil.isCompanySet(this)) {
+                syncEntities();
+                syncTransactions();
             }
-            syncEntities();
-            syncTransactions();
+
+            deleteRemovedCompanies(removed_companies);
+
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
         } catch (InvalidLoginCredentialException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
@@ -134,7 +144,32 @@ public class SheketSyncService extends IntentService {
         }
     }
 
-    void syncUser() throws Exception {
+    void deleteRemovedCompanies(Set<Long> removed_companies) throws Exception {
+        ArrayList<ContentProviderOperation> deleteOperations = new ArrayList<>();
+
+        for (Long company_id : removed_companies) {
+            deleteOperations.add(ContentProviderOperation.newDelete(CompanyEntry.CONTENT_URI).
+                    withSelection(CompanyEntry.COLUMN_COMPANY_ID + " = ?",
+                            new String[]{String.valueOf(company_id)}).build());
+        }
+
+        if (!deleteOperations.isEmpty())
+            getContentResolver().applyBatch(SheketContract.CONTENT_AUTHORITY, deleteOperations);
+    }
+
+    /**
+     * Fetches the companies the user belongs in.
+     *
+     * @return      Any company that previously existed locally but doesn't exist
+     *              in the current sync. These companies should be deleted.
+     *              This means the user was removed from the company, (e.g: an employee being fired).
+     *
+     *              IMPORTANT: We don't delete the "non-sync-existent" companies directly here
+     *              because there might be un-synced data in them. So after doing
+     *              entity + transaction syncs, they should be deleted.
+     *
+     */
+    Set<Long> syncUser() throws Exception {
         Log.d(LOG_TAG, "Syncing User started");
         Request.Builder builder = new Request.Builder();
         builder.url(ConfigData.getAddress(this) + "v1/company/list");
@@ -152,6 +187,24 @@ public class SheketSyncService extends IntentService {
         }
 
         JSONObject result = new JSONObject(response.body().string());
+
+        /**
+         * Before we start syncing, we enumerate all locally existing companies.
+         * When we do the sync, we remove from our map any that are included in the sync response.
+         * The remaining companies will be the ones that need to be deleted from local database.
+         */
+        HashMap<Long, SCompany> previous_companies_not_seen_on_sync = new HashMap<>();
+        Cursor cursor = getContentResolver().query(CompanyEntry.CONTENT_URI,
+                SCompany.COMPANY_COLUMNS, null, null, null);
+        if (cursor == null)
+            throw new SyncException("can't enumerate local companies");
+        if (cursor.moveToFirst()) {
+            do {
+                SCompany company = new SCompany(cursor);
+                previous_companies_not_seen_on_sync.put(company.company_id, company);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
 
         ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
@@ -195,12 +248,16 @@ public class SheketSyncService extends IntentService {
                 PrefUtil.setUserPermission(this, permission);
                 sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
             }
+
+            // we've seen it on the sync
+            previous_companies_not_seen_on_sync.remove(company_id);
         }
 
         if (!operations.isEmpty())
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operations);
 
+        return previous_companies_not_seen_on_sync.keySet();
     }
 
     /**
