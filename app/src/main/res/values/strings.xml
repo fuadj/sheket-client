@@ -67,6 +67,10 @@
 
     <string name="sync_json_user_rev" translatable="false">user_rev</string>
 
+    <string name="sync_json_payment_device_id" translatable="false">device_id</string>
+    <string name="sync_json_payment_local_user_time" translatable="false">local_user_time</string>
+    <string name="sync_json_payment_signed_license" translatable="false">signed_license</string>
+
     <string name="sync_json_new_transactions" translatable="false">transactions</string>
 
     <string name="sync_json_entity_types" translatable="false">types</string>

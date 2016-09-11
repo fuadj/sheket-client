@@ -174,9 +174,9 @@ public class PaymentDialog extends DialogFragment {
      * {@code Pair<False, Error Message>} otherwise
      */
     Pair<Boolean, String> verifyPayment(SCompany company) {
-        final String REQUEST_JSON_DEVICE_ID = "device_id";
-        final String REQUEST_JSON_LOCAL_USER_TIME = "local_user_time";
-        final String RESPONSE_JSON_LICENSE = "signed_license";
+        final String REQUEST_JSON_DEVICE_ID = getString(R.string.sync_json_payment_device_id);
+        final String REQUEST_JSON_LOCAL_USER_TIME = getString(R.string.sync_json_payment_local_user_time);
+        final String RESPONSE_JSON_LICENSE = getString(R.string.sync_json_payment_signed_license);
 
         try {
             JSONObject jsonObject = new JSONObject();
