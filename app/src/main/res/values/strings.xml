@@ -67,6 +67,10 @@
 
     <string name="sync_json_user_rev" translatable="false">user_rev</string>
 
+    <string name="sync_json_payment_device_id" translatable="false">device_id</string>
+    <string name="sync_json_payment_local_user_time" translatable="false">local_user_time</string>
+    <string name="sync_json_payment_signed_license" translatable="false">signed_license</string>
+
     <string name="sync_json_new_transactions" translatable="false">transactions</string>
 
     <string name="sync_json_entity_types" translatable="false">types</string>
@@ -173,6 +177,7 @@
     <string name="nav_employees">Employees</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_user_profile">User Profile</string>
+    <string name="nav_debug">Debug</string>
 
     <string name="employee_dialog_title">Add Member</string>
     <string name="employee_dialog_member_id">Member Id</string>
@@ -224,6 +229,24 @@
 
     <string name="dialog_edit_item_title">Edit Item</string>
     <string name="dialog_edit_item_msg">Do you want to edit item?</string>
+
+    <string name="dialog_payment_title_payment_ended">Payment Ended</string>
+    <string name="dialog_payment_body_payment_ended">Your contract period has ended, please extend your contract by purchasing a package. Thank You.</string>
+
+    <string name="dialog_payment_title_payment_invalid">Confirmation Required</string>
+    <string name="dialog_payment_body_payment_invalid">
+        Payment Confirmation Required. Please Select the Verify Button to Confirm.
+        Thank You.
+    </string>
+    <string name="dialog_payment_confirm_button">Confirm Payment</string>
+    <string name="dialog_payment_title_payment_number">Payment #:</string>
+    <string name="dialog_payment_desc_payment_number">*Use the payment number to pay for the service.</string>
+
+    <string name="dialog_payment_verification_progress_title">Confirming Payment</string>
+    <string name="dialog_payment_verification_progress_body">Please Wait&#8230;</string>
+
+    <string name="dialog_payment_result_ok">Verification Successful!</string>
+    <string name="dialog_payment_result_error">Verification Error</string>
 
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>

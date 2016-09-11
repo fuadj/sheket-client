@@ -6,6 +6,7 @@ import android.view.View;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -19,7 +20,7 @@ public abstract class BaseNavigation {
     public interface NavigationCallback {
         void onBranchSelected(SBranch branch);
         void onNavigationOptionSelected(int item);
-        void onCompanySwitched();
+        void onCompanySelected(SCompany company);
     }
 
     private AppCompatActivity mActivity;
@@ -114,9 +115,9 @@ public abstract class BaseNavigation {
                     new Pair<>(R.string.nav_settings, R.drawable.ic_action_new_settings));
             sEntityAndIcon.put(OPTION_USER_PROFILE,
                     new Pair<>(R.string.nav_user_profile, R.drawable.ic_action_new_profile));
-            /*
             sEntityAndIcon.put(OPTION_DEBUG,
-                    new Pair<>("Debug", R.mipmap.ic_action_settings));
+                    new Pair<>(R.string.nav_debug, R.mipmap.ic_action_settings));
+            /*
             sEntityAndIcon.put(OPTION_DELETE,
                     new Pair<>("Delete", R.mipmap.ic_action_settings));
             sEntityAndIcon.put(OPTION_LOG_OUT,

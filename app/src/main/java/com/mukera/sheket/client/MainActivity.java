@@ -10,13 +10,16 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -52,9 +55,12 @@ import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
+import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.models.SBranch;
+import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
-import com.mukera.sheket.client.sync.SheketSyncService;
+import com.mukera.sheket.client.services.AlarmReceiver;
+import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.io.File;
@@ -69,7 +75,8 @@ public class MainActivity extends AppCompatActivity implements
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final int REQUEST_FILE_CHOOSER = 1234;
+    private static final int REQUEST_FILE_CHOOSER = 1;
+    private static final int REQUEST_READ_PHONE_STATE = 2;
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -117,6 +124,19 @@ public class MainActivity extends AppCompatActivity implements
 
     private SlidingMenu mNavigation;
 
+    /**
+     * If we needed to allow permission for READ_PHONE_STATE, we need to continue with what
+     * we were doing after we get the permission. In our context, it is for showing {@code PaymentDialog}
+     * for a company. So we need to hold a reference to the company that triggered the
+     * permission request so we can show the {@code PaymentDialog} afterwards.
+     *
+     * NOTE: we could launch the {@code PaymentDialog} in {@code onRequestPermissionsResult()}, but
+     * that causes an exception saying the activity isn't Resumed yet. So, we set {@code mDidSelectCompanyBeforeRequest}
+     * to true if we need to get the READ_PHONE_STATE and show the {@code PaymentDialog} afterwards.
+     */
+    private SCompany mPermissionRequestedCompany = null;
+    private boolean mDidGrantReadPhoneStatePermission = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initSlidingMenuDrawer();
+
+        AlarmReceiver.startPeriodicPaymentAlarm(this);
 
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
@@ -283,6 +305,50 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onCompanySelected(SCompany company) {
+        if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
+
+            // there is a bug in android M, declaring the permission in the manifest isn't enough
+            // see: http://stackoverflow.com/a/38782876/5753416
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+
+                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                    PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+                } else {
+                    // get a hold of the company so we may continue from here if we are granted permission
+                    mPermissionRequestedCompany = company;
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
+                }
+            } else {
+                PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+            }
+            return;
+        }
+
+        if (PrefUtil.getCurrentCompanyId(this) == company.company_id) {
+            // there is nothing to do, we are already viewing that company
+            return;
+        }
+
+        CompanyUtil.switchCurrentCompanyInWorkerThread(this, company, new CompanyUtil.StateSwitchedListener() {
+            @Override
+            public void runAfterSwitchCompleted() {
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(MainActivity.this,
+                        new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                setAction("company changed").
+                                build());
+
+
+                LocalBroadcastManager.getInstance(MainActivity.this).
+                        sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+            }
+        });
+    }
+
+    @Override
     public void onBranchSelected(final SBranch branch) {
         replaceMainFragment(BranchItemFragment.newInstance(branch),
                 false);
@@ -382,17 +448,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onCompanySwitched() {
-        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-        SheketTracker.sendTrackingData(this,
-                new HitBuilders.EventBuilder().
-                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                        setAction("company changed").
-                        build());
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
-    }
-
     void logoutUser() {
         final ProgressDialog logoutDialog = ProgressDialog.show(this, "Logging out", "Please wait...", true);
 
@@ -460,6 +515,22 @@ public class MainActivity extends AppCompatActivity implements
                     startImporterTask();
                 }
                 break;
+            case REQUEST_READ_PHONE_STATE: {
+                if ((grantResults.length > 0) &&
+                        (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    mDidGrantReadPhoneStatePermission = true;
+                    /*
+                    // TODO: we've been granted permission, go do something with it
+                    // FIXME: but trying to show a dialog *here* causes an exception saying
+                    // java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
+
+                    if (mPermissionRequestedCompany != null)
+                        PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+                    */
+                }
+
+                break;
+            }
         }
     }
 
@@ -493,6 +564,7 @@ public class MainActivity extends AppCompatActivity implements
         filter.addAction(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR);
         filter.addAction(SheketBroadcast.ACTION_CONFIG_CHANGE);
         filter.addAction(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
+        filter.addAction(SheketBroadcast.ACTION_PAYMENT_REQUIRED);
 
         LocalBroadcastManager.getInstance(this).
                 registerReceiver(mReceiver, filter);
@@ -625,6 +697,13 @@ public class MainActivity extends AppCompatActivity implements
         mDidResume = true;
         if (mImporting) {
             showImportUpdates();
+        } else if (mDidGrantReadPhoneStatePermission &&
+                (mPermissionRequestedCompany != null)) {
+            // we requested permission for a company and it was granted, show the dialog now
+            PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+
+            // IMPORTANT: clear it so we don't always show the dialog
+            mPermissionRequestedCompany = null;
         }
     }
 
@@ -695,7 +774,10 @@ public class MainActivity extends AppCompatActivity implements
             String action = intent.getAction();
             String error_extra = intent.getStringExtra(SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
 
-            if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+            if (action.equals(SheketBroadcast.ACTION_PAYMENT_REQUIRED)) {
+                dismissSyncDialog();
+                restartMainActivity();
+            } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
                 dismissSyncDialog();
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {

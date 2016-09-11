@@ -1,26 +1,39 @@
 package com.mukera.sheket.client;
 
 import android.test.AndroidTestCase;
-import android.test.PerformanceTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.util.Log;
 
-import com.mukera.sheket.client.controller.user.UserUtil;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 
 import java.util.Locale;
-import java.util.Objects;
 
 /**
  * Created by fuad on 7/5/16.
  */
-public class TestUserUtils extends AndroidTestCase {
+public class TestIdEncoderUtils extends AndroidTestCase {
+    static String _format(String format, Object ...args) {
+        return String.format(Locale.US, format, args);
+    }
+
     public void testEncodeDecodeUserId() {
         long test_id = 12784;
-        String encoded_id = UserUtil.encodeUserId(test_id);
-        assertTrue(String.format("User Id: %d, Expected %s to be a valid encoded id", test_id, encoded_id),
-                UserUtil.isValidEncodedId(encoded_id));
+        String encoded_id = IdEncoderUtil.encodeId(test_id, IdEncoderUtil.ID_TYPE_USER);
+        assertTrue(_format("User Id: %d, Expected %s to be a valid encoded id", test_id, encoded_id),
+                IdEncoderUtil.isValidEncodedUserId(encoded_id));
+        assertFalse(_format("User Id:%d, not expected to decode as a company id: %s", test_id, encoded_id),
+                IdEncoderUtil.isValidEncodedCompanyId(encoded_id));
         assertEquals("Encoded User id doesn't match",
-                test_id, UserUtil.decodeUserId(encoded_id));
+                test_id, IdEncoderUtil.decodeEncodedId(encoded_id, IdEncoderUtil.ID_TYPE_USER));
+    }
+
+    public void testEncodeDecodeCompanyId() {
+        long test_id = 21312;
+        String encoded_id = IdEncoderUtil.encodeId(test_id, IdEncoderUtil.ID_TYPE_COMPANY);
+        assertTrue(_format("Company Id: %d, Expected %s to be a valid encoded id", test_id, encoded_id),
+                IdEncoderUtil.isValidEncodedCompanyId(encoded_id));
+        assertFalse(_format("Company Id:%d, not expected to decode as a user id: %s", test_id, encoded_id),
+                IdEncoderUtil.isValidEncodedUserId(encoded_id));
+        assertEquals("Encoded Company id doesn't match",
+                test_id, IdEncoderUtil.decodeEncodedId(encoded_id, IdEncoderUtil.ID_TYPE_COMPANY));
     }
 
     public void testDelimitedRecovery() {
@@ -50,12 +63,12 @@ public class TestUserUtils extends AndroidTestCase {
             int size = (Integer) test[1];
             int expected_delimiters = (Integer) test[2];
 
-            String delimited = UserUtil.delimitEncodedUserId(text, size);
+            String delimited = IdEncoderUtil.delimitEncodedId(text, size);
 
             int num_delimiters = 0;
 
             int last_index = 0;
-            while ((last_index = delimited.indexOf(UserUtil.GROUP_DELIMITER, last_index)) != -1) {
+            while ((last_index = delimited.indexOf(IdEncoderUtil.GROUP_DELIMITER, last_index)) != -1) {
                 last_index++;       // starting at last index keeps us in infinite loop b/c we find it right there
                 num_delimiters++;
             }
@@ -66,7 +79,7 @@ public class TestUserUtils extends AndroidTestCase {
                     expected_delimiters, num_delimiters
             );
 
-            String recovered = UserUtil.removeDelimiterOnEncodedId(delimited);
+            String recovered = IdEncoderUtil.removeDelimiterOnEncodedId(delimited);
 
             assertEquals(
                     String.format(Locale.US, "Test: '%s' recovered '%s' doesn't match original. Delimited '%s'",
@@ -77,20 +90,41 @@ public class TestUserUtils extends AndroidTestCase {
 
     public void testEncodedDelimitedUserId() {
         long test_id = 12784;
-        String encoded_id = UserUtil.encodeUserId(test_id);
-        String delimited = UserUtil.delimitEncodedUserId(encoded_id, 4);
-        String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited);
+        String encoded_id = IdEncoderUtil.encodeId(test_id, IdEncoderUtil.ID_TYPE_USER);
+        String delimited = IdEncoderUtil.delimitEncodedId(encoded_id, 4);
+        String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited);
 
         // b/c the test id is big enough, it should have a delimiter in it
         assertTrue(String.format(Locale.US,
                 "User id delimiting error, delimiter missing. Encoded '%s', delimited '%s'", encoded_id, delimited),
-                delimited.contains(UserUtil.GROUP_DELIMITER));
+                delimited.contains(IdEncoderUtil.GROUP_DELIMITER));
 
         assertEquals("The de-delimited user id doesn't match the encoded",
                 encoded_id, delimiter_removed);
 
-        long recovered_id = UserUtil.decodeUserId(delimiter_removed);
+        long recovered_id = IdEncoderUtil.decodeEncodedId(delimiter_removed, IdEncoderUtil.ID_TYPE_USER);
         assertEquals(String.format(Locale.US, "User id:'%d' doesn't recover after delimiting '%s', recovered '%d' ",
+                test_id, delimited, recovered_id),
+                test_id, recovered_id);
+    }
+
+    public void testEncodedDelimitedCompanyId() {
+        long test_id = 23135;
+
+        String encoded_id = IdEncoderUtil.encodeId(test_id, IdEncoderUtil.ID_TYPE_COMPANY);
+        String delimited = IdEncoderUtil.delimitEncodedId(encoded_id, 4);
+        String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited);
+
+        // b/c the test id is big enough, it should have a delimiter in it
+        assertTrue(String.format(Locale.US,
+                "User id delimiting error, delimiter missing. Encoded '%s', delimited '%s'", encoded_id, delimited),
+                delimited.contains(IdEncoderUtil.GROUP_DELIMITER));
+
+        assertEquals("The de-delimited user id doesn't match the encoded",
+                encoded_id, delimiter_removed);
+
+        long recovered_id = IdEncoderUtil.decodeEncodedId(delimiter_removed, IdEncoderUtil.ID_TYPE_COMPANY);
+        assertEquals(String.format(Locale.US, "Company id:'%d' doesn't recover after delimiting '%s', recovered '%d' ",
                 test_id, delimited, recovered_id),
                 test_id, recovered_id);
     }
@@ -99,23 +133,26 @@ public class TestUserUtils extends AndroidTestCase {
      * This isn't a comprehensive test, just to see if a few -ve in the range (-1000, 0) values can be encoded.
      */
     public void testNegativeUserIdEncoding() {
+        // USE-LESS test
+        /*
         long test_id = -125;
-        String encoded_id = UserUtil.encodeUserId(test_id);
-        String delimited = UserUtil.delimitEncodedUserId(encoded_id, 4);
-        String delimiter_removed = UserUtil.removeDelimiterOnEncodedId(delimited);
+        String encoded_id = IdEncoderUtil.encodeId(test_id);
+        String delimited = IdEncoderUtil.delimitEncodedId(encoded_id, 4);
+        String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited);
 
         // b/c the test id is big enough, it should have a delimiter in it
         assertTrue(String.format(Locale.US,
                 "User id delimiting error, delimiter missing. Encoded '%s', delimited '%s'", encoded_id, delimited),
-                delimited.contains(UserUtil.GROUP_DELIMITER));
+                delimited.contains(IdEncoderUtil.GROUP_DELIMITER));
 
         assertEquals("The de-delimited user id doesn't match the encoded",
                 encoded_id, delimiter_removed);
 
-        long recovered_id = UserUtil.decodeUserId(delimiter_removed);
+        long recovered_id = IdEncoderUtil.decodeEncodedId(delimiter_removed);
         assertEquals(String.format(Locale.US, "User id:'%d' doesn't recover after delimiting '%s', recovered '%d' ",
                 test_id, delimited, recovered_id),
                 test_id, recovered_id);
+        */
     }
 
     /*
@@ -127,11 +164,11 @@ public class TestUserUtils extends AndroidTestCase {
 
         for (int i = start_id; i < stop_id; i++) {
             long test_id = i;
-            String encoded_id = UserUtil.encodeUserId(test_id);
+            String encoded_id = IdEncoderUtil.encodeId(test_id);
             assertTrue(String.format("User Id: %d, Expected %s to be a valid encoded id", test_id, encoded_id),
-                    UserUtil.isValidEncodedId(encoded_id));
+                    IdEncoderUtil.isValidEncodedUserId(encoded_id));
             assertEquals("Encoded User id doesn't match",
-                    test_id, UserUtil.decodeUserId(encoded_id));
+                    test_id, IdEncoderUtil.decodeEncodedId(encoded_id));
         }
     }
     */

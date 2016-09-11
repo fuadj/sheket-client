@@ -17,6 +17,7 @@ public class SheketTracker {
 
     public static final String CATEGORY_MAIN_CONFIGURATION = "configuration changes";
     public static final String CATEGORY_MAIN_NAVIGATION = "navigation";
+    public static final String CATEGORY_MAIN_DIALOG = "dialogs";
 
     private static Tracker getTrackerForActivity(Activity activity) {
         return ((SheketApplication) activity.getApplication()).getTracker();

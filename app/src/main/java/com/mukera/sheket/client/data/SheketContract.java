@@ -157,6 +157,23 @@ public class SheketContract {
         // the naming has stuck-ed.
         public static final String COLUMN_STATE_BACKUP = "revision";
 
+        // The signed payment that was generated for
+        // {this device, company, user, ...} by the server is stored here
+        // If this license isn't valid, the user isn't allowed to use the
+        // company until the payment is verified.
+        public static final String COLUMN_PAYMENT_LICENSE = "payment_license";
+
+        // int, this holds the state of the payment issued for company.
+        // can be one of PAYMENT_* constants.
+        public static final String COLUMN_PAYMENT_STATE = "p_s";
+
+        // use can continue using the app
+        public static final int PAYMENT_VALID = 1;
+        // payment has ended
+        public static final int PAYMENT_ENDED = 2;
+        // there was a problem with the payment (invalid certificate, date got messed-up, ...)
+        public static final int PAYMENT_INVALID = 3;
+
         public static Uri buildCompanyUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }

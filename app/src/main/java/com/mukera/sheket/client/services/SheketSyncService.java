@@ -1,4 +1,4 @@
-package com.mukera.sheket.client.sync;
+package com.mukera.sheket.client.services;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -27,8 +27,9 @@ import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
+import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SyncUtil;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -102,6 +103,7 @@ public class SheketSyncService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         client.setConnectTimeout(10, TimeUnit.SECONDS);
+        PrefUtil.setIsSyncRunning(this, true);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
             // we don't remove the deleted companies right away as they might have
@@ -117,6 +119,12 @@ public class SheketSyncService extends IntentService {
             deleteRemovedCompanies(removed_companies);
 
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
+
+            // we've finished syncing, so set it here
+            // so the payment service doesn't assume we are still syncing
+            PrefUtil.setIsSyncRunning(this, false);
+
+            startService(new Intent(this, PaymentService.class));
         } catch (InvalidLoginCredentialException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
         } catch (SyncException e) {
@@ -142,6 +150,7 @@ public class SheketSyncService extends IntentService {
                     "Error " + err_msg,
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         }
+        PrefUtil.setIsSyncRunning(this, false);
     }
 
     void deleteRemovedCompanies(Set<Long> removed_companies) throws Exception {
@@ -170,12 +179,18 @@ public class SheketSyncService extends IntentService {
      *
      */
     Set<Long> syncUser() throws Exception {
-        Log.d(LOG_TAG, "Syncing User started");
-        Request.Builder builder = new Request.Builder();
-        builder.url(ConfigData.getAddress(this) + "v1/company/list");
         JSONObject json = new JSONObject();
         json.put(this.getString(R.string.sync_json_user_rev),
                 PrefUtil.getUserRevision(this));
+        json.put(getString(R.string.sync_json_payment_device_id),
+                DeviceId.getUniqueDeviceId(this));
+        // we must 'cast' the time to a string as the encoding of
+        // long and string is different and server is expecting a string
+        json.put(getString(R.string.sync_json_payment_local_user_time),
+                String.valueOf(System.currentTimeMillis()));
+
+        Request.Builder builder = new Request.Builder();
+        builder.url(ConfigData.getAddress(this) + "v1/company/list");
         builder.addHeader(this.getString(R.string.pref_request_key_cookie),
                 PrefUtil.getLoginCookie(this));
         builder.post(RequestBody.create(MediaType.parse("application/json"),
@@ -211,8 +226,10 @@ public class SheketSyncService extends IntentService {
         final String USER_JSON_COMPANY_ID = this.getString(R.string.pref_header_key_company_id);
         final String USER_JSON_COMPANY_NAME = "company_name";
         final String USER_JSON_COMPANY_PERMISSION = "user_permission";
+        final String COMPANY_LICENSE = getString(R.string.sync_json_payment_signed_license);
 
-        final String USER_JSON_COMPANIES = getResourceString(R.string.sync_json_companies);
+        final String USER_JSON_COMPANIES = getString(R.string.sync_json_companies);
+
         JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
 
         long user_id = PrefUtil.getUserId(this);
@@ -222,6 +239,13 @@ public class SheketSyncService extends IntentService {
             long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
             String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
             String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
+            String license = companyObj.getString(COMPANY_LICENSE);
+            /**
+             * The server will only return a non-empty license if payment is made.
+             * So checking if the license is empty or not is LEGIT. We don't have to
+             * verify the signature.
+             */
+            boolean is_license_valid = !license.trim().isEmpty();
 
             ContentValues values = new ContentValues();
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
@@ -229,6 +253,10 @@ public class SheketSyncService extends IntentService {
             values.put(CompanyEntry.COLUMN_USER_ID, user_id);
             values.put(CompanyEntry.COLUMN_NAME, company_name);
             values.put(CompanyEntry.COLUMN_PERMISSION, permission);
+            values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
+            // if we've got a license, then there is payment available, otherwise payment has ended.
+            values.put(CompanyEntry.COLUMN_PAYMENT_STATE,
+                    is_license_valid ? CompanyEntry.PAYMENT_VALID : CompanyEntry.PAYMENT_ENDED);
 
             operations.add(ContentProviderOperation.newInsert(SheketContract.CompanyEntry.CONTENT_URI).
                     withValues(values).build());
@@ -266,7 +294,6 @@ public class SheketSyncService extends IntentService {
      * it depends on these elements having a "defined" state.
      */
     void syncEntities() throws Exception {
-        Log.d(LOG_TAG, "Syncing Entity started");
         Request.Builder builder = new Request.Builder();
         builder.url(ConfigData.getAddress(this) + "v1/sync/entity");
         JSONObject json = createEntitySyncJSON();
@@ -1332,7 +1359,7 @@ public class SheketSyncService extends IntentService {
                 throw new InvalidLoginCredentialException("Invalid login credentials");
 
             default:
-                throw new SyncException(SyncUtil.getErrorMessage(response));
+                throw new SyncException(SheketNetworkUtil.getErrorMessage(response));
         }
     }
 

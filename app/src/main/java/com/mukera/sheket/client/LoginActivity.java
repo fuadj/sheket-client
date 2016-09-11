@@ -8,21 +8,17 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.games.appcontent.AppContents;
+import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.squareup.okhttp.MediaType;
@@ -58,6 +54,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
+
+        AlarmReceiver.startPeriodicPaymentAlarm(this);
 
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {

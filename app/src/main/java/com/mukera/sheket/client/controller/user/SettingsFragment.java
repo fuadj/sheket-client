@@ -41,7 +41,7 @@ public class SettingsFragment extends Fragment {
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
-        //adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_DEBUG);
+        adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_DEBUG);
 
         listSettings.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

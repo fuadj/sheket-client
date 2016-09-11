@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.controller.user.UserUtil;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 
 import java.util.Vector;
 
@@ -65,8 +65,32 @@ public class PrefUtil {
         }
         return language_code;
     }
+
+    private static final String pref_is_sync_running = "pref_is_sync_running";
+    public static boolean isSyncRunning(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(pref_is_sync_running, false);
+    }
+
+    public static void setIsSyncRunning(Context context, boolean is_running) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(pref_is_sync_running, is_running);
+        editor.commit();
+    }
+
+    private static final String pref_last_seen_time = "pref_last_seen_time";
+    public static void setLastSeenTime(Context context, long time) {
+        PreferenceManager.getDefaultSharedPreferences(context).
+                edit().
+                putLong(pref_last_seen_time, time).
+                commit();
+    }
+
+    public static long getLastSeenTime(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context).
+                getLong(pref_last_seen_time, -1);
+    }
     /**
-     * END: Sync On Login
      */
 
     public static void setLoginCookie(Context context, String cookie) {
@@ -262,8 +286,8 @@ public class PrefUtil {
     private static final String ENCODED_DELIMITED_USER_ID = "encoded_delimited_user_id";
     private static final int USER_ID_GROUPING = 4;
     public static void setEncodedDelimitedUserId(Context context, long user_id) {
-        String encoded = UserUtil.encodeUserId(user_id);
-        String delimited = UserUtil.delimitEncodedUserId(encoded, USER_ID_GROUPING);
+        String encoded = IdEncoderUtil.encodeId(user_id, IdEncoderUtil.ID_TYPE_USER);
+        String delimited = IdEncoderUtil.delimitEncodedId(encoded, USER_ID_GROUPING);
 
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putString(ENCODED_DELIMITED_USER_ID, delimited);
