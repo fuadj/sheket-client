@@ -125,10 +125,17 @@ public class MainActivity extends AppCompatActivity implements
     private SlidingMenu mNavigation;
 
     /**
-     * we need to have a reference to the company if we need to ask the user to access PHONE_STATE.
-     * We then "go-on with businees" if we are granted the permission with this company.
+     * If we needed to allow permission for READ_PHONE_STATE, we need to continue with what
+     * we were doing after we get the permission. In our context, it is for showing {@code PaymentDialog}
+     * for a company. So we need to hold a reference to the company that triggered the
+     * permission request so we can show the {@code PaymentDialog} afterwards.
+     *
+     * NOTE: we could launch the {@code PaymentDialog} in {@code onRequestPermissionsResult()}, but
+     * that causes an exception saying the activity isn't Resumed yet. So, we set {@code mDidSelectCompanyBeforeRequest}
+     * to true if we need to get the READ_PHONE_STATE and show the {@code PaymentDialog} afterwards.
      */
     private SCompany mPermissionRequestedCompany = null;
+    private boolean mDidGrantReadPhoneStatePermission = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -306,13 +313,12 @@ public class MainActivity extends AppCompatActivity implements
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
 
-                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                    PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
+                } else {
                     // get a hold of the company so we may continue from here if we are granted permission
                     mPermissionRequestedCompany = company;
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
-                } else {
-                    // if we've already got the permission, show payment dialog
-                    PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
                 }
             } else {
                 PaymentDialog.newInstance(company).show(getSupportFragmentManager(), null);
@@ -512,6 +518,7 @@ public class MainActivity extends AppCompatActivity implements
             case REQUEST_READ_PHONE_STATE: {
                 if ((grantResults.length > 0) &&
                         (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    mDidGrantReadPhoneStatePermission = true;
                     /*
                     // TODO: we've been granted permission, go do something with it
                     // FIXME: but trying to show a dialog *here* causes an exception saying
@@ -690,6 +697,13 @@ public class MainActivity extends AppCompatActivity implements
         mDidResume = true;
         if (mImporting) {
             showImportUpdates();
+        } else if (mDidGrantReadPhoneStatePermission &&
+                (mPermissionRequestedCompany != null)) {
+            // we requested permission for a company and it was granted, show the dialog now
+            PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+
+            // IMPORTANT: clear it so we don't always show the dialog
+            mPermissionRequestedCompany = null;
         }
     }
 
