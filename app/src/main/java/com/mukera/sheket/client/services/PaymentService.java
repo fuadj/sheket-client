@@ -68,25 +68,15 @@ public class PaymentService extends IntentService {
      * It also checks if the payment duration is still valid(not expired).
      */
     int checkPaymentState(SCompany company, long current_time) {
-        PaymentContract.ContractComponents contractAndSignature =
-                PaymentContract.extractContractComponents(company.payment_certificate);
-
-        /**
-         * Load in the contract, then replace the device and user related fields and
-         * check if the signature is valid. This is necessary b/c the signature could
-         * be valid but could have been issued for a different {device|user}. So make
-         * sure it is for the current device's user.
-         */
-        PaymentContract contract = new PaymentContract(contractAndSignature.contract);
-
-        contract.device_id = DeviceId.getUniqueDeviceId(this);
-        contract.user_id = company.user_id;
-        contract.company_id = company.company_id;
-
-        boolean is_signature_valid = PaymentContract.
-                isSignatureValid(contract.toString(), contractAndSignature.signature);
-        if (!is_signature_valid)
+        if (!PaymentContract.isLicenseValidForDeviceAndUser(
+                company.payment_certificate,
+                DeviceId.getUniqueDeviceId(this),
+                company.user_id,
+                company.company_id)) {
             return CompanyEntry.PAYMENT_INVALID;
+        }
+
+        PaymentContract contract = new PaymentContract(company.payment_certificate);
 
         final long MINUTE = 60 * 1000;      // in milliseconds
         final long HOUR = 60 * MINUTE;
