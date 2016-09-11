@@ -204,7 +204,7 @@ public class PaymentDialog extends DialogFragment {
             String license = result.getString(RESPONSE_JSON_LICENSE);
 
             ContentValues updated_values = company.toContentValues();
-            updated_values.put(CompanyEntry.COLUMN_PAYMENT_CERTIFICATE, license);
+            updated_values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
             updated_values.put(CompanyEntry.COLUMN_PAYMENT_STATE, CompanyEntry.PAYMENT_VALID);
 
             // we need to remove it, it creates problems with updating and foreign key reference

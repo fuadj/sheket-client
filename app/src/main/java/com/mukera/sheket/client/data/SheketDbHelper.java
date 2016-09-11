@@ -54,7 +54,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 // This can be empty because it might be the user's first time
                 CompanyEntry.COLUMN_STATE_BACKUP + " text, " +
 
-                CompanyEntry.COLUMN_PAYMENT_CERTIFICATE + " text, " +
+                CompanyEntry.COLUMN_PAYMENT_LICENSE + " text, " +
                 CompanyEntry.COLUMN_PAYMENT_STATE +
                 String.format(Locale.US, " integer DEFAULT %d);", CompanyEntry.PAYMENT_INVALID);
 

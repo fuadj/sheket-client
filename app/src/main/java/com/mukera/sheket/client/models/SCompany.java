@@ -21,7 +21,7 @@ public class SCompany implements Parcelable {
             f(CompanyEntry.COLUMN_NAME),
             f(CompanyEntry.COLUMN_PERMISSION),
             f(CompanyEntry.COLUMN_STATE_BACKUP),
-            f(CompanyEntry.COLUMN_PAYMENT_CERTIFICATE),
+            f(CompanyEntry.COLUMN_PAYMENT_LICENSE),
             f(CompanyEntry.COLUMN_PAYMENT_STATE)
     };
 
@@ -30,7 +30,7 @@ public class SCompany implements Parcelable {
     public static final int COL_COMPANY_NAME = 2;
     public static final int COL_PERMISSION = 3;
     public static final int COL_STATE_BKUP = 4;
-    public static final int COL_PAYMENT_CERTIFICATE = 5;
+    public static final int COL_PAYMENT_LICENSE = 5;
     public static final int COL_PAYMENT_STATE = 6;
 
     public static final int COL_LAST = 7;
@@ -40,7 +40,7 @@ public class SCompany implements Parcelable {
     public String name;
     public String encoded_permission;
     public String state_bkup;
-    public String payment_certificate;
+    public String payment_license;
     public int payment_state;
 
     public SCompany() {
@@ -56,7 +56,7 @@ public class SCompany implements Parcelable {
         name = cursor.getString(COL_COMPANY_NAME + offset);
         encoded_permission = cursor.getString(COL_PERMISSION + offset);
         state_bkup = cursor.getString(COL_STATE_BKUP + offset);
-        payment_certificate = cursor.getString(COL_PAYMENT_CERTIFICATE + offset);
+        payment_license = cursor.getString(COL_PAYMENT_LICENSE + offset);
         payment_state = cursor.getInt(COL_PAYMENT_STATE + offset);
     }
 
@@ -67,7 +67,7 @@ public class SCompany implements Parcelable {
         values.put(CompanyEntry.COLUMN_NAME, name);
         values.put(CompanyEntry.COLUMN_PERMISSION, encoded_permission);
         values.put(CompanyEntry.COLUMN_STATE_BACKUP, state_bkup);
-        values.put(CompanyEntry.COLUMN_PAYMENT_CERTIFICATE, payment_certificate);
+        values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, payment_license);
         values.put(CompanyEntry.COLUMN_PAYMENT_STATE, payment_state);
 
         return values;
@@ -79,7 +79,7 @@ public class SCompany implements Parcelable {
         name = parcel.readString();
         encoded_permission = parcel.readString();
         state_bkup = parcel.readString();
-        payment_certificate = parcel.readString();
+        payment_license = parcel.readString();
         payment_state = parcel.readInt();
     }
 
@@ -90,7 +90,7 @@ public class SCompany implements Parcelable {
         dest.writeString(name);
         dest.writeString(encoded_permission);
         dest.writeString(state_bkup);
-        dest.writeString(payment_certificate);
+        dest.writeString(payment_license);
         dest.writeInt(payment_state);
     }
 

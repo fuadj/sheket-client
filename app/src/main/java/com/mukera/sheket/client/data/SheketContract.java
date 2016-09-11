@@ -159,9 +159,9 @@ public class SheketContract {
 
         // The signed payment that was generated for
         // {this device, company, user, ...} by the server is stored here
-        // If this signature isn't valid, the user isn't allowed to use the
+        // If this license isn't valid, the user isn't allowed to use the
         // company until the payment is verified.
-        public static final String COLUMN_PAYMENT_CERTIFICATE = "p_c";
+        public static final String COLUMN_PAYMENT_LICENSE = "payment_license";
 
         // int, this holds the state of the payment issued for company.
         // can be one of PAYMENT_* constants.

@@ -69,14 +69,14 @@ public class PaymentService extends IntentService {
      */
     int checkPaymentState(SCompany company, long current_time) {
         if (!PaymentContract.isLicenseValidForDeviceAndUser(
-                company.payment_certificate,
+                company.payment_license,
                 DeviceId.getUniqueDeviceId(this),
                 company.user_id,
                 company.company_id)) {
             return CompanyEntry.PAYMENT_INVALID;
         }
 
-        PaymentContract contract = new PaymentContract(company.payment_certificate);
+        PaymentContract contract = new PaymentContract(company.payment_license);
 
         final long MINUTE = 60 * 1000;      // in milliseconds
         final long HOUR = 60 * MINUTE;
