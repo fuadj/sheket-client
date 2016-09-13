@@ -257,7 +257,7 @@
 
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
-    <string name="placeholder_employee_action_add_member">Edit Member</string>
+    <string name="placeholder_employee_action_add_member">Add Member</string>
     <string name="placeholder_employee_action_edit_member">Edit Member</string>
     <string name="placeholder_qty_send_to">Send To</string>
     <string name="placeholder_qty_receive_from">Receive From</string>
