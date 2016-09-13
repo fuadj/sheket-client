@@ -63,6 +63,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by gamma on 4/3/16.
@@ -142,15 +143,23 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID) + " ASC";
 
+        String selection = String.format(Locale.US, "(%s != ? AND %s != ?)",
+
+                // don't want those who've got their "deleted-flag" set
+                MemberEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
+
+                // and we don't want users to "see" themselves, it might lead to miss-use of power(e.g: privilege-escalation)
+                MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID));
+        String[] selectionArgs = {
+                String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED),
+                String.valueOf(PrefUtil.getUserId(getContext())),
+        };
+
         return new CursorLoader(getActivity(),
                 MemberEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SMember.MEMBER_COLUMNS,
-
-                // we don't want to show the employees who've got their deleted flag set
-                // waiting to be deleted after sync.
-                MemberEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?",
-                new String[]{String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)},
-
+                selection,
+                selectionArgs,
                 sortOrder
         );
     }
