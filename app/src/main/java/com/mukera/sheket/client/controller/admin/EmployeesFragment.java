@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.admin;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -348,10 +350,10 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             mBtnAddEditMember.setEnabled(true);
         }
 
-        @Nullable
+        @NonNull
         @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.dialog_add_edit_member, container);
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_edit_member, null);
 
             final Drawable successIcon = getResources().getDrawable(R.drawable.ic_action_success);
             successIcon.setBounds(new Rect(0, 0, successIcon.getIntrinsicWidth(), successIcon.getIntrinsicHeight()));
@@ -360,16 +362,16 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             mEditMemberId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
 
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
-            TextView title = (TextView) view.findViewById(R.id.dialog_text_view_member_action);
+            String title;
             if (is_edit) {
-                title.setText(getString(R.string.placeholder_employee_action_edit_member));
+                title = getString(R.string.placeholder_employee_action_edit_member);
                 layout_name.setVisibility(View.VISIBLE);
                 mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
                 mMemberName.setText(mMember.member_name);
                 mEditMemberId.setText(IdEncoderUtil.delimitEncodedId(IdEncoderUtil.encodeId(mMember.member_id, IdEncoderUtil.ID_TYPE_USER), 4));
                 mEditMemberId.setEnabled(false);
             } else {
-                title.setText(getString(R.string.placeholder_employee_action_add_member));
+                title = getString(R.string.placeholder_employee_action_add_member);
                 layout_name.setVisibility(View.GONE);
                 mEditMemberId.setEnabled(true);
                 mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {
@@ -514,7 +516,10 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 }
             });
             setOkButtonStatus();
-            return view;
+            return new AlertDialog.Builder(getContext()).
+                    setTitle(title).
+                    setView(view).
+                    create();
         }
 
         void updateMember(Activity activity, SMember member) {
