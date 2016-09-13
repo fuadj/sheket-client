@@ -14,7 +14,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,6 +34,7 @@ import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SPermission;
@@ -220,15 +223,22 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                     Thread t = new Thread() {
                         @Override
                         public void run() {
-                            // TODO: give some feedback if it is success/failure(maybe no internet)
-                            createCompany(activity, company_name);
+                            final Pair<Boolean, String> result = createCompany(activity, company_name);
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     mProgressDialog.dismiss();
-                                    getDialog().dismiss();
-                                    if (fragment.mListener != null) {
-                                        fragment.mListener.userPermissionChanged();
+                                    // the company creation was a success
+                                    if (result.first == true) {
+                                        getDialog().dismiss();
+                                        if (fragment.mListener != null) {
+                                            fragment.mListener.userPermissionChanged();
+                                        }
+                                    } else {
+                                        new AlertDialog.Builder(getContext()).
+                                                setTitle("error").
+                                                setMessage(result.second).
+                                                show();
                                     }
                                 }
                             });
@@ -243,7 +253,11 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
             return view;
         }
 
-        void createCompany(Activity activity, String company_name) {
+        /**
+         * Tries to create a company by sending request to the server. If all goes well,
+         * it returns <True, Null>. Otherwise it returns <False, "error message">
+         */
+        Pair<Boolean, String> createCompany(Activity activity, String company_name) {
             final String JSON_COMPANY_NAME = "company_name";
             final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
             final String JSON_USER_PERMISSION = "user_permission";
@@ -260,8 +274,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
 
                 Response response = client.newCall(builder.build()).execute();
                 if (!response.isSuccessful()) {
-                    // TODO: signify error
-                    throw new CompanyCreateException("error response");
+                    return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
                 }
 
                 JSONObject result = new JSONObject(response.body().string());
@@ -278,34 +291,17 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                         CompanyEntry.CONTENT_URI, values
                 );
                 if (ContentUris.parseId(uri) < 0) {
-                    throw new CompanyCreateException("error adding company into db");
+                    return new Pair<>(Boolean.FALSE, "error adding company into db");
                 }
                 PrefUtil.setCurrentCompanyId(activity, company_id);
                 PrefUtil.setCurrentCompanyName(activity, company_name);
                 PrefUtil.setUserPermission(activity, user_permission);
 
                 SPermission.setSingletonPermission(user_permission);
-            } catch (JSONException | IOException | CompanyCreateException e) {
-                Log.e("CompanyFragment", e.getMessage());
+            } catch (JSONException | IOException e) {
+                return new Pair<>(Boolean.FALSE, e.getMessage());
             }
-        }
-
-        class CompanyCreateException extends Exception {
-            public CompanyCreateException() {
-                super();
-            }
-
-            public CompanyCreateException(String detailMessage) {
-                super(detailMessage);
-            }
-
-            public CompanyCreateException(String detailMessage, Throwable throwable) {
-                super(detailMessage, throwable);
-            }
-
-            public CompanyCreateException(Throwable throwable) {
-                super(throwable);
-            }
+            return new Pair<>(Boolean.TRUE, null);
         }
     }
 }
