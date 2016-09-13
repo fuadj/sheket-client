@@ -13,7 +13,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -344,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
                 LocalBroadcastManager.getInstance(MainActivity.this).
-                        sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+                        sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
             }
         });
     }
@@ -589,7 +588,8 @@ public class MainActivity extends AppCompatActivity implements
         filter.addAction(SheketBroadcast.ACTION_SYNC_SERVER_ERROR);
         filter.addAction(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR);
         filter.addAction(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR);
-        filter.addAction(SheketBroadcast.ACTION_CONFIG_CHANGE);
+        filter.addAction(SheketBroadcast.ACTION_COMPANY_SWITCH);
+        filter.addAction(SheketBroadcast.ACTION_COMPANY_RESET);
         filter.addAction(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
         filter.addAction(SheketBroadcast.ACTION_PAYMENT_REQUIRED);
 
@@ -791,7 +791,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void userPermissionChanged() {
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE));
     }
 
     void dismissSyncDialog() {
@@ -821,8 +821,14 @@ public class MainActivity extends AppCompatActivity implements
             if (action.equals(SheketBroadcast.ACTION_PAYMENT_REQUIRED)) {
                 dismissSyncDialog();
                 restartMainActivity();
-            } else if (action.equals(SheketBroadcast.ACTION_CONFIG_CHANGE)) {
+            } else if (action.equals(SheketBroadcast.ACTION_COMPANY_SWITCH)) {
                 dismissSyncDialog();
+                Log.d("MainActivity", "company switch");
+                restartMainActivity();
+            } else if (action.equals(SheketBroadcast.ACTION_COMPANY_RESET)) {
+                dismissSyncDialog();
+                Log.d("MainActivity", "company reset");
+                PrefUtil.resetCompanySelection(MainActivity.this);
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
                 if (mRightNav != null) {

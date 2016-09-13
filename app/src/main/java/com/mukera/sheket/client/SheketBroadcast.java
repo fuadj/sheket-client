@@ -20,7 +20,8 @@ public class SheketBroadcast {
 
     public static final String ACTION_LOGIN = "action_login";
 
-    public static final String ACTION_CONFIG_CHANGE = "config_change";
+    public static final String ACTION_COMPANY_SWITCH = "company_switch";
+    public static final String ACTION_COMPANY_RESET = "company_reset";
     public static final String ACTION_PAYMENT_REQUIRED = "payment_required";
 
     public static final String ACTION_COMPANY_PERMISSION_CHANGE = "company_permission_change";

@@ -45,10 +45,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -137,12 +135,12 @@ public class SheketSyncService extends IntentService {
             deleteRemovedCompanies(not_seen_on_sync_companies);
 
             /**
-             * If either the current company got removed OR the payment license isn't
+             * If either the current company got removed OR the license of the current company isn't
              * legit, we need to "force-out" the user from the company.
              */
-            if (did_remove_current_company || !is_current_company_payment_valid) {
-                PrefUtil.resetCompanySelection(this);
-                sendSheketBroadcast(SheketBroadcast.ACTION_CONFIG_CHANGE);
+            if (did_remove_current_company ||
+                    (PrefUtil.isCompanySet(this) && !is_current_company_payment_valid)) {
+                sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_RESET);
             } else {
                 // can only sync if there is a company selected
                 if (PrefUtil.isCompanySet(this)) {

@@ -152,7 +152,7 @@ public class SettingsFragment extends Fragment {
                 }
 
                 PrefUtil.setUserLanguage(context, selected_lang);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(SheketBroadcast.ACTION_CONFIG_CHANGE));
+                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
             }
         };
 
