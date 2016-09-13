@@ -29,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
 
+import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.utils.ConfigData;
@@ -77,23 +78,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                     return;
                 }
                 SCompany company = new SCompany(cursor);
-
-                if (PrefUtil.getCurrentCategoryId(getActivity()) == company.company_id) {
-                    // there is nothing to do, we are already viewing that company
-                    return;
-                }
-
-                CompanyUtil.switchCurrentCompanyInWorkerThread(getActivity(),
-                        company,
-                        new CompanyUtil.StateSwitchedListener() {
-                            @Override
-                            public void runAfterSwitchCompleted() {
-                                if (mListener != null) {
-                                    mListener.userPermissionChanged();
-                                }
-                            }
-                        });
-
+                ((MainActivity) getActivity()).onCompanySelected(company);
             }
         });
 
