@@ -187,7 +187,7 @@
 
     <string name="employee_delete_confirm_title">Remove Employee, Are you Sure?</string>
     <string name="employee_delete_confirm_body">
-        This will remove the employee from the company.
+        This will remove %1$s from your company.
         NOTE: this takes effect when the employee syncs.
     </string>
 

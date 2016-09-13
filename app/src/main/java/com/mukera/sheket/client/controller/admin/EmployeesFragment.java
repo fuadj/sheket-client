@@ -215,9 +215,12 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     static void confirmMemberDeletion(final Context context, final SMember member) {
         final long company_id = PrefUtil.getCurrentCompanyId(context);
 
+        // substitute the member name in the message.
+        String confirm_body = context.getString(R.string.employee_delete_confirm_body, member.member_name);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.employee_delete_confirm_title).
-                setMessage(R.string.employee_delete_confirm_body).
+                setMessage(confirm_body).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
