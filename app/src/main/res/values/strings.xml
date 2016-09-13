@@ -119,6 +119,7 @@
 
     <string name="sync_json_delete_categories" translatable="false">deleted_categories</string>
     <string name="sync_json_delete_branch_categories" translatable="false">deleted_branch_categories</string>
+    <string name="sync_json_delete_members" translatable="false">deleted_members</string>
     <!-- End Response of Entity Sync -->
 
     <!-- Response of Transaction Sync -->

@@ -413,6 +413,14 @@ public class SheketSyncService extends IntentService {
                     build());
         }
 
+        for (Long member_id : response.deletedMembers) {
+            operationList.add(ContentProviderOperation.newDelete(
+                    MemberEntry.buildBaseUri(company_id)).
+                    withSelection(MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID) + " = ?",
+                            new String[]{String.valueOf(member_id)}).
+                    build());
+        }
+
         try {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
@@ -454,6 +462,7 @@ public class SheketSyncService extends IntentService {
 
         result.deletedCategories = new ArrayList<>();
         result.deletedBranchCategories = new ArrayList<>();
+        result.deletedMembers = new ArrayList<>();
 
         if (rootJson.has(getResourceString(R.string.sync_json_updated_category_ids))) {
             JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_category_ids));
@@ -610,6 +619,14 @@ public class SheketSyncService extends IntentService {
                 if (branch_id != -1 && category_id != -1) {
                     result.deletedBranchCategories.add(new Pair<>(branch_id, category_id));
                 }
+            }
+        }
+
+        if (rootJson.has(getResourceString(R.string.sync_json_delete_members))) {
+            JSONArray deletedMemberIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_members));
+
+            for (int i = 0; i < deletedMemberIdArray.length(); i++) {
+                result.deletedMembers.add((long)deletedMemberIdArray.getInt(i));
             }
         }
 
@@ -1386,6 +1403,7 @@ public class SheketSyncService extends IntentService {
 
         List<Long> deletedCategories;
         List<Pair<Long, Long>> deletedBranchCategories;
+        List<Long> deletedMembers;
     }
 
     static class TransactionSyncResponse {
