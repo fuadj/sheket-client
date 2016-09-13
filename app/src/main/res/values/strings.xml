@@ -185,6 +185,12 @@
     <string name="employee_dialog_permission">Permission:</string>
     <string name="employee_dialog_branches">Branches:</string>
 
+    <string name="employee_delete_confirm_title">Remove Employee, Are you Sure?</string>
+    <string name="employee_delete_confirm_body">
+        This will remove the employee from the company.
+        NOTE: this takes effect when the employee syncs.
+    </string>
+
     <string name="dialog_new_branch_title">Create Branch</string>
     <string name="dialog_new_branch_name">Branch Name</string>
     <string name="dialog_new_branch_cancel">Cancel</string>

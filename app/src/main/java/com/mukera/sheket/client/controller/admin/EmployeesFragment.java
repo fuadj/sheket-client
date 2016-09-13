@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -40,6 +41,7 @@ import com.mukera.sheket.client.data.SheketContract.MemberEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -141,7 +143,12 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         return new CursorLoader(getActivity(),
                 MemberEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SMember.MEMBER_COLUMNS,
-                null, null,
+
+                // we don't want to show the employees who've got their deleted flag set
+                // waiting to be deleted after sync.
+                MemberEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR) + " != ?",
+                new String[]{String.valueOf(ChangeTraceable.CHANGE_STATUS_DELETED)},
+
                 sortOrder
         );
     }
@@ -186,7 +193,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor cursor) {
+        public void bindView(View view, final Context context, Cursor cursor) {
             MemberViewHolder holder = (MemberViewHolder) view.getTag();
 
             final SMember member = new SMember(cursor);
@@ -199,10 +206,42 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             holder.btnDeleteMember.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // TODO: request permission to delete member
+                    confirmMemberDeletion(context, member);
                 }
             });
         }
+    }
+
+    static void confirmMemberDeletion(final Context context, final SMember member) {
+        final long company_id = PrefUtil.getCurrentCompanyId(context);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.employee_delete_confirm_title).
+                setMessage(R.string.employee_delete_confirm_body).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ContentValues values = member.toContentValues();
+
+                        // set the deleted flag to "ON", so it can be deleted on sync
+                        values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
+                                ChangeTraceable.CHANGE_STATUS_DELETED);
+                        values.remove(MemberEntry.COLUMN_MEMBER_ID);
+
+                        context.getContentResolver().
+                                update(MemberEntry.buildBaseUri(company_id),
+                                        values,
+                                        MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID),
+                                        new String[]{String.valueOf(member.member_id)});
+                        dialog.dismiss();
+                    }
+                }).
+                setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
     }
 
     public static class AddEditMemberDialog extends DialogFragment {
