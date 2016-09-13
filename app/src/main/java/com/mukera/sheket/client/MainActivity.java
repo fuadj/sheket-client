@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private SCompany mPermissionRequestedCompany = null;
     private boolean mDidGrantReadPhoneStatePermission = false;
+    private boolean mSyncRequiredPhoneStatePermission = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -396,15 +397,41 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new EmployeesFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_SYNC: {
-                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-                SheketTracker.sendTrackingData(this,
-                        new HitBuilders.EventBuilder().
+                change_title = false;
+
+                Map<String, String> trackingData = new HitBuilders.EventBuilder().
                                 setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
                                 setAction("sync started").
-                                build());
-                Intent intent = new Intent(this, SheketSyncService.class);
-                startService(intent);
-                change_title = false;
+                                build();
+
+                boolean have_read_phone_state_permission = true;
+
+                // there is a bug in android M, declaring the permission in the manifest isn't enough
+                // see: http://stackoverflow.com/a/38782876/5753416
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+
+                    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                        have_read_phone_state_permission = false;
+
+                        trackingData = new HitBuilders.EventBuilder().
+                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                                setAction("READ_PHONE_STATE required for sync").
+                                build();
+                    }
+                }
+
+                if (have_read_phone_state_permission) {
+                    Intent intent = new Intent(this, SheketSyncService.class);
+                    startService(intent);
+                } else {
+                    mSyncRequiredPhoneStatePermission = true;
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
+                }
+
+                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                SheketTracker.sendTrackingData(this, trackingData);
+
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_TRANSACTIONS:
@@ -697,13 +724,30 @@ public class MainActivity extends AppCompatActivity implements
         mDidResume = true;
         if (mImporting) {
             showImportUpdates();
-        } else if (mDidGrantReadPhoneStatePermission &&
-                (mPermissionRequestedCompany != null)) {
-            // we requested permission for a company and it was granted, show the dialog now
-            PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+        } else if (mDidGrantReadPhoneStatePermission) {
+            /**
+             * <p>RESET it. For subsequent actions that require the permission, we won't come here
+             * because checking if the permission is GRANTED will return TRUE and we can do the action
+             * in the "original" place.</p>
+             *
+             * <p>NOTE: If the user goes to "System Settings" and removes the permission,
+             * we don't want continue to assume we've been given the permission, so we SHOULD
+             * reset it for that also.</p>
+             */
+            mDidGrantReadPhoneStatePermission = false;
 
-            // IMPORTANT: clear it so we don't always show the dialog
-            mPermissionRequestedCompany = null;
+            if (mPermissionRequestedCompany != null) {
+                // we requested permission for a company and it was granted, show the dialog now
+                PaymentDialog.newInstance(mPermissionRequestedCompany).show(getSupportFragmentManager(), null);
+
+                // RESET
+                mPermissionRequestedCompany = null;
+            } else if (mSyncRequiredPhoneStatePermission) {
+                mSyncRequiredPhoneStatePermission = false;
+
+                Intent intent = new Intent(this, SheketSyncService.class);
+                startService(intent);
+            }
         }
     }
 
