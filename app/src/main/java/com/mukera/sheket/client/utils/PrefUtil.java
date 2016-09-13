@@ -311,6 +311,13 @@ public class PrefUtil {
                 context.getResources().getInteger(R.integer.invalid_user_id);
     }
 
+    // Use this if you want to "un-set" the current company.
+    public static void resetCompanySelection(Context context) {
+        setCurrentCompanyId(context, context.getResources().getInteger(R.integer.invalid_company_id));
+        setCurrentCompanyName(context, "");
+        setUserPermission(context, "");
+    }
+
     public static void logoutUser(Context context) {
         setUserId(context, context.getResources().getInteger(R.integer.invalid_user_id));
         setCurrentCompanyId(context, context.getResources().getInteger(R.integer.invalid_company_id));

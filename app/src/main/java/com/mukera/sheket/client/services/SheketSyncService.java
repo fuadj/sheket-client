@@ -65,7 +65,8 @@ public class SheketSyncService extends IntentService {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SYNC_STATUS_SYNCED, SYNC_STATUS_SYNCING, SYNC_STATUS_SUCCESSFUL,
             SYNC_STATUS_SYNC_ERROR, SYNC_STATUS_INTERNET_ERROR, SYNC_STATUS_GENERAL_ERROR})
-    public @interface SyncStatus {}
+    public @interface SyncStatus {
+    }
 
     public static final int SYNC_STATUS_SYNCED = 0;
     public static final int SYNC_STATUS_SYNCING = 1;
@@ -106,6 +107,9 @@ public class SheketSyncService extends IntentService {
         PrefUtil.setIsSyncRunning(this, true);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
+
+            Pair<Set<Long>, Boolean> pair = syncUser();
+
             /**
              * <p>These companies are the ones that existed previously but don't appear in the current
              * sync.(i.e: the user has been removed from them).</p>
@@ -117,7 +121,10 @@ public class SheketSyncService extends IntentService {
              * <p>IMPORTANT: if the company is the currently selected company, we also need to force
              * the UI to reset with the company not being visible thereafter.</p>
              */
-            Set<Long> not_seen_on_sync_companies = syncUser();
+            Set<Long> not_seen_on_sync_companies = pair.first;
+
+            Boolean is_current_company_payment_valid = pair.second;
+
             long current_company = PrefUtil.getCurrentCompanyId(this);
             boolean did_remove_current_company = false;
             for (Long company_id : not_seen_on_sync_companies) {
@@ -129,7 +136,12 @@ public class SheketSyncService extends IntentService {
 
             deleteRemovedCompanies(not_seen_on_sync_companies);
 
-            if (did_remove_current_company) {
+            /**
+             * If either the current company got removed OR the payment license isn't
+             * legit, we need to "force-out" the user from the company.
+             */
+            if (did_remove_current_company || !is_current_company_payment_valid) {
+                PrefUtil.resetCompanySelection(this);
                 sendSheketBroadcast(SheketBroadcast.ACTION_CONFIG_CHANGE);
             } else {
                 // can only sync if there is a company selected
@@ -188,18 +200,26 @@ public class SheketSyncService extends IntentService {
     }
 
     /**
-     * Fetches the companies the user belongs in.
+     * Fetches the companies the user belongs in. Also checks if the payment license for the
+     * current company is still valid. If it isn't, the caller needs to "force-out" the user
+     * so he can pay.
      *
-     * @return      Any company that previously existed locally but doesn't exist
-     *              in the current sync. These companies should be deleted.
-     *              This means the user was removed from the company, (e.g: an employee being fired).
+     * @return Pair<Set<Long>, Boolean>
      *
-     *              IMPORTANT: We don't delete the "non-sync-existent" companies directly here
-     *              because there might be un-synced data in them. So after doing
-     *              entity + transaction syncs, they should be deleted.
+     * <p>
+     * {@code Set<Long>}:
+     * Any company that previously existed locally but doesn't exist
+     * in the current sync. These companies should be deleted.
+     * This means the user was removed from the company, (e.g: an employee being fired).
+     * </p>
      *
+     * <p>
+     * {@code Boolean}:
+     * If the payment license of the current company is still valid it is True, False
+     * otherwise.
+     * </p>
      */
-    Set<Long> syncUser() throws Exception {
+    Pair<Set<Long>, Boolean> syncUser() throws Exception {
         JSONObject json = new JSONObject();
         json.put(this.getString(R.string.sync_json_user_rev),
                 PrefUtil.getUserRevision(this));
@@ -254,6 +274,9 @@ public class SheketSyncService extends IntentService {
         JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
 
         long user_id = PrefUtil.getUserId(this);
+        long current_company_id = PrefUtil.getCurrentCompanyId(this);
+        boolean is_current_company_license_valid = false;
+
         for (int i = 0; i < companyArr.length(); i++) {
             JSONObject companyObj = companyArr.getJSONObject(i);
 
@@ -267,6 +290,10 @@ public class SheketSyncService extends IntentService {
              * verify the signature.
              */
             boolean is_license_valid = !license.trim().isEmpty();
+
+            if (company_id == current_company_id) {
+                is_current_company_license_valid = is_license_valid;
+            }
 
             ContentValues values = new ContentValues();
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
@@ -306,7 +333,7 @@ public class SheketSyncService extends IntentService {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operations);
 
-        return previous_companies_not_seen_on_sync.keySet();
+        return new Pair<>(previous_companies_not_seen_on_sync.keySet(), is_current_company_license_valid);
     }
 
     /**
@@ -424,7 +451,7 @@ public class SheketSyncService extends IntentService {
         for (Pair<Long, Long> branch_category_pair : response.deletedBranchCategories) {
             String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
                     BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
-            String[] selectionArgs = new String[] {
+            String[] selectionArgs = new String[]{
                     String.valueOf(branch_category_pair.first),
                     String.valueOf(branch_category_pair.second)
             };
@@ -618,7 +645,7 @@ public class SheketSyncService extends IntentService {
             JSONArray deletedCategoryIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_categories));
 
             for (int i = 0; i < deletedCategoryIdArray.length(); i++) {
-                result.deletedCategories.add((long)deletedCategoryIdArray.getInt(i));
+                result.deletedCategories.add((long) deletedCategoryIdArray.getInt(i));
             }
         }
 
@@ -635,7 +662,8 @@ public class SheketSyncService extends IntentService {
                         category_id = Long.parseLong(branch_category_id.substring(colon_index + 1));
                     }
                 } catch (NumberFormatException e) {
-                    branch_id = -1; category_id = -1;
+                    branch_id = -1;
+                    category_id = -1;
                 }
                 if (branch_id != -1 && category_id != -1) {
                     result.deletedBranchCategories.add(new Pair<>(branch_id, category_id));
@@ -647,7 +675,7 @@ public class SheketSyncService extends IntentService {
             JSONArray deletedMemberIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_members));
 
             for (int i = 0; i < deletedMemberIdArray.length(); i++) {
-                result.deletedMembers.add((long)deletedMemberIdArray.getInt(i));
+                result.deletedMembers.add((long) deletedMemberIdArray.getInt(i));
             }
         }
 
@@ -1390,7 +1418,8 @@ public class SheketSyncService extends IntentService {
     void throwAppropriateException(Response response) throws InvalidLoginCredentialException, SyncException {
         // TODO: don't hardcode these constants, use a standard library
         switch (response.code()) {
-            case 200: return;
+            case 200:
+                return;
 
             // un-authorized, they don't have valid login credentials
             case 401:
