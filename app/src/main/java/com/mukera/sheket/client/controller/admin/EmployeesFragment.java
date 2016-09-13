@@ -234,7 +234,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                         context.getContentResolver().
                                 update(MemberEntry.buildBaseUri(company_id),
                                         values,
-                                        MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID),
+                                        MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID) + " = ?",
                                         new String[]{String.valueOf(member.member_id)});
                         dialog.dismiss();
                     }
