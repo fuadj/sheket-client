@@ -192,7 +192,9 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             final SMember member = new SMember(cursor);
 
             holder.textMemberName.setText(member.member_name);
-            holder.textMemberId.setText("" + member.member_id);
+            holder.textMemberId.setText(
+                    IdEncoderUtil.encodeAndDelimitId(member.member_id, IdEncoderUtil.ID_TYPE_USER)
+            );
             holder.textMemberPermission.setText(SPermission.shortName(member.member_permission));
             holder.btnDeleteMember.setOnClickListener(new View.OnClickListener() {
                 @Override
