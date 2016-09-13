@@ -106,19 +106,40 @@ public class SheketSyncService extends IntentService {
         PrefUtil.setIsSyncRunning(this, true);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
-            // we don't remove the deleted companies right away as they might have
-            // "un-synced" data. so delete them after entities + transactions have synced.
-            Set<Long> removed_companies = syncUser();
-
-            // can only sync if there is a company selected
-            if (PrefUtil.isCompanySet(this)) {
-                syncEntities();
-                syncTransactions();
+            /**
+             * <p>These companies are the ones that existed previously but don't appear in the current
+             * sync.(i.e: the user has been removed from them).</p>
+             *
+             * <p>If a user is removed from a certain company, he can't send any data
+             * related to that company as he won't have the permissions to do it. So, locally
+             * remove any remnants he has of that company.</p>
+             *
+             * <p>IMPORTANT: if the company is the currently selected company, we also need to force
+             * the UI to reset with the company not being visible thereafter.</p>
+             */
+            Set<Long> not_seen_on_sync_companies = syncUser();
+            long current_company = PrefUtil.getCurrentCompanyId(this);
+            boolean did_remove_current_company = false;
+            for (Long company_id : not_seen_on_sync_companies) {
+                if (company_id == current_company) {
+                    did_remove_current_company = true;
+                    break;
+                }
             }
 
-            deleteRemovedCompanies(removed_companies);
+            deleteRemovedCompanies(not_seen_on_sync_companies);
 
-            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
+            if (did_remove_current_company) {
+                sendSheketBroadcast(SheketBroadcast.ACTION_CONFIG_CHANGE);
+            } else {
+                // can only sync if there is a company selected
+                if (PrefUtil.isCompanySet(this)) {
+                    syncEntities();
+                    syncTransactions();
+                }
+
+                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
+            }
 
             // we've finished syncing, so set it here
             // so the payment service doesn't assume we are still syncing
