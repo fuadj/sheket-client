@@ -39,7 +39,7 @@ public class SettingsFragment extends Fragment {
         final SettingsAdapter adapter = new SettingsAdapter(getContext());
         listSettings.setAdapter(adapter);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES);
-        adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE);
+        //adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
         adapter.add(BaseNavigation.StaticNavigationOptions.OPTION_DEBUG);
 

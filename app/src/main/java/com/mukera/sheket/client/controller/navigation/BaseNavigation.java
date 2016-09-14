@@ -8,7 +8,6 @@ import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
-import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 
 import java.util.HashMap;
@@ -114,7 +113,7 @@ public abstract class BaseNavigation {
             sEntityAndIcon.put(OPTION_SETTINGS,
                     new Pair<>(R.string.nav_settings, R.drawable.ic_action_new_settings));
             sEntityAndIcon.put(OPTION_USER_PROFILE,
-                    new Pair<>(R.string.nav_user_profile, R.drawable.ic_action_new_profile));
+                    new Pair<>(R.string.nav_user_profile, R.drawable.ic_action_user_profile));
             sEntityAndIcon.put(OPTION_DEBUG,
                     new Pair<>(R.string.nav_debug, R.mipmap.ic_action_settings));
             /*

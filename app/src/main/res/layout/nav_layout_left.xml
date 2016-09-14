@@ -6,10 +6,36 @@
     android:layout_height="match_parent"
     android:paddingLeft="16dp">
 
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/left_nav_layout_user_profile"
         android:layout_alignParentTop="true"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_action_user_profile"/>
+
+        <TextView
+            android:id="@+id/left_nav_text_user_name"
+            android:textSize="22dp"
+            android:textColor="@color/left_nav_title_text"
+            android:text="Sample User Name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/left_nav_layout_user_profile">
 
         <LinearLayout
             android:paddingTop="16dp"

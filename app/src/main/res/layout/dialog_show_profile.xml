@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <android.support.v7.widget.GridLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:columnCount="3"
+        app:rowCount="2"
+        android:layout_centerInParent="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dialog_view_profile_name"
+            android:textColor="#111"
+            android:textSize="24dp"
+            app:layout_column="0"
+            app:layout_row="0" />
+
+        <TextView
+            android:id="@+id/dialog_show_profile_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:text="Test Name"
+            android:textColor="#333"
+            android:textSize="22dp"
+            app:layout_column="1"
+            app:layout_row="0" />
+
+        <ImageButton
+            android:id="@+id/dialog_show_profile_edit_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="32dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_action_edit_grey"
+            app:layout_column="2"
+            app:layout_row="0" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dialog_view_profile_id"
+            android:textColor="#111"
+            android:textSize="24dp"
+            app:layout_column="0"
+            app:layout_row="1"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/dialog_show_profile_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:background="#cfd8dc"
+            android:padding="8dp"
+            android:text="Test User ID"
+            android:textColor="#111"
+            android:textSize="18dp"
+            app:layout_column="1"
+            android:layout_marginTop="16dp" />
+
+    </android.support.v7.widget.GridLayout>
+</RelativeLayout>
+

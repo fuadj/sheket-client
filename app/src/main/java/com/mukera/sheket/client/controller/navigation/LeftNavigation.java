@@ -8,11 +8,13 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -20,6 +22,7 @@ import android.widget.TextView;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
@@ -30,6 +33,9 @@ import com.mukera.sheket.client.utils.PrefUtil;
  * Created by fuad on 7/29/16.
  */
 public class LeftNavigation extends BaseNavigation implements LoaderManager.LoaderCallbacks<Cursor> {
+    private View mLayoutProfile;
+    private TextView mProfileUserName;
+
     private ListView mCompanyList;
     private CompanyAdapter mCompanyAdapter;
 
@@ -42,6 +48,16 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     protected void onSetup() {
+        mLayoutProfile = getRootView().findViewById(R.id.left_nav_layout_user_profile);
+        mLayoutProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayProfileDetails();
+            }
+        });
+        mProfileUserName = (TextView) getRootView().findViewById(R.id.left_nav_text_user_name);
+        mProfileUserName.setText(PrefUtil.getUsername(getNavActivity()));
+
         mCompanyList = (ListView) getRootView().findViewById(R.id.nav_left_list_view_companies);
         mCompanyAdapter = new CompanyAdapter(getNavActivity());
         mCompanyList.setAdapter(mCompanyAdapter);
@@ -99,6 +115,28 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             });
         }
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
+    }
+
+    void displayProfileDetails() {
+        View view = getNavActivity().getLayoutInflater().inflate(R.layout.dialog_show_profile, null);
+
+        TextView username = (TextView) view.findViewById(R.id.dialog_show_profile_username);
+        TextView id = (TextView) view.findViewById(R.id.dialog_show_profile_id);
+
+        long user_id = PrefUtil.getUserId(getNavActivity());
+
+        username.setText(PrefUtil.getUsername(getNavActivity()));
+        id.setText(IdEncoderUtil.encodeAndDelimitId(user_id, IdEncoderUtil.ID_TYPE_USER));
+
+        ImageButton editNameBtn = (ImageButton) view.findViewById(R.id.dialog_show_profile_edit_name);
+        editNameBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: show edit username dialog
+            }
+        });
+        AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity());
+        builder.setView(view).show();
     }
 
     @Override
