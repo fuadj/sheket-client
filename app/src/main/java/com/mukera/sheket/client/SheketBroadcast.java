@@ -25,4 +25,6 @@ public class SheketBroadcast {
     public static final String ACTION_PAYMENT_REQUIRED = "payment_required";
 
     public static final String ACTION_COMPANY_PERMISSION_CHANGE = "company_permission_change";
+
+    public static final String ACTION_USER_CONFIG_CHANGE = "user_config_change";
 }

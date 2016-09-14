@@ -1,13 +1,17 @@
 package com.mukera.sheket.client.controller.navigation;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -23,16 +27,32 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.SheketBroadcast;
+import com.mukera.sheket.client.SheketTracker;
 import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Created by fuad on 7/29/16.
@@ -153,8 +173,75 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 setView(editText).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String new_name = editText.getText().toString().trim();
 
+                        SheketTracker.setScreenName(getNavActivity(), SheketTracker.SCREEN_NAME_MAIN);
+                        SheketTracker.sendTrackingData(getNavActivity(),
+                                new HitBuilders.EventBuilder().
+                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                        setAction("change username selected").
+                                        build());
+
+                        final ProgressDialog progress = ProgressDialog.show(
+                                getNavActivity(),
+                                getString(R.string.dialog_profile_edit_progress_title),
+                                getString(R.string.dialog_profile_edit_progress_body),
+                                true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final Pair<Boolean, String> result = updateCurrentUserName(new_name);
+                                getNavActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progress.dismiss();
+                                        dialog.dismiss();
+
+                                        Map<String, String> trackingData;
+                                        if (result.first == Boolean.TRUE) {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                        setAction("username change successful").
+                                                        build();
+                                            new AlertDialog.Builder(getNavActivity()).
+                                                    setIcon(android.R.drawable.ic_dialog_info).
+                                                    setMessage(R.string.dialog_profile_edit_result_success).
+                                                    setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                                        @Override
+                                                        public void onDismiss(DialogInterface dialog) {
+                                                            LocalBroadcastManager.getInstance(getNavActivity()).
+                                                                    sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+                                                        }
+                                                    }).
+                                                    setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                                        @Override
+                                                        public void onCancel(DialogInterface dialog) {
+                                                            LocalBroadcastManager.getInstance(getNavActivity()).
+                                                                    sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+                                                        }
+                                                    }).
+                                                    show();
+                                        } else {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("change username error").
+                                                    setLabel(result.second).
+                                                    build();
+
+                                            new AlertDialog.Builder(getNavActivity()).
+                                                    setIcon(android.R.drawable.ic_dialog_alert).
+                                                    setTitle(R.string.dialog_profile_edit_result_error).
+                                                    setMessage(result.second).
+                                                    show();
+                                        }
+
+                                        SheketTracker.setScreenName(getNavActivity(), SheketTracker.SCREEN_NAME_MAIN);
+                                        SheketTracker.sendTrackingData(getNavActivity(), trackingData);
+                                    }
+                                });
+                            }
+                        }).start();
                     }
                 }).
                 setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
@@ -192,6 +279,39 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         });
 
         dialog.show();
+    }
+
+    String getString(int res_id) {
+        return getNavActivity().getString(res_id);
+    }
+
+    static final OkHttpClient client = new OkHttpClient();
+
+    Pair<Boolean, String> updateCurrentUserName(String new_name) {
+        final String REQUEST_NEW_USER_NAME = "new_user_name";
+
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(REQUEST_NEW_USER_NAME, new_name);
+
+            Request.Builder builder = new Request.Builder();
+            builder.url(ConfigData.getAddress(getNavActivity()) + "v1/user/edit/name");
+            builder.addHeader(getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(getNavActivity()));
+            builder.post(RequestBody.create(MediaType.parse("application/json"),
+                    jsonObject.toString()));
+
+            Response response = client.newCall(builder.build()).execute();
+            if (!response.isSuccessful()) {
+                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
+            }
+
+            PrefUtil.setUserName(getNavActivity(), new_name);
+
+            return new Pair<>(Boolean.TRUE, null);
+        } catch (JSONException | IOException e) {
+            return new Pair<>(Boolean.FALSE, e.getMessage());
+        }
     }
 
     @Override

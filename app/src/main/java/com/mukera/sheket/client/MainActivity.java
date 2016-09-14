@@ -592,6 +592,8 @@ public class MainActivity extends AppCompatActivity implements
         filter.addAction(SheketBroadcast.ACTION_COMPANY_RESET);
         filter.addAction(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
         filter.addAction(SheketBroadcast.ACTION_PAYMENT_REQUIRED);
+        filter.addAction(SheketBroadcast.ACTION_USER_CONFIG_CHANGE);
+
 
         LocalBroadcastManager.getInstance(this).
                 registerReceiver(mReceiver, filter);
@@ -823,12 +825,13 @@ public class MainActivity extends AppCompatActivity implements
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_SWITCH)) {
                 dismissSyncDialog();
-                Log.d("MainActivity", "company switch");
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_RESET)) {
                 dismissSyncDialog();
-                Log.d("MainActivity", "company reset");
                 PrefUtil.resetCompanySelection(MainActivity.this);
+                restartMainActivity();
+            } else if (action.equals(SheketBroadcast.ACTION_USER_CONFIG_CHANGE)) {
+                dismissSyncDialog();
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE)) {
                 if (mRightNav != null) {
