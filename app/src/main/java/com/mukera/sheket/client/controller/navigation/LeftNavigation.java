@@ -1,6 +1,7 @@
 package com.mukera.sheket.client.controller.navigation;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
@@ -9,11 +10,14 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -28,6 +32,7 @@ import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 
 /**
  * Created by fuad on 7/29/16.
@@ -132,11 +137,61 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         editNameBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: show edit username dialog
+                displayEditUsernameDialog();
             }
         });
         AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity());
         builder.setView(view).show();
+    }
+
+    void displayEditUsernameDialog() {
+        final EditText editText = new EditText(getNavActivity());
+        final String current_user_name = PrefUtil.getUsername(getNavActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity()).
+                setTitle(R.string.dialog_edit_profile_title).
+                setView(editText).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).
+                setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        // start things off with the current name, the "OK" button should be invisible
+        editText.setText(current_user_name);
+
+        final AlertDialog dialog = builder.create();
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String new_name = s.toString().trim();
+
+                // only enable editing if there is a "non-empty name" and
+                // it is different from the current one
+                boolean show_ok_btn = !new_name.isEmpty() &&
+                        !new_name.equals(current_user_name);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).
+                        setVisibility(show_ok_btn ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // initially don't show the "Ok" button b/c the name hasn't changed
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
     }
 
     @Override
@@ -173,6 +228,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     static class CompanyAdapter extends CursorAdapter {
         private long mCurrentCompanyId;
+
         public CompanyAdapter(Context context) {
             super(context, null);
             mCurrentCompanyId = PrefUtil.getCurrentCompanyId(context);
