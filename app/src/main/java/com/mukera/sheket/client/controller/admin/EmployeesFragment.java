@@ -326,6 +326,14 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             if (!IdEncoderUtil.isValidEncodedUserId(delimiter_removed)) {
                 mBtnAddEditMember.setEnabled(false);
                 return;
+            } else {
+                long decoded_user_id = IdEncoderUtil.decodeEncodedId(delimiter_removed, IdEncoderUtil.ID_TYPE_USER);
+                // we should prohibit a user adding themselves as an employee, who
+                // knows what that can do
+                if (PrefUtil.getUserId(getActivity()) == decoded_user_id) {
+                    mBtnAddEditMember.setEnabled(false);
+                    return;
+                }
             }
 
             PermType perm_type = (PermType) mSpinnerPermissionType.getSelectedItem();
@@ -394,11 +402,18 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                                 // also remove any non-alphanumeric characters
                                         replaceAll("\\W+", "");
 
+                        long current_user_id = PrefUtil.getUserId(getActivity());
                         String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited_id);
                         if (IdEncoderUtil.isValidEncodedUserId(delimiter_removed)) {
-                            // I know it is weird to call {@code setError} for telling success
-                            // but we don't have an API for the success.
-                            mEditMemberId.setError("Correct ID", successIcon);
+
+                            long decoded_user_id = IdEncoderUtil.decodeEncodedId(delimited_id, IdEncoderUtil.ID_TYPE_USER);
+                            // we should prohibit a user adding themselves as an employee, who
+                            // knows what that can do
+                            if (current_user_id != decoded_user_id) {
+                                // I know it is weird to call {@code setError} for telling success
+                                // but we don't have an API for the success.
+                                mEditMemberId.setError("Correct ID", successIcon);
+                            }
                         } else {
                             mEditMemberId.setError(null);
                         }
