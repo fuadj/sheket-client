@@ -1,5 +1,6 @@
 package com.mukera.sheket.client.controller.navigation;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentUris;
@@ -7,12 +8,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
@@ -33,6 +38,8 @@ import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.mukera.sheket.client.LanguageSelectionDialog;
+import com.mukera.sheket.client.MainActivity;
+import com.mukera.sheket.client.PaymentDialog;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.SheketTracker;
@@ -42,6 +49,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.ConfigData;
+import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.SheketNetworkUtil;
@@ -108,8 +116,25 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                     return;
                 }
 
-                displayAddCompanyDialog();
-                // TODO: display add company dialog
+                /**
+                 * We require READ_PHONE_STATE to get device_id. We send that device id to the
+                 * server so the company is tied to the phone. This is to prevent users from
+                 * creating "fake-facebook-accounts" to freely use the app.
+                 */
+                // there is a bug in android M, declaring the permission in the manifest isn't enough
+                // see: http://stackoverflow.com/a/38782876/5753416
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    int permissionCheck = ContextCompat.checkSelfPermission(getNavActivity(), Manifest.permission.READ_PHONE_STATE);
+
+                    if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                        displayAddCompanyDialog();
+                    } else {
+                        ActivityCompat.requestPermissions(getNavActivity(), new String[]{Manifest.permission.READ_PHONE_STATE},
+                                MainActivity.REQUEST_READ_PHONE_STATE);
+                    }
+                } else {
+                    displayAddCompanyDialog();
+                }
             }
         });
 
@@ -278,9 +303,15 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         final String JSON_COMPANY_NAME = "company_name";
         final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
         final String JSON_USER_PERMISSION = "user_permission";
+        final String JSON_DEVICE_ID = "device_id";
+
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(JSON_COMPANY_NAME, company_name);
+            // we send the device id to prevent users from creating "fake" facebook accounts
+            // to use the app freely. We tie the company to this device so only a single
+            // free company can be created from a device.
+            jsonObject.put(JSON_DEVICE_ID, DeviceId.getUniqueDeviceId(getNavActivity()));
 
             Request.Builder builder = new Request.Builder();
             builder.url(ConfigData.getAddress(activity) + "v1/company/create");

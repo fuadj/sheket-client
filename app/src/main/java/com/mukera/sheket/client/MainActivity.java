@@ -94,8 +94,8 @@ public class MainActivity extends AppCompatActivity implements
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final int REQUEST_FILE_CHOOSER = 1;
-    private static final int REQUEST_READ_PHONE_STATE = 2;
+    public static final int REQUEST_FILE_CHOOSER = 1;
+    public static final int REQUEST_READ_PHONE_STATE = 2;
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
