@@ -544,25 +544,38 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        MatrixCursor addCompanyRowCursor = new MatrixCursor(SCompany.COMPANY_COLUMNS);
-        addCompanyRowCursor.addRow(new Object[]{
-                // this is the sentient value we need,
-                // use it to signal we've reached the "add company" row
-                CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID,
+        /**
+         * FIXME: Because {@code SCompany.COMPANY_COLUMNS} are fully qualified(they have the format table_name.column_name)
+         * that creates a problem when trying to find the "_id" column, which just tries to
+         * search for a column with "_id".
+         *
+         * FIXME: (Workaround) So use the "un-qualified" column name for company id. This isn't a
+         * hack because the {@code MatrixCursor} will probably won't change.
+         *
+         * This happens here and not other-places because {@code MatrixCursor} just stores the
+         * column names "raw" plainly. so when they ask the cursor to find the "_id" column it
+         * gets screw-up. Other cursors from actual ContentProvider queries don't have this problem.
+         *
+         * See {@code AbstractCursor.getColumnIndex} for more
+         * Also this Bug issue Tracker https://code.google.com/p/android/issues/detail?id=7201.
+         */
+        String[] company_columns = SCompany.COMPANY_COLUMNS;
+        company_columns[0] = CompanyEntry.COLUMN_COMPANY_ID;
+        MatrixCursor addCompanyRowCursor = new MatrixCursor(company_columns);
 
-                // the rest of these values need to be filled in b/c the # of columns needs to match
-                0, // user_id
-                "", // name
-                "", // permission
-                "", // state_bkup
-                "", // payment license
-                0, // payment state
-        });
+        // adding the columns adds it in-order from left to right, so make sure company_id column in the first.
+        addCompanyRowCursor.newRow().add(CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID);
 
+        /**
+         * TODO: we are adding the "add company" cursor to the top and not at the bottom b/c
+         * doing that creates an exception when selecting the first company.
+         *
+         * android.database.CursorIndexOutOfBoundsException: Index -1 requested, with a size
+         */
         mCompanyAdapter.swapCursor(new MergeCursor(
                 new Cursor[]{
+                        addCompanyRowCursor,
                         data,
-                        addCompanyRowCursor
                 }
         ));
         ListUtils.setDynamicHeight(mCompanyList);
@@ -589,7 +602,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             return 2;
         }
 
-        public static final long ADD_COMPANY_ROW_COMPANY_ID = -3;
+        public static final long ADD_COMPANY_ROW_COMPANY_ID = -1;
 
         /**
          * Checks if the row is pointing to the "add company" cell.
