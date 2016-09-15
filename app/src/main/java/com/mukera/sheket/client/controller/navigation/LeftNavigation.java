@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -91,8 +93,17 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         !cursor.moveToPosition(position)) {
                     return;
                 }
-                SCompany company = new SCompany(cursor);
-                getCallBack().onCompanySelected(company);
+
+                boolean is_add_company_selected = CompanyAdapter.isAddCompanyRow(cursor, position);
+                // checking for the "negation" is much cleaner as the "negation" is only 3 lines
+                // it saves us a lot of indentation.
+                if (!is_add_company_selected) {
+                    SCompany company = new SCompany(cursor);
+                    getCallBack().onCompanySelected(company);
+                    return;
+                }
+
+                // TODO: display add company dialog
             }
         });
 
@@ -197,9 +208,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                                         Map<String, String> trackingData;
                                         if (result.first == Boolean.TRUE) {
                                             trackingData = new HitBuilders.EventBuilder().
-                                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                                                        setAction("username change successful").
-                                                        build();
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("username change successful").
+                                                    build();
                                             new AlertDialog.Builder(getNavActivity()).
                                                     setIcon(android.R.drawable.ic_dialog_info).
                                                     setMessage(R.string.dialog_edit_user_profile_result_success).
@@ -333,7 +344,27 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mCompanyAdapter.swapCursor(data);
+        MatrixCursor addCompanyRowCursor = new MatrixCursor(SCompany.COMPANY_COLUMNS);
+        addCompanyRowCursor.addRow(new Object[]{
+                // this is the sentient value we need,
+                // use it to signal we've reached the "add company" row
+                CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID,
+
+                // the rest of these values need to be filled in b/c the # of columns needs to match
+                0, // user_id
+                "", // name
+                "", // permission
+                "", // state_bkup
+                "", // payment license
+                0, // payment state
+        });
+
+        mCompanyAdapter.swapCursor(new MergeCursor(
+                new Cursor[]{
+                        data,
+                        addCompanyRowCursor
+                }
+        ));
         ListUtils.setDynamicHeight(mCompanyList);
     }
 
@@ -350,21 +381,59 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             mCurrentCompanyId = PrefUtil.getCurrentCompanyId(context);
         }
 
+        private final int VIEW_TYPE_COMPANY = 0;
+        private final int VIEW_TYPE_ADD_COMPANY = 1;
+
+        @Override
+        public int getViewTypeCount() {
+            return 2;
+        }
+
+        public static final long ADD_COMPANY_ROW_COMPANY_ID = -1;
+
+        /**
+         * Checks if the row is pointing to the "add company" cell.
+         *
+         * @param position      the row of the cursor
+         */
+        public static boolean isAddCompanyRow(Cursor cursor, int position) {
+            if (!cursor.moveToPosition(position)) return false;
+
+            long company_id = cursor.getLong(SCompany.COL_COMPANY_ID);
+            return company_id == ADD_COMPANY_ROW_COMPANY_ID;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return isAddCompanyRow(getCursor(), position) ? VIEW_TYPE_ADD_COMPANY : VIEW_TYPE_COMPANY;
+        }
+
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(
-                    R.layout.list_item_nav_left_companies, parent, false);
-            CompanyViewHolder holder = new CompanyViewHolder(view);
-            view.setTag(holder);
+            View view;
+
+            if (isAddCompanyRow(cursor, cursor.getPosition())) {
+                view = LayoutInflater.from(context).inflate(
+                        R.layout.list_item_nav_left_add_company, parent, false);
+            } else {
+                view = LayoutInflater.from(context).inflate(
+                        R.layout.list_item_nav_left_companies, parent, false);
+                CompanyListViewHolder holder = new CompanyListViewHolder(view);
+                view.setTag(holder);
+            }
 
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            // the "add company" view is "static" things, we don't change anything here
+            if (isAddCompanyRow(cursor, cursor.getPosition()))
+                return;
+
             SCompany company = new SCompany(cursor);
 
-            CompanyViewHolder holder = (CompanyViewHolder) view.getTag();
+            CompanyListViewHolder holder = (CompanyListViewHolder) view.getTag();
             holder.name.setText(company.name);
             int icon_res;
             if (company.company_id == mCurrentCompanyId) {
@@ -375,11 +444,11 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             holder.icon.setImageResource(icon_res);
         }
 
-        static class CompanyViewHolder {
+        static class CompanyListViewHolder {
             TextView name;
             ImageView icon;
 
-            public CompanyViewHolder(View view) {
+            public CompanyListViewHolder(View view) {
                 name = (TextView) view.findViewById(R.id.list_item_nav_left_company_name);
                 icon = (ImageView) view.findViewById(R.id.list_item_nav_left_company_icon);
             }

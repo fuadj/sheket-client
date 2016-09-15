@@ -168,6 +168,8 @@
 
     <string name="nav_title_right_branches">Branches</string>
 
+    <string name="nav_left_add_company">Add Company</string>
+
     <string name="nav_items">Items</string>
     <string name="nav_import">Import</string>
     <string name="nav_sync">Sync</string>
