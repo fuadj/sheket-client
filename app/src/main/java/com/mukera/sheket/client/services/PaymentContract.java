@@ -1,5 +1,7 @@
 package com.mukera.sheket.client.services;
 
+import android.text.TextUtils;
+
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.io.pem.PemObject;
 import org.spongycastle.util.io.pem.PemReader;
@@ -138,6 +140,9 @@ public class PaymentContract {
     public static boolean isMessageSignatureValid(String message, String signature) {
         // we couldn't load the public key
         if (sSheketPublicKey == null)
+            return false;
+
+        if (TextUtils.isEmpty(message) || TextUtils.isEmpty(signature))
             return false;
 
         InputStream messageStream = new ByteArrayInputStream(message.getBytes(Charset.forName("UTF-8")));
