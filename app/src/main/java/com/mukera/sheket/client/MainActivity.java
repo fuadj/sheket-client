@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -20,15 +22,18 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -57,15 +62,27 @@ import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
-import com.mukera.sheket.client.data.SheketContract;
+import com.mukera.sheket.client.data.SheketContract.CompanyEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.services.SheketSyncService;
+import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.SheketNetworkUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -133,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements
      * we were doing after we get the permission. In our context, it is for showing {@code PaymentDialog}
      * for a company. So we need to hold a reference to the company that triggered the
      * permission request so we can show the {@code PaymentDialog} afterwards.
-     *
+     * <p/>
      * NOTE: we could launch the {@code PaymentDialog} in {@code onRequestPermissionsResult()}, but
      * that causes an exception saying the activity isn't Resumed yet. So, we set {@code mDidSelectCompanyBeforeRequest}
      * to true if we need to get the READ_PHONE_STATE and show the {@code PaymentDialog} afterwards.
@@ -310,8 +327,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onCompanySelected(SCompany company) {
-        if (company.payment_state != SheketContract.CompanyEntry.PAYMENT_VALID) {
+    public void onCompanySelected(final SCompany company) {
+        if (company.payment_state != CompanyEntry.PAYMENT_VALID) {
 
             // there is a bug in android M, declaring the permission in the manifest isn't enough
             // see: http://stackoverflow.com/a/38782876/5753416
@@ -353,7 +370,7 @@ public class MainActivity extends AppCompatActivity implements
             editNameBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //displayEditCompanyNameDialog();
+                    displayEditCompanyNameDialog(company);
                 }
             });
 
@@ -390,6 +407,149 @@ public class MainActivity extends AppCompatActivity implements
                         sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
             }
         });
+    }
+
+    void displayEditCompanyNameDialog(final SCompany company) {
+        final EditText editText = new EditText(this);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).
+                setTitle(R.string.dialog_edit_company_profile_title).
+                setView(editText).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String new_name = editText.getText().toString().trim();
+
+                        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                        SheketTracker.sendTrackingData(MainActivity.this,
+                                new HitBuilders.EventBuilder().
+                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                        setAction("change company name selected").
+                                        build());
+
+                        final ProgressDialog progress = ProgressDialog.show(
+                                MainActivity.this,
+                                getString(R.string.dialog_edit_company_profile_progress_title),
+                                getString(R.string.dialog_edit_company_profile_progress_body),
+                                true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final Pair<Boolean, String> result = updateCompanyName(company, new_name);
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progress.dismiss();
+                                        dialog.dismiss();
+
+                                        Map<String, String> trackingData;
+                                        if (result.first == Boolean.TRUE) {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("company name change successful").
+                                                    build();
+                                            new AlertDialog.Builder(MainActivity.this).
+                                                    setIcon(android.R.drawable.ic_dialog_info).
+                                                    setMessage(R.string.dialog_edit_company_profile_result_success).
+                                                    show();
+                                        } else {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("change company name error").
+                                                    setLabel(result.second).
+                                                    build();
+
+                                            new AlertDialog.Builder(MainActivity.this).
+                                                    setIcon(android.R.drawable.ic_dialog_alert).
+                                                    setTitle(R.string.dialog_edit_company_profile_result_error).
+                                                    setMessage(result.second).
+                                                    show();
+                                        }
+
+                                        SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
+                                        SheketTracker.sendTrackingData(MainActivity.this, trackingData);
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
+                }).
+                setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        // start things off with the current name, the "OK" button should be invisible
+        editText.setText(company.name);
+
+        final AlertDialog dialog = builder.create();
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String new_name = s.toString().trim();
+
+                // only enable editing if there is a "non-empty name" and
+                // it is different from the current one
+                boolean show_ok_btn = !new_name.isEmpty() &&
+                        !new_name.equals(company.name);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).
+                        setVisibility(show_ok_btn ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // initially don't show the "Ok" button b/c the name hasn't changed
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
+    }
+
+    static final OkHttpClient client = new OkHttpClient();
+
+    Pair<Boolean, String> updateCompanyName(SCompany company, String new_name) {
+        final String REQUEST_NEW_COMPANY_NAME = "new_company_name";
+
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(REQUEST_NEW_COMPANY_NAME, new_name);
+
+            Request.Builder builder = new Request.Builder();
+            builder.url(ConfigData.getAddress(this) + "v1/company/edit/name");
+            builder.addHeader(getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(this));
+            builder.addHeader(getString(R.string.pref_header_key_company_id),
+                    String.valueOf(company.company_id));
+            builder.post(RequestBody.create(MediaType.parse("application/json"),
+                    jsonObject.toString()));
+
+            Response response = client.newCall(builder.build()).execute();
+            if (!response.isSuccessful()) {
+                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
+            }
+
+            ContentValues values = company.toContentValues();
+            values.remove(CompanyEntry.COLUMN_COMPANY_ID);
+            values.put(CompanyEntry.COLUMN_NAME, new_name);
+
+            int num_updated = getContentResolver().
+                    update(CompanyEntry.CONTENT_URI, values,
+                            CompanyEntry._full(CompanyEntry.COLUMN_COMPANY_ID) + " = ?",
+                            new String[]{String.valueOf(company.company_id)});
+
+            if (num_updated == 1)
+                return new Pair<>(Boolean.TRUE, null);
+            else
+                return new Pair<>(Boolean.FALSE, "Error updating company name in local storage");
+        } catch (JSONException | IOException e) {
+            return new Pair<>(Boolean.FALSE, e.getMessage());
+        }
     }
 
     @Override
@@ -443,9 +603,9 @@ public class MainActivity extends AppCompatActivity implements
                 change_title = false;
 
                 Map<String, String> trackingData = new HitBuilders.EventBuilder().
-                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
-                                setAction("sync started").
-                                build();
+                        setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
+                        setAction("sync started").
+                        build();
 
                 boolean have_read_phone_state_permission = true;
 
