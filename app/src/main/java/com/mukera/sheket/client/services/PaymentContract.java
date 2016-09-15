@@ -65,16 +65,23 @@ public class PaymentContract {
         if (subs.length != 10)
             return;
 
-        device_id = subs[0];
-        user_id = Long.parseLong(subs[1]);
-        company_id = Long.parseLong(subs[2]);
-        server_date_issued = subs[3];
-        local_date_issued = subs[4];
-        duration = subs[5];
-        contract_type = Integer.parseInt(subs[6]);
-        limit_employees = Integer.parseInt(subs[7]);
-        limit_branches = Integer.parseInt(subs[8]);
-        limit_items = Integer.parseInt(subs[9]);
+        device_id = _val(subs[0]);
+        user_id = Long.parseLong(_val(subs[1]));
+        company_id = Long.parseLong(_val(subs[2]));
+        server_date_issued = _val(subs[3]);
+        local_date_issued = _val(subs[4]);
+        duration = _val(subs[5]);
+        contract_type = Integer.parseInt(_val(subs[6]));
+        limit_employees = Integer.parseInt(_val(subs[7]));
+        limit_branches = Integer.parseInt(_val(subs[8]));
+        limit_items = Integer.parseInt(_val(subs[9]));
+    }
+
+    // retrieves the value part from a "key:value" type string
+    String _val(String s) {
+        String[] subs = s.split(":");
+        if (subs.length > 1) return subs[1];
+        return s;
     }
 
     @Override
