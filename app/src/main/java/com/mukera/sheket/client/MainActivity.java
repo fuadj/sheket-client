@@ -59,7 +59,6 @@ import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
-import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.data.SheketContract.CompanyEntry;
 import com.mukera.sheket.client.models.SBranch;
@@ -636,10 +635,6 @@ public class MainActivity extends AppCompatActivity implements
                 new_screen = "Transaction Summary";
                 replaceMainFragment(new TransactionHistoryFragment(), false);
                 break;
-            case BaseNavigation.StaticNavigationOptions.OPTION_SETTINGS:
-                new_screen = "Settings";
-                replaceMainFragment(new SettingsFragment(), false);
-                break;
             case BaseNavigation.StaticNavigationOptions.OPTION_DEBUG:
                 startActivity(new Intent(this, AndroidDatabaseManager.class));
                 change_title = false;
@@ -1007,7 +1002,7 @@ public class MainActivity extends AppCompatActivity implements
         if (!PrefUtil.getIsFirstTime(this)) return;
         PrefUtil.setIsFirstTime(this, false);
 
-        SettingsFragment.displayConfigurationDialog(this, false);
+        LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false);
     }
 
 

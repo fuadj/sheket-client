@@ -79,12 +79,14 @@
         </LinearLayout>
     </ScrollView>
 
+    <!--
     <TextView
         android:text="@string/nav_title_left_preferences"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/left_nav_separator_text"
         android:layout_above="@+id/nav_left_list_view_preference" />
+        -->
 
     <ListView
         android:layout_alignParentBottom="true"

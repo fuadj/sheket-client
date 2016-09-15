@@ -32,6 +32,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.mukera.sheket.client.LanguageSelectionDialog;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.SheketTracker;
@@ -116,14 +117,19 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         mPrefAdapter = new StaticNavAdapter(getNavActivity());
         mPreferenceList.setAdapter(mPrefAdapter);
 
-        mPrefAdapter.add(StaticNavigationOptions.OPTION_SETTINGS);
+        mPrefAdapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
         ListUtils.setDynamicHeight(mPreferenceList);
 
         mPreferenceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Integer i = mPrefAdapter.getItem(position);
-                getCallBack().onNavigationOptionSelected(i);
+                switch (i) {
+                    case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
+                        LanguageSelectionDialog.
+                                displayLanguageConfigurationDialog(getNavActivity(), true);
+                        break;
+                }
             }
         });
 
