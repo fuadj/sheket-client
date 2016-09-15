@@ -214,7 +214,7 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                                 public void run() {
                                     mProgressDialog.dismiss();
                                     // the company creation was a success
-                                    if (result.first == true) {
+                                    if (result.first == Boolean.TRUE) {
                                         getDialog().dismiss();
                                         if (fragment.mListener != null) {
                                             fragment.mListener.userPermissionChanged();
@@ -281,8 +281,6 @@ public class CompanyFragment extends Fragment implements LoaderCallbacks<Cursor>
                 PrefUtil.setCurrentCompanyId(activity, company_id);
                 PrefUtil.setCurrentCompanyName(activity, company_name);
                 PrefUtil.setUserPermission(activity, user_permission);
-
-                SPermission.setSingletonPermission(user_permission);
             } catch (JSONException | IOException e) {
                 return new Pair<>(Boolean.FALSE, e.getMessage());
             }

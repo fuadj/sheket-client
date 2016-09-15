@@ -77,10 +77,10 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         };
         mViewSync.setOnClickListener(listener);
         mViewTransaction.setOnClickListener(listener);
-        if (getUserPermission().getPermissionType() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            mViewItems.setVisibility(View.GONE);
-        } else {
+        if (getUserPermission().hasManagerAccess()) {
             mViewItems.setOnClickListener(listener);
+        } else {
+            mViewItems.setVisibility(View.GONE);
         }
     }
 

@@ -104,15 +104,14 @@ public class BranchItemFragment extends SearchableItemFragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.menu_item_branch_item_list_all_items);
-        if (SPermission.getSingletonPermission().getPermissionType() !=
-                SPermission.PERMISSION_TYPE_ALL_ACCESS) {
-            menuItem.setVisible(false);
-        } else {
+        if (SPermission.getUserPermission(getContext()).hasManagerAccess()) {
             menuItem.setVisible(true);
             menuItem.setIcon(
                     getActivity().getResources().getDrawable(mShowAllItems ?
                             R.drawable.ic_action_eye_open :
                             R.drawable.ic_action_eye_closed));
+        } else {
+            menuItem.setVisible(false);
         }
         super.onPrepareOptionsMenu(menu);
     }

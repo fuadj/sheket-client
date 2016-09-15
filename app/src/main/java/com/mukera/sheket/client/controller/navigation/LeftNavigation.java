@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -15,7 +14,6 @@ import android.support.v4.util.Pair;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +29,6 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.SheketTracker;
-import com.mukera.sheket.client.controller.CompanyUtil;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -169,7 +166,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         final String current_user_name = PrefUtil.getUsername(getNavActivity());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity()).
-                setTitle(R.string.dialog_edit_profile_title).
+                setTitle(R.string.dialog_edit_user_profile_title).
                 setView(editText).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
@@ -185,8 +182,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
                         final ProgressDialog progress = ProgressDialog.show(
                                 getNavActivity(),
-                                getString(R.string.dialog_profile_edit_progress_title),
-                                getString(R.string.dialog_profile_edit_progress_body),
+                                getString(R.string.dialog_edit_user_profile_progress_title),
+                                getString(R.string.dialog_edit_user_profile_progress_body),
                                 true);
                         new Thread(new Runnable() {
                             @Override
@@ -206,7 +203,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                                                         build();
                                             new AlertDialog.Builder(getNavActivity()).
                                                     setIcon(android.R.drawable.ic_dialog_info).
-                                                    setMessage(R.string.dialog_profile_edit_result_success).
+                                                    setMessage(R.string.dialog_edit_user_profile_result_success).
                                                     setOnDismissListener(new DialogInterface.OnDismissListener() {
                                                         @Override
                                                         public void onDismiss(DialogInterface dialog) {
@@ -231,7 +228,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
                                             new AlertDialog.Builder(getNavActivity()).
                                                     setIcon(android.R.drawable.ic_dialog_alert).
-                                                    setTitle(R.string.dialog_profile_edit_result_error).
+                                                    setTitle(R.string.dialog_edit_user_profile_result_error).
                                                     setMessage(result.second).
                                                     show();
                                         }

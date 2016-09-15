@@ -668,9 +668,10 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         String selection = null;
         String[] selectionArgs = null;
 
-        SPermission.setSingletonPermission(PrefUtil.getUserPermission(getActivity()));
-        if (SPermission.getSingletonPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
-            List<Long> branches = SPermission.getSingletonPermission().getAllowedBranches();
+        SPermission permission = SPermission.getUserPermission(getContext());
+
+        if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+            List<Long> branches = permission.getAllowedBranches();
             selection = "(";
             selectionArgs = new String[branches.size()];
             for (int i = 0; i < branches.size(); i++) {

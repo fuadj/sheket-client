@@ -280,7 +280,7 @@ public class SheketSyncService extends IntentService {
 
             long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
             String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
-            String permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
+            String new_permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
             String license = companyObj.getString(COMPANY_LICENSE);
             /**
              * The server will only return a non-empty license if payment is made.
@@ -298,7 +298,7 @@ public class SheketSyncService extends IntentService {
             // tie this company to the current user calling the sync
             values.put(CompanyEntry.COLUMN_USER_ID, user_id);
             values.put(CompanyEntry.COLUMN_NAME, company_name);
-            values.put(CompanyEntry.COLUMN_PERMISSION, permission);
+            values.put(CompanyEntry.COLUMN_PERMISSION, new_permission);
             values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
             // if we've got a license, then there is payment available, otherwise payment has ended.
             values.put(CompanyEntry.COLUMN_PAYMENT_STATE,
@@ -317,9 +317,12 @@ public class SheketSyncService extends IntentService {
                             String.valueOf(company_id)
                     }).build());
 
-            if (PrefUtil.isCompanySet(this) &&
-                    PrefUtil.getCurrentCompanyId(this) == company_id) {
-                PrefUtil.setUserPermission(this, permission);
+            String previous_permission = PrefUtil.getEncodedUserPermission(this);
+
+            // if there is a permission change, send a broadcast to UI can update accordingly
+            if (PrefUtil.getCurrentCompanyId(this) == company_id &&
+                    !previous_permission.equals(new_permission)) {
+                PrefUtil.setUserPermission(this, new_permission);
                 sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
             }
 

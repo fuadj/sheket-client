@@ -38,9 +38,6 @@ public abstract class BaseNavigation {
         mRootView = view;
         mCallback = (NavigationCallback) activity;
 
-        SPermission.setSingletonPermission(PrefUtil.getUserPermission(mActivity));
-        mUserPermission = SPermission.getSingletonPermission();
-
         onSetup();
     }
 
@@ -48,8 +45,6 @@ public abstract class BaseNavigation {
      * Call this if there is a change in user permissions and UI needs to update.
      */
     public void userPermissionChanged() {
-        SPermission.setSingletonPermission(PrefUtil.getUserPermission(mActivity));
-        mUserPermission = SPermission.getSingletonPermission();
         onUserPermissionChanged();
     }
 
@@ -68,7 +63,7 @@ public abstract class BaseNavigation {
     public NavigationCallback getCallBack() { return mCallback; }
 
     public SPermission getUserPermission() {
-        return mUserPermission;
+        return SPermission.getUserPermission(getNavActivity());
     }
 
     /**

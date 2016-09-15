@@ -23,7 +23,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.widget.*;
 
 import com.mukera.sheket.client.controller.items.transactions.TransactionUtil;
-import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -65,8 +64,7 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
     }
 
     boolean hasUserManagerAccess() {
-        SPermission.setSingletonPermission(PrefUtil.getUserPermission(getActivity()));
-        return SPermission.getSingletonPermission().getPermissionType() == SPermission.PERMISSION_TYPE_ALL_ACCESS;
+        return SPermission.getUserPermission(getActivity()).hasManagerAccess();
     }
 
     void startLoader() {

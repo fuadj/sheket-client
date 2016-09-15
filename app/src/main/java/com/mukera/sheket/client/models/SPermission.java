@@ -1,6 +1,8 @@
 package com.mukera.sheket.client.models;
 
-import com.squareup.okhttp.Interceptor;
+import android.content.Context;
+
+import com.mukera.sheket.client.utils.PrefUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +40,15 @@ public class SPermission {
         mAllowedStoreBranches = new ArrayList<>();
     }
 
+    /**
+     * Decodes the user permission and converts this to an {@code SPermission} object.
+     * It is safe to use even if permission hasn't been set(e.g: if there is no company at all).
+     * It will return an {@code SPermission} with a PERMISSION_TYPE_NONE as its type.
+     */
+    public static SPermission getUserPermission(Context context) {
+        return Decode(PrefUtil.getEncodedUserPermission(context));
+    }
+
     public static SPermission Decode(String text) {
         SPermission permission = new SPermission();
         try {
@@ -57,7 +68,8 @@ public class SPermission {
                 }
             }
         } catch (JSONException e) {
-            return null;
+            permission.mPermissionType = PERMISSION_TYPE_NONE;
+            return permission;
         }
         return permission;
     }
@@ -105,16 +117,12 @@ public class SPermission {
         return result;
     }
 
-    public static void setSingletonPermission(String permission) {
-        sPermission = SPermission.Decode(permission);
+    public boolean hasManagerAccess() {
+        return getPermissionType() == PERMISSION_TYPE_ALL_ACCESS;
     }
 
-    public static SPermission getSingletonPermission() {
-        if (sPermission == null) {
-            sPermission = new SPermission();
-            sPermission.mPermissionType = PERMISSION_TYPE_NONE;
-        }
-        return sPermission;
+    public boolean hasEmploeeAccess() {
+        return getPermissionType() != PERMISSION_TYPE_NONE;
     }
 
     public int getPermissionType() {

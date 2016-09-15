@@ -48,8 +48,6 @@ public class CompanyUtil {
             PrefUtil.setUserPermission(context, switch_company.encoded_permission);
             PrefUtil.restoreStateFromBackup(context, switch_company.state_bkup);
 
-            SPermission.setSingletonPermission(switch_company.encoded_permission);
-
             listener.runAfterSwitchCompleted();
         } else {
 
@@ -78,8 +76,6 @@ public class CompanyUtil {
                     PrefUtil.setCurrentCompanyName(context, switch_company.name);
                     PrefUtil.setUserPermission(context, switch_company.encoded_permission);
                     PrefUtil.restoreStateFromBackup(context, switch_company.state_bkup);
-
-                    SPermission.setSingletonPermission(switch_company.encoded_permission);
 
                     context.runOnUiThread(new Runnable() {
                         @Override
