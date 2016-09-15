@@ -111,7 +111,7 @@ public class PaymentService extends IntentService {
                 CompanyEntry.CONTENT_URI,
                 null, null, null, null);
 
-        if (cursor != null && !cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 result.add(new SCompany(cursor));
             } while (cursor.moveToNext());
