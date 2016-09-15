@@ -21,7 +21,6 @@ import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.controller.ListUtils;
-import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -49,9 +48,6 @@ public class SettingsFragment extends Fragment {
                 Integer item = adapter.getItem(position);
                 Fragment fragment = null;
                 switch (item) {
-                    case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
-                        fragment = new CompanyFragment();
-                        break;
                     case BaseNavigation.StaticNavigationOptions.OPTION_USER_PROFILE:
                         fragment = new ProfileFragment();
                         break;

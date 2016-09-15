@@ -1,12 +1,16 @@
 package com.mukera.sheket.client.controller.navigation;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -103,6 +107,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                     return;
                 }
 
+                displayAddCompanyDialog();
                 // TODO: display add company dialog
             }
         });
@@ -147,6 +152,164 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             });
         }
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
+    }
+
+    void displayAddCompanyDialog() {
+        final EditText editText = new EditText(getNavActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity()).
+                setTitle(R.string.dialog_new_company_title).
+                setMessage(R.string.dialog_new_company_body).
+                setView(editText).
+                setPositiveButton(R.string.dialog_new_company_btn_ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String company_name = editText.getText().toString().trim();
+
+                        SheketTracker.setScreenName(getNavActivity(), SheketTracker.SCREEN_NAME_MAIN);
+                        SheketTracker.sendTrackingData(getNavActivity(),
+                                new HitBuilders.EventBuilder().
+                                        setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                        setAction("create company selected").
+                                        build());
+
+                        final ProgressDialog progress = ProgressDialog.show(
+                                getNavActivity(),
+                                getString(R.string.dialog_new_company_progress_title),
+                                getString(R.string.dialog_new_company_progress_body),
+                                true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final Pair<Boolean, String> result = createNewCompany(getNavActivity(), company_name);
+                                getNavActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progress.dismiss();
+                                        dialog.dismiss();
+
+                                        Map<String, String> trackingData;
+                                        if (result.first == Boolean.TRUE) {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("company creation successful").
+                                                    build();
+                                            new AlertDialog.Builder(getNavActivity()).
+                                                    setIcon(android.R.drawable.ic_dialog_info).
+                                                    setMessage(R.string.dialog_new_company_success).
+                                                    setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                                        @Override
+                                                        public void onDismiss(DialogInterface dialog) {
+                                                            LocalBroadcastManager.getInstance(getNavActivity()).
+                                                                    sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
+                                                        }
+                                                    }).
+                                                    setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                                        @Override
+                                                        public void onCancel(DialogInterface dialog) {
+                                                            LocalBroadcastManager.getInstance(getNavActivity()).
+                                                                    sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
+                                                        }
+                                                    }).
+                                                    show();
+                                        } else {
+                                            trackingData = new HitBuilders.EventBuilder().
+                                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
+                                                    setAction("create company error").
+                                                    setLabel(result.second).
+                                                    build();
+
+                                            new AlertDialog.Builder(getNavActivity()).
+                                                    setIcon(android.R.drawable.ic_dialog_alert).
+                                                    setTitle(R.string.dialog_new_company_error).
+                                                    setMessage(result.second).
+                                                    show();
+                                        }
+
+                                        SheketTracker.setScreenName(getNavActivity(), SheketTracker.SCREEN_NAME_MAIN);
+                                        SheketTracker.sendTrackingData(getNavActivity(), trackingData);
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
+                }).
+                setNeutralButton(R.string.dialog_new_company_btn_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        final AlertDialog dialog = builder.create();
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String name = s.toString().trim();
+
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(
+                        !name.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // b/c there is no name initially, hide "ok" btn
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Tries to create a company by sending request to the server. If all goes well,
+     * it returns <True, Null>. Otherwise it returns <False, "error message">
+     */
+    Pair<Boolean, String> createNewCompany(Activity activity, String company_name) {
+        final String JSON_COMPANY_NAME = "company_name";
+        final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
+        final String JSON_USER_PERMISSION = "user_permission";
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(JSON_COMPANY_NAME, company_name);
+
+            Request.Builder builder = new Request.Builder();
+            builder.url(ConfigData.getAddress(activity) + "v1/company/create");
+            builder.addHeader(activity.getString(R.string.pref_request_key_cookie),
+                    PrefUtil.getLoginCookie(activity));
+            builder.post(RequestBody.create(MediaType.parse("application/json"),
+                    jsonObject.toString()));
+
+            Response response = client.newCall(builder.build()).execute();
+            if (!response.isSuccessful()) {
+                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
+            }
+
+            JSONObject result = new JSONObject(response.body().string());
+            long company_id = result.getLong(JSON_COMPANY_ID);
+            String user_permission = result.getString(JSON_USER_PERMISSION);
+
+            ContentValues values = new ContentValues();
+            values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
+            values.put(CompanyEntry.COLUMN_USER_ID, PrefUtil.getUserId(activity));
+            values.put(CompanyEntry.COLUMN_NAME, company_name);
+            values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
+
+            Uri uri = activity.getContentResolver().insert(
+                    CompanyEntry.CONTENT_URI, values
+            );
+            if (ContentUris.parseId(uri) < 0) {
+                return new Pair<>(Boolean.FALSE, "error adding company into db");
+            }
+            PrefUtil.setCurrentCompanyId(activity, company_id);
+            PrefUtil.setUserPermission(activity, user_permission);
+        } catch (JSONException | IOException e) {
+            return new Pair<>(Boolean.FALSE, e.getMessage());
+        }
+        return new Pair<>(Boolean.TRUE, null);
     }
 
     void displayProfileDetails() {
@@ -389,7 +552,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             return 2;
         }
 
-        public static final long ADD_COMPANY_ROW_COMPANY_ID = -1;
+        public static final long ADD_COMPANY_ROW_COMPANY_ID = -3;
 
         /**
          * Checks if the row is pointing to the "add company" cell.

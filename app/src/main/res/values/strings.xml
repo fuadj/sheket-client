@@ -198,8 +198,15 @@
     <string name="dialog_new_branch_name">Branch Name</string>
     <string name="dialog_new_branch_cancel">Cancel</string>
     <string name="dialog_new_branch_ok">Ok</string>
-    <string name="dialog_new_company_title">Create Company</string>
-    <string name="dialog_new_company_name">Create Name</string>
+
+    <string name="dialog_new_company_title">Create New Company</string>
+    <string name="dialog_new_company_body">Give a name for your company. You can also change the name later.</string>
+    <string name="dialog_new_company_btn_cancel">Cancel</string>
+    <string name="dialog_new_company_btn_ok">Ok</string>
+    <string name="dialog_new_company_progress_title">Creating Company</string>
+    <string name="dialog_new_company_progress_body">Please Wait&#8230;</string>
+    <string name="dialog_new_company_success">New Company Created, Congratulations!!!</string>
+    <string name="dialog_new_company_error">Company Creation Error, Please try Again.</string>
 
     <string name="dialog_qty_source_branch">Source</string>
     <string name="dialog_qty_select_branch">Select Branch</string>
@@ -279,7 +286,6 @@
 
     <string name="dialog_edit_company_profile_result_success">Name Updated</string>
     <string name="dialog_edit_company_profile_result_error">Update Error!!!</string>
-
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Add Member</string>

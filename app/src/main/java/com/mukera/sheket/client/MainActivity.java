@@ -56,7 +56,6 @@ import com.mukera.sheket.client.controller.items.AllItemsFragment;
 import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
-import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
@@ -590,10 +589,6 @@ public class MainActivity extends AppCompatActivity implements
             case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
                 new_screen = "Branches Fragment";
                 replaceMainFragment(new BranchFragment(), false);
-                break;
-            case BaseNavigation.StaticNavigationOptions.OPTION_COMPANIES:
-                new_screen = "Companies Fragment";
-                replaceMainFragment(new CompanyFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_EMPLOYEES:
                 new_screen = "Employees Fragment";
