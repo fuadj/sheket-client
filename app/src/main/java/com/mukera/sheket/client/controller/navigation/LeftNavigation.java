@@ -125,7 +125,6 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             mManagerList.setAdapter(mManagementAdapter);
             mManagementAdapter.add(StaticNavigationOptions.OPTION_BRANCHES);
             mManagementAdapter.add(StaticNavigationOptions.OPTION_EMPLOYEES);
-            mManagementAdapter.add(StaticNavigationOptions.OPTION_IMPORT);
             ListUtils.setDynamicHeight(mManagerList);
 
             mManagerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

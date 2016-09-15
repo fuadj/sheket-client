@@ -29,6 +29,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.ipaulpro.afilechooser.utils.FileUtils;
@@ -51,6 +53,7 @@ import com.mukera.sheket.client.controller.navigation.LeftNavigation;
 import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.CompanyFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
 import com.mukera.sheket.client.controller.user.SettingsFragment;
 import com.mukera.sheket.client.data.AndroidDatabaseManager;
@@ -67,6 +70,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+
+import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
@@ -326,8 +331,47 @@ public class MainActivity extends AppCompatActivity implements
             return;
         }
 
+        // check if we've already selected the company previously
         if (PrefUtil.getCurrentCompanyId(this) == company.company_id) {
-            // there is nothing to do, we are already viewing that company
+            // if we are not a MANAGER, then close the nav drawer
+            if (!SPermission.getUserPermission(this).hasManagerAccess()) {
+                closeNavDrawer();
+                return;
+            }
+
+            View view = getLayoutInflater().inflate(R.layout.dialog_company_profile, null);
+
+            TextView company_name = (TextView) view.findViewById(R.id.dialog_show_company_profile_company_name);
+            TextView payment_number = (TextView) view.findViewById(R.id.dialog_show_company_profile_payment_number);
+
+            company_name.setText(company.name);
+            payment_number.setText(
+                    IdEncoderUtil.encodeAndDelimitId(company.company_id, IdEncoderUtil.ID_TYPE_COMPANY)
+            );
+
+            ImageButton editNameBtn = (ImageButton) view.findViewById(R.id.dialog_show_company_profile_btn_edit_name);
+            editNameBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //displayEditCompanyNameDialog();
+                }
+            });
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this).
+                    setView(view);
+
+            final AlertDialog dialog = builder.create();
+
+            FancyButton importBtn = (FancyButton) view.findViewById(R.id.dialog_show_company_profile_btn_import);
+            importBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    onNavigationOptionSelected(BaseNavigation.StaticNavigationOptions.OPTION_IMPORT);
+                }
+            });
+
+            dialog.show();
             return;
         }
 

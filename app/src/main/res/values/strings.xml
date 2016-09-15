@@ -255,16 +255,28 @@
     <string name="dialog_payment_result_ok">Verification Successful!</string>
     <string name="dialog_payment_result_error">Verification Error</string>
 
-    <string name="dialog_view_profile_name">Name: </string>
-    <string name="dialog_view_profile_id">ID: </string>
+    <string name="dialog_view_user_profile_name">Name: </string>
+    <string name="dialog_view_user_profile_id">ID: </string>
 
-    <string name="dialog_edit_profile_title">Edit Name</string>
+    <string name="dialog_edit_user_profile_title">Edit Name</string>
 
-    <string name="dialog_profile_edit_progress_title">Updating Username</string>
-    <string name="dialog_profile_edit_progress_body">Please Wait&#8230;</string>
+    <string name="dialog_edit_user_profile_progress_title">Updating Username</string>
+    <string name="dialog_edit_user_profile_progress_body">Please Wait&#8230;</string>
 
-    <string name="dialog_profile_edit_result_success">Name Updated</string>
-    <string name="dialog_profile_edit_result_error">Update Error!!!</string>
+    <string name="dialog_edit_user_profile_result_success">Name Updated</string>
+    <string name="dialog_edit_user_profile_result_error">Update Error!!!</string>
+
+    <string name="dialog_view_company_profile_name">Company Name: </string>
+    <string name="dialog_view_company_profile_payment_number">Payment #: </string>
+
+    <string name="dialog_view_company_profile_import_btn">Import From .csv File</string>
+    <string name="dialog_edit_company_profile_title">Edit Name</string>
+
+    <string name="dialog_edit_company_profile_progress_title">Updating Company Name</string>
+    <string name="dialog_edit_company_profile_progress_body">Please Wait&#8230;</string>
+
+    <string name="dialog_edit_company_profile_result_success">Name Updated</string>
+    <string name="dialog_edit_company_profile_result_error">Update Error!!!</string>
 
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>

@@ -11,12 +11,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="16dp"
+        android:id="@+id/layout_company_profile"
         app:columnCount="3"
         app:rowCount="2"
-        android:layout_centerInParent="true">
+        android:layout_centerHorizontal="true">
 
         <ImageButton
-            android:id="@+id/dialog_show_profile_edit_name"
+            android:id="@+id/dialog_show_company_profile_btn_edit_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="4dp"
@@ -30,7 +31,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dialog_view_user_profile_name"
+            android:text="@string/dialog_view_company_profile_name"
             android:textColor="#111"
             android:textSize="24dp"
             app:layout_column="1"
@@ -38,11 +39,11 @@
             app:layout_gravity="center_vertical" />
 
         <TextView
-            android:id="@+id/dialog_show_profile_username"
+            android:id="@+id/dialog_show_company_profile_company_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
-            android:text="Test Name"
+            android:text="Coca Cola S.C"
             android:textColor="#333"
             android:textSize="22dp"
             app:layout_column="2"
@@ -52,7 +53,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dialog_view_user_profile_id"
+            android:text="@string/dialog_view_company_profile_payment_number"
             android:textColor="#111"
             android:textSize="24dp"
             app:layout_column="1"
@@ -60,18 +61,38 @@
             android:layout_marginTop="16dp" />
 
         <TextView
-            android:id="@+id/dialog_show_profile_id"
+            android:id="@+id/dialog_show_company_profile_payment_number"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:background="#cfd8dc"
             android:padding="8dp"
-            android:text="Test User ID"
+            android:text="234#-k89"
             android:textColor="#111"
             android:textSize="18dp"
             app:layout_column="2"
             android:layout_marginTop="16dp" />
 
     </android.support.v7.widget.GridLayout>
-</RelativeLayout>
 
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/dialog_show_company_profile_btn_import"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="10dp"
+        app:fb_defaultColor="#ffd54f"
+        app:fb_focusColor="#f9a825"
+        app:fb_radius="3dp"
+        app:fb_text="@string/dialog_view_company_profile_import_btn"
+        app:fb_textColor="#333"
+        app:fb_textSize="16sp"
+        app:fb_iconResource="@drawable/ic_action_new_import"
+        app:fb_iconPosition="left"
+        android:layout_below="@+id/layout_company_profile"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp" />
+</RelativeLayout>
