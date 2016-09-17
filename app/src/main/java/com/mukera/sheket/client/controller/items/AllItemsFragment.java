@@ -972,6 +972,12 @@ public class AllItemsFragment extends SearchableItemFragment {
         dialog.show();
     }
 
+    /**
+     * This actually don't remove the items totally, but sets their {@code status_flag} to be
+     * invisible. It then makes sure that branches that have categories who've got all their
+     * items "deleted" are also deleted(the category inside the branch will be removed b/c it
+     * don't have any "visible" items left).
+     */
     void deleteItems(final List<SItem> itemList) {
         final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(),
                 getString(R.string.dialog_item_delete_progress_title),
@@ -992,6 +998,10 @@ public class AllItemsFragment extends SearchableItemFragment {
                         item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
 
                     ContentValues values = item.toContentValues();
+
+                    // set the item to become invisible so it don't show-up anymore.
+                    values.put(ItemEntry.COLUMN_STATUS_FLAG, ItemEntry.STATUS_INVISIBLE);
+
                     // b/c we're doing an update, we don't want to have conflict with the item id as it is Primary Key.
                     values.remove(ItemEntry.COLUMN_ITEM_ID);
 
