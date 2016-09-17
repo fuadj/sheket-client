@@ -1067,6 +1067,14 @@ public class AllItemsFragment extends SearchableItemFragment {
             selectionArgs = new String[]{String.valueOf(mCurrentCategoryId)};
         }
 
+        /**
+         * filter-out items who've got their status_flag's set to INVISIBLE
+         */
+        selection = ((selection != null) ? (selection + " AND ") : "") +
+                ItemEntry._full(ItemEntry.COLUMN_STATUS_FLAG) +
+                " != " +
+                String.valueOf(ItemEntry.STATUS_INVISIBLE);
+
         return new CursorLoader(getActivity(),
                 ItemEntry.buildBaseUriWithBranches(company_id),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,
