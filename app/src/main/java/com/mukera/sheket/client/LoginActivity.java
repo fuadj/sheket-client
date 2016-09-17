@@ -1,11 +1,16 @@
 package com.mukera.sheket.client;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -125,6 +130,33 @@ public class LoginActivity extends AppCompatActivity {
                         Arrays.asList("public_profile"));
             }
         });
+
+        checkReadPhoneStatePermissionGranted();
+    }
+
+    /**
+     * Because we will sync if login is successful and because read_phone_state is required for sync,
+     * it is better if we confirm the permission is granted before trying to sync.
+     */
+    void checkReadPhoneStatePermissionGranted() {
+        // there is a bug in android M, declaring the permission in the manifest isn't enough
+        // see: http://stackoverflow.com/a/38782876/5753416
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                final int REQUEST_READ_PHONE_STATE = 1;
+
+                /**
+                 * Even though we are requesting the permission, we don't actually check if
+                 * it has been granted. We leave that to the user. If the user chooses to deny
+                 * the permission, it will be again requested when trying to perform a sync.
+                 */
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_PHONE_STATE},
+                        REQUEST_READ_PHONE_STATE);
+            }
+        }
     }
 
     void startMainActivity(boolean sync_on_login) {
