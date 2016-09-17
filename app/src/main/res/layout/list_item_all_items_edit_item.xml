@@ -66,17 +66,5 @@
             android:layout_marginRight="8dp"
             tools:ignore="HardcodedText" />
 
-        <FrameLayout
-            android:id="@+id/list_item_edit_item_layout_delete_new_item"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginRight="8dp"
-            android:padding="8dp">
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/list_item_edit_item_img_btn_delete_new_item"
-                android:background="@drawable/ic_action_cancel" />
-        </FrameLayout>
     </LinearLayout>
 </RelativeLayout>

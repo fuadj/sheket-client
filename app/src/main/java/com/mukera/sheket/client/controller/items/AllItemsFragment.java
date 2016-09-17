@@ -336,9 +336,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         CheckBox select_item;
         View layout_select;
 
-        ImageButton delete_item_btn;
-        View layout_delete_item;
-
         public EditItemViewHolder(View view) {
             item_name = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_name);
             item_code = (TextView) view.findViewById(R.id.list_item_edit_item_text_view_item_code);
@@ -346,9 +343,6 @@ public class AllItemsFragment extends SearchableItemFragment {
 
             select_item = (CheckBox) view.findViewById(R.id.list_item_edit_item_check_box_select);
             layout_select = view.findViewById(R.id.list_item_edit_item_layout_select);
-
-            delete_item_btn = (ImageButton) view.findViewById(R.id.list_item_edit_item_img_btn_delete_new_item);
-            layout_delete_item = view.findViewById(R.id.list_item_edit_item_layout_delete_new_item);
         }
     }
 
@@ -394,8 +388,6 @@ public class AllItemsFragment extends SearchableItemFragment {
              */
             holder.select_item.setOnCheckedChangeListener(null);
             holder.layout_select.setOnClickListener(null);
-            holder.delete_item_btn.setOnClickListener(null);
-            holder.layout_delete_item.setOnClickListener(null);
 
             holder.select_item.setChecked(mSelectedItems.containsKey(item.item_id));
             holder.select_item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -418,23 +410,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                     holder.select_item.setChecked(!holder.select_item.isChecked());
                 }
             });
-            boolean is_newly_created = item.change_status == ChangeTraceable.CHANGE_STATUS_CREATED;
-            int show_if_newly_created = is_newly_created ? View.VISIBLE : View.GONE;
-
-            holder.delete_item_btn.setVisibility(show_if_newly_created);
-            holder.layout_delete_item.setVisibility(show_if_newly_created);
-
-            if (is_newly_created) {
-                View.OnClickListener deleteListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        displayItemDeleteConfirmationDialog(item);
-                        // TODO: display confirm to delete, then delete it
-                    }
-                };
-                holder.delete_item_btn.setOnClickListener(deleteListener);
-                holder.layout_delete_item.setOnClickListener(deleteListener);
-            }
         } else {
             ItemViewHolder holder = (ItemViewHolder) view.getTag();
 
@@ -573,41 +548,6 @@ public class AllItemsFragment extends SearchableItemFragment {
             editBtn = (ImageView) view.findViewById(R.id.list_item_all_items_category_btn_edit);
             editFrameLayout = view.findViewById(R.id.list_item_all_items_category_layout_edit);
         }
-    }
-
-    void displayItemDeleteConfirmationDialog(final SItem item) {
-        new AlertDialog.Builder(getActivity()).
-                setTitle(R.string.dialog_item_delete_title).
-                setMessage(R.string.dialog_item_delete_body).
-                setPositiveButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }).
-                // we've made it at this end to remove accidental deletion
-                        setNeutralButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(), "Deleting", "Please Wait...", true);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                getActivity().getContentResolver().
-                                        delete(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getActivity())),
-                                                ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
-                                                new String[]{String.valueOf(item.item_id)});
-                                getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        deleteProgress.dismiss();
-                                    }
-                                });
-                            }
-                        }).start();
-                    }
-                }).show();
     }
 
     /**

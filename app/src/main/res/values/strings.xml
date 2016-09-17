@@ -159,9 +159,6 @@
     <string name="sign_out">Sign-Out</string>
     <string name="dialog_trans_total_qty">Total Quantity</string>
 
-    <string name="dialog_item_delete_title" translatable="false">Delete Item</string>
-    <string name="dialog_item_delete_body" translatable="false">Are you sure you want to delete the item?</string>
-
     <string name="nav_title_left_companies">Companies</string>
     <string name="nav_title_left_management">Management</string>
     <string name="nav_title_left_preferences">Preferences</string>
