@@ -76,7 +76,11 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 BranchEntry.COLUMN_NAME + " text not null, " +
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +
-                BranchEntry.COLUMN_LOCATION + " text);";
+                BranchEntry.COLUMN_LOCATION + " text, " +
+                String.format(Locale.US,
+                        " %s INTEGER DEFAULT %d ",
+                        BranchEntry.COLUMN_STATUS_FLAG, BranchEntry.STATUS_VISIBLE) +
+                ");";
 
         final String sql_create_category_table = "create table if not exists " + CategoryEntry.TABLE_NAME + " ( " +
                 CategoryEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
@@ -112,7 +116,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                  * and will only add to data costs during syncing. So, we only change the flags on Insert
                  * and Delete.
                  */
-                 " ) ON CONFLICT IGNORE);";
+                " ) ON CONFLICT IGNORE);";
 
         final String sql_create_item_table = "create table if not exists " + ItemEntry.TABLE_NAME + " ( " +
                 ItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
@@ -141,7 +145,12 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 ChangeTraceable.COLUMN_CHANGE_INDICATOR + " integer not null, " +
                 UUIDSyncable.COLUMN_UUID + " text, " +
                 // b/c there is not bool type in sqlite
-                ItemEntry.COLUMN_HAS_BAR_CODE + " integer null);";
+                ItemEntry.COLUMN_HAS_BAR_CODE + " integer null, " +
+
+                String.format(Locale.US,
+                        " %s INTEGER DEFAULT %d ",
+                        ItemEntry.COLUMN_STATUS_FLAG, ItemEntry.STATUS_VISIBLE) +
+                ");";
 
         final String sql_create_branch_item_table = "create table if not exists " + BranchItemEntry.TABLE_NAME + " ( " +
                 BranchItemEntry.COLUMN_COMPANY_ID + COMPANY_FOREIGN_KEY_REFERENCE +
@@ -209,10 +218,21 @@ public class SheketDbHelper extends SQLiteOpenHelper {
     }
 
     static class SheketDbException extends Exception {
-        public SheketDbException() { super(); }
-        public SheketDbException(String detailMessage) { super(detailMessage); }
-        public SheketDbException(String detailMessage, Throwable throwable) { super(detailMessage, throwable); }
-        public SheketDbException(Throwable throwable) { super(throwable); }
+        public SheketDbException() {
+            super();
+        }
+
+        public SheketDbException(String detailMessage) {
+            super(detailMessage);
+        }
+
+        public SheketDbException(String detailMessage, Throwable throwable) {
+            super(detailMessage, throwable);
+        }
+
+        public SheketDbException(Throwable throwable) {
+            super(throwable);
+        }
     }
 
     void createDummyBranch(SQLiteDatabase db) throws SheketDbException {
@@ -245,7 +265,7 @@ public class SheketDbHelper extends SQLiteOpenHelper {
                 CategoryEntry.COLUMN_CATEGORY_ID + " = ?",
                 new String[]{String.valueOf(CategoryEntry.ROOT_CATEGORY_ID)},
                 null, null, null);
-        if (cursor == null)  {
+        if (cursor == null) {
             throw new SheketDbException("CreateRootCategory query error");
         }
         if (!cursor.moveToFirst()) {    // the category doesn't exist

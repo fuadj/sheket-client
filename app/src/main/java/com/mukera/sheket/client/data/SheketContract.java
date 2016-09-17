@@ -46,10 +46,11 @@ public class SheketContract {
 
     /**
      * Converts Date class to a integer representation, used for easy comparison and database lookup.
+     *
      * @param date The input date
      * @return a DB-friendly representation of the date, using the format defined in DATE_FORMAT.
      */
-    public static int getDbDateInteger(Date date){
+    public static int getDbDateInteger(Date date) {
         // Because the API returns a unix timestamp (measured in seconds),
         // it must be converted to milliseconds in order to be converted to valid date.
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
@@ -58,6 +59,7 @@ public class SheketContract {
 
     /**
      * Converts a dateText to a long Unix time representation
+     *
      * @param dateInt the input date integer
      * @return the Date object
      */
@@ -65,7 +67,7 @@ public class SheketContract {
         SimpleDateFormat dbDateFormat = new SimpleDateFormat(DATE_FORMAT);
         try {
             return dbDateFormat.parse("" + dateInt);
-        } catch ( ParseException e ) {
+        } catch (ParseException e) {
             e.printStackTrace();
             return null;
         }
@@ -78,9 +80,9 @@ public class SheketContract {
      * values to be added) or it will replace the local with the server version. Replacing also has
      * problems because a replace is a sequence of "delete - then - insert". When the deletion happens,
      * foreign key dependencies can be violates and un-known behaviour occurs.
-     *
+     * <p/>
      * So, add this to your {@code ContentValues} when inserting if you want the behaviour to be
-     *          if already exist update, otherwise insert
+     * if already exist update, otherwise insert
      * This solves the problems stated above as it won't delete existing rows.
      */
     public static final String SQL_INSERT_OR_UPDATE = "__sql_insert_or_update__";
@@ -226,7 +228,7 @@ public class SheketContract {
 
         /**
          * The root category is the parent of the "first" level categories.
-         *
+         * <p/>
          * IMPORTANT:
          * We can't use the "universal" -1 as the id because that is used by the database
          * to signal error.
@@ -247,7 +249,9 @@ public class SheketContract {
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_PARENT_ID = "parent_id";
 
-        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+        public static String _full(String col_name) {
+            return TABLE_NAME + "." + col_name;
+        }
 
         /**
          * IMPORTANT: when joining tables, you should alias the category table with this and
@@ -258,8 +262,13 @@ public class SheketContract {
         // If you are using a query that also fetches children, this is that child part
         public static final String PART_CHILD = "child";
 
-        public static String _fullCurrent(String col_name) { return PART_CURRENT + "." + col_name; }
-        public static String _fullChild(String col_name) { return PART_CHILD + "." + col_name; }
+        public static String _fullCurrent(String col_name) {
+            return PART_CURRENT + "." + col_name;
+        }
+
+        public static String _fullChild(String col_name) {
+            return PART_CHILD + "." + col_name;
+        }
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
@@ -275,7 +284,24 @@ public class SheketContract {
         }
     }
 
-    public static final class BranchEntry extends CompanyBase {
+    /**
+     * Use to set different flags on entities.
+     */
+    public interface StatusTrackable {
+        // set for "normal" mode, it should be defined as the DEFAULT.
+        int STATUS_VISIBLE = 1;
+
+        // use when you want to hide entities from UI. Used to simulate deletion without
+        // actually removing data
+        int STATUS_INVISIBLE = 2;
+
+        /**
+         * This column should be defined as an integer type.
+         */
+        String COLUMN_STATUS_FLAG = "status_flag";
+    }
+
+    public static final class BranchEntry extends CompanyBase implements StatusTrackable {
         /**
          * This is the branch id used in transactions when the transaction
          * doesn't involve another branch. This dummy branch is created in
@@ -286,11 +312,11 @@ public class SheketContract {
          * a non existing branch id on a column that has foreign key dependency.
          * So, this dummy branch serves the purpose of the "null" branch where
          * transaction that don't affect another branch point to this branch.
-         *
+         * <p/>
          * This has the HUGE benefit of updating branch ids with the server ids when
          * syncing. This is only achieved when there is a foreign dependency on the
          * branch id and that has a "cascade on update" clause.
-         *
+         * <p/>
          * IMPORTANT:
          * We can't user the "universal" -1 as the id because that is used by the database
          * to signal error.
@@ -340,7 +366,9 @@ public class SheketContract {
 
         public static final String TABLE_NAME = "branch_category_table";
 
-        public static String _full(String col_name) { return TABLE_NAME + "." + col_name; }
+        public static String _full(String col_name) {
+            return TABLE_NAME + "." + col_name;
+        }
 
         public static final String COLUMN_BRANCH_ID = "_id";
         public static final String COLUMN_CATEGORY_ID = "category_id";
@@ -386,9 +414,10 @@ public class SheketContract {
 
         /**
          * An an optional query to fetch in all items even if they don't exist in the branch.
-         * @param uri   The uri that is to be wrapped with this "query_none_existing" option.
-         *              This should be a uri generated by one of {@code BranchItem} uri builder methods
-         *              as it will be useless if it isn't.
+         *
+         * @param uri The uri that is to be wrapped with this "query_none_existing" option.
+         *            This should be a uri generated by one of {@code BranchItem} uri builder methods
+         *            as it will be useless if it isn't.
          * @return
          */
         public static Uri buildFetchCategoryWithChildrenUri(Uri uri) {
@@ -433,6 +462,7 @@ public class SheketContract {
         }
 
         public static final long NO_ID_SET = -1;
+
         /**
          * if you don't want to specify either { branch_id OR item_id },
          * you should set it to {@code NO_ID_SET}
@@ -479,9 +509,10 @@ public class SheketContract {
 
         /**
          * An an optional query to fetch in all items even if they don't exist in the branch.
-         * @param uri   The uri that is to be wrapped with this "query_none_existing" option.
-         *              This should be a uri generated by one of {@code BranchItem} uri builder methods
-         *              as it will be useless if it isn't.
+         *
+         * @param uri The uri that is to be wrapped with this "query_none_existing" option.
+         *            This should be a uri generated by one of {@code BranchItem} uri builder methods
+         *            as it will be useless if it isn't.
          * @return
          */
         public static Uri buildFetchNoneExistingItemsUri(Uri uri) {
@@ -498,7 +529,7 @@ public class SheketContract {
         }
     }
 
-    public static final class ItemEntry extends CompanyBase {
+    public static final class ItemEntry extends CompanyBase implements StatusTrackable {
         private static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_ITEM).build();
 
@@ -536,6 +567,7 @@ public class SheketContract {
 
         private static final String QUERY_BRANCH_SPECIFIED = "branch_specified";
         private static final String VALUE_BRANCH_SPECIFIED = "true";
+
         public static Uri buildBaseUriWithBranches(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendQueryParameter(QUERY_BRANCH_SPECIFIED, VALUE_BRANCH_SPECIFIED).
@@ -581,6 +613,7 @@ public class SheketContract {
 
         private static final String QUERY_ITEMS_SPECIFIED = "item_specified";
         private static final String VALUE_ITEMS_SPECIFIED = "true";
+
         public static Uri buildBaseUriWithItems(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendQueryParameter(QUERY_ITEMS_SPECIFIED, VALUE_ITEMS_SPECIFIED).
@@ -658,12 +691,17 @@ public class SheketContract {
 
         public static String getStringForm(int trans_type) {
             switch (trans_type) {
-                case TYPE_INCREASE_PURCHASE: return "Buy";
-                case TYPE_INCREASE_RETURN_ITEM: return "Returned";
-                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH: return "Receive";
+                case TYPE_INCREASE_PURCHASE:
+                    return "Buy";
+                case TYPE_INCREASE_RETURN_ITEM:
+                    return "Returned";
+                case TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
+                    return "Receive";
 
-                case TYPE_DECREASE_CURRENT_BRANCH: return "Sell";
-                case TYPE_DECREASE_TRANSFER_TO_OTHER: return "Send";
+                case TYPE_DECREASE_CURRENT_BRANCH:
+                    return "Sell";
+                case TYPE_DECREASE_TRANSFER_TO_OTHER:
+                    return "Send";
             }
             return "Undefined TransType";
         }
@@ -677,6 +715,7 @@ public class SheketContract {
         /**
          * pass in {@code NO_TRANS_ID_SET} as trans_id to search all transactions
          * in a company.
+         *
          * @param company_id
          * @param trans_id
          * @return
