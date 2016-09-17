@@ -272,9 +272,25 @@ public class AllItemsFragment extends SearchableItemFragment {
         mDeleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /**
+                 * Because we are showing category & item delete confirmation dialogs one after
+                 * the other, we can't just call them "consecutively" because both display their
+                 * dialogs instantaneously. So we use this algorithm to display the dialogs
+                 *
+                 *      if (categories > 0) {
+                 *          displayCategoryDialog() {
+                 *
+                 *              // after category dialog dismiss
+                 *
+                 *              displayItemDialog();
+                 *          }
+                 *      } else {
+                 *          displayItemDialog();
+                 *      }
+                 */
                 if (!mSelectedCategories.isEmpty())
                     displayDeleteCategoryConfirmationDialog();
-                if (!mSelectedItems.isEmpty())
+                else
                     displayDeleteItemConfirmationDialog();
             }
         });
@@ -570,7 +586,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                     }
                 }).
                 // we've made it at this end to remove accidental deletion
-                setNeutralButton("Yes", new DialogInterface.OnClickListener() {
+                        setNeutralButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
@@ -581,7 +597,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                                 getActivity().getContentResolver().
                                         delete(ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getActivity())),
                                                 ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
-                                                        new String[]{String.valueOf(item.item_id)});
+                                                new String[]{String.valueOf(item.item_id)});
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -879,8 +895,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                                             @Override
                                             public void run() {
                                                 deleteProgress.dismiss();
-                                                mIsEditMode = false;
-                                                restartFragmentToApplyEditingChanges();
+                                                displayDeleteItemConfirmationDialog();
                                             }
                                         });
                                     }
@@ -905,6 +920,12 @@ public class AllItemsFragment extends SearchableItemFragment {
      * items, but sets the invisible flag.
      */
     void displayDeleteItemConfirmationDialog() {
+        if (mSelectedItems.isEmpty()) {
+            mIsEditMode = false;
+            restartFragmentToApplyEditingChanges();
+            return;
+        }
+
         // convert from Map -> List to preserve order
         final ArrayList<SItem> itemList = new ArrayList<>();
         for (Long item_id : mSelectedItems.keySet()) {
@@ -960,11 +981,11 @@ public class AllItemsFragment extends SearchableItemFragment {
                         }).
                 setNegativeButton(R.string.dialog_item_delete_confirmation_cancel,
                         new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
 
         AlertDialog dialog = builder.create();
 
