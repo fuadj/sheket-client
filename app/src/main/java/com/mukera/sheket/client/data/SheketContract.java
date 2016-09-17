@@ -299,6 +299,11 @@ public class SheketContract {
          * This column should be defined as an integer type.
          */
         String COLUMN_STATUS_FLAG = "status_flag";
+
+        /**
+         * Use this to send and receive when encoding it in JSON format.
+         */
+        String JSON_STATUS_FLAG = "status_flag";
     }
 
     public static final class BranchEntry extends CompanyBase implements StatusTrackable {

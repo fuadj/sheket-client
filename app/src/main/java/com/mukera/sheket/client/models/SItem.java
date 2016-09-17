@@ -65,7 +65,8 @@ public class SItem extends UUIDSyncable implements Parcelable {
             _f(ItemEntry.COLUMN_BAR_CODE),
             _f(ItemEntry.COLUMN_HAS_BAR_CODE),
             _f(COLUMN_CHANGE_INDICATOR),
-            _f(COLUMN_UUID)
+            _f(COLUMN_UUID),
+            _f(ItemEntry.COLUMN_STATUS_FLAG)
     };
 
     // columns of "SItem" + "SBranchItem" + "SBranch" combined!!!
@@ -106,7 +107,9 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public static final int COL_CHANGE_INDICATOR = 14;
     public static final int COL_CLIENT_UUID = 15;
 
-    public static final int COL_LAST = 16;
+    public static final int COL_STATUS_FLAG = 16;
+
+    public static final int COL_LAST = 17;
 
     public long company_id;
     public long item_id;
@@ -124,6 +127,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public String part_number;
     public String bar_code;
     public boolean has_bar_code;
+    public int status_flag;
 
     /**
      * When joining multiple tables through LEFT/RIGHT joins, if the item
@@ -191,6 +195,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         has_bar_code = SheketContract.toBool(cursor.getInt(COL_HAS_BAR_CODE + offset));
         change_status = cursor.getInt(COL_CHANGE_INDICATOR + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
+        status_flag = cursor.getInt(COL_STATUS_FLAG + offset);
 
         total_quantity = 0.d;
         available_branches = new ArrayList<>();
@@ -312,6 +317,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         has_bar_code = SheketContract.toBool(parcel.readInt());
         change_status = parcel.readInt();
         client_uuid = parcel.readString();
+        status_flag = parcel.readInt();
     }
 
     public ContentValues toContentValues() {
@@ -336,6 +342,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
                 SheketContract.toInt(has_bar_code));
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
         values.put(COLUMN_UUID, client_uuid);
+        values.put(ItemEntry.COLUMN_STATUS_FLAG, status_flag);
         return values;
     }
 
@@ -355,6 +362,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         result.put(JSON_BAR_CODE, bar_code);
         result.put(JSON_HAS_BAR_CODE, has_bar_code);
         result.put(JSON_ITEM_UUID, client_uuid);
+        result.put(ItemEntry.JSON_STATUS_FLAG, status_flag);
         return result;
     }
 
@@ -376,6 +384,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
         dest.writeInt(SheketContract.toInt(has_bar_code));
         dest.writeInt(change_status);
         dest.writeString(client_uuid);
+        dest.writeInt(status_flag);
     }
 
     @Override

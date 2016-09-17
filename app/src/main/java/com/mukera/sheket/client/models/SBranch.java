@@ -28,7 +28,8 @@ public class SBranch extends UUIDSyncable implements Parcelable {
             _f(BranchEntry.COLUMN_NAME),
             _f(BranchEntry.COLUMN_LOCATION),
             _f(COLUMN_CHANGE_INDICATOR),
-            _f(COLUMN_UUID)
+            _f(COLUMN_UUID),
+            _f(BranchEntry.COLUMN_STATUS_FLAG)
     };
 
     public static final int COL_COMPANY_ID = 0;
@@ -37,13 +38,15 @@ public class SBranch extends UUIDSyncable implements Parcelable {
     public static final int COL_LOCATION = 3;
     public static final int COL_CHANGE = 4;
     public static final int COL_CLIENT_UUID = 5;
+    public static final int COL_STATUS_FLAG = 6;
 
-    public static final int COL_LAST = 6;
+    public static final int COL_LAST = 7;
 
     public long company_id;
     public long branch_id;
     public String branch_name;
     public String branch_location;
+    public int status_flag;
 
     // See docs for {@link SItem.NO_ITEM_FOUND}
     public static final int NO_BRANCH_FOUND = 0;
@@ -65,6 +68,7 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         branch_location = cursor.getString(COL_LOCATION + offset);
         change_status = cursor.getInt(COL_CHANGE + offset);
         client_uuid = cursor.getString(COL_CLIENT_UUID + offset);
+        status_flag = cursor.getInt(COL_STATUS_FLAG + offset);
     }
 
     private SBranch(Parcel parcel) {
@@ -75,6 +79,8 @@ public class SBranch extends UUIDSyncable implements Parcelable {
 
         change_status = parcel.readInt();
         client_uuid = parcel.readString();
+
+        status_flag = parcel.readInt();
     }
 
     @Override
@@ -91,6 +97,8 @@ public class SBranch extends UUIDSyncable implements Parcelable {
 
         dest.writeInt(change_status);
         dest.writeString(client_uuid);
+
+        dest.writeInt(status_flag);
     }
 
     public ContentValues toContentValues() {
@@ -100,6 +108,7 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         values.put(BranchEntry.COLUMN_NAME, branch_name);
         values.put(BranchEntry.COLUMN_LOCATION, branch_location);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
+        values.put(BranchEntry.COLUMN_STATUS_FLAG, status_flag);
         return values;
     }
 
@@ -109,6 +118,7 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         result.put(JSON_NAME, branch_name);
         result.put(JSON_LOCATION, branch_location);
         result.put(JSON_BRANCH_UUID, client_uuid);
+        result.put(BranchEntry.JSON_STATUS_FLAG, status_flag);
         return result;
     }
 
