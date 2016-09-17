@@ -255,6 +255,13 @@ public class CategoryUtil {
 
             Set<Long> itemCategories = new HashSet<>();
             for (SBranchItem branchItem : branchItems) {
+                /**
+                 * Don't "count" items that are invisible.
+                 * IMPORTANT: If a category only contains invisible items, it should be deleted!!!
+                 */
+                if (branchItem.item.status_flag == ItemEntry.STATUS_INVISIBLE)
+                    continue;
+
                 itemCategories.add(branchItem.item.category);
             }
 
