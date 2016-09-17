@@ -273,7 +273,9 @@ public class AllItemsFragment extends SearchableItemFragment {
             @Override
             public void onClick(View v) {
                 if (!mSelectedCategories.isEmpty())
-                    confirmCategoryDeletion();
+                    displayDeleteCategoryConfirmationDialog();
+                if (!mSelectedItems.isEmpty())
+                    displayDeleteItemConfirmationDialog();
             }
         });
 
@@ -812,7 +814,7 @@ public class AllItemsFragment extends SearchableItemFragment {
     /**
      * Displays a confirmation dialog before deleting the selected categories.
      */
-    void confirmCategoryDeletion() {
+    void displayDeleteCategoryConfirmationDialog() {
         // we are converting it to a list because we want to preserve index. THis is because
         // we want to only delete categories that have been confirmed in the multi-choice dialog
         final ArrayList<SCategory> categoryList = new ArrayList<>();
@@ -847,7 +849,9 @@ public class AllItemsFragment extends SearchableItemFragment {
                                 }
 
                                 ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).
-                                        setEnabled(at_least_one_confirmed);
+                                        setVisibility(
+                                                at_least_one_confirmed ? View.VISIBLE : View.INVISIBLE
+                                        );
                             }
                         }).setCancelable(false).
                 setTitle("Categories To Delete, Please Confirm").
@@ -894,6 +898,134 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
+    }
+
+    /**
+     * Confirms deletion of selected items. This actually doesn't remove the
+     * items, but sets the invisible flag.
+     */
+    void displayDeleteItemConfirmationDialog() {
+        // convert from Map -> List to preserve order
+        final ArrayList<SItem> itemList = new ArrayList<>();
+        for (Long item_id : mSelectedItems.keySet()) {
+            itemList.add(mSelectedItems.get(item_id));
+        }
+
+        String[] itemNameArray = new String[itemList.size()];
+        for (int i = 0; i < itemNameArray.length; i++) {
+            itemNameArray[i] = itemList.get(i).name;
+        }
+
+        final boolean[] selected_status = new boolean[itemNameArray.length];
+        // initially every item is confirmed for deletion
+        for (int i = 0; i < selected_status.length; i++) {
+            selected_status[i] = true;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).
+                setMultiChoiceItems(itemNameArray, selected_status,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                selected_status[which] = isChecked;
+                                boolean at_least_one_confirmed = false;
+                                for (Boolean confirm : selected_status) {
+                                    if (confirm) {
+                                        at_least_one_confirmed = true;
+                                        break;
+                                    }
+                                }
+
+                                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).
+                                        setVisibility(
+                                                at_least_one_confirmed ? View.VISIBLE : View.INVISIBLE
+                                        );
+
+                            }
+                        }).setCancelable(false).
+                setTitle(R.string.dialog_item_delete_confirmation_title).
+                setPositiveButton(R.string.dialog_item_delete_confirmation_ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final List<SItem> confirmedList = new ArrayList<>();
+                                for (int i = 0; i < selected_status.length; i++) {
+                                    if (selected_status[i])
+                                        confirmedList.add(itemList.get(i));
+                                }
+                                dialog.dismiss();
+
+                                deleteItems(confirmedList);
+                            }
+                        }).
+                setNegativeButton(R.string.dialog_item_delete_confirmation_cancel,
+                        new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    void deleteItems(final List<SItem> itemList) {
+        final ProgressDialog deleteProgress = ProgressDialog.show(getActivity(),
+                getString(R.string.dialog_item_delete_progress_title),
+                getString(R.string.dialog_item_delete_progress_body), true);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+                long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+
+                for (SItem item : itemList) {
+                    // If it is in created state, that means it only exists locally and the server
+                    // doesn't know about it. So we can't ask the server to update stuff it doesn't
+                    // know about.
+                    if (item.change_status != ChangeTraceable.CHANGE_STATUS_CREATED)
+                        item.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
+
+                    ContentValues values = item.toContentValues();
+                    // b/c we're doing an update, we don't want to have conflict with the item id as it is Primary Key.
+                    values.remove(ItemEntry.COLUMN_ITEM_ID);
+
+                    operations.add(ContentProviderOperation.
+                            newUpdate(ItemEntry.buildBaseUri(company_id)).
+                            withSelection(
+                                    ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                                    new String[]{String.valueOf(item.item_id)}
+                            ).withValues(values).build());
+                }
+
+                final boolean[] success = new boolean[]{true};
+                try {
+                    getActivity().getContentResolver().applyBatch(SheketContract.CONTENT_AUTHORITY,
+                            operations);
+                } catch (OperationApplicationException | RemoteException e) {
+                    success[0] = false;
+                }
+
+                // update branch categories so they don't show categories who've got all their items deleted
+                CategoryUtil.updateBranchCategoriesForAllBranches(getActivity());
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // TODO: show delete result (success | no)
+
+                        deleteProgress.dismiss();
+                        mIsEditMode = false;
+                        restartFragmentToApplyEditingChanges();
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override

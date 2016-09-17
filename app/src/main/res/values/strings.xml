@@ -286,6 +286,14 @@
 
     <string name="dialog_edit_company_profile_result_success">Name Updated</string>
     <string name="dialog_edit_company_profile_result_error">Update Error!!!</string>
+
+    <string name="dialog_item_delete_confirmation_title">Items to Delete, Please Confirm</string>
+    <string name="dialog_item_delete_confirmation_ok">Delete</string>
+    <string name="dialog_item_delete_confirmation_cancel">Cancel</string>
+
+    <string name="dialog_item_delete_progress_title">Deleting Items</string>
+    <string name="dialog_item_delete_progress_body">Please Wait&#8230;</string>
+
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Add Member</string>
