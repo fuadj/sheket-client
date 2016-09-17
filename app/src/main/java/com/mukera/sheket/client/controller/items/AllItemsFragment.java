@@ -272,7 +272,8 @@ public class AllItemsFragment extends SearchableItemFragment {
         mDeleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                confirmCategoryDeletion();
+                if (!mSelectedCategories.isEmpty())
+                    confirmCategoryDeletion();
             }
         });
 
