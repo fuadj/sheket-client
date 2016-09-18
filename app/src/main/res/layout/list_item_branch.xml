@@ -15,16 +15,16 @@
         android:layout_alignParentStart="false"
         android:layout_alignParentLeft="true"
         android:gravity="center_vertical"
-        tools:ignore="HardcodedText" />
+        tools:ignore="HardcodedText"
+        android:layout_centerVertical="true" />
 
-    <TextView
+    <ImageButton
+        android:id="@+id/branch_list_item_btn_delete_branch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Test Location"
-        android:id="@+id/branch_list_item_branch_loc"
         android:layout_alignParentRight="true"
-        android:gravity="center_vertical"
-        android:textSize="18dp"
-        android:textColor="#010421"
-        tools:ignore="HardcodedText" />
+        android:src="@drawable/ic_action_remove"
+        android:background="#fff"
+        android:padding="4dp"
+        android:layout_centerVertical="true" />
 </RelativeLayout>

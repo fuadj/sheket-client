@@ -3,6 +3,7 @@ package com.mukera.sheket.client.controller.admin;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,16 +14,17 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
@@ -47,7 +49,14 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
 
         mBranches = (ListView) rootView.findViewById(R.id.branches_list_view);
         mAdapter = new BranchAdapter(getContext());
+        mAdapter.setListener(new BranchAdapter.DeleteBranchListener() {
+            @Override
+            public void deleteBranchSelected(SBranch branch) {
+                displayDeleteBranchConfirmation(branch);
+            }
+        });
         mBranches.setAdapter(mAdapter);
+
         Button createBranchBtn = (Button) rootView.findViewById(R.id.branches_btn_create);
         createBranchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +69,50 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
         });
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);
         return rootView;
+    }
+
+    void displayDeleteBranchConfirmation(final SBranch branch) {
+        new AlertDialog.Builder(getActivity()).
+                setTitle(R.string.dialog_branch_delete_confirmation_title).
+                setMessage(R.string.dialog_branch_delete_confirmation_body).
+                // make the right button be cancel to prevent accidental clicking
+                        setPositiveButton(R.string.dialog_branch_delete_confirmation_cancel,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).
+                setNeutralButton(R.string.dialog_branch_delete_confirmation_ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(final DialogInterface dialog, int which) {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        branch.status_flag = BranchEntry.STATUS_INVISIBLE;
+
+                                        ContentValues values = branch.toContentValues();
+                                        values.remove(BranchEntry.COLUMN_BRANCH_ID);
+
+                                        getContext().getContentResolver().update(
+                                                BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
+                                                values,
+                                                BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " = ?",
+                                                new String[]{String.valueOf(branch.branch_id)}
+                                        );
+
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                    }
+                                }).start();
+                            }
+                        }).
+                show();
     }
 
     @Override
@@ -87,18 +140,29 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
     public static class BranchAdapter extends CursorAdapter {
 
         public static class BranchViewHolder {
-            TextView branchName, loc;
+            TextView branchName;
+            ImageButton btnDeleteBranch;
 
             public BranchViewHolder(View view) {
                 branchName = (TextView) view.findViewById(R.id.branch_list_item_branch_name);
-                loc = (TextView) view.findViewById(R.id.branch_list_item_branch_loc);
+                btnDeleteBranch = (ImageButton) view.findViewById(R.id.branch_list_item_btn_delete_branch);
+
                 view.setTag(this);
             }
         }
 
+        public interface DeleteBranchListener {
+            void deleteBranchSelected(SBranch branch);
+        }
+
+        private DeleteBranchListener mListener;
 
         public BranchAdapter(Context context) {
             super(context, null);
+        }
+
+        public void setListener(DeleteBranchListener listener) {
+            mListener = listener;
         }
 
         @Override
@@ -114,9 +178,15 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             BranchViewHolder holder = (BranchViewHolder) view.getTag();
-            SBranch branch = new SBranch(cursor);
+            final SBranch branch = new SBranch(cursor);
             holder.branchName.setText(branch.branch_name);
-            holder.loc.setText(branch.branch_location);
+            holder.btnDeleteBranch.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mListener != null)
+                        mListener.deleteBranchSelected(branch);
+                }
+            });
         }
     }
 
@@ -130,13 +200,14 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                     !mBranchName.getText().toString().trim().isEmpty()
             );
         }
+
         @Nullable
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.dialog_new_branch, container);
 
             mBranchName = (EditText) view.findViewById(R.id.dialog_edit_text_branch_name);
-            mBranchName.addTextChangedListener(new TextWatcherAdapter(){
+            mBranchName.addTextChangedListener(new TextWatcherAdapter() {
                 @Override
                 public void afterTextChanged(Editable s) {
                     setButtonStatus();
