@@ -587,6 +587,7 @@ public class SheketSyncService extends IntentService {
                 item.bar_code = object.getString(SItem.JSON_BAR_CODE);
                 item.has_bar_code = object.getBoolean(SItem.JSON_HAS_BAR_CODE);
 
+                item.status_flag = object.getInt(ItemEntry.JSON_STATUS_FLAG);
                 result.syncedItems.add(item);
             }
         }
@@ -604,6 +605,8 @@ public class SheketSyncService extends IntentService {
                 branch.client_uuid = object.getString(SBranch.JSON_BRANCH_UUID);
                 branch.branch_name = object.getString(SBranch.JSON_NAME);
                 branch.branch_location = object.getString(SBranch.JSON_LOCATION);
+
+                branch.status_flag = object.getInt(BranchEntry.JSON_STATUS_FLAG);
 
                 result.syncedBranches.add(branch);
             }
