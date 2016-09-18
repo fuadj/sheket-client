@@ -33,6 +33,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.utils.PrefUtil;
 
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -119,10 +120,16 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
 
+        String selection = String.format(Locale.US,
+                "%s != %d",
+                BranchEntry._full(BranchEntry.COLUMN_STATUS_FLAG),
+                BranchEntry.STATUS_INVISIBLE);
+
         return new CursorLoader(getActivity(),
                 BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getContext())),
                 SBranch.BRANCH_COLUMNS,
-                null, null,
+                selection,
+                null,
                 sortOrder
         );
     }

@@ -48,6 +48,7 @@ import com.mukera.sheket.client.utils.UnitsOfMeasurement;
 import com.mukera.sheket.client.utils.Utils;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by fuad on 7/11/16.
@@ -683,6 +684,16 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
             selection += ")";
         }
+
+        /**
+         * filter-out branches who've got their status_flag's set to INVISIBLE
+         */
+        selection = ((selection != null) ? (selection + " AND ") : "") +
+                String.format(Locale.US,
+                        "%s != %d",
+                        BranchEntry._full(BranchEntry.COLUMN_STATUS_FLAG),
+                        BranchEntry.STATUS_INVISIBLE);
+
         return new CursorLoader(getActivity(),
                 BranchItemEntry.buildItemInAllBranches(company_id, mItem.item_id),
                 SItem.ITEM_WITH_BRANCH_DETAIL_COLUMNS,

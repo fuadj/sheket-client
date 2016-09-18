@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
+import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -25,6 +26,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by fuad on 7/29/16.
@@ -62,13 +64,16 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 switch (v.getId()) {
                     case R.id.nav_right_sync:
                         selected_option = StaticNavigationOptions.OPTION_SYNC;
-                        option_matched = true; break;
+                        option_matched = true;
+                        break;
                     case R.id.nav_right_transactions:
                         selected_option = StaticNavigationOptions.OPTION_TRANSACTIONS;
-                        option_matched = true; break;
+                        option_matched = true;
+                        break;
                     case R.id.nav_right_items:
                         selected_option = StaticNavigationOptions.OPTION_ITEM_LIST;
-                        option_matched = true; break;
+                        option_matched = true;
+                        break;
                 }
                 if (option_matched) {
                     getCallBack().onNavigationOptionSelected(selected_option);
@@ -120,7 +125,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String sortOrder = SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " ASC";
+        String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
 
         String selection = null;
         String[] selectionArgs = null;
@@ -133,13 +138,22 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 if (i != 0) {
                     selection += " OR ";
                 }
-                selection += SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
+                selection += BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
                 selectionArgs[i] = String.valueOf(branches.get(i));
             }
         }
 
+        /**
+         * filter-out branches who've got their status_flag's set to INVISIBLE
+         */
+        selection = ((selection != null) ? (selection + " AND ") : "") +
+                String.format(Locale.US,
+                        "%s != %d",
+                        BranchEntry._full(BranchEntry.COLUMN_STATUS_FLAG),
+                        BranchEntry.STATUS_INVISIBLE);
+
         return new CursorLoader(getNavActivity(),
-                SheketContract.BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getNavActivity())),
+                BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(getNavActivity())),
                 SBranch.BRANCH_COLUMNS,
                 selection,
                 selectionArgs,
