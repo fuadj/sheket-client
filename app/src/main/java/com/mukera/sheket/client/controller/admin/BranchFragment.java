@@ -93,7 +93,11 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                                     public void run() {
                                         branch.status_flag = BranchEntry.STATUS_INVISIBLE;
 
+                                        if (branch.change_status != ChangeTraceable.CHANGE_STATUS_CREATED)
+                                            branch.change_status = ChangeTraceable.CHANGE_STATUS_UPDATED;
+
                                         ContentValues values = branch.toContentValues();
+
                                         values.remove(BranchEntry.COLUMN_BRANCH_ID);
 
                                         getContext().getContentResolver().update(
