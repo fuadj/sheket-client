@@ -372,7 +372,7 @@ public class BranchItemFragment extends SearchableItemFragment {
             @Override
             public void run() {
                 if (!itemList.isEmpty())
-                    TransactionUtil.createTransactionWithItems(getActivity(), itemList, mBranch.branch_id, transactionNote);
+                    TransactionUtil.commitTransactionWithItems(getActivity(), itemList, mBranch.branch_id, transactionNote);
 
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
