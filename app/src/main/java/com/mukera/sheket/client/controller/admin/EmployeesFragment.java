@@ -35,6 +35,7 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.OperationSupport;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.BranchEntry;
@@ -43,7 +44,6 @@ import com.mukera.sheket.client.data.SheketContract.MemberEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
-import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -106,13 +106,25 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         addMemberBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-                AddEditMemberDialog dialog = new AddEditMemberDialog();
-                dialog.setBranches(getBranches());
-                dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_ADD;
-                dialog.fragment = EmployeesFragment.this;
-                dialog.mMember = null;
-                dialog.show(fm, "Add Member");
+                OperationSupport.checkPaymentSupportsOperation(getActivity(),
+                        OperationSupport.OPERATION_ADD_EMPLOYEE,
+                        new OperationSupport.OperationSupportListener() {
+                            @Override
+                            public void operationSupported() {
+                                FragmentManager fm = getActivity().getSupportFragmentManager();
+                                AddEditMemberDialog dialog = new AddEditMemberDialog();
+                                dialog.setBranches(getBranches());
+                                dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_ADD;
+                                dialog.fragment = EmployeesFragment.this;
+                                dialog.mMember = null;
+                                dialog.show(fm, null);
+                            }
+
+                            @Override
+                            public void operationNotSupported() {
+
+                            }
+                        });
             }
         });
 

@@ -25,6 +25,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.OperationSupport;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
@@ -62,10 +63,22 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
         createBranchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-                final BranchCreateDialog dialog = new BranchCreateDialog();
-                dialog.fragment = BranchFragment.this;
-                dialog.show(fm, "Create Branch");
+                OperationSupport.checkPaymentSupportsOperation(getActivity(),
+                        OperationSupport.OPERATION_ADD_BRANCH,
+                        new OperationSupport.OperationSupportListener() {
+                            @Override
+                            public void operationSupported() {
+                                FragmentManager fm = getActivity().getSupportFragmentManager();
+                                final BranchCreateDialog dialog = new BranchCreateDialog();
+                                dialog.fragment = BranchFragment.this;
+                                dialog.show(fm, null);
+                            }
+
+                            @Override
+                            public void operationNotSupported() {
+
+                            }
+                        });
             }
         });
         getLoaderManager().initLoader(LoaderId.MainActivity.BRANCH_LIST_LOADER, null, this);

@@ -299,6 +299,11 @@
     <string name="dialog_branch_delete_progress_title">Deleting Items</string>
     <string name="dialog_branch_delete_progress_body">Please Wait&#8230;</string>
 
+    <string name="dialog_payment_operation_not_supported_title">Operation Not Supported</string>
+    <string name="dialog_payment_operation_not_supported_body">
+        %1$s is not supported in your license level, please upgrade your license.
+    </string>
+
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Add Member</string>

@@ -36,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mukera.sheket.client.OperationSupport;
 import com.mukera.sheket.client.controller.items.transactions.CategoryUtil;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
@@ -650,19 +651,43 @@ public class AllItemsFragment extends SearchableItemFragment {
         option_item.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog.dismiss();
+                OperationSupport.checkPaymentSupportsOperation(getActivity(),
+                        OperationSupport.OPERATION_ADD_ITEM,
+                        new OperationSupport.OperationSupportListener() {
+                            @Override
+                            public void operationSupported() {
+                                dialog.dismiss();
 
-                ItemCreateEditDialog.newInstance(getCurrentCategory(),
-                        // we are passing a null item as we are not editing, but creating
-                        null
-                ).show(getFragmentManager(), null);
+                                ItemCreateEditDialog.newInstance(getCurrentCategory(),
+                                        // we are passing a null item as we are not editing, but creating
+                                        null
+                                ).show(getFragmentManager(), null);
+                            }
+
+                            @Override
+                            public void operationNotSupported() {
+
+                            }
+                        });
             }
         });
         option_category.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog.dismiss();
-                displayCategoryAddEditDialog(null);
+                OperationSupport.checkPaymentSupportsOperation(getActivity(),
+                        OperationSupport.OPERATION_ADD_CATEGORY,
+                        new OperationSupport.OperationSupportListener() {
+                            @Override
+                            public void operationSupported() {
+                                dialog.dismiss();
+                                displayCategoryAddEditDialog(null);
+                            }
+
+                            @Override
+                            public void operationNotSupported() {
+
+                            }
+                        });
             }
         });
         dialog.show();
