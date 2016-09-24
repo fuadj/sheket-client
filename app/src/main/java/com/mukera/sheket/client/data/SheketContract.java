@@ -141,6 +141,15 @@ public class SheketContract {
         public static final String COLUMN_COMPANY_ID = "_id";
 
         /**
+         * This is used to identify the company when paying for the service. This is a {@code String}
+         * value that is generated on the backend. We don't locally generate it from the
+         * company id because that wouldn't allow us to update payment_id if we've found
+         * a better way of encoding the id. So it is generated at the backend and any
+         * upgrades can be applied remotely.
+         */
+        public static final String COLUMN_PAYMENT_ID = "payment_id";
+
+        /**
          * This is only used for locally differentiating different users who
          * use the same phone to login to different companies.
          * We have the user id here and in no other place because controlling

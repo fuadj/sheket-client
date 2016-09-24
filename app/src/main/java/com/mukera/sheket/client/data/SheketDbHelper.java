@@ -47,6 +47,8 @@ public class SheketDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         final String sql_create_company_table = "create table if not exists " + CompanyEntry.TABLE_NAME + " ( " +
                 CompanyEntry.COLUMN_COMPANY_ID + " integer primary key ON CONFLICT IGNORE, " +
+                CompanyEntry.COLUMN_PAYMENT_ID + " text not null, " +
+
                 CompanyEntry.COLUMN_USER_ID + " integer not null, " +
 
                 CompanyEntry.COLUMN_NAME + " text not null, " +
