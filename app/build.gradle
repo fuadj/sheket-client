@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 
@@ -32,9 +33,37 @@ android {
         }
     }
 }
+
 repositories {
     mavenCentral()
 }
+
+def grpcVersion = '1.0.0'
+
+protobuf {
+    protoc {
+        // The version of protoc must match protobuf-java. If you don't depend on
+        // protobuf-java directly, you will be transitively depending on the
+        // protobuf-java version that grpc depends on.
+        artifact = "com.google.protobuf:protoc:3.0.0"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+        javalite {
+            // The codegen for lite comes as a separate artifact
+            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            //grpc {}
+            javalite {}
+        }
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
@@ -58,11 +87,8 @@ dependencies {
     // google analytics requires this dependency
     compile 'com.google.android.gms:play-services:6.5.+'
 
-    //compile files('libs/okhttp-3.2.0.jar')
-    //compile files('libs/mockwebserver-3.2.0.jar')
-    /*
-        compile('com.github.afollestad.material-dialogs:core:0.8.5.7@aar') {
-            transitive = true
-        }
-        */
+    compile "io.grpc:grpc-okhttp:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf-lite:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
 }
+
