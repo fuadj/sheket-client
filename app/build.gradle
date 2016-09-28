@@ -58,8 +58,10 @@ protobuf {
     }
     generateProtoTasks {
         all()*.plugins {
-            //grpc {}
             javalite {}
+            grpc {
+                option 'lite'
+            }
         }
     }
 }
