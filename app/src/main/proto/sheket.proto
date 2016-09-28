@@ -1,18 +1,20 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.mukera.sheket.client.communication";
-option java_outer_classname = "SheketGrpc";
+option java_package = "com.mukera.sheket.client.network";
+option java_outer_classname = "SheketServiceProto";
 
-package sheket_proto;
+package sheketproto;
 
-service Sheket {
+service SheketService {
     rpc UserSignup (SingupRequest) returns (SignupResponse);
-    rpc CreateCompany (NewCompanyRequest) returns (CompanyResponse);
-    rpc ListUserCompanies (Auth) returns (CompanyListResponse);
+
+    rpc SyncCompanies (SyncCompanyRequest) returns (CompanyList);
     rpc EditUserName (EditUserNameRequest) returns (EmptyResponse);
+
+    rpc CreateCompany (NewCompanyRequest) returns (Company);
     rpc AddEmployee (AddEmployeeRequest) returns (AddEmployeeResponse);
-    rpc SyncEnity (EntityRequest) returns (EmptyResponse);
+    rpc SyncEntity (EntityRequest) returns (EmptyResponse);
     rpc SyncTransaction (TransactionRequest) returns (TransactionResponse);
     rpc IssuePayment (IssuePaymentRequest) returns (IssuePaymentResponse);
     rpc VerifyPayment (VerifyPaymentRequest) returns (VerifyPaymentResponse);
@@ -27,7 +29,7 @@ message EmptyResponse {
 }
 
 // Requests that require the user to be authenticated need to embed this.
-message Auth {
+message SheketAuth {
     string login_cookie = 1;
 }
 
@@ -36,7 +38,7 @@ message CompanyID {
 }
 
 message CompanyAuth {
-    Auth auth = 1;
+    SheketAuth sheketAuth = 1;
     CompanyID company_id = 2;
 }
 /**
@@ -53,24 +55,35 @@ message SignupResponse {
     string login_cookie = 3;
 }
 
+message SyncCompanyRequest {
+    SheketAuth auth = 1;
+    int64 user_rev = 2;
+    string device_id = 3;
+    string local_user_time = 4;
+}
+
+message SyncUserResponse {
+}
+
 message NewCompanyRequest {
-    Auth auth = 1;
+    SheketAuth auth = 1;
     string name = 2;
     string device_id = 3;
 }
 
-message CompanyResponse {
+message Company {
     int64 company_id = 1;
     string company_name = 2;
     string permission = 3;
+    string signed_license = 4;
 }
 
-message CompanyListResponse {
-    repeated CompanyResponse companies = 1;
+message CompanyList {
+    repeated Company companies = 1;
 }
 
 message EditUserNameRequest {
-    Auth auth = 1;
+    SheketAuth auth = 1;
     string new_name = 2;
 }
 
