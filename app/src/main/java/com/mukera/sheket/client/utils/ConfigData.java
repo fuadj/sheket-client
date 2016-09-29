@@ -11,8 +11,10 @@ import com.mukera.sheket.client.R;
  */
 public class ConfigData {
     public static String getAddress(Context context) {
-        return "https://mukerax.com/api/";
-        //return "http://192.168.0.102:8080/api/";
+        //return "https://mukerax.com/api/";
+        //return "http://192.168.0.107:8080/api/";
+        return "http://172.20.10.3:8080/api/";
+
         //return "http://172.20.10.8:8080/api/";
         /*
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -20,6 +22,14 @@ public class ConfigData {
                 context.getString(R.string.pref_ip_default));
         return "http://" + ip_address + ":8000/";
         */
+    }
+
+    public static String getServerIP() {
+        return "192.168.0.107";
+    }
+
+    public static int getServerPort() {
+        return 8080;
     }
 
 }

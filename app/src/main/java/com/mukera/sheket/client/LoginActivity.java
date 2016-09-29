@@ -23,6 +23,9 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.google.android.gms.analytics.HitBuilders;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
+import com.mukera.sheket.client.network.SignupResponse;
+import com.mukera.sheket.client.network.SingupRequest;
 import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
@@ -38,6 +41,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Arrays;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import mehdi.sakout.fancybuttons.FancyButton;
 
 /**
@@ -191,31 +197,24 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
+                ManagedChannel managedChannel = ManagedChannelBuilder.
+                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                        usePlaintext(true).
+                        build();
+
+                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                        SheketServiceGrpc.newBlockingStub(managedChannel);
+
+                SingupRequest request = SingupRequest.newBuilder().
+                        setToken(mToken).build();
+                SignupResponse response = blockingStub.userSignup(request);
+
                 Context context = LoginActivity.this;
 
-                Request.Builder builder = new Request.Builder();
-                builder.url(ConfigData.getAddress(context) + "v1/signin/facebook");
-                builder.post(RequestBody.create(MediaType.parse("application/json"),
-                        new JSONObject().put(REQUEST_TOKEN, mToken).toString()));
-                Response response = client.newCall(builder.build()).execute();
-                if (!response.isSuccessful()) {
-                    JSONObject err = new JSONObject(response.body().string());
-                    errMsg = err.getString(context.getString(R.string.json_err_message));
-                    return false;
-                }
-
-                String login_cookie =
-                        response.header(context.getString(R.string.pref_response_key_cookie));
-
-                JSONObject result = new JSONObject(response.body().string());
-
-                long user_id = result.getLong(RESPONSE_USER_ID);
-                String username = result.getString(RESPONSE_USERNAME);
-
-                PrefUtil.setUserName(context, username);
-                PrefUtil.setUserId(context, user_id);
-                PrefUtil.setLoginCookie(context, login_cookie);
-            } catch (JSONException | IOException e) {
+                PrefUtil.setUserName(context, response.getUsername());
+                PrefUtil.setUserId(context, response.getUserId());
+                PrefUtil.setLoginCookie(context, response.getLoginCookie());
+            } catch (StatusRuntimeException e) {
                 errMsg = e.getMessage();
                 return false;
             }
