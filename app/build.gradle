@@ -24,13 +24,18 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.SheketReleaseConfig
         }
+    }
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
     }
 }
 
@@ -79,6 +84,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile project(':slidingmenu')
 
+    compile 'com.android.support:multidex:1.0.0'
+
     // We are sticking with 4.5.0 b/c after that minSdk is 15
     // see https://developers.facebook.com/docs/android/upgrading-4.x#450to451
     compile 'com.facebook.android:facebook-android-sdk:4.5.0'
@@ -89,6 +96,8 @@ dependencies {
     // google analytics requires this dependency
     compile 'com.google.android.gms:play-services:6.5.+'
 
+    // the annotations is need for the generated source
+    compile 'javax.annotation:javax.annotation-api:1.2'
     compile "io.grpc:grpc-okhttp:${grpcVersion}"
     compile "io.grpc:grpc-protobuf-lite:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"
