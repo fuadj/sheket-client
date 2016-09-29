@@ -15,6 +15,11 @@ import android.util.Log;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SCompany;
+import com.mukera.sheket.client.network.Company;
+import com.mukera.sheket.client.network.CompanyList;
+import com.mukera.sheket.client.network.SheketAuth;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
+import com.mukera.sheket.client.network.SyncCompanyRequest;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -45,10 +50,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 
 /**
  * Created by gamma on 4/13/16.
@@ -101,38 +110,40 @@ public class SheketSyncService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        client.setConnectTimeout(10, TimeUnit.SECONDS);
+        //client.setConnectTimeout(10, TimeUnit.SECONDS);
         PrefUtil.setIsSyncRunning(this, true);
         try {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
 
-            Pair<Set<Long>, Boolean> pair = syncUser();
+            ManagedChannel managedChannel = ManagedChannelBuilder.
+                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    usePlaintext(true).
+                    build();
+
+            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                    SheketServiceGrpc.newBlockingStub(managedChannel);
+
+            Set<Long> previous_companies = getLocalCompanyIds();
+
+            Pair<Set<Long>, Boolean> pair = syncCompanyList(blockingStub);
 
             /**
-             * <p>These companies are the ones that existed previously but don't appear in the current
-             * sync.(i.e: the user has been removed from them).</p>
+             * Remove the companies that previously existed locally but now don't appear when syncing.
+             * IMPORTANT: if the company is the currently selected company, we also need to force
+             * the UI to reset with the company not being visible thereafter.
              *
-             * <p>If a user is removed from a certain company, he can't send any data
-             * related to that company as he won't have the permissions to do it. So, locally
-             * remove any remnants he has of that company.</p>
-             *
-             * <p>IMPORTANT: if the company is the currently selected company, we also need to force
-             * the UI to reset with the company not being visible thereafter.</p>
+             * NOTE: {@code removeAll()} is a set subtraction.
+             * i.e:     companies_to_remove = previously_exist - currently_synced;
              */
-            Set<Long> not_seen_on_sync_companies = pair.first;
+            Set<Long> companies_to_delete = previous_companies;
+            companies_to_delete.removeAll(pair.first);
 
             Boolean is_current_company_payment_valid = pair.second;
 
-            long current_company = PrefUtil.getCurrentCompanyId(this);
-            boolean did_remove_current_company = false;
-            for (Long company_id : not_seen_on_sync_companies) {
-                if (company_id == current_company) {
-                    did_remove_current_company = true;
-                    break;
-                }
-            }
+            boolean did_remove_current_company = companies_to_delete.
+                    contains(PrefUtil.getCurrentCompanyId(this));
 
-            deleteRemovedCompanies(not_seen_on_sync_companies);
+            deleteRemovedCompanies(companies_to_delete);
 
             /**
              * If either the current company got removed OR the license of the current company isn't
@@ -169,6 +180,7 @@ public class SheketSyncService extends IntentService {
                     "Internet problem",
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (Exception e) {
+            e.printStackTrace();
             String err = e.getMessage();
             // it usually has the format package.exception_class: error message,
             // so do the crude "parsing" of the error message
@@ -182,6 +194,22 @@ public class SheketSyncService extends IntentService {
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         }
         PrefUtil.setIsSyncRunning(this, false);
+    }
+
+    Set<Long> getLocalCompanyIds() throws Exception {
+        Set<Long> company_ids = new HashSet<>();
+        Cursor cursor = getContentResolver().query(CompanyEntry.CONTENT_URI,
+                SCompany.COMPANY_COLUMNS, null, null, null);
+        if (cursor == null)
+            throw new SyncException("can't enumerate local companies");
+        if (cursor.moveToFirst()) {
+            do {
+                SCompany company = new SCompany(cursor);
+                company_ids.add(company.company_id);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return company_ids;
     }
 
     void deleteRemovedCompanies(Set<Long> removed_companies) throws Exception {
@@ -198,90 +226,51 @@ public class SheketSyncService extends IntentService {
     }
 
     /**
+     * <p/>
      * Fetches the companies the user belongs in. Also checks if the payment license for the
      * current company is still valid. If it isn't, the caller needs to "force-out" the user
      * so he can pay.
+     * <p/>
      *
-     * @return Pair<Set<Long>, Boolean>
-     *
-     * <p>
-     * {@code Set<Long>}:
-     * Any company that previously existed locally but doesn't exist
-     * in the current sync. These companies should be deleted.
-     * This means the user was removed from the company, (e.g: an employee being fired).
-     * </p>
-     *
-     * <p>
-     * {@code Boolean}:
-     * If the payment license of the current company is still valid it is True, False
-     * otherwise.
+     * @return a Pair<Set, Boolean>
+     * The {@code Set<Long>} holds the ids of companies in the current sync. * The {@code Boolean} is true if the current company's payment license is valid.
      * </p>
      */
-    Pair<Set<Long>, Boolean> syncUser() throws Exception {
-        JSONObject json = new JSONObject();
-        json.put(this.getString(R.string.sync_json_user_rev),
-                PrefUtil.getUserRevision(this));
-        json.put(getString(R.string.sync_json_payment_device_id),
-                DeviceId.getUniqueDeviceId(this));
-        // we must 'cast' the time to a string as the encoding of
-        // long and string is different and server is expecting a string
-        json.put(getString(R.string.sync_json_payment_local_user_time),
-                String.valueOf(System.currentTimeMillis()));
+    Pair<Set<Long>, Boolean> syncCompanyList(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        SyncCompanyRequest request = SyncCompanyRequest.
+                newBuilder().
+                setUserRev(PrefUtil.getUserRevision(this)).
+                setDeviceId(DeviceId.getUniqueDeviceId(this)).
+                setLocalUserTime(
+                        String.valueOf(System.currentTimeMillis())).
+                setAuth(SheketAuth.newBuilder().
+                        setLoginCookie(PrefUtil.getLoginCookie(this)).build()).
+                build();
 
-        Request.Builder builder = new Request.Builder();
-        builder.url(ConfigData.getAddress(this) + "v1/company/list");
-        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                PrefUtil.getLoginCookie(this));
-        builder.post(RequestBody.create(MediaType.parse("application/json"),
-                json.toString()));
-
-        Response response = client.newCall(builder.build()).execute();
-        if (!response.isSuccessful()) {
-            throwAppropriateException(response);
-        }
-
-        JSONObject result = new JSONObject(response.body().string());
-
-        /**
-         * Before we start syncing, we enumerate all locally existing companies.
-         * When we do the sync, we remove from our map any that are included in the sync response.
-         * The remaining companies will be the ones that need to be deleted from local database.
-         */
-        HashMap<Long, SCompany> previous_companies_not_seen_on_sync = new HashMap<>();
-        Cursor cursor = getContentResolver().query(CompanyEntry.CONTENT_URI,
-                SCompany.COMPANY_COLUMNS, null, null, null);
-        if (cursor == null)
-            throw new SyncException("can't enumerate local companies");
-        if (cursor.moveToFirst()) {
-            do {
-                SCompany company = new SCompany(cursor);
-                previous_companies_not_seen_on_sync.put(company.company_id, company);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-
-        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-
-        final String USER_JSON_COMPANY_ID = this.getString(R.string.pref_header_key_company_id);
-        final String USER_JSON_COMPANY_NAME = "company_name";
-        final String USER_JSON_COMPANY_PERMISSION = "user_permission";
-        final String COMPANY_LICENSE = getString(R.string.sync_json_payment_signed_license);
-
-        final String USER_JSON_COMPANIES = getString(R.string.sync_json_companies);
-
-        JSONArray companyArr = result.getJSONArray(USER_JSON_COMPANIES);
+        CompanyList companies = blockingStub.syncCompanies(request);
 
         long user_id = PrefUtil.getUserId(this);
         long current_company_id = PrefUtil.getCurrentCompanyId(this);
+
         boolean is_current_company_license_valid = false;
 
-        for (int i = 0; i < companyArr.length(); i++) {
-            JSONObject companyObj = companyArr.getJSONObject(i);
+        Set<Long> sync_company_ids = new HashSet<>();
 
-            long company_id = companyObj.getLong(USER_JSON_COMPANY_ID);
-            String company_name = companyObj.getString(USER_JSON_COMPANY_NAME);
-            String new_permission = companyObj.getString(USER_JSON_COMPANY_PERMISSION);
-            String license = companyObj.getString(COMPANY_LICENSE);
+        List<Company> companyList = companies.getCompaniesList();
+
+        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+
+        for (Company company : companyList) {
+            long company_id = company.getCompanyId();
+
+            sync_company_ids.add(company_id);
+
+            String name = company.getCompanyName();
+            String new_permission = company.getPermission();
+            String license = company.getSignedLicense();
+            // TODO: get correct payment id
+            String payment_id = "";
+
             /**
              * The server will only return a non-empty license if payment is made.
              * So checking if the license is empty or not is LEGIT. We don't have to
@@ -297,8 +286,9 @@ public class SheketSyncService extends IntentService {
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
             // tie this company to the current user calling the sync
             values.put(CompanyEntry.COLUMN_USER_ID, user_id);
-            values.put(CompanyEntry.COLUMN_NAME, company_name);
+            values.put(CompanyEntry.COLUMN_NAME, name);
             values.put(CompanyEntry.COLUMN_PERMISSION, new_permission);
+            values.put(CompanyEntry.COLUMN_PAYMENT_ID, payment_id);
             values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
             // if we've got a license, then there is payment available, otherwise payment has ended.
             values.put(CompanyEntry.COLUMN_PAYMENT_STATE,
@@ -325,16 +315,13 @@ public class SheketSyncService extends IntentService {
                 PrefUtil.setUserPermission(this, new_permission);
                 sendSheketBroadcast(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE);
             }
-
-            // we've seen it on the sync
-            previous_companies_not_seen_on_sync.remove(company_id);
         }
 
         if (!operations.isEmpty())
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operations);
 
-        return new Pair<>(previous_companies_not_seen_on_sync.keySet(), is_current_company_license_valid);
+        return new Pair<>(sync_company_ids, is_current_company_license_valid);
     }
 
     /**
