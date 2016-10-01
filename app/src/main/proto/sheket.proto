@@ -14,7 +14,7 @@ service SheketService {
 
     rpc CreateCompany (NewCompanyRequest) returns (Company);
     rpc AddEmployee (AddEmployeeRequest) returns (AddEmployeeResponse);
-    rpc SyncEntity (EntityRequest) returns (EmptyResponse);
+    rpc SyncEntity (EntityRequest) returns (EntityResponse);
     rpc SyncTransaction (TransactionRequest) returns (TransactionResponse);
     rpc IssuePayment (IssuePaymentRequest) returns (IssuePaymentResponse);
     rpc VerifyPayment (VerifyPaymentRequest) returns (VerifyPaymentResponse);
