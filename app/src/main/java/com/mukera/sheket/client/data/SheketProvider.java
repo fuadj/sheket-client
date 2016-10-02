@@ -283,7 +283,7 @@ public class SheketProvider extends ContentProvider {
                         selection = CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
                         selectionArgs = null;
                     }
-                    column_company_id = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID);
+                    column_company_id = CategoryEntry._full(CategoryEntry.COLUMN_COMPANY_ID);
                 }
                 break;
             }
