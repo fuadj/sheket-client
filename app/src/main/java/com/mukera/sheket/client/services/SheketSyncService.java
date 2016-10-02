@@ -65,8 +65,6 @@ import io.grpc.ManagedChannelBuilder;
 public class SheketSyncService extends IntentService {
     private final String LOG_TAG = SheketSyncService.class.getSimpleName();
 
-    public static final int SYNC_ROOT_CATEGORY_ID = -1;
-
     public static final OkHttpClient client = new OkHttpClient();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -531,16 +529,13 @@ public class SheketSyncService extends IntentService {
         // build categories
         genericEntityRequestBuilder(request_builder,
                 CategoryEntry.buildBaseUriWithNoChildren(PrefUtil.getCurrentCompanyId(this)),
-                CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
+                CategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SCategory.CATEGORY_COLUMNS,
                 new EntityBuilder() {
                     @Override
                     public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        Log.d("SheketSync", "adding category");
                         SCategory category = new SCategory(cursor);
-
-                        if (category.parent_id == CategoryEntry.ROOT_CATEGORY_ID) {
-                            category.parent_id = SYNC_ROOT_CATEGORY_ID;
-                        }
 
                         request_builder.addCategories(
                                 EntityRequest.RequestCategory.newBuilder().
@@ -560,12 +555,6 @@ public class SheketSyncService extends IntentService {
                     @Override
                     public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
                         SItem item = new SItem(cursor);
-                        /**
-                         * Convert from the local root category id to the one the server expects
-                         */
-                        if (item.category == CategoryEntry.ROOT_CATEGORY_ID) {
-                            item.category = SYNC_ROOT_CATEGORY_ID;
-                        }
                         request_builder.addItems(
                                 EntityRequest.RequestItem.newBuilder().
                                         setItem(item.toGRPCBuilder()).
