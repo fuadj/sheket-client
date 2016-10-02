@@ -111,59 +111,59 @@ message VerifyPaymentResponse {
 }
 
 message Item {
-    sint32 item_id = 1;
+    sint64 item_id = 1;
 
     string name = 2;
     string code = 3;
 
     string UUID = 4;
-    int32 status_flag = 5;
+    int64 status_flag = 5;
 
-    sint32 category_id = 6;
+    sint64 category_id = 6;
 
-    int32 unit_of_measurement = 7;
+    int64 unit_of_measurement = 7;
     bool has_derived_unit = 8;
     string derived_name = 9;
     double derived_factor = 10;
 }
 
 message Category {
-    sint32 category_id = 1;
+    sint64 category_id = 1;
 
     string name = 2;
-    sint32 parent_id = 3;
+    sint64 parent_id = 3;
 
     string UUID = 4;
-    int32 status_flag = 5;
+    int64 status_flag = 5;
 }
 
 message Branch {
-    sint32 branch_id = 1;
+    sint64 branch_id = 1;
 
     string name = 2;
 
     string UUID = 3;
-    int32 status_flag = 4;
+    int64 status_flag = 4;
 }
 
 message Employee {
-    int32 employee_id = 1;
+    int64 employee_id = 1;
 
     string name = 2;
     string permission = 3;
 }
 
 message BranchItem {
-    sint32 branch_id = 1;
-    sint32 item_id = 2;
+    sint64 branch_id = 1;
+    sint64 item_id = 2;
 
     double quantity = 3;
     string shelf_location = 4;
 }
 
 message BranchCategory {
-    sint32 branch_id = 1;
-    sint32 category_id = 2;
+    sint64 branch_id = 1;
+    sint64 category_id = 2;
 }
 
 message EntityRequest {
@@ -203,26 +203,27 @@ message EntityRequest {
         BranchCategory branchCategory = 2;
     }
 
-    CompanyAuth companyAuth = 1;
+    repeated RequestItem items = 1;
+    repeated RequestCategory categories = 2;
+    repeated RequestBranch branches = 3;
+    repeated RequestEmployee employees = 4;
+    repeated RequestBranchItem branchItems = 5;
+    repeated RequestBranchCategory branchCategories = 6;
 
-    repeated RequestItem items = 2;
-    repeated RequestCategory categories = 3;
-    repeated RequestBranch branches = 4;
-    repeated RequestEmployee employees = 5;
-    repeated RequestBranchItem branchItems = 6;
-    repeated RequestBranchCategory branchCategories = 7;
+    CompanyAuth companyAuth = 20;
 
-    int64 old_category_rev = 8;
-    int64 old_item_rev = 9;
-    int64 old_branch_rev = 10;
-    int64 old_branch_item_rev = 11;
-    int64 old_member_rev = 12;
-    int64 old_branch_category_rev = 13;
+    int64 old_category_rev = 21;
+    int64 old_item_rev = 22;
+    int64 old_branch_rev = 23;
+    int64 old_branch_item_rev = 24;
+    int64 old_member_rev = 25;
+    int64 old_branch_category_rev = 26;
 }
 
 message EntityResponse {
     enum SyncState {
-        // EXIST is the default state. If you deleted it, set it to REMOVED.
+        // EXIST is the default state(so it can be left out).
+        // If you deleted it, set it to REMOVED.
         EXIST = 0;
         REMOVED = 1;
     }
@@ -247,11 +248,6 @@ message EntityResponse {
         SyncState state = 2;
     }
 
-    message SyncBranchItem {
-        BranchItem branchItem = 1;
-        SyncState state = 2;
-    }
-
     message SyncBranchCategory {
         BranchCategory branchCategory = 1;
         SyncState state = 2;
@@ -259,33 +255,73 @@ message EntityResponse {
 
     message UpdatedId {
         // old_id is signed because it can be -ve
-        sint32 old_id = 1;
+        sint64 old_id = 1;
         // new_id can't be -ve, so it is not signed
-        int32 new_id = 2;
+        int64 new_id = 2;
     }
 
-    CompanyID company_id = 1;
+    repeated UpdatedId updated_item_ids = 1;
+    repeated UpdatedId updated_branch_ids = 2;
+    repeated UpdatedId updated_category_ids = 3;
 
-    repeated UpdatedId updated_item_ids = 2;
-    repeated UpdatedId updated_branch_ids = 3;
-    repeated UpdatedId updated_category_ids = 4;
+    repeated SyncItem items = 4;
+    repeated SyncCategory categories = 5;
+    repeated SyncBranch branches = 6;
+    repeated SyncEmployee employees = 7;
+    repeated SyncBranchCategory branchCategories = 8;
 
-    repeated SyncItem items = 5;
-    repeated SyncCategory categories = 6;
-    repeated SyncBranch branches = 7;
-    repeated SyncEmployee employees = 8;
-    repeated SyncBranchItem branchItems = 9;
-    repeated SyncBranchCategory branchCategories = 10;
+    // leave some gap till 15 so we can extend it
 
-    int64 new_category_rev = 11;
-    int64 new_item_rev = 12;
-    int64 new_branch_rev = 13;
-    int64 new_branch_item_rev = 14;
-    int64 new_member_rev = 15;
-    int64 new_branch_category_rev = 16;
+    int64 new_category_rev = 20;
+    int64 new_item_rev = 21;
+    int64 new_branch_rev = 22;
+    int64 new_branch_item_rev = 23;
+    int64 new_member_rev = 24;
+    int64 new_branch_category_rev = 25;
+}
+
+message Transaction {
+    message TransItem {
+        int64 trans_type = 1;
+        int64 item_id = 2;
+        double quantity = 3;
+        int64 other_branch_id = 4;
+        string item_note = 5;
+    }
+
+    repeated TransItem transactionItems = 1;
+
+    sint64 trans_id = 2;
+    sint64 branch_id = 3;
+    int64 date_time = 4;
+    string trans_note = 5;
+    string UUID = 6;
 }
 
 message TransactionRequest {
+    repeated Transaction transactions = 1;
+
+    CompanyAuth companyAuth = 2;
+
+    int64 old_branch_item_rev = 3;
+    int64 old_trans_rev = 4;
 }
+
 message TransactionResponse {
+    message SyncTransaction {
+        Transaction transaction = 1;
+        int64 user_id = 2;
+    }
+
+    message SyncBranchItem {
+        BranchItem branchItem = 1;
+        EntityResponse.SyncState state = 2;
+    }
+
+    repeated SyncTransaction transactions = 1;
+    repeated SyncBranchItem branchItems = 2;
+    repeated EntityResponse.UpdatedId updated_transaction_ids = 3;
+
+    int64 new_branch_item_rev = 4;
+    int64 new_trans_rev = 5;
 }
