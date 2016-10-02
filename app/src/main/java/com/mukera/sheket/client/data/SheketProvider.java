@@ -257,24 +257,34 @@ public class SheketProvider extends ContentProvider {
 
             case CATEGORY_WITH_ID:
             case CATEGORY: {
-                query_db = false;
-                tableName = CategoryEntry.TABLE_NAME;
-                if (uri_match == CATEGORY_WITH_ID) {
-                    selection = withAppendedSelection(selection,
-                            CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ");
-                    selectionArgs = withAppendedSelectionArgs(selectionArgs, null);
+                boolean should_fetch_children = !CategoryEntry.shouldNotFetchChildren(uri);
+                if (should_fetch_children) {
+                    query_db = false;
+                    tableName = CategoryEntry.TABLE_NAME;
+                    if (uri_match == CATEGORY_WITH_ID) {
+                        selection = withAppendedSelection(selection,
+                                CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ");
+                        selectionArgs = withAppendedSelectionArgs(selectionArgs, null);
+                    }
+
+                    selection = withAppendedCompanyIdSelection(selection,
+                            CategoryEntry._fullCurrent(CategoryEntry.COLUMN_COMPANY_ID));
+                    selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs,
+                            company_id);
+
+                    result = sCategoryWithChildrenQueryBuilder.query(
+                            mDbHelper.getReadableDatabase(),
+                            projection,
+                            selection, selectionArgs,
+                            null, null, sortOrder);
+                } else {
+                    tableName = CategoryEntry.TABLE_NAME;
+                    if (uri_match == CATEGORY_WITH_ID) {
+                        selection = CategoryEntry.COLUMN_CATEGORY_ID + " = ' " + ContentUris.parseId(uri) + " ' ";
+                        selectionArgs = null;
+                    }
+                    column_company_id = CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID);
                 }
-
-                selection = withAppendedCompanyIdSelection(selection,
-                        CategoryEntry._fullCurrent(CategoryEntry.COLUMN_COMPANY_ID));
-                selectionArgs = withAppendedCompanyIdSelectionArgs(selectionArgs,
-                        company_id);
-
-                result = sCategoryWithChildrenQueryBuilder.query(
-                        mDbHelper.getReadableDatabase(),
-                        projection,
-                        selection, selectionArgs,
-                        null, null, sortOrder);
                 break;
             }
 

@@ -266,7 +266,9 @@ public class SheketContract {
          * IMPORTANT: when joining tables, you should alias the category table with this and
          * fully qualify every columns you want to select with it.
          */
-        public static final String PART_CURRENT = "current";
+        // TODO: // FIXME: 10/2/16  this is just a temporary HACK!!!!
+        //public static final String PART_CURRENT = "current";
+        public static final String PART_CURRENT = TABLE_NAME;
 
         // If you are using a query that also fetches children, this is that child part
         public static final String PART_CHILD = "child";
@@ -281,6 +283,24 @@ public class SheketContract {
 
         public static Uri buildBaseUri(long company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
+        }
+
+        private static String QUERY_PARAM_DON_T_FETCH_CHILDREN = "query_param_don_t_fetch_children";
+        private static String PARAM_DONT_FETCH = "dont_fetch";
+        // FIXME: this is just a hack, find proper way of implementing this
+        // TODO: refactor sheket provider to have "current , child" category stuff.
+        // make "current the default" and add option to fetch children.
+        public static Uri buildBaseUriWithNoChildren(long company_id) {
+            return withBaseCompanyIdUri(CONTENT_URI, company_id).
+                    appendQueryParameter(QUERY_PARAM_DON_T_FETCH_CHILDREN, PARAM_DONT_FETCH).build();
+        }
+
+        public static boolean shouldNotFetchChildren(Uri uri) {
+            String val = uri.getQueryParameter(QUERY_PARAM_DON_T_FETCH_CHILDREN);
+            if (val != null && val.equals(PARAM_DONT_FETCH)) {
+                return true;
+            }
+            return false;
         }
 
         public static Uri buildCategoryUri(long company_id, long category_id) {
