@@ -9,6 +9,7 @@ import android.support.v4.util.Pair;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.Item;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -148,6 +149,20 @@ public class SItem extends UUIDSyncable implements Parcelable {
     public List<Pair<SBranchItem, SBranch>> available_branches;
 
     public SItem() {
+    }
+
+    public SItem(Item gRPC_Item) {
+        item_id = gRPC_Item.getItemId();
+        name = gRPC_Item.getName();
+        item_code = gRPC_Item.getCode();
+        category = gRPC_Item.getCategoryId();
+
+        unit_of_measurement = gRPC_Item.getUnitOfMeasurement();
+        has_derived_unit = gRPC_Item.getHasDerivedUnit();
+        derived_name = gRPC_Item.getDerivedName();
+        derived_factor = gRPC_Item.getDerivedFactor();
+        client_uuid = gRPC_Item.getUUID();
+        status_flag = gRPC_Item.getStatusFlag();
     }
 
     public SItem(Cursor cursor) {
@@ -344,6 +359,19 @@ public class SItem extends UUIDSyncable implements Parcelable {
         values.put(COLUMN_UUID, client_uuid);
         values.put(ItemEntry.COLUMN_STATUS_FLAG, status_flag);
         return values;
+    }
+
+    public Item.Builder toGRPCBuilder() {
+        return Item.newBuilder().
+                setItemId((int)item_id).
+                setName(name).
+                setCode(item_code).
+                setCategoryId((int)category).
+                setUnitOfMeasurement(unit_of_measurement).
+                setHasDerivedUnit(has_derived_unit).
+                setDerivedName(derived_name).
+                setDerivedFactor(derived_factor).
+                setUUID(client_uuid).setStatusFlag(status_flag);
     }
 
     public JSONObject toJsonObject() throws JSONException {

@@ -6,17 +6,23 @@ import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.RemoteException;
 import android.support.annotation.IntDef;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.google.android.gms.drive.events.ChangeEvent;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.network.Company;
+import com.mukera.sheket.client.network.CompanyAuth;
+import com.mukera.sheket.client.network.CompanyID;
 import com.mukera.sheket.client.network.CompanyList;
+import com.mukera.sheket.client.network.EntityRequest;
+import com.mukera.sheket.client.network.EntityResponse;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.network.SyncCompanyRequest;
@@ -29,7 +35,6 @@ import com.mukera.sheket.client.models.SBranchItem;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.models.SItem;
 import com.mukera.sheket.client.models.SMember;
-import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.DeviceId;
@@ -49,12 +54,9 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -155,7 +157,7 @@ public class SheketSyncService extends IntentService {
             } else {
                 // can only sync if there is a company selected
                 if (PrefUtil.isCompanySet(this)) {
-                    syncEntities();
+                    syncEntities(blockingStub);
                     syncTransactions();
                 }
 
@@ -329,24 +331,26 @@ public class SheketSyncService extends IntentService {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      */
-    void syncEntities() throws Exception {
-        Request.Builder builder = new Request.Builder();
-        builder.url(ConfigData.getAddress(this) + "v1/sync/entity");
-        JSONObject json = createEntitySyncJSON();
-        builder.addHeader(this.getString(R.string.pref_header_key_company_id),
-                Long.toString(PrefUtil.getCurrentCompanyId(this)));
-        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                PrefUtil.getLoginCookie(this));
-        builder.post(RequestBody.create(MediaType.parse("application/json"),
-                json.toString()));
+    void syncEntities(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        EntityRequest.Builder entity_request = EntityRequest.newBuilder();
+        CompanyAuth companyAuth = CompanyAuth.
+                newBuilder().
+                setCompanyId(
+                        CompanyID.newBuilder().setCompanyId(
+                                PrefUtil.getCurrentCompanyId(this)
+                        ).build()
+                ).
+                setSheketAuth(
+                        SheketAuth.newBuilder().setLoginCookie(
+                                PrefUtil.getLoginCookie(this)
+                        ).build()
+                ).build();
+        entity_request.setCompanyAuth(companyAuth);
 
-        Response response = client.newCall(builder.build()).execute();
-        if (!response.isSuccessful()) {
-            throwAppropriateException(response);
-        }
+        buildEntityRequest(entity_request);
 
-        EntitySyncResponse result = parseEntitySyncResponse(response.body().string());
-        applyEntitySync(result);
+        EntityResponse response = blockingStub.syncEntity(entity_request.build());
+        applyEntityResponse(response);
     }
 
     ContentValues setStatusSynced(ContentValues values) {
@@ -354,846 +358,332 @@ public class SheketSyncService extends IntentService {
         return values;
     }
 
-    void applyEntitySync(EntitySyncResponse response) throws Exception {
+    void applyEntityResponse(EntityResponse response) {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
         long company_id = PrefUtil.getCurrentCompanyId(this);
-        for (SyncUpdatedElement updated_category : response.updatedCategoryIds) {
+
+        for (EntityResponse.UpdatedId updatedId : response.getUpdatedCategoryIdsList()) {
             ContentValues values = new ContentValues();
-            values.put(CategoryEntry.COLUMN_CATEGORY_ID, updated_category.newId);
+            values.put(CategoryEntry.COLUMN_CATEGORY_ID, updatedId.getNewId());
             setStatusSynced(values);
             operationList.add(ContentProviderOperation.newUpdate(CategoryEntry.buildBaseUri(company_id)).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", CategoryEntry.COLUMN_CATEGORY_ID),
-                            new String[]{Long.toString(updated_category.oldId)}
+                            new String[]{Long.toString(updatedId.getOldId())}
                     ).build());
         }
-
-        for (SyncUpdatedElement updated_item : response.updatedItemIds) {
+        for (EntityResponse.UpdatedId updatedId : response.getUpdatedItemIdsList()) {
             ContentValues values = new ContentValues();
-            values.put(ItemEntry.COLUMN_ITEM_ID, updated_item.newId);
+            values.put(ItemEntry.COLUMN_ITEM_ID, updatedId.getNewId());
             setStatusSynced(values);
             operationList.add(ContentProviderOperation.newUpdate(ItemEntry.buildBaseUri(company_id)).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", ItemEntry.COLUMN_ITEM_ID),
-                            new String[]{Long.toString(updated_item.oldId)}).
+                            new String[]{Long.toString(updatedId.getOldId())}).
                     build());
         }
 
-        for (SyncUpdatedElement updated_branch : response.updatedBranchIds) {
+        for (EntityResponse.UpdatedId updatedId : response.getUpdatedItemIdsList()) {
             ContentValues values = new ContentValues();
-            values.put(BranchEntry.COLUMN_BRANCH_ID, updated_branch.newId);
+            values.put(BranchEntry.COLUMN_BRANCH_ID, updatedId.getNewId());
             setStatusSynced(values);
             operationList.add(ContentProviderOperation.newUpdate(BranchEntry.buildBaseUri(company_id)).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", BranchEntry.COLUMN_BRANCH_ID),
-                            new String[]{Long.toString(updated_branch.oldId)}).
+                            new String[]{Long.toString(updatedId.getOldId())}).
                     build());
         }
 
-        for (SCategory sync_category : response.syncedCategories) {
-            operationList.add(ContentProviderOperation.newInsert(CategoryEntry.buildBaseUri(company_id)).
-                    withValues(setStatusSynced(DbUtil.setUpdateOnConflict(sync_category.toContentValues()))).
-                    build());
+        for (EntityResponse.SyncCategory syncCategory : response.getCategoriesList()) {
+            if (syncCategory.getState() == EntityResponse.SyncState.REMOVED) {
+                operationList.add(ContentProviderOperation.newDelete(
+                        CategoryEntry.buildBaseUri(company_id)).
+                        withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
+                                new String[]{String.valueOf(syncCategory.getCategory().getCategoryId())}).
+                        build());
+            } else {
+                SCategory category = new SCategory(syncCategory.getCategory());
+                category.company_id = company_id;
+                operationList.add(ContentProviderOperation.newInsert(CategoryEntry.buildBaseUri(company_id)).
+                        withValues(setStatusSynced(DbUtil.setUpdateOnConflict(
+                                category.toContentValues()
+                        ))).build());
+            }
         }
 
-        for (SItem sync_item : response.syncedItems) {
-            operationList.add(ContentProviderOperation.newInsert(ItemEntry.buildBaseUri(company_id)).
-                    withValues(
-                            setStatusSynced(DbUtil.setUpdateOnConflict(sync_item.toContentValues()))).
-                    build());
+        for (EntityResponse.SyncItem syncItem : response.getItemsList()) {
+            if (syncItem.getState() == EntityResponse.SyncState.REMOVED) {
+                operationList.add(ContentProviderOperation.newDelete(
+                        CategoryEntry.buildBaseUri(company_id)).
+                        withSelection(ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
+                                new String[]{String.valueOf(syncItem.getItem().getItemId())}).
+                        build());
+            } else {
+                SItem item = new SItem(syncItem.getItem());
+                item.company_id = company_id;
+                operationList.add(ContentProviderOperation.newInsert(ItemEntry.buildBaseUri(company_id)).
+                        withValues(
+                                setStatusSynced(DbUtil.setUpdateOnConflict(
+                                        item.toContentValues()
+                                ))).build());
+            }
         }
 
-        for (SBranch sync_branch : response.syncedBranches) {
-            operationList.add(ContentProviderOperation.newInsert(BranchEntry.buildBaseUri(company_id)).
-                    withValues(
-                            setStatusSynced(DbUtil.setUpdateOnConflict(sync_branch.toContentValues()))).
-                    build());
+        for (EntityResponse.SyncBranch syncBranch : response.getBranchesList()) {
+            if (syncBranch.getState() == EntityResponse.SyncState.REMOVED) {
+                operationList.add(ContentProviderOperation.newDelete(
+                        BranchEntry.buildBaseUri(company_id)).
+                        withSelection(BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " = ?",
+                                new String[]{String.valueOf(syncBranch.getBranch().getBranchId())}).
+                        build());
+            } else {
+                SBranch branch = new SBranch(syncBranch.getBranch());
+                branch.company_id = company_id;
+                operationList.add(ContentProviderOperation.newInsert(BranchEntry.buildBaseUri(company_id)).
+                        withValues(
+                                setStatusSynced(DbUtil.setUpdateOnConflict(
+                                        branch.toContentValues()
+                                ))).build());
+            }
         }
 
-        for (SMember sync_member : response.syncedMembers) {
-            operationList.add(ContentProviderOperation.newInsert(MemberEntry.buildBaseUri(company_id)).
-                    withValues(
-                            setStatusSynced(DbUtil.setUpdateOnConflict(sync_member.toContentValues()))).
-                    build());
+        for (EntityResponse.SyncBranchCategory syncBranchCategory : response.getBranchCategoriesList()) {
+            if (syncBranchCategory.getState() == EntityResponse.SyncState.REMOVED) {
+                String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
+                        BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
+                String[] selectionArgs = new String[]{
+                        String.valueOf(syncBranchCategory.getBranchCategory().getBranchId()),
+                        String.valueOf(syncBranchCategory.getBranchCategory().getCategoryId())
+                };
+                operationList.add(ContentProviderOperation.newDelete(
+                        BranchCategoryEntry.buildBaseUri(company_id)).
+                        withSelection(selection, selectionArgs).
+                        build());
+            } else {
+                SBranchCategory branchCategory = new SBranchCategory(syncBranchCategory.getBranchCategory());
+                branchCategory.company_id = company_id;
+                operationList.add(ContentProviderOperation.newInsert(BranchCategoryEntry.buildBaseUri(company_id)).
+                        withValues(
+                                setStatusSynced(DbUtil.setUpdateOnConflict(branchCategory.toContentValues()))).
+                        build());
+            }
         }
 
-        for (SBranchCategory branch_category : response.syncedBranchCategories) {
-            operationList.add(ContentProviderOperation.newInsert(BranchCategoryEntry.buildBaseUri(company_id)).
-                    withValues(
-                            setStatusSynced(DbUtil.setUpdateOnConflict(branch_category.toContentValues()))).
-                    build());
-        }
-
-        for (Long category_id : response.deletedCategories) {
-            operationList.add(ContentProviderOperation.newDelete(
-                    CategoryEntry.buildBaseUri(company_id)).
-                    withSelection(CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
-                            new String[]{String.valueOf(category_id)}).
-                    build());
-        }
-
-        for (Pair<Long, Long> branch_category_pair : response.deletedBranchCategories) {
-            String selection = BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_BRANCH_ID) + " = ? AND " +
-                    BranchCategoryEntry._full(BranchCategoryEntry.COLUMN_CATEGORY_ID) + " = ?";
-            String[] selectionArgs = new String[]{
-                    String.valueOf(branch_category_pair.first),
-                    String.valueOf(branch_category_pair.second)
-            };
-            operationList.add(ContentProviderOperation.newDelete(
-                    BranchCategoryEntry.buildBaseUri(company_id)).
-                    withSelection(selection, selectionArgs).
-                    build());
-        }
-
-        for (Long member_id : response.deletedMembers) {
-            operationList.add(ContentProviderOperation.newDelete(
-                    MemberEntry.buildBaseUri(company_id)).
-                    withSelection(MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID) + " = ?",
-                            new String[]{String.valueOf(member_id)}).
-                    build());
+        for (EntityResponse.SyncEmployee syncEmployee : response.getEmployeesList()) {
+            if (syncEmployee.getState() == EntityResponse.SyncState.REMOVED) {
+                operationList.add(ContentProviderOperation.newDelete(
+                        MemberEntry.buildBaseUri(company_id)).
+                        withSelection(MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID) + " = ?",
+                                new String[]{String.valueOf(syncEmployee.getEmployee().getEmployeeId())}).
+                        build());
+            } else {
+                SMember employee = new SMember(syncEmployee.getEmployee());
+                employee.company_id = company_id;
+                operationList.add(ContentProviderOperation.newInsert(MemberEntry.buildBaseUri(company_id)).
+                        withValues(
+                                setStatusSynced(DbUtil.setUpdateOnConflict(employee.toContentValues()))).
+                        build());
+            }
         }
 
         try {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
-            PrefUtil.setCategoryRevision(this, response.latest_category_rev);
-            PrefUtil.setItemRevision(this, response.latest_item_rev);
-            PrefUtil.setBranchRevision(this, response.latest_branch_rev);
-            PrefUtil.setMemberRevision(this, response.latest_member_rev);
-            PrefUtil.setBranchCategoryRevision(this, response.latest_branch_category_rev);
+            PrefUtil.setCategoryRevision(this, (int) response.getNewCategoryRev());
+            PrefUtil.setItemRevision(this, (int) response.getNewItemRev());
+            PrefUtil.setBranchRevision(this, (int) response.getNewBranchRev());
+            PrefUtil.setMemberRevision(this, (int) response.getNewMemberRev());
+            PrefUtil.setBranchCategoryRevision(this, (int) response.getNewBranchCategoryRev());
         } catch (OperationApplicationException | RemoteException e) {
-            throw e;
+            e.printStackTrace();
+            // TODO: handle exception
+            //throw e;
         }
     }
 
-    String getResourceString(int resId) {
-        return this.getString(resId);
+    interface EntityBuilder {
+        void buildEntity(Cursor cursor, EntityRequest.Builder request_builder);
     }
 
-    EntitySyncResponse parseEntitySyncResponse(String server_response) throws JSONException {
-        EntitySyncResponse result = new EntitySyncResponse();
-        JSONObject rootJson = new JSONObject(server_response);
-
-        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
-
-        result.latest_category_rev = rootJson.getInt(getResourceString(R.string.sync_json_category_rev));
-        result.latest_item_rev = rootJson.getInt(getResourceString(R.string.sync_json_item_rev));
-        result.latest_branch_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_rev));
-        result.latest_member_rev = rootJson.getInt(getResourceString(R.string.sync_json_member_rev));
-        result.latest_branch_category_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_category_rev));
-
-        result.updatedCategoryIds = new ArrayList<>();
-        result.updatedItemIds = new ArrayList<>();
-        result.updatedBranchIds = new ArrayList<>();
-
-        result.syncedCategories = new ArrayList<>();
-        result.syncedItems = new ArrayList<>();
-        result.syncedBranches = new ArrayList<>();
-        result.syncedMembers = new ArrayList<>();
-        result.syncedBranchCategories = new ArrayList<>();
-
-        result.deletedCategories = new ArrayList<>();
-        result.deletedBranchCategories = new ArrayList<>();
-        result.deletedMembers = new ArrayList<>();
-
-        if (rootJson.has(getResourceString(R.string.sync_json_updated_category_ids))) {
-            JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_category_ids));
-            for (int i = 0; i < updatedArray.length(); i++) {
-                result.updatedCategoryIds.add(new SyncUpdatedElement(updatedArray.getJSONObject(i), result.company_id));
-            }
+    EntityRequest.Action toSyncRequestAction(int change_status) {
+        switch (change_status) {
+            case ChangeTraceable.CHANGE_STATUS_CREATED:
+                return EntityRequest.Action.CREATE;
+            case ChangeTraceable.CHANGE_STATUS_UPDATED:
+                return EntityRequest.Action.UPDATE;
+            case ChangeTraceable.CHANGE_STATUS_DELETED:
+            default:
+                return EntityRequest.Action.DELETE;
         }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_updated_item_ids))) {
-            JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_item_ids));
-            for (int i = 0; i < updatedArray.length(); i++) {
-                result.updatedItemIds.add(new SyncUpdatedElement(updatedArray.getJSONObject(i), result.company_id));
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_updated_branch_ids))) {
-            JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_branch_ids));
-            for (int i = 0; i < updatedArray.length(); i++) {
-                result.updatedBranchIds.add(new SyncUpdatedElement(updatedArray.getJSONObject(i), result.company_id));
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_categories))) {
-            JSONArray categoryArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_categories));
-
-            for (int i = 0; i < categoryArray.length(); i++) {
-                JSONObject object = categoryArray.getJSONObject(i);
-
-                SCategory category = new SCategory();
-                category.company_id = result.company_id;
-
-                category.category_id = object.getLong(SCategory.JSON_CATEGORY_ID);
-                category.name = object.getString(SCategory.JSON_NAME);
-                category.client_uuid = object.getString(SCategory.JSON_CATEGORY_UUID);
-
-                category.parent_id = object.getLong(SCategory.JSON_PARENT_ID);
-                if (category.parent_id == SYNC_ROOT_CATEGORY_ID) {
-                    category.parent_id = CategoryEntry.ROOT_CATEGORY_ID;
-                }
-
-                result.syncedCategories.add(category);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_items))) {
-            JSONArray itemArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_items));
-
-            for (int i = 0; i < itemArray.length(); i++) {
-                JSONObject object = itemArray.getJSONObject(i);
-
-                SItem item = new SItem();
-                item.company_id = result.company_id;
-
-                item.item_id = object.getLong(SItem.JSON_ITEM_ID);
-                item.name = object.getString(SItem.JSON_ITEM_NAME);
-                item.item_code = object.getString(SItem.JSON_ITEM_CODE);
-                item.client_uuid = object.getString(SItem.JSON_ITEM_UUID);
-
-                long category = object.getLong(SItem.JSON_ITEM_CATEGORY);
-                if (category == SYNC_ROOT_CATEGORY_ID) {
-                    category = CategoryEntry.ROOT_CATEGORY_ID;
-                }
-                item.category = category;
-
-                item.unit_of_measurement = object.getInt(SItem.JSON_UNIT_OF_MEASUREMENT);
-                item.has_derived_unit = object.getBoolean(SItem.JSON_HAS_DERIVED_UNIT);
-                item.derived_name = object.getString(SItem.JSON_DERIVED_NAME);
-                item.derived_factor = object.getDouble(SItem.JSON_DERIVED_FACTOR);
-                item.reorder_level = object.getDouble(SItem.JSON_REORDER_LEVEL);
-
-                item.model_year = object.getString(SItem.JSON_MODEL_YEAR);
-                item.part_number = object.getString(SItem.JSON_PART_NUMBER);
-                item.bar_code = object.getString(SItem.JSON_BAR_CODE);
-                item.has_bar_code = object.getBoolean(SItem.JSON_HAS_BAR_CODE);
-
-                item.status_flag = object.getInt(ItemEntry.JSON_STATUS_FLAG);
-                result.syncedItems.add(item);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_branches))) {
-            JSONArray branchArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_branches));
-
-            for (int i = 0; i < branchArray.length(); i++) {
-                JSONObject object = branchArray.getJSONObject(i);
-
-                SBranch branch = new SBranch();
-                branch.company_id = result.company_id;
-
-                branch.branch_id = object.getLong(SBranch.JSON_BRANCH_ID);
-                branch.client_uuid = object.getString(SBranch.JSON_BRANCH_UUID);
-                branch.branch_name = object.getString(SBranch.JSON_NAME);
-                branch.branch_location = object.getString(SBranch.JSON_LOCATION);
-
-                branch.status_flag = object.getInt(BranchEntry.JSON_STATUS_FLAG);
-
-                result.syncedBranches.add(branch);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_members))) {
-            JSONArray memberArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_members));
-
-            for (int i = 0; i < memberArray.length(); i++) {
-                JSONObject object = memberArray.getJSONObject(i);
-
-                SMember member = new SMember();
-                member.company_id = result.company_id;
-
-                member.member_id = object.getLong(SMember.JSON_MEMBER_ID);
-                member.member_name = object.getString(SMember.JSON_MEMBER_NAME);
-                member.member_permission = SPermission.Decode(object.getString(SMember.JSON_MEMBER_PERMISSION));
-
-                result.syncedMembers.add(member);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_branch_categories))) {
-            JSONArray branchCategoryArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_branch_categories));
-
-            for (int i = 0; i < branchCategoryArray.length(); i++) {
-                JSONObject object = branchCategoryArray.getJSONObject(i);
-
-                SBranchCategory branchCategory = new SBranchCategory();
-                branchCategory.company_id = result.company_id;
-
-                branchCategory.branch_id = object.getLong(SBranchCategory.JSON_BRANCH_ID);
-                branchCategory.category_id = object.getLong(SBranchCategory.JSON_CATEGORY_ID);
-
-                result.syncedBranchCategories.add(branchCategory);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_delete_categories))) {
-            JSONArray deletedCategoryIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_categories));
-
-            for (int i = 0; i < deletedCategoryIdArray.length(); i++) {
-                result.deletedCategories.add((long) deletedCategoryIdArray.getInt(i));
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_delete_branch_categories))) {
-            JSONArray deletedBranchCategoryIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_branch_categories));
-
-            for (int i = 0; i < deletedBranchCategoryIdArray.length(); i++) {
-                String branch_category_id = deletedBranchCategoryIdArray.getString(i);
-                long branch_id = -1, category_id = -1;
-                try {
-                    int colon_index = branch_category_id.indexOf(":");
-                    if (colon_index != -1) {
-                        branch_id = Long.parseLong(branch_category_id.substring(0, colon_index));
-                        category_id = Long.parseLong(branch_category_id.substring(colon_index + 1));
-                    }
-                } catch (NumberFormatException e) {
-                    branch_id = -1;
-                    category_id = -1;
-                }
-                if (branch_id != -1 && category_id != -1) {
-                    result.deletedBranchCategories.add(new Pair<>(branch_id, category_id));
-                }
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_delete_members))) {
-            JSONArray deletedMemberIdArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_delete_members));
-
-            for (int i = 0; i < deletedMemberIdArray.length(); i++) {
-                result.deletedMembers.add((long) deletedMemberIdArray.getInt(i));
-            }
-        }
-
-        return result;
     }
 
-    /**
-     * creates the request body JSON used to sync entities.
-     *
-     * @return
-     * @throws JSONException
-     */
-    JSONObject createEntitySyncJSON() throws JSONException {
-        Pair<Boolean, JSONObject> categoryChanges = getCategoryChanges();
-        Pair<Boolean, JSONObject> itemChanges = getItemChanges();
-        Pair<Boolean, JSONObject> branchChanges = getBranchChanges();
-        Pair<Boolean, JSONObject> branchItemChanges = getBranchItemChanges();
-        Pair<Boolean, JSONObject> memberChanges = getMemberChanges();
-        Pair<Boolean, JSONObject> branchCategoryChanges = getBranchCategoryChanges();
+    void buildEntityRequest(EntityRequest.Builder request_builder) {
+        request_builder.
+                setOldCategoryRev(PrefUtil.getCategoryRevision(this)).
+                setOldItemRev(PrefUtil.getItemRevision(this)).
+                setOldBranchRev(PrefUtil.getBranchRevision(this)).
+                setOldBranchItemRev(PrefUtil.getBranchItemRevision(this)).
+                setOldMemberRev(PrefUtil.getMemberRevision(this)).
+                setOldBranchCategoryRev(PrefUtil.getBranchCategoryRevision(this));
 
-        JSONObject syncJson = new JSONObject();
-        syncJson.put(this.getString(R.string.sync_json_category_rev),
-                PrefUtil.getCategoryRevision(this));
-        syncJson.put(this.getString(R.string.sync_json_item_rev),
-                PrefUtil.getItemRevision(this));
-        syncJson.put(this.getString(R.string.sync_json_branch_rev),
-                PrefUtil.getBranchRevision(this));
-        syncJson.put(this.getString(R.string.sync_json_branch_item_rev),
-                PrefUtil.getBranchItemRevision(this));
-        syncJson.put(this.getString(R.string.sync_json_member_rev),
-                PrefUtil.getMemberRevision(this));
-        syncJson.put(this.getString(R.string.sync_json_branch_category_rev),
-                PrefUtil.getBranchCategoryRevision(this));
-
-        JSONArray types = new JSONArray();
-
-        String category_entity = this.getString(R.string.sync_json_entity_type_category);
-        String item_entity = this.getString(R.string.sync_json_entity_type_item);
-        String branch_entity = this.getString(R.string.sync_json_entity_type_branch);
-        String branchItem_entity = this.getString(R.string.sync_json_entity_type_branch_item);
-        String member_entity = this.getString(R.string.sync_json_entity_type_member);
-        String branchCategory_entity = this.getString(R.string.sync_json_entity_type_branch_category);
-
-        if (categoryChanges.first) {
-            syncJson.put(category_entity, categoryChanges.second);
-            types.put(category_entity);
-        }
-        if (itemChanges.first) {
-            syncJson.put(item_entity, itemChanges.second);
-            types.put(item_entity);
-        }
-        if (branchChanges.first) {
-            syncJson.put(branch_entity, branchChanges.second);
-            types.put(branch_entity);
-        }
-        if (branchItemChanges.first) {
-            syncJson.put(branchItem_entity, branchItemChanges.second);
-            types.put(branchItem_entity);
-        }
-        if (memberChanges.first) {
-            syncJson.put(member_entity, memberChanges.second);
-            types.put(member_entity);
-        }
-        if (branchCategoryChanges.first) {
-            syncJson.put(branchCategory_entity, branchCategoryChanges.second);
-            types.put(branchCategory_entity);
-        }
-
-        syncJson.put(this.getString(R.string.sync_json_entity_types), types);
-        return syncJson;
-    }
-
-    List<Long> getItemIds(List<SItem> items) {
-        List<Long> ids = new ArrayList<>();
-        for (int i = 0; i < items.size(); i++) {
-            ids.add(items.get(i).item_id);
-        }
-        return ids;
-    }
-
-    JSONArray longArrToJson(List<Long> longs) {
-        JSONArray array = new JSONArray();
-        for (Long l : longs) {
-            array.put(l);
-        }
-        return array;
-    }
-
-    List<Long> getCategoryIds(List<SCategory> categories) {
-        List<Long> ids = new ArrayList<>();
-        for (int i = 0; i < categories.size(); i++) {
-            ids.add(categories.get(i).category_id);
-        }
-        return ids;
-    }
-
-    /**
-     * gathers every changes that happened on items table and returns that's
-     * representation in a JSON object. If no changes were found, the Pair's first bool
-     * will false.
-     */
-    Pair<Boolean, JSONObject> getCategoryChanges() throws JSONException {
-        List<SCategory> createdCategories = new ArrayList<>();
-        List<SCategory> updatedCategories = new ArrayList<>();
-        List<SCategory> deletedCategories = new ArrayList<>();
-
-        String change_selector = String.format("%s != ?", CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = this.getContentResolver().query(
-                CategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+        // build categories
+        genericEntityRequestBuilder(request_builder,
+                CategoryEntry.buildBaseUriWithNoChildren(PrefUtil.getCurrentCompanyId(this)),
+                CategoryEntry._fullCurrent(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SCategory.CATEGORY_COLUMNS,
-                change_selector,
-                args,
-                null);
-        if (cursor.moveToFirst()) {
-            do {
-                SCategory category = new SCategory(cursor);
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SCategory category = new SCategory(cursor);
 
-                if (category.parent_id == CategoryEntry.ROOT_CATEGORY_ID) {
-                    category.parent_id = SYNC_ROOT_CATEGORY_ID;
-                }
-                switch (category.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdCategories.add(category);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedCategories.add(category);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedCategories.add(category);
-                        break;
-                }
-            } while (cursor.moveToNext());
-        }
+                        if (category.parent_id == CategoryEntry.ROOT_CATEGORY_ID) {
+                            category.parent_id = SYNC_ROOT_CATEGORY_ID;
+                        }
 
-        if (createdCategories.isEmpty() && updatedCategories.isEmpty() && deletedCategories.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
+                        request_builder.addCategories(
+                                EntityRequest.RequestCategory.newBuilder().
+                                        setCategory(category.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(category.change_status)
+                                        ));
+                    }
+                });
 
-        JSONObject categoryJson = new JSONObject();
-        JSONArray fieldsArray = new JSONArray();
-
-        for (SCategory category : createdCategories) {
-            fieldsArray.put(category.toJsonObject());
-        }
-        for (SCategory category : updatedCategories) {
-            fieldsArray.put(category.toJsonObject());
-        }
-        for (SCategory category : deletedCategories) {
-            fieldsArray.put(category.toJsonObject());
-        }
-
-        categoryJson.put(getResourceString(R.string.sync_json_key_create),
-                longArrToJson(getCategoryIds(createdCategories)));
-        categoryJson.put(getResourceString(R.string.sync_json_key_update),
-                longArrToJson(getCategoryIds(updatedCategories)));
-        categoryJson.put(getResourceString(R.string.sync_json_key_delete),
-                longArrToJson(getCategoryIds(deletedCategories)));
-
-        categoryJson.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArray);
-        return new Pair<>(Boolean.TRUE, categoryJson);
-    }
-
-    /**
-     * see the {@code getCategoryChanges()} docs
-     */
-    Pair<Boolean, JSONObject> getItemChanges() throws JSONException {
-        List<SItem> createdItems = new ArrayList<>();
-        List<SItem> updatedItems = new ArrayList<>();
-        List<SItem> deletedItems = new ArrayList<>();
-
-        String change_selector = String.format("%s != ?", ItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = this.getContentResolver().query(
+        // build items
+        genericEntityRequestBuilder(request_builder,
                 ItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                ItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SItem.ITEM_COLUMNS,
-                change_selector,
-                args,
-                null);
-        if (cursor.moveToFirst()) {
-            do {
-                SItem item = new SItem(cursor);
-                /**
-                 * Convert from the local root category id to the one the server expects
-                 */
-                if (item.category == CategoryEntry.ROOT_CATEGORY_ID) {
-                    item.category = SYNC_ROOT_CATEGORY_ID;
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SItem item = new SItem(cursor);
+                        /**
+                         * Convert from the local root category id to the one the server expects
+                         */
+                        if (item.category == CategoryEntry.ROOT_CATEGORY_ID) {
+                            item.category = SYNC_ROOT_CATEGORY_ID;
+                        }
+                        request_builder.addItems(
+                                EntityRequest.RequestItem.newBuilder().
+                                        setItem(item.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(item.change_status)
+                                        ));
+                    }
                 }
-                switch (item.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdItems.add(item);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedItems.add(item);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedItems.add(item);
-                        break;
-                }
-            } while (cursor.moveToNext());
-        }
+        );
 
-        if (createdItems.isEmpty() && updatedItems.isEmpty() && deletedItems.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
-
-        JSONObject itemsJSON = new JSONObject();
-
-        JSONArray fieldsArray = new JSONArray();
-
-        for (SItem item : createdItems) {
-            fieldsArray.put(item.toJsonObject());
-        }
-        for (SItem item : updatedItems) {
-            fieldsArray.put(item.toJsonObject());
-        }
-        for (SItem item : deletedItems) {
-            fieldsArray.put(item.toJsonObject());
-        }
-
-        itemsJSON.put(getResourceString(R.string.sync_json_key_create),
-                longArrToJson(getItemIds(createdItems)));
-        itemsJSON.put(getResourceString(R.string.sync_json_key_update),
-                longArrToJson(getItemIds(updatedItems)));
-        itemsJSON.put(getResourceString(R.string.sync_json_key_delete),
-                longArrToJson(getItemIds(deletedItems)));
-
-        itemsJSON.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArray);
-        return new Pair<>(Boolean.TRUE, itemsJSON);
-    }
-
-    List<Long> getBranchIds(List<SBranch> branches) {
-        List<Long> ids = new ArrayList<>();
-        for (int i = 0; i < branches.size(); i++) {
-            ids.add(branches.get(i).branch_id);
-        }
-        return ids;
-    }
-
-    /**
-     * see the {@code getCategoryChanges()} docs
-     */
-    Pair<Boolean, JSONObject> getBranchChanges() throws JSONException {
-        List<SBranch> createdBranches = new ArrayList<>();
-        List<SBranch> updatedBranches = new ArrayList<>();
-        List<SBranch> deletedBranches = new ArrayList<>();
-
-        String change_selector = String.format("%s != ?", BranchEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = this.getContentResolver().query(
+        // build branches
+        genericEntityRequestBuilder(request_builder,
                 BranchEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                BranchEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SBranch.BRANCH_COLUMNS,
-                change_selector,
-                args,
-                null);
-        if (cursor.moveToFirst()) {
-            do {
-                SBranch branch = new SBranch(cursor);
-                switch (branch.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdBranches.add(branch);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedBranches.add(branch);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedBranches.add(branch);
-                        break;
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SBranch branch = new SBranch(cursor);
+
+                        request_builder.addBranches(
+                                EntityRequest.RequestBranch.newBuilder().
+                                        setBranch(branch.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(branch.change_status)
+                                        ));
+                    }
                 }
-            } while (cursor.moveToNext());
-        }
+        );
 
-        if (createdBranches.isEmpty() && updatedBranches.isEmpty() && deletedBranches.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
-
-        JSONObject branchesJson = new JSONObject();
-
-        JSONArray fieldsArray = new JSONArray();
-
-        for (SBranch branch : createdBranches) {
-            fieldsArray.put(branch.toJsonObject());
-        }
-        for (SBranch branch : updatedBranches) {
-            fieldsArray.put(branch.toJsonObject());
-        }
-        for (SBranch branch : deletedBranches) {
-            fieldsArray.put(branch.toJsonObject());
-        }
-
-        branchesJson.put(getResourceString(R.string.sync_json_key_create),
-                longArrToJson(getBranchIds(createdBranches)));
-        branchesJson.put(getResourceString(R.string.sync_json_key_update),
-                longArrToJson(getBranchIds(updatedBranches)));
-        branchesJson.put(getResourceString(R.string.sync_json_key_delete),
-                longArrToJson(getBranchIds(deletedBranches)));
-
-        branchesJson.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArray);
-        return new Pair<>(Boolean.TRUE, branchesJson);
-    }
-
-    List<String> getBranchItemIds(List<SBranchItem> branchItems) {
-        List<String> result = new ArrayList<>(branchItems.size());
-        for (SBranchItem branchItem : branchItems) {
-            result.add(String.format(Locale.US, "%d:%d", branchItem.branch_id, branchItem.item_id));
-        }
-        return result;
-    }
-
-    JSONArray stringArrToJson(List<String> strings) {
-        JSONArray arr = new JSONArray();
-        for (String s : strings) {
-            arr.put(s);
-        }
-        return arr;
-    }
-
-    /**
-     * Changes in branch items will not include quantity changes, those
-     * are only affected by transactions. The other attributes of a branch-item
-     * are what is returned in a JSON representation in the Pair's second member.
-     *
-     * @return
-     */
-    Pair<Boolean, JSONObject> getBranchItemChanges() throws JSONException {
-        List<SBranchItem> createdBranchItems = new ArrayList<>();
-        List<SBranchItem> updatedBranchItems = new ArrayList<>();
-        List<SBranchItem> deletedBranchItems = new ArrayList<>();
-
-        String change_selector = String.format("%s != ?", BranchItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = this.getContentResolver().query(
+        // build branch_item
+        genericEntityRequestBuilder(request_builder,
                 BranchItemEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                BranchItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SBranchItem.BRANCH_ITEM_COLUMNS,
-                change_selector,
-                args,
-                null);
-        if (cursor.moveToFirst()) {
-            do {
-                SBranchItem branchItem = new SBranchItem(cursor);
-                switch (branchItem.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdBranchItems.add(branchItem);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedBranchItems.add(branchItem);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedBranchItems.add(branchItem);
-                        break;
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SBranchItem branchItem = new SBranchItem(cursor);
+
+                        request_builder.addBranchItems(
+                                EntityRequest.RequestBranchItem.newBuilder().
+                                        setBranchItem(branchItem.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(branchItem.change_status)
+                                        ));
+                    }
                 }
-            } while (cursor.moveToNext());
-        }
+        );
 
-        if (createdBranchItems.isEmpty() && updatedBranchItems.isEmpty() && deletedBranchItems.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
-
-        JSONObject branchesItemJson = new JSONObject();
-
-        JSONArray fieldsArray = new JSONArray();
-
-        for (SBranchItem branchItem : createdBranchItems) {
-            fieldsArray.put(branchItem.toJsonObject());
-        }
-        for (SBranchItem branchItem : updatedBranchItems) {
-            fieldsArray.put(branchItem.toJsonObject());
-        }
-        for (SBranchItem branchItem : deletedBranchItems) {
-            fieldsArray.put(branchItem.toJsonObject());
-        }
-
-        branchesItemJson.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArray);
-
-        branchesItemJson.put(getResourceString(R.string.sync_json_key_create),
-                stringArrToJson(getBranchItemIds(createdBranchItems)));
-        branchesItemJson.put(getResourceString(R.string.sync_json_key_update),
-                stringArrToJson(getBranchItemIds(updatedBranchItems)));
-        branchesItemJson.put(getResourceString(R.string.sync_json_key_delete),
-                stringArrToJson(getBranchItemIds(deletedBranchItems)));
-
-        return new Pair<>(Boolean.TRUE, branchesItemJson);
-    }
-
-    List<String> getBranchCategoryIds(List<SBranchCategory> branchCategories) {
-        List<String> result = new ArrayList<>(branchCategories.size());
-        for (SBranchCategory branchCategory : branchCategories) {
-            result.add(String.format(Locale.US, "%d:%d", branchCategory.branch_id, branchCategory.category_id));
-        }
-        return result;
-    }
-
-    Pair<Boolean, JSONObject> getBranchCategoryChanges() throws JSONException {
-        List<SBranchCategory> createdBranchCategories = new ArrayList<>();
-        List<SBranchCategory> updatedBranchCategories = new ArrayList<>();
-        List<SBranchCategory> deletedBranchCategories = new ArrayList<>();
-
-        String change_selector = String.format(Locale.US, "%s != ?", BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{String.valueOf(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = this.getContentResolver().query(
-                BranchCategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
-                SBranchCategory.BRANCH_CATEGORY_COLUMNS,
-                change_selector,
-                args,
-                null);
-        if (cursor.moveToFirst()) {
-            do {
-                SBranchCategory branchCategory = new SBranchCategory(cursor);
-                switch (branchCategory.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdBranchCategories.add(branchCategory);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedBranchCategories.add(branchCategory);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedBranchCategories.add(branchCategory);
-                        break;
-                }
-            } while (cursor.moveToNext());
-        }
-
-        if (createdBranchCategories.isEmpty() && updatedBranchCategories.isEmpty() && deletedBranchCategories.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
-
-        JSONArray fieldsArray = new JSONArray();
-
-        for (SBranchCategory branchCategory : createdBranchCategories) {
-            fieldsArray.put(branchCategory.toJsonObject());
-        }
-
-        for (SBranchCategory branchCategory : updatedBranchCategories) {
-            fieldsArray.put(branchCategory.toJsonObject());
-        }
-
-        for (SBranchCategory branchCategory : deletedBranchCategories) {
-            fieldsArray.put(branchCategory.toJsonObject());
-        }
-
-        JSONObject branchCategoryJson = new JSONObject();
-
-        branchCategoryJson.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArray);
-
-        branchCategoryJson.put(getResourceString(R.string.sync_json_key_create),
-                stringArrToJson(getBranchCategoryIds(createdBranchCategories)));
-        branchCategoryJson.put(getResourceString(R.string.sync_json_key_update),
-                stringArrToJson(getBranchCategoryIds(updatedBranchCategories)));
-        branchCategoryJson.put(getResourceString(R.string.sync_json_key_delete),
-                stringArrToJson(getBranchCategoryIds(deletedBranchCategories)));
-
-        return new Pair<>(Boolean.TRUE, branchCategoryJson);
-    }
-
-    List<Long> getMemberIds(List<SMember> members) {
-        List<Long> result = new ArrayList<>(members.size());
-        for (SMember member : members) {
-            result.add(member.member_id);
-        }
-        return result;
-    }
-
-    Pair<Boolean, JSONObject> getMemberChanges() throws JSONException {
-        List<SMember> createdMembers = new ArrayList<>();
-        List<SMember> updatedMembers = new ArrayList<>();
-        List<SMember> deletedMembers = new ArrayList<>();
-
-        String change_selector = String.format("%s != ?", MemberEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
-        Cursor cursor = getContentResolver().query(
+        // build employee
+        genericEntityRequestBuilder(request_builder,
                 MemberEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                MemberEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
                 SMember.MEMBER_COLUMNS,
-                change_selector,
-                args, null);
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SMember employee = new SMember(cursor);
 
-        if (cursor.moveToFirst()) {
-            do {
-                SMember member = new SMember(cursor);
-                switch (member.change_status) {
-                    case ChangeTraceable.CHANGE_STATUS_CREATED:
-                        createdMembers.add(member);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_UPDATED:
-                        updatedMembers.add(member);
-                        break;
-                    case ChangeTraceable.CHANGE_STATUS_DELETED:
-                        deletedMembers.add(member);
-                        break;
+                        request_builder.addEmployees(
+                                EntityRequest.RequestEmployee.newBuilder().
+                                        setEmployee(employee.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(employee.change_status)
+                                        ));
+                    }
                 }
-            } while (cursor.moveToNext());
+        );
+
+        // build branch_category
+        genericEntityRequestBuilder(request_builder,
+                BranchCategoryEntry.buildBaseUri(PrefUtil.getCurrentCompanyId(this)),
+                BranchCategoryEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR),
+                SBranchCategory.BRANCH_CATEGORY_COLUMNS,
+                new EntityBuilder() {
+                    @Override
+                    public void buildEntity(Cursor cursor, EntityRequest.Builder request_builder) {
+                        SBranchCategory branchCategory = new SBranchCategory(cursor);
+
+                        request_builder.addBranchCategories(
+                                EntityRequest.RequestBranchCategory.newBuilder().
+                                        setBranchCategory(branchCategory.toGRPCBuilder()).
+                                        setAction(
+                                                toSyncRequestAction(branchCategory.change_status)
+                                        ));
+                    }
+                }
+        );
+    }
+
+    void genericEntityRequestBuilder(EntityRequest.Builder request_builder,
+                                     Uri query_uri,
+                                     String change_column,
+                                     String[] projection,
+                                     EntityBuilder entityBuilder) {
+        Cursor cursor = this.getContentResolver().query(
+                query_uri,
+                projection,
+                String.format("%s != ?", change_column),
+                new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)},
+                null);
+
+        if (cursor == null) {
+            // TODO: maybe throw an Exception?
+            return;
+        } else if (!cursor.moveToFirst()) {
+            cursor.close();
+            return;
         }
 
-        if (createdMembers.isEmpty() && updatedMembers.isEmpty() && deletedMembers.isEmpty()) {
-            return new Pair<>(Boolean.FALSE, null);
-        }
+        do {
+            entityBuilder.buildEntity(cursor, request_builder);
+        } while (cursor.moveToNext());
 
-        JSONObject memberJson = new JSONObject();
-        JSONArray fieldsArr = new JSONArray();
-
-        for (SMember member : createdMembers) {
-            fieldsArr.put(member.toJsonObject());
-        }
-
-        for (SMember member : updatedMembers) {
-            fieldsArr.put(member.toJsonObject());
-        }
-
-        for (SMember member : deletedMembers) {
-            fieldsArr.put(member.toJsonObject());
-        }
-
-        memberJson.put(getResourceString(R.string.sync_json_key_fields),
-                fieldsArr);
-
-        memberJson.put(getResourceString(R.string.sync_json_key_create),
-                longArrToJson(getMemberIds(createdMembers)));
-        memberJson.put(getResourceString(R.string.sync_json_key_update),
-                longArrToJson(getMemberIds(updatedMembers)));
-        memberJson.put(getResourceString(R.string.sync_json_key_delete),
-                longArrToJson(getMemberIds(deletedMembers)));
-
-        return new Pair<>(Boolean.TRUE, memberJson);
+        cursor.close();
     }
 
     void syncTransactions() throws Exception {
@@ -1253,6 +743,10 @@ public class SheketSyncService extends IntentService {
                 PrefUtil.getBranchItemRevision(this));
 
         return transactionJson;
+    }
+
+    String getResourceString(int string_id) {
+        return getString(string_id);
     }
 
     TransactionSyncResponse parseTransactionSyncResponse(String server_response) throws JSONException {
@@ -1419,32 +913,6 @@ public class SheketSyncService extends IntentService {
             default:
                 throw new SyncException(SheketNetworkUtil.getErrorMessage(response));
         }
-    }
-
-    static class EntitySyncResponse {
-        long company_id;
-
-        int latest_category_rev;
-        int latest_item_rev;
-        int latest_branch_rev;
-        int latest_member_rev;
-        int latest_branch_category_rev;
-
-        // empty if the element doesn't exist in the response
-        // or if it is empty
-        List<SyncUpdatedElement> updatedCategoryIds;
-        List<SyncUpdatedElement> updatedItemIds;
-        List<SyncUpdatedElement> updatedBranchIds;
-
-        List<SCategory> syncedCategories;
-        List<SItem> syncedItems;
-        List<SBranch> syncedBranches;
-        List<SMember> syncedMembers;
-        List<SBranchCategory> syncedBranchCategories;
-
-        List<Long> deletedCategories;
-        List<Pair<Long, Long>> deletedBranchCategories;
-        List<Long> deletedMembers;
     }
 
     static class TransactionSyncResponse {

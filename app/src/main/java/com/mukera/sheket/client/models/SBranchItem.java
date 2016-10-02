@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.support.v4.util.Pair;
 
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.BranchItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +20,9 @@ public class SBranchItem extends ChangeTraceable {
     public static final String JSON_QUANTITY = "quantity";
     public static final String JSON_LOCATION = "item_location";
 
-    static String _f(String s) { return BranchItemEntry._full(s); }
+    static String _f(String s) {
+        return BranchItemEntry._full(s);
+    }
 
     public static final String[] BRANCH_ITEM_COLUMNS = {
             _f(BranchItemEntry.COLUMN_COMPANY_ID),
@@ -32,6 +35,7 @@ public class SBranchItem extends ChangeTraceable {
 
     // Joined projection of "SBranchItem" + "SItem".
     public static final String[] BRANCH_ITEM_WITH_DETAIL_COLUMNS;
+
     static {
         int size = BRANCH_ITEM_COLUMNS.length + SItem.ITEM_COLUMNS.length;
         BRANCH_ITEM_WITH_DETAIL_COLUMNS = new String[size];
@@ -63,6 +67,13 @@ public class SBranchItem extends ChangeTraceable {
     public SItem item;
 
     public SBranchItem() {
+    }
+
+    public SBranchItem(BranchItem gRPC_Branch_Item) {
+        branch_id = gRPC_Branch_Item.getBranchId();
+        item_id = gRPC_Branch_Item.getItemId();
+        quantity = gRPC_Branch_Item.getQuantity();
+        item_location = gRPC_Branch_Item.getShelfLocation();
     }
 
     public SBranchItem(Cursor cursor) {
@@ -115,6 +126,14 @@ public class SBranchItem extends ChangeTraceable {
         result.put(JSON_QUANTITY, quantity);
         result.put(JSON_LOCATION, item_location);
         return result;
+    }
+
+    public BranchItem.Builder toGRPCBuilder() {
+        return BranchItem.newBuilder().
+                setBranchId((int) branch_id).
+                setItemId((int) item_id).
+                setQuantity(quantity).
+                setShelfLocation(item_location);
     }
 
     public static Pair<SBranchItem, SItem> getBranchItemWithItem(Cursor cursor) {

@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.BranchCategory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,6 +64,11 @@ public class SBranchCategory extends ChangeTraceable {
     public SBranchCategory() {
     }
 
+    public SBranchCategory(BranchCategory gRPC_Branch_Category) {
+        branch_id = gRPC_Branch_Category.getBranchId();
+        category_id = gRPC_Branch_Category.getCategoryId();
+    }
+
     public SBranchCategory(Cursor cursor) {
         this(cursor, 0, false);
     }
@@ -92,5 +98,11 @@ public class SBranchCategory extends ChangeTraceable {
         json.put(JSON_BRANCH_CATEGORY_BOTH_ID,
                 String.format(Locale.US, "%d:%d", branch_id, category_id));
         return json;
+    }
+
+    public BranchCategory.Builder toGRPCBuilder() {
+        return BranchCategory.newBuilder().
+                setBranchId((int)branch_id).
+                setCategoryId((int)category_id);
     }
 }

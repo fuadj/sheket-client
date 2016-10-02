@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.Employee;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,6 +41,13 @@ public class SMember extends ChangeTraceable {
     public SPermission member_permission;
 
     public SMember() {
+    }
+
+    public SMember(Employee gRPC_Employee) {
+        member_id = gRPC_Employee.getEmployeeId();
+        member_name = gRPC_Employee.getName();
+        member_permission = SPermission.Decode(
+                gRPC_Employee.getPermission());
     }
 
     public SMember(SMember other) {
@@ -80,5 +88,12 @@ public class SMember extends ChangeTraceable {
         result.put(JSON_MEMBER_NAME, member_name);
         result.put(JSON_MEMBER_PERMISSION, member_permission.Encode());
         return result;
+    }
+
+    public Employee.Builder toGRPCBuilder() {
+        return Employee.newBuilder().
+                setEmployeeId((int)member_id).
+                setName(member_name).
+                setPermission(member_permission.Encode());
     }
 }

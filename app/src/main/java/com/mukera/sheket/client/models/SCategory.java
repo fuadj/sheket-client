@@ -6,6 +6,7 @@ import android.database.CursorWrapper;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.mukera.sheket.client.network.Category;
 import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.data.SheketContract.*;
 
@@ -27,8 +28,13 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     public static final String JSON_NAME = "name";
     public static final String JSON_PARENT_ID = "parent_id";
 
-    static String _fCurrent(String s) { return CategoryEntry._fullCurrent(s); }
-    static String _fChild(String s) { return CategoryEntry._fullChild(s); }
+    static String _fCurrent(String s) {
+        return CategoryEntry._fullCurrent(s);
+    }
+
+    static String _fChild(String s) {
+        return CategoryEntry._fullChild(s);
+    }
 
     /**
      * You can use this projection with results from joined queries with Category tables,
@@ -61,6 +67,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
      * Use this if you also want to fetch the children.
      */
     public static final String[] CATEGORY_WITH_CHILDREN_COLUMNS;
+
     static {
         CATEGORY_WITH_CHILDREN_COLUMNS = new String[CATEGORY_COLUMNS.length + CHILDREN_COLUMNS.length];
 
@@ -92,7 +99,16 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
     public List<SCategory> childrenCategories;
 
-    public SCategory() {}
+    public SCategory() {
+    }
+
+    // constructor from gRPC object
+    public SCategory(Category gRPC_Category) {
+        category_id = gRPC_Category.getCategoryId();
+        name = gRPC_Category.getName();
+        parent_id = gRPC_Category.getParentId();
+        client_uuid = gRPC_Category.getUUID();
+    }
 
     public SCategory(Cursor cursor) {
         this(cursor, 0, true, false);
@@ -107,6 +123,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     }
 
     private static final int NO_CATEGORY_FOUND = 0;
+
     public SCategory(Cursor cursor, int offset, boolean is_parent, boolean fetch_children) {
         if (is_parent) {
             if (cursor.isNull(COL_CURRENT_COMPANY_ID + offset)) {
@@ -218,6 +235,14 @@ public class SCategory extends UUIDSyncable implements Parcelable {
         obj.put(JSON_PARENT_ID, parent_id);
         obj.put(JSON_CATEGORY_UUID, client_uuid);
         return obj;
+    }
+
+    public Category.Builder toGRPCBuilder() {
+        return Category.newBuilder().
+                setCategoryId((int) category_id).
+                setName(name).
+                setParentId((int) parent_id).
+                setUUID(client_uuid);
     }
 
     private SCategory(Parcel parcel) {

@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.Branch;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,6 +53,13 @@ public class SBranch extends UUIDSyncable implements Parcelable {
     public static final int NO_BRANCH_FOUND = 0;
 
     public SBranch() {
+    }
+
+    public SBranch(Branch gRPC_Branch) {
+        branch_id = gRPC_Branch.getBranchId();
+        branch_name = gRPC_Branch.getName();
+        client_uuid = gRPC_Branch.getUUID();
+        status_flag = gRPC_Branch.getStatusFlag();
     }
 
     public SBranch(Cursor cursor) {
@@ -120,6 +128,14 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         result.put(JSON_BRANCH_UUID, client_uuid);
         result.put(BranchEntry.JSON_STATUS_FLAG, status_flag);
         return result;
+    }
+
+    public Branch.Builder toGRPCBuilder() {
+        return Branch.newBuilder().
+                setBranchId((int)branch_id).
+                setName(branch_name).
+                setUUID(client_uuid).
+                setStatusFlag(status_flag);
     }
 
 
