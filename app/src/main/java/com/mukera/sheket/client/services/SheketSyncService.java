@@ -13,7 +13,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
-import com.google.android.gms.drive.events.ChangeEvent;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SCompany;
@@ -26,6 +25,8 @@ import com.mukera.sheket.client.network.EntityResponse;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.network.SyncCompanyRequest;
+import com.mukera.sheket.client.network.TransactionRequest;
+import com.mukera.sheket.client.network.TransactionResponse;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
@@ -40,10 +41,7 @@ import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.SheketNetworkUtil;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
@@ -158,7 +156,7 @@ public class SheketSyncService extends IntentService {
                 // can only sync if there is a company selected
                 if (PrefUtil.isCompanySet(this)) {
                     syncEntities(blockingStub);
-                    syncTransactions();
+                    syncTransactions(blockingStub);
                 }
 
                 sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SUCCESS);
@@ -686,188 +684,88 @@ public class SheketSyncService extends IntentService {
         cursor.close();
     }
 
-    void syncTransactions() throws Exception {
-        JSONObject json = createTransactionSyncJSON();
-        Request.Builder builder = new Request.Builder();
-        builder.url(ConfigData.getAddress(this) + "v1/sync/transaction");
-        builder.addHeader(this.getString(R.string.pref_header_key_company_id),
-                Long.toString(PrefUtil.getCurrentCompanyId(this)));
-        builder.addHeader(this.getString(R.string.pref_request_key_cookie),
-                PrefUtil.getLoginCookie(this));
-        builder.post(RequestBody.create(MediaType.parse("application/json"),
-                json.toString()));
+    void syncTransactions(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        TransactionRequest.Builder transaction_request = TransactionRequest.newBuilder();
+        CompanyAuth companyAuth = CompanyAuth.
+                newBuilder().
+                setCompanyId(
+                        CompanyID.newBuilder().setCompanyId(
+                                PrefUtil.getCurrentCompanyId(this)
+                        ).build()
+                ).
+                setSheketAuth(
+                        SheketAuth.newBuilder().setLoginCookie(
+                                PrefUtil.getLoginCookie(this)
+                        ).build()
+                ).build();
+        transaction_request.setCompanyAuth(companyAuth);
 
-        Response response = client.newCall(builder.build()).execute();
-        if (!response.isSuccessful()) {
-            throwAppropriateException(response);
-        }
+        buildTransactionRequest(transaction_request);
 
-        TransactionSyncResponse result = parseTransactionSyncResponse(
-                response.body().string());
-        applyTransactionSync(result);
+        TransactionResponse response = blockingStub.syncTransaction(transaction_request.build());
+        applyTransactionResponse(response);
     }
 
-    JSONObject createTransactionSyncJSON() throws JSONException {
-        List<STransaction> unsyncedTrans = new ArrayList<>();
+    void buildTransactionRequest(TransactionRequest.Builder request_builder) {
+        request_builder.
+                setOldBranchItemRev(PrefUtil.getBranchItemRevision(this)).
+                setOldTransRev(PrefUtil.getTransactionRevision(this));
 
-        String change_selector = String.format("%s != ?", TransItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR));
-        String[] args = new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)};
         Cursor cursor = this.getContentResolver().query(
                 // the TransItemEntry.NO_TRANS_ID_SET is to search ALL transactions
                 TransItemEntry.buildTransactionItemsUri(PrefUtil.getCurrentCompanyId(this), TransItemEntry.NO_TRANS_ID_SET),
                 STransaction.TRANSACTION_JOIN_ITEMS_COLUMNS,
-                change_selector,
-                args,
+                String.format("%s != ?", TransItemEntry._full(ChangeTraceable.COLUMN_CHANGE_INDICATOR)),
+                new String[]{Integer.toString(ChangeTraceable.CHANGE_STATUS_SYNCED)},
                 null);
-        if (cursor.moveToFirst()) {
-            do {
-                STransaction transaction = new STransaction(cursor, true);
-                unsyncedTrans.add(transaction);
-            } while (cursor.moveToNext());
+        if (cursor == null) {
+            // TODO: maybe throw an exception?
+            return;
+        } else if (!cursor.moveToFirst()) {
+            cursor.close();
+            return;
         }
 
-        JSONObject transactionJson = new JSONObject();
-        if (!unsyncedTrans.isEmpty()) {
-            JSONArray transArray = new JSONArray();
-            for (STransaction transaction : unsyncedTrans) {
-                transArray.put(transaction.toJsonObject());
-            }
+        do {
+            request_builder.addTransactions(new STransaction(cursor, true).toGRPCBuilder());
+        } while (cursor.moveToNext());
 
-            transactionJson.put(getResourceString(R.string.sync_json_new_transactions),
-                    transArray);
-        }
-
-        transactionJson.put(getResourceString(R.string.sync_json_trans_rev),
-                PrefUtil.getTransactionRevision(this));
-        transactionJson.put(getResourceString(R.string.sync_json_branch_item_rev),
-                PrefUtil.getBranchItemRevision(this));
-
-        return transactionJson;
+        cursor.close();
     }
 
-    String getResourceString(int string_id) {
-        return getString(string_id);
-    }
-
-    TransactionSyncResponse parseTransactionSyncResponse(String server_response) throws JSONException {
-        TransactionSyncResponse result = new TransactionSyncResponse();
-        JSONObject rootJson = new JSONObject(server_response);
-
-        result.company_id = rootJson.getLong(getResourceString(R.string.pref_header_key_company_id));
-        result.latest_branch_item_rev = rootJson.getInt(getResourceString(R.string.sync_json_branch_item_rev));
-        result.latest_transaction_rev = rootJson.getInt(getResourceString(R.string.sync_json_trans_rev));
-
-        result.updatedTransIds = new ArrayList<>();
-        result.syncedBranchItems = new ArrayList<>();
-        result.syncedTrans = new ArrayList<>();
-
-        if (rootJson.has(getResourceString(R.string.sync_json_updated_trans_ids))) {
-            JSONArray updatedArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_updated_trans_ids));
-            for (int i = 0; i < updatedArray.length(); i++) {
-                result.updatedTransIds.add(new SyncUpdatedElement(updatedArray.getJSONObject(i), result.company_id));
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_branch_items))) {
-            JSONArray branchItemArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_branch_items));
-
-            final String JSON_BRANCH_ID = "branch_id";
-            final String JSON_ITEM_ID = "item_id";
-            final String JSON_QUANTITY = "quantity";
-            final String JSON_LOC = "loc";
-            for (int i = 0; i < branchItemArray.length(); i++) {
-                JSONObject object = branchItemArray.getJSONObject(i);
-
-                SBranchItem branchItem = new SBranchItem();
-                branchItem.company_id = result.company_id;
-                branchItem.branch_id = object.getLong(JSON_BRANCH_ID);
-                branchItem.item_id = object.getLong(JSON_ITEM_ID);
-                branchItem.quantity = object.getDouble(JSON_QUANTITY);
-                branchItem.item_location = object.getString(JSON_LOC);
-
-                result.syncedBranchItems.add(branchItem);
-            }
-        }
-
-        if (rootJson.has(getResourceString(R.string.sync_json_sync_trans))) {
-            JSONArray transArray = rootJson.getJSONArray(getResourceString(R.string.sync_json_sync_trans));
-
-            final String TRANS_JSON_TRANS_ID = "trans_id";
-            final String TRANS_JSON_UUID = "client_uuid";
-            final String TRANS_JSON_USER_ID = "user_id";
-            final String TRANS_JSON_BRANCH_ID = "branch_id";
-            final String TRANS_JSON_DATE = "date";
-            final String TRANS_JSON_TRANS_NOTE = "trans_note";
-            final String TRANS_JSON_ITEMS = "items";
-
-            final String TRANS_ITEM_JSON_TRANS_TYPE = "trans_type";
-            final String TRANS_ITEM_JSON_ITEM_ID = "item_id";
-            final String TRANS_ITEM_JSON_OTHER_BRANCH_ID = "other_branch";
-            final String TRANS_ITEM_JSON_QUANTITY = "quantity";
-            final String TRANS_ITEM_JSON_ITEM_NOTE = "item_note";
-
-            for (int i = 0; i < transArray.length(); i++) {
-                JSONObject transObject = transArray.getJSONObject(i);
-                STransaction transaction = new STransaction();
-                transaction.company_id = result.company_id;
-                transaction.client_uuid = transObject.getString(TRANS_JSON_UUID);
-                transaction.transaction_id = transObject.getLong(TRANS_JSON_TRANS_ID);
-                transaction.user_id = transObject.getLong(TRANS_JSON_USER_ID);
-                transaction.branch_id = transObject.getLong(TRANS_JSON_BRANCH_ID);
-                transaction.date = transObject.getLong(TRANS_JSON_DATE);
-                transaction.transactionNote = transObject.getString(TRANS_JSON_TRANS_NOTE);
-
-                transaction.transactionItems = new ArrayList<>();
-
-                JSONArray itemsArray = transObject.getJSONArray(TRANS_JSON_ITEMS);
-                for (int j = 0; j < itemsArray.length(); j++) {
-                    JSONObject itemObject = itemsArray.getJSONObject(j);
-                    STransaction.STransactionItem transactionItem = new
-                            STransaction.STransactionItem();
-                    transactionItem.company_id = result.company_id;
-                    transactionItem.trans_id = transaction.transaction_id;
-                    transactionItem.trans_type = itemObject.getInt(TRANS_ITEM_JSON_TRANS_TYPE);
-                    transactionItem.item_id = itemObject.getInt(TRANS_ITEM_JSON_ITEM_ID);
-                    transactionItem.other_branch_id = itemObject.getInt(TRANS_ITEM_JSON_OTHER_BRANCH_ID);
-                    transactionItem.quantity = itemObject.getInt(TRANS_ITEM_JSON_QUANTITY);
-                    transactionItem.item_note = itemObject.getString(TRANS_ITEM_JSON_ITEM_NOTE);
-
-                    transaction.transactionItems.add(transactionItem);
-                }
-
-                result.syncedTrans.add(transaction);
-            }
-        }
-
-        return result;
-    }
-
-    void applyTransactionSync(TransactionSyncResponse result) throws Exception {
+    void applyTransactionResponse(TransactionResponse response) throws Exception {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
+
         long company_id = PrefUtil.getCurrentCompanyId(this);
-        for (SyncUpdatedElement updated_trans : result.updatedTransIds) {
+
+        for (EntityResponse.UpdatedId updatedId : response.getUpdatedTransactionIdsList()) {
             ContentValues values = new ContentValues();
-            values.put(TransactionEntry.COLUMN_TRANS_ID, updated_trans.newId);
+            values.put(TransactionEntry.COLUMN_TRANS_ID, updatedId.getNewId());
             setStatusSynced(values);
             operationList.add(ContentProviderOperation.newUpdate(TransactionEntry.buildBaseUri(company_id)).
                     withValues(values).
                     withSelection(
                             String.format("%s = ?", TransactionEntry.COLUMN_TRANS_ID),
-                            new String[]{Long.toString(updated_trans.oldId)}).
+                            new String[]{Long.toString(updatedId.getOldId())}).
                     build());
         }
-        for (SBranchItem sync_branch_item : result.syncedBranchItems) {
+
+        for (TransactionResponse.SyncBranchItem sync_branch_item : response.getBranchItemsList()) {
+            SBranchItem branchItem = new SBranchItem(sync_branch_item.getBranchItem());
+            branchItem.company_id = company_id;
             operationList.add(ContentProviderOperation.newInsert(BranchItemEntry.buildBaseUri(company_id)).
                     withValues(
-                            setStatusSynced(DbUtil.setUpdateOnConflict(sync_branch_item.toContentValues()))).
+                            setStatusSynced(DbUtil.setUpdateOnConflict(branchItem.toContentValues()))).
                     build());
         }
-        for (STransaction sync_trans : result.syncedTrans) {
+
+        for (TransactionResponse.SyncTransaction sync_trans : response.getTransactionsList()) {
+            STransaction transaction = new STransaction(sync_trans, company_id);
             operationList.add(ContentProviderOperation.newInsert(TransactionEntry.buildBaseUri(company_id)).
                     withValues(
-                            setStatusSynced(sync_trans.toContentValues())).
+                            setStatusSynced(transaction.toContentValues())).
                     build());
-            for (STransaction.STransactionItem trans_item : sync_trans.transactionItems) {
+            for (STransaction.STransactionItem trans_item : transaction.transactionItems) {
                 operationList.add(ContentProviderOperation.newInsert(TransItemEntry.buildBaseUri(company_id)).
                         withValues(
                                 setStatusSynced(trans_item.toContentValues())).
@@ -878,20 +776,27 @@ public class SheketSyncService extends IntentService {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
             operationList = new ArrayList<>();
-            // also update the transaction items
-            // TODO: check if this can be done in the previous contentprovider operations list
-            for (SyncUpdatedElement updated_trans : result.updatedTransIds) {
+            /**
+             * Update the transaction item to have an updated state. Check if we can do that
+             * in a single ContentProviderOperation's List. The issue is which transaction id
+             * to use. If we use the "un-synced" values, what will happen to the update
+             * since we are also changing them. If we try to use the new ids, there might
+             * be a "FOREIGN-KEY" violation as the transactions might not have updated their ids.
+             */
+
+            for (EntityResponse.UpdatedId updated_trans : response.getUpdatedTransactionIdsList()) {
                 operationList.add(ContentProviderOperation.newUpdate(TransItemEntry.buildBaseUri(company_id)).
                         withValues(setStatusSynced(new ContentValues())).
                         withSelection(
                                 String.format("%s = ?", TransItemEntry.COLUMN_TRANSACTION_ID),
-                                new String[]{Long.toString(updated_trans.newId)}).build());
+                                new String[]{Long.toString(updated_trans.getNewId())}).build());
             }
+
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
 
-            PrefUtil.setTransactionRevision(this, result.latest_transaction_rev);
-            PrefUtil.setBranchItemRevision(this, result.latest_branch_item_rev);
+            PrefUtil.setTransactionRevision(this, (int)response.getNewTransRev());
+            PrefUtil.setBranchItemRevision(this, (int)response.getNewBranchItemRev());
         } catch (OperationApplicationException | RemoteException e) {
             throw e;
         }
@@ -912,32 +817,6 @@ public class SheketSyncService extends IntentService {
 
             default:
                 throw new SyncException(SheketNetworkUtil.getErrorMessage(response));
-        }
-    }
-
-    static class TransactionSyncResponse {
-        long company_id;
-        int latest_transaction_rev;
-        int latest_branch_item_rev;
-
-        List<SyncUpdatedElement> updatedTransIds;
-
-        List<STransaction> syncedTrans;
-        List<SBranchItem> syncedBranchItems;
-    }
-
-    public class SyncUpdatedElement {
-        public long oldId;
-        public long newId;
-        public long companyId;
-
-        public static final String JSON_OLD_ID = "o";
-        public static final String JSON_NEW_ID = "n";
-
-        public SyncUpdatedElement(JSONObject json, long company_id) throws JSONException {
-            oldId = json.getLong(JSON_OLD_ID);
-            newId = json.getLong(JSON_NEW_ID);
-            this.companyId = company_id;
         }
     }
 

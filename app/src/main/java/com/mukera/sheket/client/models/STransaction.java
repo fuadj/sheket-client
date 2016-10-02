@@ -8,6 +8,8 @@ import android.text.TextUtils;
 
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.network.Transaction;
+import com.mukera.sheket.client.network.TransactionResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,6 +90,37 @@ public class STransaction extends UUIDSyncable implements Parcelable {
 
     public STransaction() {
         transactionItems = new ArrayList<>();
+    }
+
+    public STransaction(TransactionResponse.SyncTransaction gRPC_Sync_Transaction, long t_company_id) {
+        Transaction transaction = gRPC_Sync_Transaction.getTransaction();
+
+        user_id = gRPC_Sync_Transaction.getUserId();
+
+        company_id = t_company_id;
+        transaction_id = transaction.getTransId();
+        branch_id = transaction.getBranchId();
+        date = transaction.getDateTime();
+        transactionNote = transaction.getTransNote();
+        client_uuid = transaction.getUUID();
+
+        transactionItems = new ArrayList<>();
+
+        for (Transaction.TransItem _item : transaction.getTransactionItemsList()) {
+            STransactionItem transItem = new STransactionItem();
+            transItem.company_id = company_id;
+
+            // the transaction id isn't sent with the transaction items
+            // but through the "outer" transaction
+            transItem.trans_id = transaction_id;
+            transItem.trans_type = (int)_item.getTransType();
+            transItem.item_id = _item.getItemId();
+            transItem.other_branch_id = _item.getOtherBranchId();
+            transItem.quantity = _item.getQuantity();
+            transItem.item_note = _item.getItemNote();
+
+            transactionItems.add(transItem);
+        }
     }
 
     public STransaction(Cursor cursor) {
@@ -189,6 +222,27 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         }
         result.put(JSON_TRANS_KEY_ITEMS, itemsArr);
         return result;
+    }
+
+    public Transaction.Builder toGRPCBuilder() {
+        Transaction.Builder builder = Transaction.newBuilder().
+                setTransId(transaction_id).
+                setBranchId(branch_id).
+                setUUID(client_uuid).
+                setDateTime(date).
+                setTransNote(transactionNote);
+
+        for (STransactionItem transItem : transactionItems) {
+            builder.addTransactionItems(
+                    Transaction.TransItem.newBuilder().
+                            setTransType(transItem.trans_type).
+                            setItemId(transItem.item_id).
+                            setOtherBranchId(transItem.other_branch_id).
+                            setQuantity(transItem.quantity).
+                            setItemNote(transItem.item_note));
+        }
+
+        return builder;
     }
 
     @Override
