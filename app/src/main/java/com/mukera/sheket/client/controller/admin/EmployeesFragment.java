@@ -44,6 +44,12 @@ import com.mukera.sheket.client.data.SheketContract.MemberEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SMember;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.network.AddEmployeeRequest;
+import com.mukera.sheket.client.network.AddEmployeeResponse;
+import com.mukera.sheket.client.network.CompanyAuth;
+import com.mukera.sheket.client.network.CompanyID;
+import com.mukera.sheket.client.network.SheketAuth;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -64,6 +70,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 /**
  * Created by gamma on 4/3/16.
@@ -569,40 +579,34 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         }
 
         void addMember(Activity activity, SMember member) {
-            final String JSON_MEMBER_ID = "user_id";
-            final String JSON_MEMBER_PERMISSION = "user_permission";
-
-            // This is part of the response
-            final String JSON_MEMBER_NAME = "username";
-
             try {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put(JSON_MEMBER_ID, member.member_id);
-                jsonObject.put(JSON_MEMBER_PERMISSION, member.member_permission.Encode());
+                ManagedChannel managedChannel = ManagedChannelBuilder.
+                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                        usePlaintext(true).
+                        build();
 
-                Request.Builder builder = new Request.Builder();
-                builder.url(ConfigData.getAddress(getActivity()) + "v1/member/add");
-                builder.addHeader(getContext().getString(R.string.pref_header_key_company_id),
-                        Long.toString(PrefUtil.getCurrentCompanyId(getContext())));
-                builder.addHeader(activity.getString(R.string.pref_request_key_cookie),
-                        PrefUtil.getLoginCookie(activity));
-                builder.post(RequestBody.create(MediaType.parse("application/json"),
-                        jsonObject.toString()));
+                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                        SheketServiceGrpc.newBlockingStub(managedChannel);
 
-                Response response = client.newCall(builder.build()).execute();
-                if (!response.isSuccessful()) {
-                    throw new MemberException(SheketNetworkUtil.getErrorMessage(response));
-                }
+                long company_id = PrefUtil.getCurrentCompanyId(getContext());
+                String cookie = PrefUtil.getLoginCookie(getContext());
 
-                JSONObject json = new JSONObject(response.body().string());
-
-                String member_name = json.getString(JSON_MEMBER_NAME);
+                AddEmployeeRequest request = AddEmployeeRequest.newBuilder().
+                        setCompanyAuth(CompanyAuth.newBuilder().
+                                setCompanyId(CompanyID.newBuilder().
+                                        setCompanyId(company_id)).
+                                setSheketAuth(SheketAuth.newBuilder().
+                                        setLoginCookie(cookie))).
+                        setEmployeeId(member.member_id).
+                        setPermission(member.member_permission.Encode()).
+                        build();
+                AddEmployeeResponse response = blockingStub.addEmployee(request);
 
                 ContentValues values = new ContentValues();
                 values.put(MemberEntry.COLUMN_COMPANY_ID,
                         PrefUtil.getCurrentCompanyId(activity));
                 values.put(MemberEntry.COLUMN_MEMBER_ID, member.member_id);
-                values.put(MemberEntry.COLUMN_MEMBER_NAME, member_name);
+                values.put(MemberEntry.COLUMN_MEMBER_NAME, response.getEmployeeName());
                 values.put(MemberEntry.COLUMN_MEMBER_PERMISSION, member.member_permission.Encode());
 
                 // b/c we directly added the member, we've synced it with the server
@@ -614,7 +618,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 if (MemberEntry.getMemberId(uri) < 0) {
                     throw new MemberException("error adding member into company");
                 }
-            } catch (JSONException | IOException | MemberException e) {
+            } catch (StatusRuntimeException | MemberException e) {
                 mErrorOccurred = true;
                 mErrorMsg = e.getMessage();
             }

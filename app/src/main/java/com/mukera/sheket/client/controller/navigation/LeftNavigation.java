@@ -48,6 +48,10 @@ import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.network.EditUserNameRequest;
+import com.mukera.sheket.client.network.EmptyResponse;
+import com.mukera.sheket.client.network.SheketAuth;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -65,6 +69,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Map;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 /**
  * Created by fuad on 7/29/16.
@@ -143,6 +151,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         mPreferenceList.setAdapter(mPrefAdapter);
 
         mPrefAdapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
+        mPrefAdapter.add(StaticNavigationOptions.OPTION_DEBUG);
         ListUtils.setDynamicHeight(mPreferenceList);
 
         mPreferenceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -153,6 +162,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                     case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
                         LanguageSelectionDialog.
                                 displayLanguageConfigurationDialog(getNavActivity(), true);
+                        break;
+                    case StaticNavigationOptions.OPTION_DEBUG:
+                        getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
                         break;
                 }
             }
@@ -495,28 +507,29 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     static final OkHttpClient client = new OkHttpClient();
 
     Pair<Boolean, String> updateCurrentUserName(String new_name) {
-        final String REQUEST_NEW_USER_NAME = "new_user_name";
-
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put(REQUEST_NEW_USER_NAME, new_name);
+            ManagedChannel managedChannel = ManagedChannelBuilder.
+                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    usePlaintext(true).
+                    build();
 
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(getNavActivity()) + "v1/user/edit/name");
-            builder.addHeader(getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(getNavActivity()));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    jsonObject.toString()));
+            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                    SheketServiceGrpc.newBlockingStub(managedChannel);
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
-            }
+            String cookie = PrefUtil.getLoginCookie(getNavActivity());
+
+            // TODO: check if we need a better check
+            // we don't really have a response, we just need to check if we can
+            // "pass" the call without throwing an exception. If that happened it means
+            // a "non-error" result.
+            blockingStub.editUserName(EditUserNameRequest.newBuilder().
+                    setNewName(new_name).
+                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
+                    build());
 
             PrefUtil.setUserName(getNavActivity(), new_name);
-
             return new Pair<>(Boolean.TRUE, null);
-        } catch (JSONException | IOException e) {
+        } catch (StatusRuntimeException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
     }
