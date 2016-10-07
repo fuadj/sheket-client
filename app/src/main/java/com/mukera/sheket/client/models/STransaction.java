@@ -185,6 +185,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         values.put(TransactionEntry.COLUMN_DATE, date);
         values.put(TransactionEntry.COLUMN_TRANS_NOTE, transactionNote);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
+        values.put(COLUMN_UUID, client_uuid);
         return values;
     }
 

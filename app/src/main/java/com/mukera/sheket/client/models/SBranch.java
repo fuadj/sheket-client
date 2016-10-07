@@ -117,6 +117,7 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         values.put(BranchEntry.COLUMN_LOCATION, branch_location);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
         values.put(BranchEntry.COLUMN_STATUS_FLAG, status_flag);
+        values.put(COLUMN_UUID, client_uuid);
         return values;
     }
 
