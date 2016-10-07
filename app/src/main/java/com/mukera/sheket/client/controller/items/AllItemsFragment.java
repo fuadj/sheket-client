@@ -21,6 +21,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,6 +44,7 @@ import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCategory;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.mukera.sheket.client.utils.Utils;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SBranchItem;
@@ -730,6 +732,27 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         if (is_editing)
             editText.setText(category.name);
+
+        editText.addTextChangedListener(new TextWatcherAdapter(){
+            @Override
+            public void afterTextChanged(Editable s) {
+                String name = s.toString().trim();
+
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).
+                        setVisibility(
+                                // the category name can't be empty
+                                !name.isEmpty() ?
+                                        View.VISIBLE : View.GONE
+                        );
+            }
+        });
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // initially don't show the "Ok" button b/c the name hasn't changed
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
 
         dialog.show();
     }
