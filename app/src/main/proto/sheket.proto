@@ -77,6 +77,9 @@ message Company {
     string company_name = 2;
     string permission = 3;
     string signed_license = 4;
+
+    // being able to generate payment_id at the server end gives us flexibilty
+    string payment_id = 5;
 }
 
 message CompanyList {

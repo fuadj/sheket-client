@@ -44,10 +44,6 @@ import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -58,6 +54,8 @@ import java.util.Set;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 
 /**
  * Created by gamma on 4/13/16.
@@ -165,8 +163,12 @@ public class SheketSyncService extends IntentService {
             PrefUtil.setIsSyncRunning(this, false);
 
             startService(new Intent(this, PaymentService.class));
-        } catch (InvalidLoginCredentialException e) {
-            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().value() == Status.UNAUTHENTICATED.getCode().value()) {
+                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
+            } else if (e.getStatus().getCode().value() == Status.ABORTED.getCode().value()) {
+
+            }
         } catch (SyncException e) {
             Log.e(LOG_TAG, "Sync Error", e);
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SERVER_ERROR,
@@ -180,12 +182,14 @@ public class SheketSyncService extends IntentService {
         } catch (Exception e) {
             e.printStackTrace();
             String err = e.getMessage();
+            String err_msg = err;
+            /*
             // it usually has the format package.exception_class: error message,
             // so do the crude "parsing" of the error message
             int index = err.indexOf("Exception");
-            String err_msg = err;
             if (index != -1)
                 err_msg = err.substring(index + "Exception".length());
+                */
 
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR,
                     "Error " + err_msg,
@@ -266,8 +270,7 @@ public class SheketSyncService extends IntentService {
             String name = company.getCompanyName();
             String new_permission = company.getPermission();
             String license = company.getSignedLicense();
-            // TODO: get correct payment id
-            String payment_id = "";
+            String payment_id = company.getPaymentId();
 
             /**
              * The server will only return a non-empty license if payment is made.
@@ -791,24 +794,6 @@ public class SheketSyncService extends IntentService {
         }
     }
 
-    /**
-     * Checks the response codes and throws the exception for it.
-     */
-    void throwAppropriateException(Response response) throws InvalidLoginCredentialException, SyncException {
-        // TODO: don't hardcode these constants, use a standard library
-        switch (response.code()) {
-            case 200:
-                return;
-
-            // un-authorized, they don't have valid login credentials
-            case 401:
-                throw new InvalidLoginCredentialException("Invalid login credentials");
-
-            default:
-                throw new SyncException(SheketNetworkUtil.getErrorMessage(response));
-        }
-    }
-
     private static class SyncException extends Exception {
         public SyncException() {
             super();
@@ -823,24 +808,6 @@ public class SheketSyncService extends IntentService {
         }
 
         public SyncException(Throwable throwable) {
-            super(throwable);
-        }
-    }
-
-    public static class InvalidLoginCredentialException extends Exception {
-        public InvalidLoginCredentialException() {
-            super();
-        }
-
-        public InvalidLoginCredentialException(String detailMessage) {
-            super(detailMessage);
-        }
-
-        public InvalidLoginCredentialException(String detailMessage, Throwable throwable) {
-            super(detailMessage, throwable);
-        }
-
-        public InvalidLoginCredentialException(Throwable throwable) {
             super(throwable);
         }
     }

@@ -48,8 +48,10 @@ import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.network.Company;
 import com.mukera.sheket.client.network.EditUserNameRequest;
 import com.mukera.sheket.client.network.EmptyResponse;
+import com.mukera.sheket.client.network.NewCompanyRequest;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.utils.ConfigData;
@@ -318,34 +320,43 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         final String JSON_DEVICE_ID = "device_id";
 
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put(JSON_COMPANY_NAME, company_name);
-            // we send the device id to prevent users from creating "fake" facebook accounts
-            // to use the app freely. We tie the company to this device so only a single
-            // free company can be created from a device.
-            jsonObject.put(JSON_DEVICE_ID, DeviceId.getUniqueDeviceId(getNavActivity()));
+            ManagedChannel managedChannel = ManagedChannelBuilder.
+                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    usePlaintext(true).
+                    build();
 
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(activity) + "v1/company/create");
-            builder.addHeader(activity.getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(activity));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    jsonObject.toString()));
+            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                    SheketServiceGrpc.newBlockingStub(managedChannel);
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
-            }
+            String cookie = PrefUtil.getLoginCookie(getNavActivity());
 
-            JSONObject result = new JSONObject(response.body().string());
-            long company_id = result.getLong(JSON_COMPANY_ID);
-            String user_permission = result.getString(JSON_USER_PERMISSION);
+            // TODO: check if we need a better check
+            // we don't really have a response, we just need to check if we can
+            // "pass" the call without throwing an exception. If that happened it means
+            // a "non-error" result.
+            Company created_company = blockingStub.
+                    createCompany(
+                            NewCompanyRequest.
+                                    newBuilder().
+                                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
+                                    setCompanyName(company_name).
+                                    setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
+                                    setLocalUserTime(
+                                            String.valueOf(System.currentTimeMillis())
+                                    ).build()
+                    );
+
+            long company_id = created_company.getCompanyId();
+            String user_permission = created_company.getPermission();
+            String license = created_company.getSignedLicense();
 
             ContentValues values = new ContentValues();
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
             values.put(CompanyEntry.COLUMN_USER_ID, PrefUtil.getUserId(activity));
             values.put(CompanyEntry.COLUMN_NAME, company_name);
             values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
+            values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
+            values.put(CompanyEntry.COLUMN_PAYMENT_ID, created_company.getPaymentId());
 
             Uri uri = activity.getContentResolver().insert(
                     CompanyEntry.CONTENT_URI, values
@@ -353,9 +364,13 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             if (ContentUris.parseId(uri) < 0) {
                 return new Pair<>(Boolean.FALSE, "error adding company into db");
             }
+
+            // TODO: do a TOTAL company switch. We shouldn't be using other company
+            // state for this company.
             PrefUtil.setCurrentCompanyId(activity, company_id);
             PrefUtil.setUserPermission(activity, user_permission);
-        } catch (JSONException | IOException e) {
+
+        } catch (StatusRuntimeException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
         return new Pair<>(Boolean.TRUE, null);
@@ -620,7 +635,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         /**
          * Checks if the row is pointing to the "add company" cell.
          *
-         * @param position      the row of the cursor
+         * @param position the row of the cursor
          */
         public static boolean isAddCompanyRow(Cursor cursor, int position) {
             if (!cursor.moveToPosition(position)) return false;
