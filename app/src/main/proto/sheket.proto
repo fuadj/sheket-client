@@ -67,8 +67,9 @@ message SyncUserResponse {
 
 message NewCompanyRequest {
     SheketAuth auth = 1;
-    string name = 2;
+    string company_name = 2;
     string device_id = 3;
+    string local_user_time = 4;
 }
 
 message Company {
