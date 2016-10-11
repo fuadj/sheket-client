@@ -29,7 +29,6 @@ import com.mukera.sheket.client.network.SyncCompanyRequest;
 import com.mukera.sheket.client.network.TransactionRequest;
 import com.mukera.sheket.client.network.TransactionResponse;
 import com.mukera.sheket.client.utils.ConfigData;
-import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
@@ -41,9 +40,7 @@ import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -250,7 +247,14 @@ public class SheketSyncService extends IntentService {
                         setLoginCookie(PrefUtil.getLoginCookie(this)).build()).
                 build();
 
-        CompanyList companies = blockingStub.syncCompanies(request);
+        CompanyList companies = new SheketGRPCCall<CompanyList>().runBlockingCall(
+                new SheketGRPCCall.GRPCCallable<CompanyList>() {
+                    @Override
+                    public CompanyList runGRPCCall() throws Exception {
+                        return blockingStub.syncCompanies(request);
+                    }
+                }
+        );
 
         long user_id = PrefUtil.getUserId(this);
         long current_company_id = PrefUtil.getCurrentCompanyId(this);
@@ -349,7 +353,14 @@ public class SheketSyncService extends IntentService {
 
         buildEntityRequest(entity_request);
 
-        EntityResponse response = blockingStub.syncEntity(entity_request.build());
+        EntityResponse response = new SheketGRPCCall<EntityResponse>().runBlockingCall(
+                new SheketGRPCCall.GRPCCallable<EntityResponse>() {
+                    @Override
+                    public EntityResponse runGRPCCall() throws Exception {
+                        return blockingStub.syncEntity(entity_request.build());
+                    }
+                }
+        );
         applyEntityResponse(response);
     }
 
@@ -696,7 +707,14 @@ public class SheketSyncService extends IntentService {
 
         buildTransactionRequest(transaction_request);
 
-        TransactionResponse response = blockingStub.syncTransaction(transaction_request.build());
+        TransactionResponse response = new SheketGRPCCall<TransactionResponse>().runBlockingCall(
+                new SheketGRPCCall.GRPCCallable<TransactionResponse>() {
+                    @Override
+                    public TransactionResponse runGRPCCall() throws Exception {
+                        return blockingStub.syncTransaction(transaction_request.build());
+                    }
+                }
+        );
         applyTransactionResponse(response);
     }
 
