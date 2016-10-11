@@ -3,7 +3,9 @@ package com.mukera.sheket.client;
 import android.test.AndroidTestCase;
 
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
+import com.mukera.sheket.client.utils.DuplicateFinder;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -170,6 +172,91 @@ public class TestIdEncoderUtils extends AndroidTestCase {
             assertEquals("Encoded User id doesn't match",
                     test_id, IdEncoderUtil.decodeEncodedId(encoded_id));
         }
+    }
+    */
+
+    /*
+     * Test for finding the min-distance between a group of encoded-ids.
+     * Un-comment to run.
+     */
+    /*
+    public void testClosestIds() {
+        final int num_between_checks = 100;
+        final int num_linear_checks = num_between_checks * num_between_checks;
+
+        final int start_id = 1002;
+        final int stop_id = num_between_checks + start_id;
+
+        ArrayList<String> encoded_ids = new ArrayList<>();
+        for (int i = start_id; i < stop_id; i++) {
+            encoded_ids.add(IdEncoderUtil.encodeAndDelimitId(i, IdEncoderUtil.ID_TYPE_COMPANY));
+        }
+
+        String encoded_left = null, encoded_right = null;
+        int id_left = 0, id_right = 0;
+        int min_between_distance = 1000, max_between_distance = 0;
+        int distance_sum = 0;
+
+        int n = 0;
+        for (int i = 0; i < (num_between_checks - 1); i++) {
+            for (int j = i + 1; j < num_between_checks; j++) {
+                int distance = DuplicateFinder.computeDistance(
+                        encoded_ids.get(i),
+                        encoded_ids.get(j));
+                if (distance < min_between_distance) {
+                    min_between_distance = distance;
+
+                    id_left = i + start_id;
+                    id_right = j + start_id;
+
+                    encoded_left = encoded_ids.get(i);
+                    encoded_right = encoded_ids.get(j);
+                } else if (distance > max_between_distance) {
+                    max_between_distance = distance;
+                }
+                distance_sum += distance;
+                n++;
+            }
+        }
+        double avg_between_distance = distance_sum / (1.0 * n);
+
+        int min_linear_distance = 1000;
+
+        int base_id = start_id;
+        String base_encoded_id = encoded_ids.get(0);
+
+        String closest_encoded_id = null;
+        int closest_id = 0;
+
+        for (int i = 1; i < num_linear_checks; i++) {
+            String encoded_id = IdEncoderUtil.encodeAndDelimitId(i + start_id, IdEncoderUtil.ID_TYPE_USER);
+            int distance = DuplicateFinder.computeDistance(
+                    base_encoded_id, encoded_id);
+            if (distance < min_linear_distance) {
+                min_linear_distance = distance;
+
+                closest_encoded_id = encoded_id;
+                closest_id = i + start_id;
+            }
+        }
+
+        assertTrue(String.format(
+                "\n\nQuadratic: \nClosest Ids:(%d , %d) => (%s , %s)\n" +
+                        "Average: (%f), Min: %d. Max: %d\n" +
+                        "\n\nLinear: \nMin Distance: %d,\nClosest Ids:(%d , %d) => (%s , %s)\n\n",
+
+                id_left, id_right,
+                encoded_left, encoded_right,
+
+                avg_between_distance,
+                min_between_distance,
+                max_between_distance,
+
+                min_linear_distance,
+                base_id, closest_id,
+                base_encoded_id, closest_encoded_id
+                ),
+                false);
     }
     */
 }
