@@ -9,6 +9,7 @@ import com.mukera.sheket.client.R;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by gamma on 3/2/16.
@@ -53,18 +54,18 @@ public class SheketContract {
     public static int getDbDateInteger(Date date) {
         // Because the API returns a unix timestamp (measured in seconds),
         // it must be converted to milliseconds in order to be converted to valid date.
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT, Locale.US);
         return Integer.parseInt(sdf.format(date));
     }
 
     /**
-     * Converts a dateText to a long Unix time representation
+     * Converts a dateText to a int Unix time representation
      *
      * @param dateInt the input date integer
      * @return the Date object
      */
     public static Date getDateFromDb(long dateInt) {
-        SimpleDateFormat dbDateFormat = new SimpleDateFormat(DATE_FORMAT);
+        SimpleDateFormat dbDateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.US);
         try {
             return dbDateFormat.parse("" + dateInt);
         } catch (ParseException e) {
@@ -112,13 +113,13 @@ public class SheketContract {
          * By setting the dummy company to be 0, we can guarantee that it won't
          * show up in ANY of the companies of a user because all of them have a non-zero id.
          */
-        public static final long DUMMY_COMPANY_ID = 0;
+        public static final int DUMMY_COMPANY_ID = 0;
 
-        public static long getCompanyId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(1));
+        public static int getCompanyId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(1));
         }
 
-        protected static Uri.Builder withBaseCompanyIdUri(Uri base_uri, long companyId) {
+        protected static Uri.Builder withBaseCompanyIdUri(Uri base_uri, int companyId) {
             return base_uri.buildUpon().appendPath(Long.toString(companyId));
         }
     }
@@ -185,7 +186,7 @@ public class SheketContract {
         // there was a problem with the payment (invalid certificate, date got messed-up, ...)
         public static final int PAYMENT_INVALID = 3;
 
-        public static Uri buildCompanyUri(long id) {
+        public static Uri buildCompanyUri(int id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }
@@ -209,18 +210,18 @@ public class SheketContract {
         public static final String COLUMN_MEMBER_NAME = "member_name";
         public static final String COLUMN_MEMBER_PERMISSION = "member_permission";
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
-        public static Uri buildMemberUri(long company_id, long member_id) {
+        public static Uri buildMemberUri(int company_id, int member_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).appendPath(
                     Long.toString(member_id)).build();
         }
 
 
-        public static long getMemberId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public static int getMemberId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
     }
 
@@ -233,7 +234,7 @@ public class SheketContract {
          * SO, create another "dummy" category for the root to refer it to as parent,
          * and this problem will be solved.
          */
-        public static final long _ROOT_CATEGORY_PARENT_ID = -2;
+        public static final int _ROOT_CATEGORY_PARENT_ID = -2;
 
         /**
          * The root category is the parent of the "first" level categories.
@@ -242,7 +243,7 @@ public class SheketContract {
          * We can't use the "universal" -1 as the id because that is used by the database
          * to signal error.
          */
-        public static final long ROOT_CATEGORY_ID = -3;
+        public static final int ROOT_CATEGORY_ID = -3;
 
         private static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_CATEGORY).build();
@@ -281,7 +282,7 @@ public class SheketContract {
             return PART_CHILD + "." + col_name;
         }
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
@@ -290,7 +291,7 @@ public class SheketContract {
         // FIXME: this is just a hack, find proper way of implementing this
         // TODO: refactor sheket provider to have "current , child" category stuff.
         // make "current the default" and add option to fetch children.
-        public static Uri buildBaseUriWithNoChildren(long company_id) {
+        public static Uri buildBaseUriWithNoChildren(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendQueryParameter(QUERY_PARAM_DON_T_FETCH_CHILDREN, PARAM_DONT_FETCH).build();
         }
@@ -303,13 +304,13 @@ public class SheketContract {
             return false;
         }
 
-        public static Uri buildCategoryUri(long company_id, long category_id) {
+        public static Uri buildCategoryUri(int company_id, int category_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(category_id)).build();
         }
 
-        public long getCategoryId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public int getCategoryId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
     }
 
@@ -355,7 +356,7 @@ public class SheketContract {
          * We can't user the "universal" -1 as the id because that is used by the database
          * to signal error.
          */
-        public static final long DUMMY_BRANCH_ID = -2;
+        public static final int DUMMY_BRANCH_ID = -2;
 
         private static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_BRANCH).build();
@@ -375,17 +376,17 @@ public class SheketContract {
         public static final String COLUMN_NAME = "branch_name";
         public static final String COLUMN_LOCATION = "branch_location";
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
-        public static Uri buildBranchUri(long company_id, long id) {
+        public static Uri buildBranchUri(int company_id, int id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).appendPath(
                     Long.toString(id)).build();
         }
 
-        public static long getBranchId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public static int getBranchId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
     }
 
@@ -407,36 +408,36 @@ public class SheketContract {
         public static final String COLUMN_BRANCH_ID = "_id";
         public static final String COLUMN_CATEGORY_ID = "category_id";
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
-        public static final long NO_ID_SET = -1;
+        public static final int NO_ID_SET = -1;
 
         /**
          * if you don't want to specify either { branch_id OR category_id },
          * you should set it to {@code NO_ID_SET}
          * e.g: (company_id, NO_ID_SET, category_id) when you don't specify the branch
          */
-        public static Uri buildBranchCategoryUri(long company_id, long branch_id, long cateogry_id) {
+        public static Uri buildBranchCategoryUri(int company_id, int branch_id, int cateogry_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(branch_id)).
                     appendPath(Long.toString(cateogry_id)).build();
         }
 
-        public static long getBranchId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public static int getBranchId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
 
-        public static long getCategoryId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(3));
+        public static int getCategoryId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(3));
         }
 
         /**
          * Use this to check if an id is set
          */
-        public static boolean isIdSpecified(Context context, long id) {
-            long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        public static boolean isIdSpecified(Context context, int id) {
+            int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
             // if the id didn't still sync with the server, it will be -ve
             // then it needs to be equal or below default entity id
             return id <= default_id ||
@@ -491,36 +492,36 @@ public class SheketContract {
         public static final String COLUMN_QUANTITY = "quantity";
         public static final String COLUMN_ITEM_LOCATION = "item_location";
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
-        public static final long NO_ID_SET = -1;
+        public static final int NO_ID_SET = -1;
 
         /**
          * if you don't want to specify either { branch_id OR item_id },
          * you should set it to {@code NO_ID_SET}
          * e.g: (company_id, NO_ID_SET, item_id) when you don't specify the branch
          */
-        public static Uri buildBranchItemUri(long company_id, long branch_id, long item_id) {
+        public static Uri buildBranchItemUri(int company_id, int branch_id, int item_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(branch_id)).
                     appendPath(Long.toString(item_id)).build();
         }
 
-        public static long getBranchId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public static int getBranchId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
 
-        public static long getItemId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(3));
+        public static int getItemId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(3));
         }
 
         /**
          * Use this to check is an id was set
          */
-        public static boolean isIdSpecified(Context context, long id) {
-            long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        public static boolean isIdSpecified(Context context, int id) {
+            int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
             // if the id didn't still sync with the server, it will be -ve
             // then it needs to be equal or below default entity id
             return id <= default_id ||
@@ -530,11 +531,11 @@ public class SheketContract {
         /**
          * Helper methods to simplify uri creation
          */
-        public static Uri buildAllItemsInBranchUri(long company_id, long branch_id) {
+        public static Uri buildAllItemsInBranchUri(int company_id, int branch_id) {
             return buildBranchItemUri(company_id, branch_id, NO_ID_SET);
         }
 
-        public static Uri buildItemInAllBranches(long company_id, long item_id) {
+        public static Uri buildItemInAllBranches(int company_id, int item_id) {
             return buildBranchItemUri(company_id, NO_ID_SET, item_id);
         }
 
@@ -595,14 +596,14 @@ public class SheketContract {
         public static final String COLUMN_BAR_CODE = "bar_code";
         public static final String COLUMN_HAS_BAR_CODE = "has_bar_code";
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
         private static final String QUERY_BRANCH_SPECIFIED = "branch_specified";
         private static final String VALUE_BRANCH_SPECIFIED = "true";
 
-        public static Uri buildBaseUriWithBranches(long company_id) {
+        public static Uri buildBaseUriWithBranches(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendQueryParameter(QUERY_BRANCH_SPECIFIED, VALUE_BRANCH_SPECIFIED).
                     build();
@@ -616,13 +617,13 @@ public class SheketContract {
             return false;
         }
 
-        public static Uri buildItemUri(long company_id, long id) {
+        public static Uri buildItemUri(int company_id, int id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(id)).build();
         }
 
-        public long getItemId(Uri uri) {
-            return Long.parseLong(uri.getPathSegments().get(2));
+        public int getItemId(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
         }
     }
 
@@ -641,14 +642,14 @@ public class SheketContract {
             return TABLE_NAME + "." + col_name;
         }
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
         private static final String QUERY_ITEMS_SPECIFIED = "item_specified";
         private static final String VALUE_ITEMS_SPECIFIED = "true";
 
-        public static Uri buildBaseUriWithItems(long company_id) {
+        public static Uri buildBaseUriWithItems(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendQueryParameter(QUERY_ITEMS_SPECIFIED, VALUE_ITEMS_SPECIFIED).
                     build();
@@ -668,7 +669,7 @@ public class SheketContract {
         public static final String COLUMN_DATE = "date";
         public static final String COLUMN_TRANS_NOTE = "trans_note";
 
-        public static Uri buildTransactionUri(long company_id, long trans_id) {
+        public static Uri buildTransactionUri(int company_id, long trans_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(trans_id)).build();
         }
@@ -740,7 +741,7 @@ public class SheketContract {
             return "Undefined TransType";
         }
 
-        public static Uri buildBaseUri(long company_id) {
+        public static Uri buildBaseUri(int company_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).build();
         }
 
@@ -754,7 +755,7 @@ public class SheketContract {
          * @param trans_id
          * @return
          */
-        public static Uri buildTransactionItemsUri(long company_id, long trans_id) {
+        public static Uri buildTransactionItemsUri(int company_id, long trans_id) {
             return withBaseCompanyIdUri(CONTENT_URI, company_id).
                     appendPath(Long.toString(trans_id)).build();
         }
@@ -767,7 +768,7 @@ public class SheketContract {
          * Use this to check is an id was set
          */
         public static boolean isTransactionIdSet(Context context, long id) {
-            long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+            int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
             // if the id didn't still sync we the server, it will be -ve
             // then it needs to be equal or below default entity id
             return id <= default_id ||

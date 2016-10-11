@@ -41,7 +41,7 @@ import java.util.Map;
 public class TransactionHistoryFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private ListView mTransList;
     private TransDetailAdapter mTransDetailAdapter;
-    private Map<Long, SMember> mMembers = null;
+    private Map<Integer, SMember> mMembers = null;
 
     /**
      * Because we are fetching both un-synced & synced(only if a manager) transactions,
@@ -93,11 +93,11 @@ public class TransactionHistoryFragment extends Fragment implements LoaderCallba
         return isUnSyncedTransaction(transactionDetail);
     }
 
-    Map<Long, SMember> getMembers() {
+    Map<Integer, SMember> getMembers() {
         if (mMembers == null) {
             mMembers = new HashMap<>();
 
-            long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+            int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
             String sortOrder = MemberEntry._full(MemberEntry.COLUMN_MEMBER_ID);
             Cursor cursor = getActivity().getContentResolver().query(MemberEntry.buildBaseUri(company_id),

@@ -259,7 +259,7 @@ public class BranchFragment extends Fragment implements LoaderCallbacks<Cursor> 
                             values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR,
                                     ChangeTraceable.CHANGE_STATUS_CREATED);
 
-                            long branch_id = PrefUtil.getNewBranchId(activity);
+                            int branch_id = PrefUtil.getNewBranchId(activity);
                             PrefUtil.setNewBranchId(activity, branch_id);
 
                             values.put(BranchEntry.COLUMN_BRANCH_ID, branch_id);

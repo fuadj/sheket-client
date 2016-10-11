@@ -131,7 +131,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         String[] selectionArgs = null;
 
         if (getUserPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
-            List<Long> branches = getUserPermission().getAllowedBranches();
+            List<Integer> branches = getUserPermission().getAllowedBranches();
             selection = "";
             selectionArgs = new String[branches.size()];
             for (int i = 0; i < branches.size(); i++) {

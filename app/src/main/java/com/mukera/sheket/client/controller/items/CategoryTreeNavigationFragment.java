@@ -41,8 +41,8 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
         ExpandableCategoryTreeAdapter.ExpandableCategoryTreeListener {
 
-    protected long mCurrentCategoryId;
-    protected Stack<Long> mCategoryBackstack;
+    protected int mCurrentCategoryId;
+    protected Stack<Integer> mCategoryBackstack;
 
     private ExpandableListView mExpandableListView;
 
@@ -90,7 +90,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * @param previous_category This this the last category visited before selecting the category
      * @param selected_category
      */
-    protected void onCategorySelected(long previous_category, long selected_category) {
+    protected void onCategorySelected(int previous_category, int selected_category) {
     }
 
     /**
@@ -120,12 +120,12 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * @param category_id
      * @return the previous category
      */
-    protected long setCurrentCategory(long category_id) {
+    protected int setCurrentCategory(int category_id) {
         // the root category is only added to the "bottom" of the stack
         if (category_id == CategoryEntry.ROOT_CATEGORY_ID)
             return mCurrentCategoryId;
 
-        long previous_category = mCurrentCategoryId;
+        int previous_category = mCurrentCategoryId;
         mCategoryBackstack.push(mCurrentCategoryId);
         mCurrentCategoryId = category_id;
         return previous_category;
@@ -135,9 +135,9 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
      * Replace the current stack with the this. It won't immediately update
      * the UI. Sub-classes should handle that when necessary.
      */
-    protected void setCategoryStack(Stack<Long> category_stack, long current_category) {
+    protected void setCategoryStack(Stack<Integer> category_stack, int current_category) {
         mCategoryBackstack = new Stack<>();
-        for (Long category_id : category_stack) {
+        for (Integer category_id : category_stack) {
             mCategoryBackstack.push(category_id);
         }
         mCurrentCategoryId = current_category;
@@ -146,11 +146,11 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
     /**
      * Use this to find the category you are in.
      */
-    public long getCurrentCategory() {
+    public int getCurrentCategory() {
         return mCurrentCategoryId;
     }
 
-    public Stack<Long> getCurrentStack() {
+    public Stack<Integer> getCurrentStack() {
         return mCategoryBackstack;
     }
 
@@ -185,7 +185,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                 if (groupPosition == ExpandableCategoryTreeAdapter.GROUP_CATEGORY) {
                     SCategory category = new SCategory(cursor);
 
-                    long previous_category = setCurrentCategory(category.category_id);
+                    int previous_category = setCurrentCategory(category.category_id);
 
                     onCategorySelected(previous_category, category.category_id);
                     restartLoaders();
@@ -222,7 +222,7 @@ public abstract class CategoryTreeNavigationFragment extends Fragment
                          * If we were inside a sub-category, we should move back to the parent
                          * and notify of that.
                          */
-                        long previous_category = mCategoryBackstack.peek();
+                        int previous_category = mCategoryBackstack.peek();
                         mCurrentCategoryId = mCategoryBackstack.pop();
                         onCategorySelected(previous_category, mCurrentCategoryId);
                         restartLoaders();

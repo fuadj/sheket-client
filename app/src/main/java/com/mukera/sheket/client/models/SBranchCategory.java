@@ -15,10 +15,6 @@ import java.util.Locale;
  * Created by fuad on 7/14/16.
  */
 public class SBranchCategory extends ChangeTraceable {
-    public static final String JSON_BRANCH_CATEGORY_BOTH_ID = "branch_category_id";
-    public static final String JSON_BRANCH_ID = "branch_id";
-    public static final String JSON_CATEGORY_ID = "category_id";
-
     static String _f(String s) { return BranchCategoryEntry._full(s); }
 
     public static final String[] BRANCH_CATEGORY_COLUMNS = {
@@ -55,9 +51,9 @@ public class SBranchCategory extends ChangeTraceable {
 
     public static final int COL_LAST = 4;
 
-    public long company_id;
-    public long branch_id;
-    public long category_id;
+    public int company_id;
+    public int branch_id;
+    public int category_id;
 
     public SCategory category;
 
@@ -74,9 +70,9 @@ public class SBranchCategory extends ChangeTraceable {
     }
 
     public SBranchCategory(Cursor cursor, int offset, boolean fetch_category) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
-        branch_id = cursor.getLong(COL_BRANCH_ID + offset);
-        category_id = cursor.getLong(COL_CATEGORY_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
+        branch_id = cursor.getInt(COL_BRANCH_ID + offset);
+        category_id = cursor.getInt(COL_CATEGORY_ID + offset);
 
         change_status = cursor.getInt(COL_CHANGE + offset);
         if (fetch_category) {
@@ -91,13 +87,6 @@ public class SBranchCategory extends ChangeTraceable {
         values.put(BranchCategoryEntry.COLUMN_CATEGORY_ID, category_id);
         values.put(COLUMN_CHANGE_INDICATOR, change_status);
         return values;
-    }
-
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject json = new JSONObject();
-        json.put(JSON_BRANCH_CATEGORY_BOTH_ID,
-                String.format(Locale.US, "%d:%d", branch_id, category_id));
-        return json;
     }
 
     public BranchCategory.Builder toGRPCBuilder() {

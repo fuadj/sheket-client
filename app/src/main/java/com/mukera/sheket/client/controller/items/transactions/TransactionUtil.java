@@ -26,7 +26,7 @@ import java.util.UUID;
 public class TransactionUtil {
     public static void reverseTransactionWithItems(Context context, STransaction transaction,
                                                    List<STransaction.STransactionItem> itemList) {
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         // because there is a foreign dependency on the transaction items, deleting the
         // transaction also deletes the items involved in it.
@@ -40,7 +40,7 @@ public class TransactionUtil {
 
     public static boolean commitTransactionWithItems(Context context,
                                                      List<STransaction.STransactionItem> itemList,
-                                                     long branch_id,
+                                                     int branch_id,
                                                      String transactionNote) {
         if (itemList.isEmpty())
             return false;
@@ -62,7 +62,7 @@ public class TransactionUtil {
 
         values.put(TransactionEntry.COLUMN_DATE, SheketContract.getDbDateInteger(new Date()));
 
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
         operations.add(
                 ContentProviderOperation.newInsert(TransactionEntry.buildBaseUri(company_id)).
                         withValues(values).build());
@@ -103,10 +103,10 @@ public class TransactionUtil {
      */
     private static void updateBranchItemQuantities(Context context,
                                                    List<STransaction.STransactionItem> transItemList,
-                                                   long current_branch_id,
+                                                   int current_branch_id,
                                                    boolean reverse_transaction) {
         HashMap<KeyBranchItem, SBranchItem> seenBranchItems = new HashMap<>();
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         for (STransaction.STransactionItem transItem : transItemList) {
             switch (transItem.trans_type) {
@@ -124,7 +124,7 @@ public class TransactionUtil {
 
                 case TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH:
                 case TransItemEntry.TYPE_DECREASE_TRANSFER_TO_OTHER: {
-                    long source_branch, dest_branch;
+                    int source_branch, dest_branch;
                     if (transItem.trans_type == TransItemEntry.TYPE_INCREASE_TRANSFER_FROM_OTHER_BRANCH) {
                         source_branch = transItem.other_branch_id;
                         dest_branch = current_branch_id;
@@ -134,7 +134,7 @@ public class TransactionUtil {
                     }
 
                     if (reverse_transaction) {
-                        long temp_branch = source_branch;
+                        int temp_branch = source_branch;
                         source_branch = dest_branch;
                         dest_branch = temp_branch;
                     }
@@ -164,9 +164,9 @@ public class TransactionUtil {
         }
     }
 
-    private static SBranchItem getBranchItem(Context context, long company_id,
+    private static SBranchItem getBranchItem(Context context, int company_id,
                                              HashMap<KeyBranchItem, SBranchItem> seenBranchItems,
-                                             long branch_id, long item_id) {
+                                             int branch_id, int item_id) {
         KeyBranchItem key = new KeyBranchItem(branch_id, item_id);
 
         if (seenBranchItems.containsKey(key)) {
@@ -205,7 +205,7 @@ public class TransactionUtil {
         return item;
     }
 
-    static void setBranchItem(Context context, long company_id,
+    static void setBranchItem(Context context, int company_id,
                               HashMap<KeyBranchItem, SBranchItem> seenBranchItems, SBranchItem branchItem) {
         context.getContentResolver().insert(BranchItemEntry.buildBaseUri(company_id),
                 DbUtil.setUpdateOnConflict(branchItem.toContentValues()));
@@ -216,9 +216,9 @@ public class TransactionUtil {
     }
 
     static class KeyBranchItem {
-        long branch_id, item_id;
+        int branch_id, item_id;
 
-        public KeyBranchItem(long b_id, long i_id) {
+        public KeyBranchItem(int b_id, int i_id) {
             branch_id = b_id;
             item_id = i_id;
         }

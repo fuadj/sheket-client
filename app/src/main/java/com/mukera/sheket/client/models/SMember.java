@@ -13,10 +13,6 @@ import org.json.JSONObject;
  * Created by gamma on 4/7/16.
  */
 public class SMember extends ChangeTraceable {
-    public static final String JSON_MEMBER_ID = "member_id";
-    public static final String JSON_MEMBER_NAME = "username";
-    public static final String JSON_MEMBER_PERMISSION = "member_permission";
-
     static String _f(String s) { return MemberEntry._full(s); }
 
     public static final String[] MEMBER_COLUMNS = {
@@ -35,8 +31,8 @@ public class SMember extends ChangeTraceable {
 
     public static final int COL_LAST = 5;
 
-    public long company_id;
-    public long member_id;
+    public int company_id;
+    public int member_id;
     public String member_name;
     public SPermission member_permission;
 
@@ -63,8 +59,8 @@ public class SMember extends ChangeTraceable {
     }
 
     public SMember(Cursor cursor, int offset) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
-        member_id = cursor.getLong(COL_MEMBER_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
+        member_id = cursor.getInt(COL_MEMBER_ID + offset);
         member_name = cursor.getString(COL_MEMBER_NAME + offset);
         member_permission = SPermission.Decode(cursor.
                 getString(COL_MEMBER_PERMISSION + offset));
@@ -82,17 +78,9 @@ public class SMember extends ChangeTraceable {
         return values;
     }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put(JSON_MEMBER_ID, member_id);
-        result.put(JSON_MEMBER_NAME, member_name);
-        result.put(JSON_MEMBER_PERMISSION, member_permission.Encode());
-        return result;
-    }
-
     public Employee.Builder toGRPCBuilder() {
         return Employee.newBuilder().
-                setEmployeeId((int)member_id).
+                setEmployeeId(member_id).
                 setName(member_name).
                 setPermission(member_permission.Encode());
     }

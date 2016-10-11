@@ -26,6 +26,8 @@ public class PaymentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        if (1 == 1)
+            return;
         long prev_time = PrefUtil.getLastSeenTime(this);
         long now = System.currentTimeMillis();
         PrefUtil.setLastSeenTime(this, now);

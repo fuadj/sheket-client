@@ -30,7 +30,7 @@ import java.util.Set;
  */
 public class CategoryUtil {
     public static class CategoryNode {
-        public long categoryId;
+        public int categoryId;
         public CategoryNode parentNode;
     }
 
@@ -42,8 +42,8 @@ public class CategoryUtil {
      * @param context
      * @return
      */
-    public static Map<Long, CategoryNode> parseCategoryTree(Context context) {
-        Map<Long, CategoryNode> categoryTree = new HashMap<>();
+    public static Map<Integer, CategoryNode> parseCategoryTree(Context context) {
+        Map<Integer, CategoryNode> categoryTree = new HashMap<>();
 
         CategoryNode rootCategory = new CategoryNode();
         rootCategory.categoryId = CategoryEntry.ROOT_CATEGORY_ID;
@@ -51,7 +51,7 @@ public class CategoryUtil {
 
         categoryTree.put(CategoryEntry.ROOT_CATEGORY_ID, rootCategory);
 
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         String sortOrder = CategoryEntry._fullCurrent(CategoryEntry.COLUMN_CATEGORY_ID) + " ASC";
         Cursor cursor = context.getContentResolver().query(
@@ -62,8 +62,8 @@ public class CategoryUtil {
             do {
                 SCategory category = new SCategory(cursor);
 
-                long current_id = category.category_id;
-                long parent_id = category.parent_id;
+                int current_id = category.category_id;
+                int parent_id = category.parent_id;
                 CategoryNode currentNode, parentNode;
 
                 /**
@@ -110,7 +110,7 @@ public class CategoryUtil {
      * don't tell the server about the removal, it will still exist in other people's databases.
      */
     public static void deleteCategoryList(Context context, List<SCategory> categoryList) {
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
         for (SCategory category : categoryList) {
@@ -148,7 +148,7 @@ public class CategoryUtil {
     private static void moveOutChildrenCategories(Context context,
                                                   ArrayList<ContentProviderOperation> operations,
                                                   SCategory parent_category,
-                                                  long company_id) {
+                                                  int company_id) {
         /**
          * TODO: this is a very inefficient implementation, we are fetching EVERY
          * child category and updating it while what we should be doing is run a single
@@ -193,7 +193,7 @@ public class CategoryUtil {
     private static void moveOutItemsInsideCategory(Context context,
                                                    ArrayList<ContentProviderOperation> operations,
                                                   SCategory parent_category,
-                                                  long company_id) {
+                                                  int company_id) {
         /**
          * TODO: this is a very inefficient implementation, we are fetching EVERY
          * item in the category and updating it. We should be running a single
@@ -242,10 +242,10 @@ public class CategoryUtil {
      * before category movement happened and now have become "empty" categories with no items.
      */
     public static void updateBranchCategoriesForAllBranches(Context context) {
-        Map<Long, CategoryNode> categoryTree = parseCategoryTree(context);
+        Map<Integer, CategoryNode> categoryTree = parseCategoryTree(context);
         List<SBranch> branches = getAllBranches(context);
 
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
@@ -253,7 +253,7 @@ public class CategoryUtil {
             List<SBranchCategory> branchCategories = getBranchCategories(context, branch);
             List<SBranchItem> branchItems = getBranchItems(context, branch);
 
-            Set<Long> itemCategories = new HashSet<>();
+            Set<Integer> itemCategories = new HashSet<>();
             for (SBranchItem branchItem : branchItems) {
                 /**
                  * Don't "count" items that are invisible.
@@ -265,8 +265,8 @@ public class CategoryUtil {
                 itemCategories.add(branchItem.item.category);
             }
 
-            Set<Long> visited_categories = new HashSet<>();
-            for (Long item_category : itemCategories) {
+            Set<Integer> visited_categories = new HashSet<>();
+            for (Integer item_category : itemCategories) {
                 CategoryNode node = categoryTree.get(item_category);
 
                 while (node.categoryId != CategoryEntry.ROOT_CATEGORY_ID) {
@@ -278,14 +278,14 @@ public class CategoryUtil {
                 }
             }
 
-            Set<Long> previous_categories = new HashSet<>();
+            Set<Integer> previous_categories = new HashSet<>();
 
             // if we need to delete them, then the un-synced can be TOTALLY deleted LOCALLY.
-            Set<Long> un_synced_categories = new HashSet<>();
+            Set<Integer> un_synced_categories = new HashSet<>();
 
             // if we had deleted them, but not yet synced the "delete-action", and we then try
             // to add them BACK, that should just ignore the "delete-action" altogether
-            Map<Long, SBranchCategory> marked_as_deleted = new HashMap<>();
+            Map<Integer, SBranchCategory> marked_as_deleted = new HashMap<>();
 
             for (SBranchCategory branchCategory : branchCategories) {
                 previous_categories.add(branchCategory.category_id);
@@ -297,7 +297,7 @@ public class CategoryUtil {
             }
 
             // these will be added to the branch
-            Set<Long> newly_added_categories = setDifference(visited_categories, previous_categories);
+            Set<Integer> newly_added_categories = setDifference(visited_categories, previous_categories);
             // we should restore them.
             /**
              * We should restore these branch categories. We had marked them as deleted, but we haven't
@@ -306,13 +306,13 @@ public class CategoryUtil {
              * them as delete and not actually deleted them. That means they had been synced previously and
              * can't be just removed locally. So restoring them as "synced" is the "correct" way.
              */
-            Set<Long> categories_to_restore = setIntersection(visited_categories, marked_as_deleted.keySet());
+            Set<Integer> categories_to_restore = setIntersection(visited_categories, marked_as_deleted.keySet());
 
             // these existed before, but are not used now. Will be removed
-            Set<Long> unseen_categories = setDifference(previous_categories, visited_categories);
+            Set<Integer> unseen_categories = setDifference(previous_categories, visited_categories);
 
             // add the new categories
-            for (Long category_id : newly_added_categories) {
+            for (Integer category_id : newly_added_categories) {
                 ContentValues values = new ContentValues();
                 values.put(BranchCategoryEntry.COLUMN_COMPANY_ID, company_id);
                 values.put(BranchCategoryEntry.COLUMN_BRANCH_ID, branch.branch_id);
@@ -323,7 +323,7 @@ public class CategoryUtil {
                         withValues(values).build());
             }
 
-            for (Long restore_category_id : categories_to_restore) {
+            for (Integer restore_category_id : categories_to_restore) {
                 SBranchCategory branchCategory = marked_as_deleted.get(restore_category_id);
                 branchCategory.change_status = ChangeTraceable.CHANGE_STATUS_SYNCED;
 
@@ -340,7 +340,7 @@ public class CategoryUtil {
             }
 
             // remove the previously existing, but not currently being used ones
-            for (Long category_id : unseen_categories) {
+            for (Integer category_id : unseen_categories) {
                 String selection = String.format(Locale.US, "%s = ? AND %s = ?",
                         BranchCategoryEntry.COLUMN_BRANCH_ID, BranchCategoryEntry.COLUMN_CATEGORY_ID);
                 String[] selection_args = new String[]{
@@ -416,7 +416,7 @@ public class CategoryUtil {
     private static List<SBranch> getAllBranches(Context context) {
         List<SBranch> branches = new ArrayList<>();
 
-        long company_id = PrefUtil.getCurrentCompanyId(context);
+        int company_id = PrefUtil.getCurrentCompanyId(context);
 
         String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
         Cursor cursor = context.getContentResolver().
@@ -433,15 +433,15 @@ public class CategoryUtil {
     /**
      * Does left - right
      */
-    private static Set<Long> setDifference(Set<Long> left, Set<Long> right) {
-        Set<Long> left_copy = new HashSet<>(left);
+    private static Set<Integer> setDifference(Set<Integer> left, Set<Integer> right) {
+        Set<Integer> left_copy = new HashSet<>(left);
         left_copy.removeAll(right);
         return left_copy;
     }
 
-    private static Set<Long> setIntersection(Set<Long> left, Set<Long> right) {
-        Set<Long> result = new HashSet<>();
-        for (Long l : left) {
+    private static Set<Integer> setIntersection(Set<Integer> left, Set<Integer> right) {
+        Set<Integer> result = new HashSet<>();
+        for (Integer l : left) {
             if (right.contains(l)) {
                 result.add(l);
             }

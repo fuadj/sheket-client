@@ -204,7 +204,7 @@ public class PrefUtil {
         editor.commit();
     }
 
-    public static long getUserRevision(Context context) {
+    public static int getUserRevision(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         int default_rev = context.getResources().getInteger(R.integer.pref_default_revision);
@@ -227,17 +227,17 @@ public class PrefUtil {
     /**
      * User setting Tracking Block
      */
-    public static void setCurrentCompanyId(Context context, long companyId) {
+    public static void setCurrentCompanyId(Context context, int companyId) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putLong(context.getString(R.string.pref_company_id), companyId);
+        editor.putInt(context.getString(R.string.pref_company_id), companyId);
         editor.commit();
     }
 
-    public static long getCurrentCompanyId(Context context) {
+    public static int getCurrentCompanyId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        long invalid_id = context.getResources().getInteger(R.integer.invalid_company_id);
-        return prefs.getLong(context.getString(R.string.pref_company_id), invalid_id);
+        int invalid_id = context.getResources().getInteger(R.integer.invalid_company_id);
+        return prefs.getInt(context.getString(R.string.pref_company_id), invalid_id);
     }
 
     public static boolean isCompanySet(Context context) {
@@ -269,23 +269,23 @@ public class PrefUtil {
         return prefs.getString(context.getString(R.string.pref_user_name), "");
     }
 
-    public static void setUserId(Context context, long user_id) {
+    public static void setUserId(Context context, int user_id) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putLong(context.getString(R.string.pref_user_id), user_id);
+        editor.putInt(context.getString(R.string.pref_user_id), user_id);
         editor.commit();
         setEncodedDelimitedUserId(context, user_id);
     }
 
-    public static long getUserId(Context context) {
+    public static int getUserId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        long invalid_id = context.getResources().getInteger(R.integer.invalid_user_id);
-        return prefs.getLong(context.getString(R.string.pref_user_id), invalid_id);
+        int invalid_id = context.getResources().getInteger(R.integer.invalid_user_id);
+        return prefs.getInt(context.getString(R.string.pref_user_id), invalid_id);
     }
 
     private static final String ENCODED_DELIMITED_USER_ID = "encoded_delimited_user_id";
     private static final int USER_ID_GROUPING = 4;
-    public static void setEncodedDelimitedUserId(Context context, long user_id) {
+    public static void setEncodedDelimitedUserId(Context context, int user_id) {
         String encoded = IdEncoderUtil.encodeId(user_id, IdEncoderUtil.ID_TYPE_USER);
         String delimited = IdEncoderUtil.delimitEncodedId(encoded, USER_ID_GROUPING);
 
@@ -350,47 +350,47 @@ public class PrefUtil {
      * So, to avoid any collisions with the local and server ids, all
      * locally generated ids are negative.
      */
-    public static long getCurrentBranchId(Context c) {
+    public static int getCurrentBranchId(Context c) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
 
-        long default_id = c.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(c.getString(R.string.local_last_branch_id), default_id);
+        int default_id = c.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getInt(c.getString(R.string.local_last_branch_id), default_id);
     }
 
     /**
      * We add -1 to get a new id for each entity.
      */
-    public static long getNewBranchId(Context context) {
+    public static int getNewBranchId(Context context) {
         return getCurrentBranchId(context) - 1;
     }
 
-    public static void setNewBranchId(Context context, long branch_id) {
+    public static void setNewBranchId(Context context, int branch_id) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putLong(context.getString(R.string.local_last_branch_id), branch_id);
+        editor.putInt(context.getString(R.string.local_last_branch_id), branch_id);
         editor.commit();
     }
 
-    public static long getCurrentItemId(Context context) {
+    public static int getCurrentItemId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_item_id), default_id);
+        int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getInt(context.getString(R.string.local_last_item_id), default_id);
     }
 
-    public static long getNewItemId(Context context) {
+    public static int getNewItemId(Context context) {
         return getCurrentItemId(context) - 1;
     }
 
-    public static void setNewItemId(Context context, long item_id) {
+    public static void setNewItemId(Context context, int item_id) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putLong(context.getString(R.string.local_last_item_id), item_id);
+        editor.putInt(context.getString(R.string.local_last_item_id), item_id);
         editor.commit();
     }
 
     public static long getCurrentTransId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
         return prefs.getLong(context.getString(R.string.local_last_trans_id), default_id);
     }
 
@@ -404,20 +404,20 @@ public class PrefUtil {
         editor.commit();
     }
 
-    public static long getCurrentCategoryId(Context context) {
+    public static int getCurrentCategoryId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        long default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
-        return prefs.getLong(context.getString(R.string.local_last_category_id), default_id);
+        int default_id = context.getResources().getInteger(R.integer.default_local_entity_id);
+        return prefs.getInt(context.getString(R.string.local_last_category_id), default_id);
     }
 
-    public static long getNewCategoryId(Context context) {
+    public static int getNewCategoryId(Context context) {
         return getCurrentCategoryId(context) - 1;
     }
 
-    public static void setNewCategoryId(Context context, long category_id) {
+    public static void setNewCategoryId(Context context, int category_id) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putLong(context.getString(R.string.local_last_category_id), category_id);
+        editor.putInt(context.getString(R.string.local_last_category_id), category_id);
         editor.commit();
     }
 
@@ -463,10 +463,6 @@ public class PrefUtil {
         return Integer.toString(i);
     }
 
-    static String _to_str(long l) {
-        return Long.toString(l);
-    }
-
     /**
      * Encode the current state so it may be restored later.
      * This can then be persisted, e.g: stored in database.
@@ -478,10 +474,10 @@ public class PrefUtil {
         int trans_rev = getTransactionRevision(c);
         int category_rev = getCategoryRevision(c);
 
-        long c_branch_id = getCurrentBranchId(c);
-        long c_item_id = getCurrentItemId(c);
+        int c_branch_id = getCurrentBranchId(c);
+        int c_item_id = getCurrentItemId(c);
         long c_trans_id = getCurrentTransId(c);
-        long c_category_id = getCurrentCategoryId(c);
+        int c_category_id = getCurrentCategoryId(c);
 
         Vector<String> vec = new Vector<>();
         vec.add(_to_str(branch_rev));
@@ -492,7 +488,7 @@ public class PrefUtil {
 
         vec.add(_to_str(c_branch_id));
         vec.add(_to_str(c_item_id));
-        vec.add(_to_str(c_trans_id));
+        vec.add(_to_str((int)c_trans_id));
         vec.add(_to_str(c_category_id));
 
         StringBuilder builder = new StringBuilder();
@@ -505,7 +501,6 @@ public class PrefUtil {
     }
 
     static int _to_i(String s) { return Integer.parseInt(s); }
-    static long _to_l(String s) { return Long.parseLong(s); }
     public static void restoreStateFromBackup(Context context, String bkup) {
         if (bkup == null) return;
         bkup = bkup.trim();
@@ -526,10 +521,10 @@ public class PrefUtil {
         int trans_rev = _to_i(values[3]);
         int category_rev = _to_i(values[4]);
 
-        long c_branch_id = _to_l(values[5]);
-        long c_item_id = _to_l(values[6]);
-        long c_trans_id = _to_l(values[7]);
-        long c_category_id = _to_l(values[8]);
+        int c_branch_id = _to_i(values[5]);
+        int c_item_id = _to_i(values[6]);
+        int c_trans_id = _to_i(values[7]);
+        int c_category_id = _to_i(values[8]);
 
         setBranchRevision(context, branch_rev);
         setItemRevision(context, item_rev);

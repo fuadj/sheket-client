@@ -34,7 +34,7 @@ message SheketAuth {
 }
 
 message CompanyID {
-    int64 company_id = 1;
+    int32 company_id = 1;
 }
 
 message CompanyAuth {
@@ -51,13 +51,13 @@ message SingupRequest {
 
 message SignupResponse {
     string username = 1;
-    int64 user_id = 2;
+    int32 user_id = 2;
     string login_cookie = 3;
 }
 
 message SyncCompanyRequest {
     SheketAuth auth = 1;
-    int64 user_rev = 2;
+    int32 user_rev = 2;
     string device_id = 3;
     string local_user_time = 4;
 }
@@ -73,7 +73,7 @@ message NewCompanyRequest {
 }
 
 message Company {
-    int64 company_id = 1;
+    int32 company_id = 1;
     string company_name = 2;
     string permission = 3;
     string signed_license = 4;
@@ -93,12 +93,12 @@ message EditUserNameRequest {
 
 message AddEmployeeRequest {
     CompanyAuth companyAuth = 1;
-    int64 employee_id = 2;
+    int32 employee_id = 2;
     string permission = 3;
 }
 
 message AddEmployeeResponse {
-    int64 employee_id = 1;
+    int32 employee_id = 1;
     string employee_name = 2;
 }
 
@@ -115,59 +115,59 @@ message VerifyPaymentResponse {
 }
 
 message Item {
-    sint64 item_id = 1;
+    sint32 item_id = 1;
 
     string name = 2;
     string code = 3;
 
     string UUID = 4;
-    int64 status_flag = 5;
+    int32 status_flag = 5;
 
-    sint64 category_id = 6;
+    sint32 category_id = 6;
 
-    int64 unit_of_measurement = 7;
+    int32 unit_of_measurement = 7;
     bool has_derived_unit = 8;
     string derived_name = 9;
     double derived_factor = 10;
 }
 
 message Category {
-    sint64 category_id = 1;
+    sint32 category_id = 1;
 
     string name = 2;
-    sint64 parent_id = 3;
+    sint32 parent_id = 3;
 
     string UUID = 4;
-    int64 status_flag = 5;
+    int32 status_flag = 5;
 }
 
 message Branch {
-    sint64 branch_id = 1;
+    sint32 branch_id = 1;
 
     string name = 2;
 
     string UUID = 3;
-    int64 status_flag = 4;
+    int32 status_flag = 4;
 }
 
 message Employee {
-    int64 employee_id = 1;
+    int32 employee_id = 1;
 
     string name = 2;
     string permission = 3;
 }
 
 message BranchItem {
-    sint64 branch_id = 1;
-    sint64 item_id = 2;
+    sint32 branch_id = 1;
+    sint32 item_id = 2;
 
     double quantity = 3;
     string shelf_location = 4;
 }
 
 message BranchCategory {
-    sint64 branch_id = 1;
-    sint64 category_id = 2;
+    sint32 branch_id = 1;
+    sint32 category_id = 2;
 }
 
 message EntityRequest {
@@ -216,12 +216,12 @@ message EntityRequest {
 
     CompanyAuth companyAuth = 20;
 
-    int64 old_category_rev = 21;
-    int64 old_item_rev = 22;
-    int64 old_branch_rev = 23;
-    int64 old_branch_item_rev = 24;
-    int64 old_member_rev = 25;
-    int64 old_branch_category_rev = 26;
+    int32 old_category_rev = 21;
+    int32 old_item_rev = 22;
+    int32 old_branch_rev = 23;
+    int32 old_branch_item_rev = 24;
+    int32 old_member_rev = 25;
+    int32 old_branch_category_rev = 26;
 }
 
 message EntityResponse {
@@ -259,9 +259,9 @@ message EntityResponse {
 
     message UpdatedId {
         // old_id is signed because it can be -ve
-        sint64 old_id = 1;
+        sint32 old_id = 1;
         // new_id can't be -ve, so it is not signed
-        int64 new_id = 2;
+        int32 new_id = 2;
     }
 
     repeated UpdatedId updated_item_ids = 1;
@@ -276,27 +276,27 @@ message EntityResponse {
 
     // leave some gap till 15 so we can extend it
 
-    int64 new_category_rev = 20;
-    int64 new_item_rev = 21;
-    int64 new_branch_rev = 22;
-    int64 new_branch_item_rev = 23;
-    int64 new_member_rev = 24;
-    int64 new_branch_category_rev = 25;
+    int32 new_category_rev = 20;
+    int32 new_item_rev = 21;
+    int32 new_branch_rev = 22;
+    int32 new_branch_item_rev = 23;
+    int32 new_member_rev = 24;
+    int32 new_branch_category_rev = 25;
 }
 
 message Transaction {
     message TransItem {
-        int64 trans_type = 1;
-        int64 item_id = 2;
+        int32 item_id = 2;
+        int32 trans_type = 1;
         double quantity = 3;
-        int64 other_branch_id = 4;
+        int32 other_branch_id = 4;
         string item_note = 5;
     }
 
     repeated TransItem transactionItems = 1;
 
     sint64 trans_id = 2;
-    sint64 branch_id = 3;
+    sint32 branch_id = 3;
     int64 date_time = 4;
     string trans_note = 5;
     string UUID = 6;
@@ -314,7 +314,7 @@ message TransactionRequest {
 message TransactionResponse {
     message SyncTransaction {
         Transaction transaction = 1;
-        int64 user_id = 2;
+        int32 user_id = 2;
     }
 
     message SyncBranchItem {
@@ -322,9 +322,13 @@ message TransactionResponse {
         EntityResponse.SyncState state = 2;
     }
 
+    message UpdatedTransId {
+        sint64 old_id = 1;
+        int64 new_id = 2;
+    }
     repeated SyncTransaction transactions = 1;
     repeated SyncBranchItem branchItems = 2;
-    repeated EntityResponse.UpdatedId updated_transaction_ids = 3;
+    repeated UpdatedTransId updated_transaction_ids = 3;
 
     int64 new_branch_item_rev = 4;
     int64 new_trans_rev = 5;

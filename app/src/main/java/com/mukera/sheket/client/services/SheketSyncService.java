@@ -14,6 +14,7 @@ import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.mukera.sheket.client.SheketBroadcast;
+import com.mukera.sheket.client.SheketGRPCCall;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.network.Company;
@@ -119,9 +120,9 @@ public class SheketSyncService extends IntentService {
             SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
                     SheketServiceGrpc.newBlockingStub(managedChannel);
 
-            Set<Long> previous_companies = getLocalCompanyIds();
+            Set<Integer> previous_companies = getLocalCompanyIds();
 
-            Pair<Set<Long>, Boolean> pair = syncCompanyList(blockingStub);
+            Pair<Set<Integer>, Boolean> pair = syncCompanyList(blockingStub);
 
             /**
              * Remove the companies that previously existed locally but now don't appear when syncing.
@@ -131,7 +132,7 @@ public class SheketSyncService extends IntentService {
              * NOTE: {@code removeAll()} is a set subtraction.
              * i.e:     companies_to_remove = previously_exist - currently_synced;
              */
-            Set<Long> companies_to_delete = previous_companies;
+            Set<Integer> companies_to_delete = previous_companies;
             companies_to_delete.removeAll(pair.first);
 
             Boolean is_current_company_payment_valid = pair.second;
@@ -198,8 +199,8 @@ public class SheketSyncService extends IntentService {
         PrefUtil.setIsSyncRunning(this, false);
     }
 
-    Set<Long> getLocalCompanyIds() throws Exception {
-        Set<Long> company_ids = new HashSet<>();
+    Set<Integer> getLocalCompanyIds() throws Exception {
+        Set<Integer> company_ids = new HashSet<>();
         Cursor cursor = getContentResolver().query(CompanyEntry.CONTENT_URI,
                 SCompany.COMPANY_COLUMNS, null, null, null);
         if (cursor == null)
@@ -214,10 +215,10 @@ public class SheketSyncService extends IntentService {
         return company_ids;
     }
 
-    void deleteRemovedCompanies(Set<Long> removed_companies) throws Exception {
+    void deleteRemovedCompanies(Set<Integer> removed_companies) throws Exception {
         ArrayList<ContentProviderOperation> deleteOperations = new ArrayList<>();
 
-        for (Long company_id : removed_companies) {
+        for (Integer company_id : removed_companies) {
             deleteOperations.add(ContentProviderOperation.newDelete(CompanyEntry.CONTENT_URI).
                     withSelection(CompanyEntry.COLUMN_COMPANY_ID + " = ?",
                             new String[]{String.valueOf(company_id)}).build());
@@ -238,8 +239,8 @@ public class SheketSyncService extends IntentService {
      * The {@code Set<Long>} holds the ids of companies in the current sync. * The {@code Boolean} is true if the current company's payment license is valid.
      * </p>
      */
-    Pair<Set<Long>, Boolean> syncCompanyList(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
-        SyncCompanyRequest request = SyncCompanyRequest.
+    Pair<Set<Integer>, Boolean> syncCompanyList(final SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        final SyncCompanyRequest request = SyncCompanyRequest.
                 newBuilder().
                 setUserRev(PrefUtil.getUserRevision(this)).
                 setDeviceId(DeviceId.getUniqueDeviceId(this)).
@@ -256,14 +257,14 @@ public class SheketSyncService extends IntentService {
 
         boolean is_current_company_license_valid = false;
 
-        Set<Long> sync_company_ids = new HashSet<>();
+        Set<Integer> sync_company_ids = new HashSet<>();
 
         List<Company> companyList = companies.getCompaniesList();
 
         ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
         for (Company company : companyList) {
-            long company_id = company.getCompanyId();
+            int company_id = company.getCompanyId();
 
             sync_company_ids.add(company_id);
 
@@ -330,8 +331,8 @@ public class SheketSyncService extends IntentService {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      */
-    void syncEntities(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
-        EntityRequest.Builder entity_request = EntityRequest.newBuilder();
+    void syncEntities(final SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        final EntityRequest.Builder entity_request = EntityRequest.newBuilder();
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
                 setCompanyId(
@@ -360,7 +361,7 @@ public class SheketSyncService extends IntentService {
     void applyEntityResponse(EntityResponse response) {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
-        long company_id = PrefUtil.getCurrentCompanyId(this);
+        int company_id = PrefUtil.getCurrentCompanyId(this);
 
         for (EntityResponse.UpdatedId updatedId : response.getUpdatedCategoryIdsList()) {
             ContentValues values = new ContentValues();
@@ -676,8 +677,9 @@ public class SheketSyncService extends IntentService {
         cursor.close();
     }
 
-    void syncTransactions(SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
-        TransactionRequest.Builder transaction_request = TransactionRequest.newBuilder();
+
+    void syncTransactions(final SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+        final TransactionRequest.Builder transaction_request = TransactionRequest.newBuilder();
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
                 setCompanyId(
@@ -728,9 +730,9 @@ public class SheketSyncService extends IntentService {
     void applyTransactionResponse(TransactionResponse response) throws Exception {
         ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
-        long company_id = PrefUtil.getCurrentCompanyId(this);
+        int company_id = PrefUtil.getCurrentCompanyId(this);
 
-        for (EntityResponse.UpdatedId updatedId : response.getUpdatedTransactionIdsList()) {
+        for (TransactionResponse.UpdatedTransId updatedId : response.getUpdatedTransactionIdsList()) {
             ContentValues values = new ContentValues();
             values.put(TransactionEntry.COLUMN_TRANS_ID, updatedId.getNewId());
             setStatusSynced(values);
@@ -776,7 +778,7 @@ public class SheketSyncService extends IntentService {
              * be a "FOREIGN-KEY" violation as the transactions might not have updated their ids.
              */
 
-            for (EntityResponse.UpdatedId updated_trans : response.getUpdatedTransactionIdsList()) {
+            for (TransactionResponse.UpdatedTransId updated_trans : response.getUpdatedTransactionIdsList()) {
                 operationList.add(ContentProviderOperation.newUpdate(TransItemEntry.buildBaseUri(company_id)).
                         withValues(setStatusSynced(new ContentValues())).
                         withSelection(
@@ -787,8 +789,8 @@ public class SheketSyncService extends IntentService {
             this.getContentResolver().applyBatch(
                     SheketContract.CONTENT_AUTHORITY, operationList);
 
-            PrefUtil.setTransactionRevision(this, (int)response.getNewTransRev());
-            PrefUtil.setBranchItemRevision(this, (int)response.getNewBranchItemRev());
+            PrefUtil.setTransactionRevision(this, (int) response.getNewTransRev());
+            PrefUtil.setBranchItemRevision(this, (int) response.getNewBranchItemRev());
         } catch (OperationApplicationException | RemoteException e) {
             throw e;
         }

@@ -311,8 +311,8 @@ public class SheketProvider extends ContentProvider {
                 // doesn't exist in them
                 boolean fetch_item_in_all_branches = false;
 
-                long branch_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getBranchId(uri);
-                long item_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getItemId(uri);
+                int branch_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getBranchId(uri);
+                int item_id = (uri_match == BRANCH_ITEM) ? BranchItemEntry.NO_ID_SET : BranchItemEntry.getItemId(uri);
 
                 boolean branch_set = BranchItemEntry.isIdSpecified(getContext(), branch_id);
                 boolean item_set = BranchItemEntry.isIdSpecified(getContext(), item_id);
@@ -454,8 +454,8 @@ public class SheketProvider extends ContentProvider {
             case BRANCH_CATEGORY: {
                 query_db = false;
                 if (uri_match == BRANCH_CATEGORY_WITH_ID) {
-                    long branch_id = BranchCategoryEntry.getBranchId(uri);
-                    long category_id = BranchCategoryEntry.getCategoryId(uri);
+                    int branch_id = BranchCategoryEntry.getBranchId(uri);
+                    int category_id = BranchCategoryEntry.getCategoryId(uri);
 
                     boolean branch_set = BranchCategoryEntry.isIdSpecified(getContext(), branch_id);
                     boolean category_set = BranchCategoryEntry.isIdSpecified(getContext(), category_id);
@@ -614,8 +614,8 @@ public class SheketProvider extends ContentProvider {
                 return BranchEntry.CONTENT_TYPE;
 
             case BRANCH_ITEM_WITH_ID: {
-                long branch_id = BranchItemEntry.getBranchId(uri);
-                long item_id = BranchItemEntry.getItemId(uri);
+                int branch_id = BranchItemEntry.getBranchId(uri);
+                int item_id = BranchItemEntry.getItemId(uri);
                 if (BranchItemEntry.isIdSpecified(getContext(), branch_id) &&
                         BranchItemEntry.isIdSpecified(getContext(), item_id)) {
                     return BranchItemEntry.CONTENT_ITEM_TYPE;
@@ -627,8 +627,8 @@ public class SheketProvider extends ContentProvider {
                 return BranchItemEntry.CONTENT_TYPE;
 
             case BRANCH_CATEGORY_WITH_ID: {
-                long branch_id = BranchCategoryEntry.getBranchId(uri);
-                long category_id = BranchCategoryEntry.getBranchId(uri);
+                int branch_id = BranchCategoryEntry.getBranchId(uri);
+                int category_id = BranchCategoryEntry.getBranchId(uri);
                 if (BranchCategoryEntry.isIdSpecified(getContext(), branch_id) &&
                         BranchCategoryEntry.isIdSpecified(getContext(), category_id)) {
                     return BranchCategoryEntry.CONTENT_ITEM_TYPE;
@@ -673,12 +673,12 @@ public class SheketProvider extends ContentProvider {
 
         int match = sUriMatcher.match(uri);
 
-        long company_id = -1;
+        int company_id = -1;
         if (match != COMPANY) {
             company_id = CompanyBase.getCompanyId(uri);
         } else {
             if (values.containsKey(CompanyEntry.COLUMN_COMPANY_ID)) {
-                company_id = values.getAsLong(CompanyEntry.COLUMN_COMPANY_ID);
+                company_id = values.getAsInteger(CompanyEntry.COLUMN_COMPANY_ID);
             }
         }
 
@@ -738,7 +738,7 @@ public class SheketProvider extends ContentProvider {
                 db.update(tableName, values, selection, null);
             }
 
-            long _id = db.insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+            int _id = (int)db.insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
 
             // if not found and we can select, try to select it out
             if (_id == -1 && selection != null && columnId != null) {
@@ -750,7 +750,7 @@ public class SheketProvider extends ContentProvider {
                                 "select %s from %s where %s",
                                 columnId, tableName, selection));
                 try {
-                    _id = stmt.simpleQueryForLong();
+                    _id = (int)stmt.simpleQueryForLong();
                 } finally {
                     stmt.close();
                 }
@@ -772,14 +772,14 @@ public class SheketProvider extends ContentProvider {
                     returnUri = BranchEntry.buildBranchUri(company_id, _id);
                     break;
                 case BRANCH_ITEM: {
-                    long branch_id = values.getAsLong(BranchItemEntry.COLUMN_BRANCH_ID);
-                    long item_id = values.getAsLong(BranchItemEntry.COLUMN_ITEM_ID);
+                    int branch_id = values.getAsInteger(BranchItemEntry.COLUMN_BRANCH_ID);
+                    int item_id = values.getAsInteger(BranchItemEntry.COLUMN_ITEM_ID);
                     returnUri = BranchItemEntry.buildBranchItemUri(company_id, branch_id, item_id);
                     break;
                 }
                 case BRANCH_CATEGORY: {
-                    long branch_id = values.getAsLong(BranchCategoryEntry.COLUMN_BRANCH_ID);
-                    long category_id = values.getAsLong(BranchCategoryEntry.COLUMN_CATEGORY_ID);
+                    int branch_id = values.getAsInteger(BranchCategoryEntry.COLUMN_BRANCH_ID);
+                    int category_id = values.getAsInteger(BranchCategoryEntry.COLUMN_CATEGORY_ID);
                     returnUri = BranchCategoryEntry.buildBranchCategoryUri(company_id, branch_id, category_id);
                     break;
                 }

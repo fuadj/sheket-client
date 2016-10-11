@@ -15,20 +15,14 @@ import java.util.List;
  * Created by gamma on 4/7/16.
  */
 public class SPermission {
-    public interface PermissionChangeListener {
-        void userPermissionChanged();
-    }
-
-    private static SPermission sPermission;
-
     public static final int PERMISSION_TYPE_NONE = 0;
     public static final int PERMISSION_TYPE_ALL_ACCESS = 1;
     public static final int PERMISSION_TYPE_ALL_BRANCHES = 2;
     public static final int PERMISSION_TYPE_LISTED_BRANCHES = 3;
 
     private int mPermissionType;
-    private List<Long> mAllowedBranches;
-    private List<Long> mAllowedStoreBranches;
+    private List<Integer> mAllowedBranches;
+    private List<Integer> mAllowedStoreBranches;
 
     static final String P_JSON_TYPE = "permission_type";
     static final String P_JSON_BRANCHES = "branches";
@@ -58,13 +52,13 @@ public class SPermission {
             if (json.has(P_JSON_BRANCHES)) {
                 JSONArray arr = json.getJSONArray(P_JSON_BRANCHES);
                 for (int i = 0; i < arr.length(); i++) {
-                    permission.mAllowedBranches.add(arr.getLong(i));
+                    permission.mAllowedBranches.add(arr.getInt(i));
                 }
             }
             if (json.has(P_JSON_STORE_BRANCHES)) {
                 JSONArray arr = json.getJSONArray(P_JSON_STORE_BRANCHES);
                 for (int i = 0; i < arr.length(); i++) {
-                    permission.mAllowedStoreBranches.add(arr.getLong(i));
+                    permission.mAllowedStoreBranches.add(arr.getInt(i));
                 }
             }
         } catch (JSONException e) {
@@ -133,19 +127,19 @@ public class SPermission {
         mPermissionType = type;
     }
 
-    public void setAllowedBranches(List<Long> branches) {
+    public void setAllowedBranches(List<Integer> branches) {
         mAllowedBranches = new ArrayList<>(branches);
     }
 
-    public void setAllowedStoreBranches(List<Long> stores) {
+    public void setAllowedStoreBranches(List<Integer> stores) {
         mAllowedStoreBranches = new ArrayList<>(stores);
     }
 
-    public List<Long> getAllowedBranches() {
+    public List<Integer> getAllowedBranches() {
         return mAllowedBranches;
     }
 
-    public List<Long> getAllowedStoreBranches() {
+    public List<Integer> getAllowedStoreBranches() {
         return mAllowedStoreBranches;
     }
 }

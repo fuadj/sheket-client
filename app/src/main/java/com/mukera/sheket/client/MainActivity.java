@@ -90,7 +90,6 @@ import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
-        SPermission.PermissionChangeListener,
         ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -983,11 +982,6 @@ public class MainActivity extends AppCompatActivity implements
         if (mDidResume) {
             showImportUpdates();
         }
-    }
-
-    @Override
-    public void userPermissionChanged() {
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_PERMISSION_CHANGE));
     }
 
     void dismissSyncDialog() {

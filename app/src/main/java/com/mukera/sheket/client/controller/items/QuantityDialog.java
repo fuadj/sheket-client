@@ -664,7 +664,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
         String selection = null;
         String[] selectionArgs = null;
@@ -672,7 +672,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         SPermission permission = SPermission.getUserPermission(getContext());
 
         if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
-            List<Long> branches = permission.getAllowedBranches();
+            List<Integer> branches = permission.getAllowedBranches();
             selection = "(";
             selectionArgs = new String[branches.size()];
             for (int i = 0; i < branches.size(); i++) {

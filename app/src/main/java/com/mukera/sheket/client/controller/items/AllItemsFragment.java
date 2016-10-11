@@ -75,9 +75,9 @@ public class AllItemsFragment extends SearchableItemFragment {
      * We hold on to them for finally applying an operation on them AND ALSO
      * the UI looks at this to figure out which are selected or not.
      */
-    private Map<Long, SCategory> mSelectedCategories;
+    private Map<Integer, SCategory> mSelectedCategories;
 
-    private Map<Long, SItem> mSelectedItems;
+    private Map<Integer, SItem> mSelectedItems;
 
     /**
      * Creates a new fragment with the editing mode set and the category stack
@@ -91,7 +91,7 @@ public class AllItemsFragment extends SearchableItemFragment {
      *                       The category at the top of the stack is the one that will be opened.
      * @return
      */
-    public static AllItemsFragment newInstance(boolean is_edit_mode, Stack<Long> category_stack) {
+    public static AllItemsFragment newInstance(boolean is_edit_mode, Stack<Integer> category_stack) {
         Bundle args = new Bundle();
         args.putBoolean(ARG_KEY_EDIT_MODE, is_edit_mode);
 
@@ -102,13 +102,13 @@ public class AllItemsFragment extends SearchableItemFragment {
             category_stack.push(CategoryEntry.ROOT_CATEGORY_ID);
         }
 
-        // Because Stack<Long> can't be put inside a Bundle, convert it to ArrayList<Integer>
-        ArrayList<Integer> int_stack = new ArrayList<>();
-        for (Long category : category_stack) {
-            int_stack.add(category.intValue());
+        // Because Stack<Integer> can't be put inside a Bundle, convert it to ArrayList<Integer>
+        ArrayList<Integer> long_stack = new ArrayList<>();
+        for (Integer category : category_stack) {
+            long_stack.add(category.intValue());
         }
 
-        args.putIntegerArrayList(ARG_KEY_CATEGORY_STACK, int_stack);
+        args.putIntegerArrayList(ARG_KEY_CATEGORY_STACK, long_stack);
 
         AllItemsFragment fragment = new AllItemsFragment();
         fragment.setArguments(args);
@@ -123,11 +123,11 @@ public class AllItemsFragment extends SearchableItemFragment {
         } else {
             Bundle args = getArguments();
             if (args != null) {
-                ArrayList<Integer> int_category_stack = args.getIntegerArrayList(ARG_KEY_CATEGORY_STACK);
-                if (int_category_stack != null) {
-                    Stack<Long> category_stack = new Stack<>();
-                    for (Integer category_id : int_category_stack) {
-                        category_stack.push(category_id.longValue());
+                ArrayList<Integer> long_category_stack = args.getIntegerArrayList(ARG_KEY_CATEGORY_STACK);
+                if (long_category_stack != null) {
+                    Stack<Integer> category_stack = new Stack<>();
+                    for (Integer category_id : long_category_stack) {
+                        category_stack.push(category_id.intValue());
                     }
                     // the top of the stack is current category, pop it
                     super.setCategoryStack(category_stack, category_stack.pop());
@@ -188,7 +188,7 @@ public class AllItemsFragment extends SearchableItemFragment {
      * </p>
      */
     void restartFragmentToApplyEditingChanges() {
-        Stack<Long> current_stack = super.getCurrentStack();
+        Stack<Integer> current_stack = super.getCurrentStack();
         // add the current category to the top.
         current_stack.push(getCurrentCategory());
 
@@ -216,7 +216,7 @@ public class AllItemsFragment extends SearchableItemFragment {
     }
 
     @Override
-    public void onCategorySelected(long previous_category, long selected_category) {
+    public void onCategorySelected(int previous_category, int selected_category) {
     }
 
     @Override
@@ -516,7 +516,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             }
         });
         /**
-         * It is hard to click the check box, we intercept the enclosing view and simulate a
+         * It is hard to click the check box, we longercept the enclosing view and simulate a
          * click on the checkbox also. If we don't do this, then the list-view will receive the
          * click event and that is not the desired behaviour.
          */
@@ -569,13 +569,13 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     /**
      * Moves the selected categories to the current category. Updates them so they
-     * point to this category as their parent.
+     * polong to this category as their parent.
      */
     void moveCategoriesToCurrentCategory() {
         if (mSelectedCategories.isEmpty()) return;
 
-        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
-        long current_category = super.getCurrentCategory();
+        int company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        int current_category = super.getCurrentCategory();
 
         ArrayList<ContentProviderOperation> operation = new ArrayList<>();
         for (SCategory category : mSelectedCategories.values()) {
@@ -594,7 +594,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                     withValues(category.toContentValues()).
                     withSelection(
                             CategoryEntry._full(CategoryEntry.COLUMN_CATEGORY_ID) + " = ?",
-                            new String[]{Long.toString(category.category_id)}
+                            new String[]{Integer.toString(category.category_id)}
                     ).build());
         }
 
@@ -609,8 +609,8 @@ public class AllItemsFragment extends SearchableItemFragment {
     void moveItemsToCurrentCategory() {
         if (mSelectedItems.isEmpty()) return;
 
-        long company_id = PrefUtil.getCurrentCompanyId(getActivity());
-        long current_category = super.getCurrentCategory();
+        int company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        int current_category = super.getCurrentCategory();
 
         ArrayList<ContentProviderOperation> operation = new ArrayList<>();
         for (SItem item : mSelectedItems.values()) {
@@ -629,7 +629,7 @@ public class AllItemsFragment extends SearchableItemFragment {
                     withValues(item.toContentValues()).
                     withSelection(
                             ItemEntry._full(ItemEntry.COLUMN_ITEM_ID) + " = ?",
-                            new String[]{Long.toString(item.item_id)}
+                            new String[]{Integer.toString(item.item_id)}
                     ).build());
         }
 
@@ -733,7 +733,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         if (is_editing)
             editText.setText(category.name);
 
-        editText.addTextChangedListener(new TextWatcherAdapter(){
+        editText.addTextChangedListener(new TextWatcherAdapter() {
             @Override
             public void afterTextChanged(Editable s) {
                 String name = s.toString().trim();
@@ -768,7 +768,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+                int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
                 ContentValues values;
                 if (is_editing) {
@@ -787,10 +787,10 @@ public class AllItemsFragment extends SearchableItemFragment {
                             String.format(Locale.US, "%s = ?", CategoryEntry.COLUMN_CATEGORY_ID),
                             new String[]{String.valueOf(category.category_id)});
                 } else {
-                    final long new_category_id = PrefUtil.getNewCategoryId(getActivity());
+                    final int new_category_id = PrefUtil.getNewCategoryId(getActivity());
                     PrefUtil.setNewCategoryId(getActivity(), new_category_id);
 
-                    long current_category = AllItemsFragment.this.getCurrentCategory();
+                    int current_category = AllItemsFragment.this.getCurrentCategory();
 
                     values = new ContentValues();
                     values.put(CategoryEntry.COLUMN_CATEGORY_ID, new_category_id);
@@ -822,7 +822,7 @@ public class AllItemsFragment extends SearchableItemFragment {
         // we are converting it to a list because we want to preserve index. THis is because
         // we want to only delete categories that have been confirmed in the multi-choice dialog
         final ArrayList<SCategory> categoryList = new ArrayList<>();
-        for (Long category_id : mSelectedCategories.keySet()) {
+        for (Integer category_id : mSelectedCategories.keySet()) {
             categoryList.add(mSelectedCategories.get(category_id));
         }
 
@@ -916,7 +916,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
         // convert from Map -> List to preserve order
         final ArrayList<SItem> itemList = new ArrayList<>();
-        for (Long item_id : mSelectedItems.keySet()) {
+        for (Integer item_id : mSelectedItems.keySet()) {
             itemList.add(mSelectedItems.get(item_id));
         }
 
@@ -997,7 +997,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             public void run() {
                 ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
-                long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+                int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
                 for (SItem item : itemList) {
                     // If it is in created state, that means it only exists locally and the server
@@ -1061,7 +1061,7 @@ public class AllItemsFragment extends SearchableItemFragment {
 
     @Override
     protected Loader<Cursor> onEntityCreateLoader(int id, Bundle args) {
-        long company_id = PrefUtil.getCurrentCompanyId(getContext());
+        int company_id = PrefUtil.getCurrentCompanyId(getContext());
         String sortOrder = ItemEntry._full(ItemEntry.COLUMN_ITEM_CODE) + " ASC";
 
         String selection = null;

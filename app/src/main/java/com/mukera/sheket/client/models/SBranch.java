@@ -16,12 +16,9 @@ import org.json.JSONObject;
  */
 public class SBranch extends UUIDSyncable implements Parcelable {
 
-    public static final String JSON_BRANCH_ID = "branch_id";
-    public static final String JSON_BRANCH_UUID = "client_uuid";
-    public static final String JSON_NAME = "name";
-    public static final String JSON_LOCATION = "location";
-
-    static String _f(String s) { return BranchEntry._full(s); }
+    static String _f(String s) {
+        return BranchEntry._full(s);
+    }
 
     public static final String[] BRANCH_COLUMNS = {
             _f(BranchEntry.COLUMN_COMPANY_ID),
@@ -43,8 +40,8 @@ public class SBranch extends UUIDSyncable implements Parcelable {
 
     public static final int COL_LAST = 7;
 
-    public long company_id;
-    public long branch_id;
+    public int company_id;
+    public int branch_id;
     public String branch_name;
     public String branch_location;
     public int status_flag;
@@ -65,13 +62,14 @@ public class SBranch extends UUIDSyncable implements Parcelable {
     public SBranch(Cursor cursor) {
         this(cursor, 0);
     }
+
     public SBranch(Cursor cursor, int offset) {
         if (cursor.isNull(COL_BRANCH_ID + offset)) {
             branch_id = NO_BRANCH_FOUND;
             return;
         }
-        branch_id = cursor.getLong(COL_BRANCH_ID + offset);
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        branch_id = cursor.getInt(COL_BRANCH_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
         branch_name = cursor.getString(COL_NAME + offset);
         branch_location = cursor.getString(COL_LOCATION + offset);
         change_status = cursor.getInt(COL_CHANGE + offset);
@@ -80,8 +78,8 @@ public class SBranch extends UUIDSyncable implements Parcelable {
     }
 
     private SBranch(Parcel parcel) {
-        company_id = parcel.readLong();
-        branch_id = parcel.readLong();
+        company_id = parcel.readInt();
+        branch_id = parcel.readInt();
         branch_name = parcel.readString();
         branch_location = parcel.readString();
 
@@ -121,24 +119,13 @@ public class SBranch extends UUIDSyncable implements Parcelable {
         return values;
     }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put(JSON_BRANCH_ID, branch_id);
-        result.put(JSON_NAME, branch_name);
-        result.put(JSON_LOCATION, branch_location);
-        result.put(JSON_BRANCH_UUID, client_uuid);
-        result.put(BranchEntry.JSON_STATUS_FLAG, status_flag);
-        return result;
-    }
-
     public Branch.Builder toGRPCBuilder() {
         return Branch.newBuilder().
-                setBranchId((int)branch_id).
+                setBranchId((int) branch_id).
                 setName(branch_name).
                 setUUID(client_uuid).
                 setStatusFlag(status_flag);
     }
-
 
     public static final Parcelable.Creator<SBranch> CREATOR = new Parcelable.Creator<SBranch>() {
         @Override

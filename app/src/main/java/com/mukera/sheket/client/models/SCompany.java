@@ -37,9 +37,9 @@ public class SCompany implements Parcelable {
 
     public static final int COL_LAST = 8;
 
-    public long company_id;
+    public int company_id;
     public String payment_id;
-    public long user_id;
+    public int user_id;
     public String name;
     public String encoded_permission;
     public String state_bkup;
@@ -54,9 +54,9 @@ public class SCompany implements Parcelable {
     }
 
     public SCompany(Cursor cursor, int offset) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
         payment_id = cursor.getString(COL_PAYMENT_ID + offset);
-        user_id = cursor.getLong(COL_USER_ID + offset);
+        user_id = cursor.getInt(COL_USER_ID + offset);
         name = cursor.getString(COL_COMPANY_NAME + offset);
         encoded_permission = cursor.getString(COL_PERMISSION + offset);
         state_bkup = cursor.getString(COL_STATE_BKUP + offset);
@@ -79,9 +79,9 @@ public class SCompany implements Parcelable {
     }
 
     private SCompany(Parcel parcel) {
-        company_id = parcel.readLong();
+        company_id = parcel.readInt();
         payment_id = parcel.readString();
-        user_id = parcel.readLong();
+        user_id = parcel.readInt();
         name = parcel.readString();
         encoded_permission = parcel.readString();
         state_bkup = parcel.readString();
@@ -91,9 +91,9 @@ public class SCompany implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(company_id);
+        dest.writeInt(company_id);
         dest.writeString(payment_id);
-        dest.writeLong(user_id);
+        dest.writeInt(user_id);
         dest.writeString(name);
         dest.writeString(encoded_permission);
         dest.writeString(state_bkup);

@@ -145,7 +145,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     List<SBranch> getBranches() {
         if (mBranches == null) {
             mBranches = new ArrayList<>();
-            long company_id = PrefUtil.getCurrentCompanyId(getActivity());
+            int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
             String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
             Cursor cursor = getActivity().getContentResolver().
@@ -246,7 +246,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     }
 
     static void confirmMemberDeletion(final Context context, final SMember member) {
-        final long company_id = PrefUtil.getCurrentCompanyId(context);
+        final int company_id = PrefUtil.getCurrentCompanyId(context);
 
         // substitute the member name in the message.
         String confirm_body = context.getString(R.string.employee_delete_confirm_body, member.member_name);
@@ -503,14 +503,14 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
                         String id = mEditMemberId.getText().toString().trim();
-                        member.member_id = IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
+                        member.member_id = (int)IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
                         mProgressDialog = ProgressDialog.show(getActivity(),
                                 "Adding Member", "Please wait...", true);
                     } else {
                         member = new SMember(mMember);
                     }
 
-                    List<Long> branch_ids = new ArrayList<>();
+                    List<Integer> branch_ids = new ArrayList<>();
                     boolean[] selected = mSpinnerBranches.getSelected();
                     for (int i = 0; i < selected.length; i++) {
                         if (selected[i] == true) {
@@ -569,7 +569,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         }
 
         void updateMember(Activity activity, SMember member) {
-            long company_id = PrefUtil.getCurrentCompanyId(activity);
+            int company_id = PrefUtil.getCurrentCompanyId(activity);
             member.company_id = company_id;
             ContentValues values = member.toContentValues();
             values.put(ChangeTraceable.COLUMN_CHANGE_INDICATOR, ChangeTraceable.CHANGE_STATUS_UPDATED);
@@ -588,7 +588,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
                         SheketServiceGrpc.newBlockingStub(managedChannel);
 
-                long company_id = PrefUtil.getCurrentCompanyId(getContext());
+                int company_id = PrefUtil.getCurrentCompanyId(getContext());
                 String cookie = PrefUtil.getLoginCookie(getContext());
 
                 AddEmployeeRequest request = AddEmployeeRequest.newBuilder().

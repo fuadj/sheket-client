@@ -26,13 +26,6 @@ import java.util.List;
 public class STransaction extends UUIDSyncable implements Parcelable {
     private static final String LOG_TAG = STransaction.class.getSimpleName();
 
-    public static final String JSON_TRANS_KEY_TRANS_ID = "trans_id";
-    public static final String JSON_TRANS_KEY_BRANCH_ID = "branch_id";
-    public static final String JSON_TRANS_KEY_DATE = "date";
-    public static final String JSON_TRANS_KEY_TRANS_NOTE = "trans_note";
-    public static final String JSON_TRANS_KEY_ITEMS = "items";
-    public static final String JSON_TRANS_KEY_UUID = "client_uuid";
-
     static String _f(String s) {
         return TransactionEntry._full(s);
     }
@@ -78,10 +71,10 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     // use this to retrieve next columns in a joined query
     public static final int COL_LAST = 8;
 
-    public long company_id;
+    public int company_id;
     public long transaction_id;
-    public long user_id;
-    public long branch_id;
+    public int user_id;
+    public int branch_id;
     public long date;
     public String decodedDate;
     public String transactionNote;
@@ -92,7 +85,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         transactionItems = new ArrayList<>();
     }
 
-    public STransaction(TransactionResponse.SyncTransaction gRPC_Sync_Transaction, long t_company_id) {
+    public STransaction(TransactionResponse.SyncTransaction gRPC_Sync_Transaction, int t_company_id) {
         Transaction transaction = gRPC_Sync_Transaction.getTransaction();
 
         user_id = gRPC_Sync_Transaction.getUserId();
@@ -137,10 +130,10 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     }
 
     public STransaction(Cursor cursor, int offset, boolean fetch_affected) {
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
         transaction_id = cursor.getLong(COL_TRANS_ID + offset);
-        user_id = cursor.getLong(COL_USER_ID + offset);
-        branch_id = cursor.getLong(COL_BRANCH_ID + offset);
+        user_id = cursor.getInt(COL_USER_ID + offset);
+        branch_id = cursor.getInt(COL_BRANCH_ID + offset);
         date = cursor.getLong(COL_DATE + offset);
 
         Date d = SheketContract.getDateFromDb(date);
@@ -166,10 +159,10 @@ public class STransaction extends UUIDSyncable implements Parcelable {
     }
 
     private STransaction(Parcel parcel) {
-        company_id = parcel.readLong();
+        company_id = parcel.readInt();
         transaction_id = parcel.readLong();
-        user_id = parcel.readLong();
-        branch_id = parcel.readLong();
+        user_id = parcel.readInt();
+        branch_id = parcel.readInt();
         date = parcel.readLong();
         transactionNote = parcel.readString();
         change_status = parcel.readInt();
@@ -189,47 +182,10 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         return values;
     }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put(JSON_TRANS_KEY_TRANS_ID, transaction_id);
-        result.put(JSON_TRANS_KEY_BRANCH_ID, branch_id);
-        result.put(JSON_TRANS_KEY_UUID, client_uuid);
-
-        result.put(JSON_TRANS_KEY_DATE, date);
-        result.put(JSON_TRANS_KEY_TRANS_NOTE,
-                TextUtils.isEmpty(transactionNote) ? "" : transactionNote);
-
-        JSONArray itemsArr = new JSONArray();
-        for (STransactionItem transItem : transactionItems) {
-            JSONArray json_item = new JSONArray();
-            /**
-             * This is the format the server expects
-             *
-             * [a(int), b(int), c(int), d(float), e(string)]
-             * a: transaction type
-             * b: item_id
-             * c: other_branch_id
-             * d: quantity
-             * e: item note
-             */
-            json_item.put(transItem.trans_type);
-            json_item.put(transItem.item_id);
-            json_item.put(transItem.other_branch_id);
-            json_item.put(transItem.quantity);
-            json_item.put(TextUtils.isEmpty(transItem.item_note) ? "" :
-                    transItem.item_note);
-
-            itemsArr.put(json_item);
-        }
-        result.put(JSON_TRANS_KEY_ITEMS, itemsArr);
-        return result;
-    }
-
     public Transaction.Builder toGRPCBuilder() {
         Transaction.Builder builder = Transaction.newBuilder().
                 setTransId(transaction_id).
-                setBranchId(branch_id).
-                setUUID(client_uuid).
+                setBranchId(branch_id). setUUID(client_uuid).
                 setDateTime(date).
                 setTransNote(transactionNote);
 
@@ -303,8 +259,8 @@ public class STransaction extends UUIDSyncable implements Parcelable {
         public long company_id;
         public long trans_id;
         public int trans_type;
-        public long item_id;
-        public long other_branch_id;
+        public int item_id;
+        public int other_branch_id;
         public double quantity;
         public String item_note;
 
@@ -318,7 +274,7 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             trans_id = cursor.getLong(COL_TRANS_ID + offset);
             trans_type = cursor.getInt(COL_TRANS_TYPE + offset);
             item_id = cursor.getInt(COL_ITEM_ID + offset);
-            other_branch_id = cursor.getLong(COL_OTHER_BRANCH_ID + offset);
+            other_branch_id = cursor.getInt(COL_OTHER_BRANCH_ID + offset);
             quantity = cursor.getDouble(COL_QTY + offset);
             item_note = cursor.getString(COL_ITEM_NOTE + offset);
             change_status = cursor.getInt(COL_CHANGE + offset);
@@ -344,8 +300,8 @@ public class STransaction extends UUIDSyncable implements Parcelable {
             company_id = parcel.readLong();
             trans_id = parcel.readLong();
             trans_type = parcel.readInt();
-            item_id = parcel.readLong();
-            other_branch_id = parcel.readLong();
+            item_id = parcel.readInt();
+            other_branch_id = parcel.readInt();
             quantity = parcel.readDouble();
             item_note = parcel.readString();
             change_status = parcel.readInt();

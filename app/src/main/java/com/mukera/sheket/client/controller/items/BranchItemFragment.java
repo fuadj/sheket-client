@@ -51,7 +51,7 @@ import java.util.Locale;
 public class BranchItemFragment extends SearchableItemFragment {
     private static final String KEY_BRANCH = "key_branch";
 
-    private long mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
+    private int mCategoryId = CategoryEntry.ROOT_CATEGORY_ID;
     private SBranch mBranch;
 
     private FloatingActionButton mFinishTransactionBtn;
@@ -564,7 +564,7 @@ public class BranchItemFragment extends SearchableItemFragment {
     }
 
     @Override
-    public void onCategorySelected(long previous_category, long selected_category) {
+    public void onCategorySelected(int previous_category, int selected_category) {
         mCategoryId = selected_category;
     }
 
@@ -620,7 +620,7 @@ public class BranchItemFragment extends SearchableItemFragment {
 
     @Override
     protected Loader<Cursor> onEntityCreateLoader(int id, Bundle args) {
-        long company_id = PrefUtil.getCurrentCompanyId(getContext());
+        int company_id = PrefUtil.getCurrentCompanyId(getContext());
 
         String selection = null;
         String[] selectionArgs = null;

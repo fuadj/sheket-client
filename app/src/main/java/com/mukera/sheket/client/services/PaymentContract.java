@@ -113,8 +113,8 @@ public class PaymentContract {
      */
     public static boolean isLicenseValidForDeviceAndUser(String license,
                                                          String device_id,
-                                                         Long user_id,
-                                                         Long company_id) {
+                                                         Integer user_id,
+                                                         Integer company_id) {
         LicenseComponents components = PaymentContract.extractLicenseComponents(license);
 
         /**

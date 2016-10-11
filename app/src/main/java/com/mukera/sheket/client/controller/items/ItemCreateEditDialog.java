@@ -49,7 +49,7 @@ public class ItemCreateEditDialog extends DialogFragment {
 
     private TextView mConversionRate;
 
-    private long mCurrentCategory;
+    private int mCurrentCategory;
     private SItem mEditItem;
     private boolean mIsEditMode;
     private int mCurrentSelectedUnit = 0;   // default is 0, which is "pcs"
@@ -65,9 +65,9 @@ public class ItemCreateEditDialog extends DialogFragment {
      * Instantiates this dialog. If {@code item} is not null, it means it is in edit mode.
      * Otherwise it is in create mode.
      */
-    public static ItemCreateEditDialog newInstance(long current_category, SItem item) {
+    public static ItemCreateEditDialog newInstance(int current_category, SItem item) {
         Bundle args = new Bundle();
-        args.putLong(ARG_CURRENT_CATEGORY, current_category);
+        args.putInt(ARG_CURRENT_CATEGORY, current_category);
         args.putBoolean(ARG_EDIT_MODE, item != null);
         if (item != null) {
             args.putParcelable(ARG_ITEM, item);
@@ -81,7 +81,7 @@ public class ItemCreateEditDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        mCurrentCategory = args.getLong(ARG_CURRENT_CATEGORY);
+        mCurrentCategory = args.getInt(ARG_CURRENT_CATEGORY);
         mIsEditMode = args.getBoolean(ARG_EDIT_MODE);
         if (mIsEditMode)
             mEditItem = args.getParcelable(ARG_ITEM);
@@ -243,11 +243,11 @@ public class ItemCreateEditDialog extends DialogFragment {
     }
 
     void applyItemOperation(final Runnable runOnFinish) {
-        final long item_id;
+        final int item_id;
         if (mIsEditMode)
             item_id = mEditItem.item_id;
         else {
-            long new_item_id = PrefUtil.getNewItemId(getActivity());
+            int new_item_id = PrefUtil.getNewItemId(getActivity());
             PrefUtil.setNewItemId(getActivity(), new_item_id);
 
             item_id = new_item_id;
@@ -261,7 +261,7 @@ public class ItemCreateEditDialog extends DialogFragment {
         final int has_derived_unit = SheketContract.toInt(mSwitchHasBundle.isChecked());
         final String derived_name = getBundleName();
 
-        final long category_id = mCurrentCategory;
+        final int category_id = mCurrentCategory;
 
         String factor = getBundleFactor();
         final double derived_factor = factor.isEmpty() ? 0 : Double.valueOf(factor);
@@ -284,7 +284,7 @@ public class ItemCreateEditDialog extends DialogFragment {
             change_status = SheketContract.ChangeTraceable.CHANGE_STATUS_CREATED;
         }
 
-        final long company_id = PrefUtil.getCurrentCompanyId(getContext());
+        final int company_id = PrefUtil.getCurrentCompanyId(getContext());
         Thread t = new Thread() {
             @Override
             public void run() {

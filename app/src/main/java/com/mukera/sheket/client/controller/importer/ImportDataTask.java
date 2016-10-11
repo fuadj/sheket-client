@@ -174,7 +174,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             }
 
             // this is a new category, add it
-            long new_category_id = PrefUtil.getNewCategoryId(mContext);
+            int new_category_id = PrefUtil.getNewCategoryId(mContext);
             PrefUtil.setNewCategoryId(mContext, new_category_id);
 
             _import_category _c = new _import_category();
@@ -245,7 +245,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
                 code = mReader.getRowAt(i).get(item_code_col);
             }
 
-            long new_item_id = PrefUtil.getNewItemId(mContext);
+            int new_item_id = PrefUtil.getNewItemId(mContext);
             PrefUtil.setNewItemId(mContext, new_item_id);
 
             _import_item _i = new _import_item();
@@ -258,7 +258,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             values.put(ItemEntry.COLUMN_NAME, name);
             values.put(ItemEntry.COLUMN_ITEM_CODE, code);
 
-            long category_id = CategoryEntry.ROOT_CATEGORY_ID;
+            int category_id = CategoryEntry.ROOT_CATEGORY_ID;
             if (has_categories) {
                 String category_name = mReader.getRowAt(i).get(col_categories);
 
@@ -326,7 +326,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
                 continue;
             }
 
-            long new_branch_id = PrefUtil.getNewBranchId(mContext);
+            int new_branch_id = PrefUtil.getNewBranchId(mContext);
             PrefUtil.setNewBranchId(mContext, new_branch_id);
 
             _import_branch _b = new _import_branch();
@@ -361,17 +361,17 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         // we need both branches and quantity declared to do stuff
         if (!has_branches || !has_quantity) return;
 
-        long company_id = importData.company_id;
-        long user_id = PrefUtil.getUserId(mContext);
+        int company_id = importData.company_id;
+        int user_id = PrefUtil.getUserId(mContext);
 
         /**
          * We want to group imports pertaining to a specific branch into a single transactions.
          * This is done by only creating a new transaction for unseen(new) branches.
          */
-        Map<Long, Long> seenBranches = new HashMap<>();
+        Map<Integer, Integer> seenBranches = new HashMap<>();
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
-            long item_id, branch_id;
+            int item_id, branch_id;
 
             String item_name = _to_key(mReader.getRowAt(i).get(col_name));
             String branch_name = _to_key(replaceBranchNameIfDuplicate(mReader.getRowAt(i).get(col_branch)));
@@ -388,11 +388,11 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             String string_qty = mReader.getRowAt(i).get(col_quantity);
             double quantity = Utils.extractDoubleFromString(string_qty);
 
-            long transaction_id;
+            int transaction_id;
             if (seenBranches.containsKey(branch_id)) {
                 transaction_id = seenBranches.get(branch_id);
             } else {
-                transaction_id = PrefUtil.getNewTransId(mContext);
+                transaction_id = (int)PrefUtil.getNewTransId(mContext);
                 PrefUtil.setNewTransId(mContext, transaction_id);
 
                 seenBranches.put(branch_id, transaction_id);
@@ -451,9 +451,9 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         int col_branch = mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION);
         int col_category = mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY);
 
-        long company_id = importData.company_id;
+        int company_id = importData.company_id;
 
-        Map<Long, Set<Long>> seenBranchCategories = new HashMap<>();
+        Map<Integer, Set<Integer>> seenBranchCategories = new HashMap<>();
         for (int i = 0; i < mReader.getNumRows(); i++) {
             String branch_name = replaceBranchNameIfDuplicate(
                     mReader.getRowAt(i).get(col_branch)).trim();
@@ -468,11 +468,11 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
                     _to_key(branch_name));
             _import_category _c = importData.mCategoryIds.get(
                     _to_key(category_name));
-            long branch_id = _b.is_new ? _b.new_id : _b.previousBranch.branch_id;
-            long category_id = _c.is_new ? _c.new_id : _c.previousCategory.category_id;
+            int branch_id = _b.is_new ? _b.new_id : _b.previousBranch.branch_id;
+            int category_id = _c.is_new ? _c.new_id : _c.previousCategory.category_id;
 
             if (!seenBranchCategories.containsKey(branch_id))
-                seenBranchCategories.put(branch_id, new HashSet<Long>());
+                seenBranchCategories.put(branch_id, new HashSet<Integer>());
 
             if (seenBranchCategories.get(branch_id).contains(category_id))
                 // we've already added the category to the branch
@@ -501,25 +501,25 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         Map<String, _import_category> mCategoryIds;
         Map<String, _import_item> mItemIds;
         Map<String, _import_branch> mBranchIds;
-        long company_id;
+        int company_id;
 
         ArrayList<ContentProviderOperation> operationsList;
     }
 
     class _import_category {
-        long new_id;
+        int new_id;
         boolean is_new;
         SCategory previousCategory;
     }
 
     class _import_item {
-        long new_id;
+        int new_id;
         boolean is_new;
         SItem previousItem;
     }
 
     class _import_branch {
-        long new_id;
+        int new_id;
         boolean is_new;
         SBranch previousBranch;
     }

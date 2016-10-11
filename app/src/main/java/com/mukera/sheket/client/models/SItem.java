@@ -23,24 +23,6 @@ import java.util.Map;
  * Created by gamma on 3/3/16.
  */
 public class SItem extends UUIDSyncable implements Parcelable {
-    public static final String JSON_ITEM_ID = "item_id";
-    public static final String JSON_ITEM_UUID = "client_uuid";
-
-    public static final String JSON_ITEM_CODE = "item_code";
-    public static final String JSON_ITEM_NAME = "item_name";
-    public static final String JSON_ITEM_CATEGORY = "category_id";
-
-    public static final String JSON_UNIT_OF_MEASUREMENT = "units";
-    public static final String JSON_HAS_DERIVED_UNIT = "has_derived_unit";
-    public static final String JSON_DERIVED_NAME = "derived_name";
-    public static final String JSON_DERIVED_FACTOR = "derived_factor";
-    public static final String JSON_REORDER_LEVEL = "reorder_level";
-
-    public static final String JSON_MODEL_YEAR = "model_year";
-    public static final String JSON_PART_NUMBER = "part_number";
-    public static final String JSON_BAR_CODE = "bar_code";
-    public static final String JSON_HAS_BAR_CODE = "has_bar_code";
-
     private static final String LOG_TAG = SItem.class.getSimpleName();
 
     static String _f(String s) {
@@ -112,11 +94,11 @@ public class SItem extends UUIDSyncable implements Parcelable {
 
     public static final int COL_LAST = 17;
 
-    public long company_id;
-    public long item_id;
+    public int company_id;
+    public int item_id;
     public String name;
     public String item_code;
-    public long category;
+    public int category;
 
     public int unit_of_measurement;
     public boolean has_derived_unit;
@@ -191,11 +173,11 @@ public class SItem extends UUIDSyncable implements Parcelable {
             return;
         }
 
-        item_id = cursor.getLong(COL_ITEM_ID + offset);
-        company_id = cursor.getLong(COL_COMPANY_ID + offset);
+        item_id = cursor.getInt(COL_ITEM_ID + offset);
+        company_id = cursor.getInt(COL_COMPANY_ID + offset);
         name = cursor.getString(COL_NAME + offset);
         item_code = cursor.getString(COL_MANUAL_CODE + offset);
-        category = cursor.getLong(COL_CATEGORY + offset);
+        category = cursor.getInt(COL_CATEGORY + offset);
 
         unit_of_measurement = cursor.getInt(COL_UNIT_OF_MEASUREMENT + offset);
         has_derived_unit = SheketContract.toBool(cursor.getInt(COL_HAS_DERIVED_UNIT + offset));
@@ -239,7 +221,7 @@ public class SItem extends UUIDSyncable implements Parcelable {
 
                 if (!cursor.moveToNext()) // we've hit the end
                     break;
-                long next_item_id = cursor.getLong(COL_ITEM_ID + offset);
+                int next_item_id = cursor.getInt(COL_ITEM_ID + offset);
                 if (next_item_id != item_id) {      // we've moved to the territory of another item, get back
                     cursor.moveToPrevious();
                     break;
@@ -295,12 +277,12 @@ public class SItem extends UUIDSyncable implements Parcelable {
         if (!cursor.moveToFirst())
             return starting_positions;
 
-        long prev_item_id = -1;
+        int prev_item_id = -1;
 
         for (int i = 0; ; i++) {
             if (cursor.isNull(COL_ITEM_ID)) break;
 
-            long item_id = cursor.getLong(COL_ITEM_ID);
+            int item_id = cursor.getInt(COL_ITEM_ID);
             if (item_id != prev_item_id) {
                 starting_positions.add(i);
 
@@ -316,11 +298,11 @@ public class SItem extends UUIDSyncable implements Parcelable {
     }
 
     private SItem(Parcel parcel) {
-        company_id = parcel.readLong();
-        item_id = parcel.readLong();
+        company_id = parcel.readInt();
+        item_id = parcel.readInt();
         name = parcel.readString();
         item_code = parcel.readString();
-        category = parcel.readLong();
+        category = parcel.readInt();
         unit_of_measurement = parcel.readInt();
         has_derived_unit = SheketContract.toBool(parcel.readInt());
         derived_name = parcel.readString();
@@ -374,33 +356,13 @@ public class SItem extends UUIDSyncable implements Parcelable {
                 setUUID(client_uuid).setStatusFlag(status_flag);
     }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put(JSON_ITEM_ID, item_id);
-        result.put(JSON_ITEM_NAME, name);
-        result.put(JSON_ITEM_CODE, item_code);
-        result.put(JSON_ITEM_CATEGORY, category);
-        result.put(JSON_UNIT_OF_MEASUREMENT, unit_of_measurement);
-        result.put(JSON_HAS_DERIVED_UNIT, has_derived_unit);
-        result.put(JSON_DERIVED_NAME, derived_name);
-        result.put(JSON_DERIVED_FACTOR, derived_factor);
-        result.put(JSON_REORDER_LEVEL, reorder_level);
-        result.put(JSON_MODEL_YEAR, model_year);
-        result.put(JSON_PART_NUMBER, part_number);
-        result.put(JSON_BAR_CODE, bar_code);
-        result.put(JSON_HAS_BAR_CODE, has_bar_code);
-        result.put(JSON_ITEM_UUID, client_uuid);
-        result.put(ItemEntry.JSON_STATUS_FLAG, status_flag);
-        return result;
-    }
-
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(company_id);
-        dest.writeLong(item_id);
+        dest.writeInt(company_id);
+        dest.writeInt(item_id);
         dest.writeString(name);
         dest.writeString(item_code);
-        dest.writeLong(category);
+        dest.writeInt(category);
         dest.writeInt(unit_of_measurement);
         dest.writeInt(SheketContract.toInt(has_derived_unit));
         dest.writeString(derived_name);

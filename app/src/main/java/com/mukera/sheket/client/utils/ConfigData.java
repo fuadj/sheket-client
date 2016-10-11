@@ -25,7 +25,11 @@ public class ConfigData {
     }
 
     public static String getServerIP() {
-        return "192.168.0.107";
+        //return "192.168.43.119";
+        return "192.168.43.211";
+        //return "192.168.42.193";
+
+        //return "192.168.0.107";
     }
 
     public static int getServerPort() {

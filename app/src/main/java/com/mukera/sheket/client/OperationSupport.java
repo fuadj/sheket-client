@@ -117,9 +117,9 @@ public class OperationSupport {
                                                               @Operation int operation) {
 
         if (true)
-            return false;
+            return true;
 
-        long company_id = PrefUtil.getCurrentCompanyId(activity);
+        int company_id = PrefUtil.getCurrentCompanyId(activity);
         Cursor cursor = activity.getContentResolver().
                 query(SheketContract.CompanyEntry.buildCompanyUri(company_id),
                         SCompany.COMPANY_COLUMNS,

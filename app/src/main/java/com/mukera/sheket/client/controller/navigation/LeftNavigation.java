@@ -346,7 +346,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                                     ).build()
                     );
 
-            long company_id = created_company.getCompanyId();
+            int company_id = created_company.getCompanyId();
             String user_permission = created_company.getPermission();
             String license = created_company.getSignedLicense();
 
@@ -382,7 +382,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         TextView username = (TextView) view.findViewById(R.id.dialog_show_profile_username);
         TextView id = (TextView) view.findViewById(R.id.dialog_show_profile_id);
 
-        long user_id = PrefUtil.getUserId(getNavActivity());
+        int user_id = PrefUtil.getUserId(getNavActivity());
 
         username.setText(PrefUtil.getUsername(getNavActivity()));
         id.setText(IdEncoderUtil.encodeAndDelimitId(user_id, IdEncoderUtil.ID_TYPE_USER));
@@ -615,7 +615,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     }
 
     static class CompanyAdapter extends CursorAdapter {
-        private long mCurrentCompanyId;
+        private int mCurrentCompanyId;
 
         public CompanyAdapter(Context context) {
             super(context, null);
@@ -630,7 +630,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             return 2;
         }
 
-        public static final long ADD_COMPANY_ROW_COMPANY_ID = -1;
+        public static final int ADD_COMPANY_ROW_COMPANY_ID = -1;
 
         /**
          * Checks if the row is pointing to the "add company" cell.
@@ -640,8 +640,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         public static boolean isAddCompanyRow(Cursor cursor, int position) {
             if (!cursor.moveToPosition(position)) return false;
 
-            long company_id = cursor.getLong(SCompany.COL_COMPANY_ID);
-            return company_id == ADD_COMPANY_ROW_COMPANY_ID;
+            return new SCompany(cursor).company_id == ADD_COMPANY_ROW_COMPANY_ID;
         }
 
         @Override

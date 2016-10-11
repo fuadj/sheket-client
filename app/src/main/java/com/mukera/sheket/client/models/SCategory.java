@@ -22,12 +22,6 @@ import java.util.Map;
  * Created by fuad on 5/21/16.
  */
 public class SCategory extends UUIDSyncable implements Parcelable {
-
-    public static final String JSON_CATEGORY_ID = "category_id";
-    public static final String JSON_CATEGORY_UUID = "client_uuid";
-    public static final String JSON_NAME = "name";
-    public static final String JSON_PARENT_ID = "parent_id";
-
     static String _fCurrent(String s) {
         return CategoryEntry._fullCurrent(s);
     }
@@ -92,10 +86,10 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
     public static final int COL_LAST = 12;
 
-    public long company_id;
-    public long category_id;
+    public int company_id;
+    public int category_id;
     public String name;
-    public long parent_id;
+    public int parent_id;
 
     public List<SCategory> childrenCategories;
 
@@ -130,10 +124,10 @@ public class SCategory extends UUIDSyncable implements Parcelable {
                 category_id = NO_CATEGORY_FOUND;
                 return;
             }
-            company_id = cursor.getLong(COL_CURRENT_COMPANY_ID + offset);
-            category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID + offset);
+            company_id = cursor.getInt(COL_CURRENT_COMPANY_ID + offset);
+            category_id = cursor.getInt(COL_CURRENT_CATEGORY_ID + offset);
             name = Utils.toTitleCase(cursor.getString(COL_CURRENT_NAME + offset));
-            parent_id = cursor.getLong(COL_CURRENT_PARENT_ID + offset);
+            parent_id = cursor.getInt(COL_CURRENT_PARENT_ID + offset);
 
             change_status = cursor.getInt(COL_CURRENT_CHANGE_INDICATOR + offset);
             client_uuid = cursor.getString(COL_CURRENT_CLIENT_UUID + offset);
@@ -148,7 +142,7 @@ public class SCategory extends UUIDSyncable implements Parcelable {
                     childrenCategories.add(child);
                     if (!cursor.moveToNext())       // we've reached the end
                         break;
-                    long next_category = cursor.getLong(COL_CURRENT_CATEGORY_ID + offset);
+                    int next_category = cursor.getInt(COL_CURRENT_CATEGORY_ID + offset);
                     if (next_category != category_id) {     // we've moved to the territory of the next category, get back
                         cursor.moveToPrevious();
                         break;
@@ -161,10 +155,10 @@ public class SCategory extends UUIDSyncable implements Parcelable {
                 return;
             }
 
-            company_id = cursor.getLong(COL_CHILD_COMPANY_ID + offset);
-            category_id = cursor.getLong(COL_CHILD_CATEGORY_ID + offset);
+            company_id = cursor.getInt(COL_CHILD_COMPANY_ID + offset);
+            category_id = cursor.getInt(COL_CHILD_CATEGORY_ID + offset);
             name = Utils.toTitleCase(cursor.getString(COL_CHILD_NAME + offset));
-            parent_id = cursor.getLong(COL_CHILD_PARENT_ID + offset);
+            parent_id = cursor.getInt(COL_CHILD_PARENT_ID + offset);
 
             change_status = cursor.getInt(COL_CHILD_CHANGE_INDICATOR + offset);
             client_uuid = cursor.getString(COL_CHILD_CLIENT_UUID + offset);
@@ -200,11 +194,11 @@ public class SCategory extends UUIDSyncable implements Parcelable {
 
         if (!cursor.moveToFirst()) return starting_positions;
 
-        long prev_category_id = -1;
+        int prev_category_id = -1;
         for (int i = 0; ; i++) {
             if (cursor.isNull(COL_CURRENT_CATEGORY_ID)) break;
 
-            long category_id = cursor.getLong(COL_CURRENT_CATEGORY_ID);
+            int category_id = cursor.getInt(COL_CURRENT_CATEGORY_ID);
             if (category_id != prev_category_id) {
                 starting_positions.add(i);
                 prev_category_id = category_id;
@@ -228,15 +222,6 @@ public class SCategory extends UUIDSyncable implements Parcelable {
         return values;
     }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put(JSON_NAME, name);
-        obj.put(JSON_CATEGORY_ID, category_id);
-        obj.put(JSON_PARENT_ID, parent_id);
-        obj.put(JSON_CATEGORY_UUID, client_uuid);
-        return obj;
-    }
-
     public Category.Builder toGRPCBuilder() {
         return Category.newBuilder().
                 setCategoryId((int) category_id).
@@ -246,10 +231,10 @@ public class SCategory extends UUIDSyncable implements Parcelable {
     }
 
     private SCategory(Parcel parcel) {
-        company_id = parcel.readLong();
-        category_id = parcel.readLong();
+        company_id = parcel.readInt();
+        category_id = parcel.readInt();
         name = parcel.readString();
-        parent_id = parcel.readLong();
+        parent_id = parcel.readInt();
         change_status = parcel.readInt();
         client_uuid = parcel.readString();
     }
