@@ -172,11 +172,7 @@ public class PaymentDialog extends DialogFragment {
     Pair<Boolean, String> verifyPayment(SCompany company) {
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
-                setCompanyId(
-                        CompanyID.newBuilder().setCompanyId(
-                                PrefUtil.getCurrentCompanyId(getContext())
-                        ).build()
-                ).
+                setCompanyId(CompanyID.newBuilder().setCompanyId(company.company_id).build()).
                 setSheketAuth(
                         SheketAuth.newBuilder().setLoginCookie(
                                 PrefUtil.getLoginCookie(getContext())
