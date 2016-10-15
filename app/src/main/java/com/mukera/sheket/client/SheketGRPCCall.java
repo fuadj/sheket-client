@@ -1,7 +1,5 @@
 package com.mukera.sheket.client;
 
-import android.util.Log;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -38,7 +36,7 @@ public class SheketGRPCCall<T> {
         } catch (ExecutionException e) {
             StatusRuntimeException exception = (StatusRuntimeException) e.getCause();
 
-            if (exception.getStatus() == Status.UNAUTHENTICATED) {
+            if (exception.getStatus().getCode() == Status.Code.UNAUTHENTICATED) {
                 throw new SheketInvalidLoginException(e);
             } else {
                 throw new SheketException(e);
@@ -78,3 +76,4 @@ public class SheketGRPCCall<T> {
         }
     }
 }
+
