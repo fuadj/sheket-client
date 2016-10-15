@@ -74,19 +74,10 @@ import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -566,7 +557,13 @@ public class MainActivity extends AppCompatActivity implements
                 return new Pair<>(Boolean.TRUE, null);
             else
                 return new Pair<>(Boolean.FALSE, "Error updating company name in local storage");
-        } catch (SheketGRPCCall.SheketGRPCException e) {
+        } catch (SheketGRPCCall.SheketInvalidLoginException e) {
+            LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(
+                    new Intent(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS));
+            return new Pair<>(Boolean.FALSE, e.getMessage());
+        } catch (SheketGRPCCall.SheketInternetException e) {
+            return new Pair<>(Boolean.FALSE, "Internet problem");
+        } catch (SheketGRPCCall.SheketException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
     }

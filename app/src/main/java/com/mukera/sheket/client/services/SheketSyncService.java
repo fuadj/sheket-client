@@ -8,7 +8,6 @@ import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.support.annotation.IntDef;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 import android.util.Log;
@@ -40,11 +39,7 @@ import com.mukera.sheket.client.models.STransaction;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.squareup.okhttp.OkHttpClient;
 
-import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,8 +47,6 @@ import java.util.Set;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 
 /**
  * Created by gamma on 4/13/16.
@@ -61,25 +54,8 @@ import io.grpc.StatusRuntimeException;
 public class SheketSyncService extends IntentService {
     private final String LOG_TAG = SheketSyncService.class.getSimpleName();
 
-    public static final OkHttpClient client = new OkHttpClient();
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({SYNC_STATUS_SYNCED, SYNC_STATUS_SYNCING, SYNC_STATUS_SUCCESSFUL,
-            SYNC_STATUS_SYNC_ERROR, SYNC_STATUS_INTERNET_ERROR, SYNC_STATUS_GENERAL_ERROR})
-    public @interface SyncStatus {
-    }
-
-    public static final int SYNC_STATUS_SYNCED = 0;
-    public static final int SYNC_STATUS_SYNCING = 1;
-    public static final int SYNC_STATUS_SUCCESSFUL = 2;
-    public static final int SYNC_STATUS_SYNC_ERROR = 3;
-    public static final int SYNC_STATUS_INTERNET_ERROR = 4;
-    public static final int SYNC_STATUS_GENERAL_ERROR = 5;
-
-    private String error_msg;
-
     public SheketSyncService() {
-        super("Sheket");
+        super(SheketSyncService.class.getSimpleName());
     }
 
     /**
@@ -161,38 +137,23 @@ public class SheketSyncService extends IntentService {
             PrefUtil.setIsSyncRunning(this, false);
 
             startService(new Intent(this, PaymentService.class));
-        } catch (StatusRuntimeException e) {
-            if (e.getStatus().getCode().value() == Status.UNAUTHENTICATED.getCode().value()) {
-                sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
-            } else if (e.getStatus().getCode().value() == Status.ABORTED.getCode().value()) {
 
-            }
-        } catch (SyncException e) {
-            Log.e(LOG_TAG, "Sync Error", e);
-            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SERVER_ERROR,
-                    e.getMessage(),
-                    SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Internet Problem", e);
+        } catch (SheketGRPCCall.SheketInvalidLoginException e) {
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
+        } catch (SheketGRPCCall.SheketInternetException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INTERNET_ERROR,
                     "Internet problem",
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
+        } catch (SheketGRPCCall.SheketException e) {
+            sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_SERVER_ERROR,
+                    e.getMessage(),
+                    SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         } catch (Exception e) {
-            e.printStackTrace();
-            String err = e.getMessage();
-            String err_msg = err;
-            /*
-            // it usually has the format package.exception_class: error message,
-            // so do the crude "parsing" of the error message
-            int index = err.indexOf("Exception");
-            if (index != -1)
-                err_msg = err.substring(index + "Exception".length());
-                */
-
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_GENERAL_ERROR,
-                    "Error " + err_msg,
+                    e.getMessage(),
                     SheketBroadcast.ACTION_SYNC_EXTRA_ERROR_MSG);
         }
+
         PrefUtil.setIsSyncRunning(this, false);
     }
 
@@ -201,7 +162,7 @@ public class SheketSyncService extends IntentService {
         Cursor cursor = getContentResolver().query(CompanyEntry.CONTENT_URI,
                 SCompany.COMPANY_COLUMNS, null, null, null);
         if (cursor == null)
-            throw new SyncException("can't enumerate local companies");
+            throw new Exception("can't enumerate local companies");
         if (cursor.moveToFirst()) {
             do {
                 SCompany company = new SCompany(cursor);
@@ -335,7 +296,7 @@ public class SheketSyncService extends IntentService {
      * This prepares the way for the transactions to sync, since
      * it depends on these elements having a "defined" state.
      */
-    void syncEntities(final SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws Exception {
+    void syncEntities(final SheketServiceGrpc.SheketServiceBlockingStub blockingStub) throws SheketGRPCCall.SheketException {
         final EntityRequest.Builder entity_request = EntityRequest.newBuilder();
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
@@ -811,24 +772,6 @@ public class SheketSyncService extends IntentService {
             PrefUtil.setBranchItemRevision(this, (int) response.getNewBranchItemRev());
         } catch (OperationApplicationException | RemoteException e) {
             throw e;
-        }
-    }
-
-    private static class SyncException extends Exception {
-        public SyncException() {
-            super();
-        }
-
-        public SyncException(String detailMessage) {
-            super(detailMessage);
-        }
-
-        public SyncException(String detailMessage, Throwable throwable) {
-            super(detailMessage, throwable);
-        }
-
-        public SyncException(Throwable throwable) {
-            super(throwable);
         }
     }
 }

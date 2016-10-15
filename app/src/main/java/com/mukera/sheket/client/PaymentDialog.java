@@ -4,10 +4,12 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -27,7 +29,6 @@ import com.mukera.sheket.client.network.VerifyPaymentResponse;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.squareup.okhttp.OkHttpClient;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -217,7 +218,14 @@ public class PaymentDialog extends DialogFragment {
                 return new Pair<>(Boolean.TRUE, null);
             else
                 return new Pair<>(Boolean.FALSE, "Problem updating license");
-        } catch (SheketGRPCCall.SheketGRPCException e) {
+        } catch (SheketGRPCCall.SheketInvalidLoginException e) {
+            LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(
+                    new Intent(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS)
+            );
+            return new Pair<>(Boolean.FALSE, e.getMessage());
+        } catch (SheketGRPCCall.SheketInternetException e) {
+            return new Pair<>(Boolean.FALSE, "Internet problem");
+        } catch (SheketGRPCCall.SheketException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
     }
