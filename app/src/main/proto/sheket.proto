@@ -13,9 +13,13 @@ service SheketService {
     rpc EditUserName (EditUserNameRequest) returns (EmptyResponse);
 
     rpc CreateCompany (NewCompanyRequest) returns (Company);
+    rpc EditCompany (EditCompanyRequest) returns (EmptyResponse);
+
     rpc AddEmployee (AddEmployeeRequest) returns (AddEmployeeResponse);
+
     rpc SyncEntity (EntityRequest) returns (EntityResponse);
     rpc SyncTransaction (TransactionRequest) returns (TransactionResponse);
+
     rpc IssuePayment (IssuePaymentRequest) returns (IssuePaymentResponse);
     rpc VerifyPayment (VerifyPaymentRequest) returns (VerifyPaymentResponse);
 }
@@ -62,9 +66,6 @@ message SyncCompanyRequest {
     string local_user_time = 4;
 }
 
-message SyncUserResponse {
-}
-
 message NewCompanyRequest {
     SheketAuth auth = 1;
     string company_name = 2;
@@ -103,15 +104,34 @@ message AddEmployeeResponse {
 }
 
 message IssuePaymentRequest {
+    SheketAuth sheketAuth = 1;
+    int32 company_id = 2;
+    int32 contract_type = 3;
+    int32 duration_days = 4;
+
+    sint32 employee_limit = 5;
+    sint32 branch_limit = 6;
+    sint32 item_limit = 7;
 }
 
 message IssuePaymentResponse {
+    int32 issued_company_id = 1;
+    string payment_description = 2;
 }
 
 message VerifyPaymentRequest {
+    CompanyAuth companyAuth = 1;
+    string device_id = 2;
+    string local_user_time = 3;
 }
 
 message VerifyPaymentResponse {
+    string signed_license = 1;
+}
+
+message EditCompanyRequest{
+    CompanyAuth companyAuth = 1;
+    string new_name = 2;
 }
 
 message Item {

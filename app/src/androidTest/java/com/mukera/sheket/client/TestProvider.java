@@ -25,7 +25,7 @@ import java.util.Set;
  * Created by gamma on 3/2/16.
  */
 public class TestProvider extends AndroidTestCase {
-    static final long TEST_COMPANY_ID = 2;
+    static final int TEST_COMPANY_ID = 2;
     static final String TEST_COMPANY_name = "test company";
     static final String TEST_COMPANY_PERMISSION;
     static {
@@ -34,10 +34,10 @@ public class TestProvider extends AndroidTestCase {
         TEST_COMPANY_PERMISSION = p.Encode();
     }
 
-    static final long TEST_BRANCH_ID = 10;
+    static final int TEST_BRANCH_ID = 10;
     static final String TEST_BRANCH_NAME = "test branch";
 
-    static final long TEST_ITEM_ID = 140;
+    static final int TEST_ITEM_ID = 140;
     static final String TEST_ITEM_NAME = "test item";
     static final String TEST_ITEM_CODE = "21adsfqewr-25";
     static final int TEST_HAS_BARCODE = SheketContract.FALSE;
@@ -103,7 +103,7 @@ public class TestProvider extends AndroidTestCase {
         return values;
     }
 
-    public static ContentValues createTransactionItems(long item_id, long trans_id) {
+    public static ContentValues createTransactionItems(int item_id, long trans_id) {
         ContentValues values = new ContentValues();
         values.put(TransItemEntry.COLUMN_COMPANY_ID, TEST_COMPANY_ID);
         values.put(TransItemEntry.COLUMN_ITEM_ID, item_id);
@@ -283,31 +283,31 @@ public class TestProvider extends AndroidTestCase {
         ContentValues values = createCompanyValues();
         Uri uri = mContext.getContentResolver().insert(
                 CompanyEntry.CONTENT_URI, values);
-        long row_id = ContentUris.parseId(uri);
-        assertTrue(row_id != -1);
+        int company_id = (int)ContentUris.parseId(uri);
+        assertTrue(company_id != -1);
 
         Cursor cursor = _query(CompanyEntry.CONTENT_URI);
         validateCursor(cursor, values);
 
-        cursor = _query(CompanyEntry.buildCompanyUri(row_id));
+        cursor = _query(CompanyEntry.buildCompanyUri(company_id));
         validateCursor(cursor, values);
 
         values = createBranchValues();
         uri = mContext.getContentResolver().insert(
                 BranchEntry.buildBaseUri(TEST_COMPANY_ID), values);
-        row_id = ContentUris.parseId(uri);
-        assertTrue(row_id != -1);
+        company_id = (int)ContentUris.parseId(uri);
+        assertTrue(company_id != -1);
 
         cursor = _query(BranchEntry.buildBaseUri(TEST_COMPANY_ID));
         validateCursor(cursor, values);
 
-        cursor = _query(BranchEntry.buildBranchUri(TEST_COMPANY_ID, row_id));
+        cursor = _query(BranchEntry.buildBranchUri(TEST_COMPANY_ID, company_id));
         validateCursor(cursor, values);
 
         values = createItemValues();
         uri = mContext.getContentResolver().insert(
                 ItemEntry.buildBaseUri(TEST_COMPANY_ID), values);
-        long item_id = ContentUris.parseId(uri);
+        int item_id = (int)ContentUris.parseId(uri);
         assertTrue(item_id != -1);
 
         cursor = _query(ItemEntry.buildBaseUri(TEST_COMPANY_ID));
@@ -362,7 +362,7 @@ public class TestProvider extends AndroidTestCase {
 
     public void testGetType() {
         log("testGetType");
-        long test_company_id = 1;
+        int test_company_id = 1;
 
         String type = _type(CompanyEntry.CONTENT_URI);
         assertEquals(CompanyEntry.CONTENT_TYPE, type);
@@ -370,11 +370,11 @@ public class TestProvider extends AndroidTestCase {
         type = _type(BranchEntry.buildBaseUri(test_company_id));
         assertEquals(BranchEntry.CONTENT_TYPE, type);
 
-        long testBranch = 1;
+        int testBranch = 1;
         type = _type(BranchEntry.buildBranchUri(test_company_id, testBranch));
         assertEquals(BranchEntry.CONTENT_ITEM_TYPE, type);
 
-        long testItem = 13;
+        int testItem = 13;
         type = _type(ItemEntry.buildItemUri(test_company_id, testItem));
         assertEquals(ItemEntry.CONTENT_ITEM_TYPE, type);
 
@@ -435,7 +435,7 @@ public class TestProvider extends AndroidTestCase {
         ContentValues values = createCompanyValues();
 
         Uri uri = _insert(CompanyEntry.CONTENT_URI, values);
-        long company_id = ContentUris.parseId(uri);
+        int company_id = (int)ContentUris.parseId(uri);
         assertTrue(company_id != -1);
 
         ContentValues updatedValues = new ContentValues(values);
@@ -454,7 +454,7 @@ public class TestProvider extends AndroidTestCase {
 
         values = createItemValues();
         uri = _insert(ItemEntry.buildBaseUri(company_id), values);
-        long item_id = ContentUris.parseId(uri);
+        int item_id = (int)ContentUris.parseId(uri);
         assertTrue(item_id > 0);
 
         values = createBranchItemValues();

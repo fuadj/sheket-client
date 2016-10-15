@@ -64,6 +64,12 @@ import com.mukera.sheket.client.data.SheketContract.CompanyEntry;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
+import com.mukera.sheket.client.network.CompanyAuth;
+import com.mukera.sheket.client.network.CompanyID;
+import com.mukera.sheket.client.network.EditCompanyRequest;
+import com.mukera.sheket.client.network.EmptyResponse;
+import com.mukera.sheket.client.network.SheketAuth;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
 import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
@@ -86,6 +92,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements
@@ -511,26 +519,40 @@ public class MainActivity extends AppCompatActivity implements
     static final OkHttpClient client = new OkHttpClient();
 
     Pair<Boolean, String> updateCompanyName(SCompany company, String new_name) {
-        final String REQUEST_NEW_COMPANY_NAME = "new_company_name";
-
+        CompanyAuth companyAuth = CompanyAuth.
+                newBuilder().
+                setCompanyId(
+                        CompanyID.newBuilder().setCompanyId(
+                                PrefUtil.getCurrentCompanyId(this)
+                        ).build()
+                ).
+                setSheketAuth(
+                        SheketAuth.newBuilder().setLoginCookie(
+                                PrefUtil.getLoginCookie(this)
+                        ).build()
+                ).build();
+        final EditCompanyRequest request = EditCompanyRequest.newBuilder().
+                setCompanyAuth(companyAuth).
+                setNewName(new_name).
+                build();
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put(REQUEST_NEW_COMPANY_NAME, new_name);
+            new SheketGRPCCall<EmptyResponse>().runBlockingCall(
+                    new SheketGRPCCall.GRPCCallable<EmptyResponse>() {
+                        @Override
+                        public EmptyResponse runGRPCCall() throws Exception {
+                            ManagedChannel managedChannel = ManagedChannelBuilder.
+                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                    usePlaintext(true).
+                                    build();
 
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(this) + "v1/company/edit/name");
-            builder.addHeader(getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(this));
-            builder.addHeader(getString(R.string.pref_header_key_company_id),
-                    String.valueOf(company.company_id));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    jsonObject.toString()));
+                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                    SheketServiceGrpc.newBlockingStub(managedChannel);
+                            return blockingStub.editCompany(request);
+                        }
+                    }
+            );
 
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
-            }
-
+            // if we've reached this point without throwing an exception, then it means success
             ContentValues values = company.toContentValues();
             values.remove(CompanyEntry.COLUMN_COMPANY_ID);
             values.put(CompanyEntry.COLUMN_NAME, new_name);
@@ -544,7 +566,7 @@ public class MainActivity extends AppCompatActivity implements
                 return new Pair<>(Boolean.TRUE, null);
             else
                 return new Pair<>(Boolean.FALSE, "Error updating company name in local storage");
-        } catch (JSONException | IOException e) {
+        } catch (SheketGRPCCall.SheketGRPCException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
     }

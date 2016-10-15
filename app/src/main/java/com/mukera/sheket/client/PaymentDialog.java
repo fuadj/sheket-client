@@ -16,23 +16,21 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract;
-import com.mukera.sheket.client.data.SheketContract.*;
+import com.mukera.sheket.client.data.SheketContract.CompanyEntry;
 import com.mukera.sheket.client.models.SCompany;
+import com.mukera.sheket.client.network.CompanyAuth;
+import com.mukera.sheket.client.network.CompanyID;
+import com.mukera.sheket.client.network.SheketAuth;
+import com.mukera.sheket.client.network.SheketServiceGrpc;
+import com.mukera.sheket.client.network.VerifyPaymentRequest;
+import com.mukera.sheket.client.network.VerifyPaymentResponse;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketNetworkUtil;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import mehdi.sakout.fancybuttons.FancyButton;
 
 /**
@@ -164,8 +162,6 @@ public class PaymentDialog extends DialogFragment {
         return dialog;
     }
 
-    public static final OkHttpClient client = new OkHttpClient();
-
     /**
      * Tries to verify payment. If payment was verified, it will update the company's
      * payment "stuff" in the local db.
@@ -174,37 +170,42 @@ public class PaymentDialog extends DialogFragment {
      * {@code Pair<False, Error Message>} otherwise
      */
     Pair<Boolean, String> verifyPayment(SCompany company) {
-        final String REQUEST_JSON_DEVICE_ID = getString(R.string.sync_json_payment_device_id);
-        final String REQUEST_JSON_LOCAL_USER_TIME = getString(R.string.sync_json_payment_local_user_time);
-        final String RESPONSE_JSON_LICENSE = getString(R.string.sync_json_payment_signed_license);
+        CompanyAuth companyAuth = CompanyAuth.
+                newBuilder().
+                setCompanyId(
+                        CompanyID.newBuilder().setCompanyId(
+                                PrefUtil.getCurrentCompanyId(getContext())
+                        ).build()
+                ).
+                setSheketAuth(
+                        SheketAuth.newBuilder().setLoginCookie(
+                                PrefUtil.getLoginCookie(getContext())
+                        ).build()
+                ).build();
+        final VerifyPaymentRequest request = VerifyPaymentRequest.newBuilder().
+                setCompanyAuth(companyAuth).
+                setDeviceId(DeviceId.getUniqueDeviceId(getActivity())).
+                setLocalUserTime(String.valueOf(System.currentTimeMillis())).
+                build();
 
         try {
-            JSONObject jsonObject = new JSONObject();
+            VerifyPaymentResponse response = new SheketGRPCCall<VerifyPaymentResponse>().runBlockingCall(
+                    new SheketGRPCCall.GRPCCallable<VerifyPaymentResponse>() {
+                        @Override
+                        public VerifyPaymentResponse runGRPCCall() throws Exception {
+                            ManagedChannel managedChannel = ManagedChannelBuilder.
+                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                    usePlaintext(true).
+                                    build();
 
-            jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceId.getUniqueDeviceId(getActivity()));
-            // we must 'cast' the time to a string as the encoding is different and server is expecting a string
-            jsonObject.put(REQUEST_JSON_LOCAL_USER_TIME, String.valueOf(System.currentTimeMillis()));
-
-            Request.Builder builder = new Request.Builder();
-            builder.url(ConfigData.getAddress(getActivity()) + "v1/payment/verify");
-            builder.addHeader(getString(R.string.pref_request_key_cookie),
-                    PrefUtil.getLoginCookie(getActivity()));
-            builder.addHeader(getString(R.string.pref_header_key_company_id),
-                    Long.toString(company.company_id));
-            builder.post(RequestBody.create(MediaType.parse("application/json"),
-                    jsonObject.toString()));
-
-            Response response = client.newCall(builder.build()).execute();
-            if (!response.isSuccessful()) {
-                return new Pair<>(Boolean.FALSE, SheketNetworkUtil.getErrorMessage(response));
-            }
-
-            JSONObject result = new JSONObject(response.body().string());
-
-            String license = result.getString(RESPONSE_JSON_LICENSE);
-
+                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                    SheketServiceGrpc.newBlockingStub(managedChannel);
+                            return blockingStub.verifyPayment(request);
+                        }
+                    }
+            );
             ContentValues updated_values = company.toContentValues();
-            updated_values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
+            updated_values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, response.getSignedLicense());
             updated_values.put(CompanyEntry.COLUMN_PAYMENT_STATE, CompanyEntry.PAYMENT_VALID);
 
             // we need to remove it, it creates problems with updating and foreign key reference
@@ -220,7 +221,7 @@ public class PaymentDialog extends DialogFragment {
                 return new Pair<>(Boolean.TRUE, null);
             else
                 return new Pair<>(Boolean.FALSE, "Problem updating license");
-        } catch (JSONException | IOException e) {
+        } catch (SheketGRPCCall.SheketGRPCException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
     }

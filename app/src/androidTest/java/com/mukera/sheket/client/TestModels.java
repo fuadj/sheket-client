@@ -19,7 +19,7 @@ import java.util.List;
  * Created by gamma on 3/3/16.
  */
 public class TestModels extends AndroidTestCase {
-    private static List<Long> sItemIds = null;
+    private static List<Integer> sItemIds = null;
 
     void setupCompany() {
         ContentValues values = TestProvider.createCompanyValues();
@@ -38,7 +38,7 @@ public class TestModels extends AndroidTestCase {
             values.put(ItemEntry.COLUMN_ITEM_CODE,
                     codeArr[((i*13) + 3)%codeArr.length]);      // a bit if "randomness"
 
-            long item_id = (long)i + 1;
+            int item_id = i + 1;
             values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
             Uri uri = mContext.getContentResolver().insert(
                     ItemEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID), values);
@@ -67,7 +67,7 @@ public class TestModels extends AndroidTestCase {
 
     void checkItemModel() {
         ContentValues values = TestProvider.createItemValues();
-        long item_id = 1000;
+        int item_id = 1000;
         values.put(ItemEntry.COLUMN_ITEM_ID, item_id);
         Uri uri = mContext.getContentResolver().insert(
                 ItemEntry.buildBaseUri(TestProvider.TEST_COMPANY_ID), values);
