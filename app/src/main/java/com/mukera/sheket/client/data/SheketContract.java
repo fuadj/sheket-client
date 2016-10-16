@@ -167,7 +167,7 @@ public class SheketContract {
         // save state bkup stuff when switching between companies,
         // This was previously used to save revision number, that is why
         // the naming has stuck-ed.
-        public static final String COLUMN_STATE_BACKUP = "revision";
+        public static final String COLUMN_STATE_BACKUP = "state_bkup";
 
         // The signed payment that was generated for
         // {this device, company, user, ...} by the server is stored here
