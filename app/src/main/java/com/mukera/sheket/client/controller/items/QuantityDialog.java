@@ -69,7 +69,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         /**
          * The user has selected the item he wants and wants to finish the transaction.
-         *
+         * <p/>
          * It would be good if you check the number of items that have been selected for
          * the transaction thus far and decide whether to display a "transaction-summary"
          * or just commit it.
@@ -86,10 +86,13 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         }
     }
 
-    private ImageButton mImgBtnAction;
-
-    private View mLayoutTransferToOtherBranch;
+    /**
+     * These ImageButtons will only be bind to the views after {@code onLoaderFinished} has been
+     * called and we know if we should include "other" branch option.
+     */
     private ImageButton mImgBtnSend, mImgBtnReceive, mImgBtnBuy, mImgBtnSell;
+
+    private ImageButton mImgBtnSelectedTransaction;
 
     private View mLayoutOtherBranchSelector;
     private TextView mTextTransferType;
@@ -113,6 +116,14 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     private Button mBtnCancel;
     private Button mBtnContinue, mBtnFinish;
+
+    /**
+     * We need to hold on to the layout after {@code onCreateDialog} so we may access it after the cursor
+     * inside {@code onLoadFinished}. This was needed because some UI elements depended on knowing whether
+     * an item existed in other branches, which can only be "known" after {@code onLoadFinished}.
+     * Till then, some of the UI widgets will be null.
+     */
+    private View mDialogLayout;
 
     private SItem mItem;
     private Long mCurrentBranch;
@@ -277,13 +288,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
     void linkViews(View view) {
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
-        mImgBtnAction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
-
-        mLayoutTransferToOtherBranch = view.findViewById(R.id.dialog_qty_layout_transfer);
-        mImgBtnSend = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_send);
-        mImgBtnReceive = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_receive);
-        mImgBtnBuy = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_buy);
-        mImgBtnSell = (ImageButton) view.findViewById(R.id.dialog_qty_select_img_btn_sell);
+        mImgBtnSelectedTransaction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
 
         mLayoutOtherBranchSelector = view.findViewById(R.id.dialog_qty_layout_select_other_branch);
         mTextTransferType = (TextView) view.findViewById(R.id.dialog_qty_text_transfer_type);
@@ -328,14 +333,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 is_transfer = false;
         }
 
-        if (mItem != null) {
-            if (mItem.available_branches.isEmpty()) {
-                mLayoutTransferToOtherBranch.setVisibility(View.GONE);
-            } else {
-                mLayoutTransferToOtherBranch.setVisibility(View.VISIBLE);
-            }
-        }
-
         mLayoutOtherBranchSelector.setVisibility(is_transfer ? View.VISIBLE : View.GONE);
 
         if (is_transfer &&
@@ -360,19 +357,23 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 img_resource = -1;
                 break;
             case BUY:
-                img_resource = R.drawable.ic_action_choice_buy; break;
+                img_resource = R.drawable.ic_action_choice_buy;
+                break;
             case SELL:
-                img_resource = R.drawable.ic_action_choice_sell; break;
+                img_resource = R.drawable.ic_action_choice_sell;
+                break;
             case SEND_TO:
-                img_resource = R.drawable.ic_action_choice_send; break;
+                img_resource = R.drawable.ic_action_choice_send;
+                break;
             case RECEIVE_FROM:
-                img_resource = R.drawable.ic_action_choice_receive; break;
+                img_resource = R.drawable.ic_action_choice_receive;
+                break;
         }
         if (img_resource != -1) {
-            mImgBtnAction.setImageResource(img_resource);
-            mImgBtnAction.setVisibility(View.VISIBLE);
+            mImgBtnSelectedTransaction.setImageResource(img_resource);
+            mImgBtnSelectedTransaction.setVisibility(View.VISIBLE);
         } else {
-            mImgBtnAction.setVisibility(View.INVISIBLE);
+            mImgBtnSelectedTransaction.setVisibility(View.INVISIBLE);
         }
 
         boolean is_transfer = false;
@@ -443,10 +444,10 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        View view = getActivity().getLayoutInflater().
+        mDialogLayout = getActivity().getLayoutInflater().
                 inflate(R.layout.dialog_quantity, null);
 
-        linkViews(view);
+        linkViews(mDialogLayout);
 
         mRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -468,41 +469,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 mListener.dialogCancel(QuantityDialog.this);
             }
         });
-
-        View.OnClickListener clickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int view_id = v.getId();
-
-                mActionType = ActionType.NOT_SET;
-                if (view_id == mImgBtnReceive.getId()) {
-                    mActionType = ActionType.RECEIVE_FROM;
-                } else if (view_id == mImgBtnSend.getId()) {
-                    mActionType = ActionType.SEND_TO;
-                } else if (view_id == mImgBtnBuy.getId()) {
-                    mActionType = ActionType.BUY;
-                } else if (view_id == mImgBtnSell.getId()) {
-                    mActionType = ActionType.SELL;
-                }
-
-                /**
-                 * ALWAYS "reset" the other branch, this prevents some inconsistent states.
-                 *
-                 * e.g:     Because you can send an item to a branch it doesn't already exist
-                 *          in, you can select such a branch to send an item to it. But you
-                 *          shouldn't just change transaction type to "receive from" and
-                 *          still use that branch the item doesn't exist in.
-                 */
-                mOtherBranchItem = null;
-
-                updateViews();
-            }
-        };
-
-        mImgBtnReceive.setOnClickListener(clickListener);
-        mImgBtnSend.setOnClickListener(clickListener);
-        mImgBtnBuy.setOnClickListener(clickListener);
-        mImgBtnSell.setOnClickListener(clickListener);
 
         mBtnSelectOtherBranch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -557,7 +523,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                 if (v.getId() == mBtnContinue.getId()) {
                     mListener.dialogOkContinue(QuantityDialog.this,
                             getTransactionItem());
-                } else if (v.getId() == mBtnFinish.getId()){
+                } else if (v.getId() == mBtnFinish.getId()) {
                     mListener.dialogOkFinish(QuantityDialog.this,
                             getTransactionItem());
                 }
@@ -572,7 +538,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle(mItem.name);
-        Dialog dialog = builder.setView(view).create();
+        Dialog dialog = builder.setView(mDialogLayout).create();
         return dialog;
     }
 
@@ -671,7 +637,7 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         SPermission permission = SPermission.getUserPermission(getContext());
 
-        if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+        if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_BRANCH_EMPLOYEE) {
             List<Integer> branches = permission.getAllowedBranches();
             selection = "(";
             selectionArgs = new String[branches.size()];
@@ -713,6 +679,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         mItem = new SItem(data, true);
         for (int i = 0; i < mItem.available_branches.size(); i++) {
             Pair<SBranchItem, SBranch> branchItemBranchPair = mItem.available_branches.get(i);
+
+            // remove the current branch from the branch options
             if (branchItemBranchPair.second.branch_id == mCurrentBranch) {
                 mCurrentBranchItemPair = branchItemBranchPair;
 
@@ -722,7 +690,65 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
         }
 
-        updateViews();
+        if (mItem.available_branches.isEmpty()) {
+            // hide the 4 ImageBtn layout.
+            mDialogLayout.findViewById(R.id.dialog_qty_layout_transaction_type_four).setVisibility(View.GONE);
+
+            mImgBtnSend = null;
+            mImgBtnReceive = null;
+
+            // TODO: check if the user has permission to buy items, hide it otherwise
+            mImgBtnBuy = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_two_buy);
+
+            mImgBtnSell = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_two_sell);
+        } else {
+            // hide the 2 ImageBtn layout.
+            mDialogLayout.findViewById(R.id.dialog_qty_layout_transaction_type_two).setVisibility(View.GONE);
+
+            mImgBtnSend = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_four_send);
+            mImgBtnReceive = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_four_receive);
+            mImgBtnBuy = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_four_buy);
+            mImgBtnSell = (ImageButton) mDialogLayout.findViewById(R.id.dialog_qty_select_img_btn_four_sell);
+        }
+
+        View.OnClickListener clickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int view_id = v.getId();
+
+                mActionType = ActionType.NOT_SET;
+                if (mImgBtnReceive != null && view_id == mImgBtnReceive.getId()) {
+                    mActionType = ActionType.RECEIVE_FROM;
+                } else if (mImgBtnSend != null && view_id == mImgBtnSend.getId()) {
+                    mActionType = ActionType.SEND_TO;
+                } else if (mImgBtnBuy != null && view_id == mImgBtnBuy.getId()) {
+                    mActionType = ActionType.BUY;
+                } else if (mImgBtnSell != null && view_id == mImgBtnSell.getId()) {
+                    mActionType = ActionType.SELL;
+                }
+
+                /**
+                 * ALWAYS "reset" the other branch, this prevents some inconsistent states.
+                 *
+                 * e.g:     Because you can send an item to a branch it doesn't already exist
+                 *          in, you can select such a branch to send an item to it. But you
+                 *          shouldn't just change transaction type to "receive from" and
+                 *          still use that branch the item doesn't exist in.
+                 */
+                mOtherBranchItem = null;
+
+                updateViews();
+            }
+        };
+
+        if (mImgBtnReceive != null)
+            mImgBtnReceive.setOnClickListener(clickListener);
+        if (mImgBtnSend != null)
+            mImgBtnSend.setOnClickListener(clickListener);
+        if (mImgBtnBuy != null)
+            mImgBtnBuy.setOnClickListener(clickListener);
+        if (mImgBtnSell != null)
+            mImgBtnSell.setOnClickListener(clickListener);
     }
 
     @Override
