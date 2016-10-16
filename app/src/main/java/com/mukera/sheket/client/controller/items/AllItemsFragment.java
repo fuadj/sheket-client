@@ -206,7 +206,6 @@ public class AllItemsFragment extends SearchableItemFragment {
         } else {
             mAddBtn.setVisibility(View.GONE);
             mPasteBtn.setVisibility(View.VISIBLE);
-            // TODO: make it visible after you implement delete here and on server
             mDeleteBtn.setVisibility(View.VISIBLE);
 
             // they both should start disabled only be enabled after some items/categories have been selected
@@ -277,7 +276,7 @@ public class AllItemsFragment extends SearchableItemFragment {
             public void onClick(View v) {
                 /**
                  * Because we are showing category & item delete confirmation dialogs one after
-                 * the other, we can't just call them "consecutively" because both display their
+                 * the other, we can't just call them "sequentially" because both display their
                  * dialogs instantaneously. So we use this algorithm to display the dialogs
                  *
                  *      if (categories > 0) {

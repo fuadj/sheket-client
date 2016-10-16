@@ -108,8 +108,8 @@ public class BranchItemFragment extends SearchableItemFragment {
             menuItem.setVisible(true);
             menuItem.setIcon(
                     getActivity().getResources().getDrawable(mShowAllItems ?
-                            R.drawable.ic_action_eye_open :
-                            R.drawable.ic_action_eye_closed));
+                            R.drawable.ic_action_eye_open_white :
+                            R.drawable.ic_action_eye_closed_white));
         } else {
             menuItem.setVisible(false);
         }

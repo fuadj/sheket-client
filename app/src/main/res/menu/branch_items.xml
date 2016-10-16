@@ -5,7 +5,7 @@
 
     <item
         android:id="@+id/menu_item_branch_item_list_all_items"
-        android:icon="@drawable/ic_action_eye_closed"
+        android:icon="@drawable/ic_action_eye_closed_white"
         android:orderInCategory="2"
         android:title="Show All"
         app:showAsAction="always"
