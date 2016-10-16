@@ -28,8 +28,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -37,6 +40,7 @@ import android.widget.TextView;
 
 import com.mukera.sheket.client.OperationSupport;
 import com.mukera.sheket.client.R;
+import com.mukera.sheket.client.SheketGRPCCall;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.data.SheketContract.BranchEntry;
 import com.mukera.sheket.client.data.SheketContract.ChangeTraceable;
@@ -54,18 +58,9 @@ import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DbUtil;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +68,6 @@ import java.util.Locale;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.StatusRuntimeException;
 
 /**
  * Created by gamma on 4/3/16.
@@ -85,6 +79,13 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     private MemberAdapter mAdapter;
 
     private List<SBranch> mBranches;
+    private HashMap<Integer, BranchAuthority> mBranchAuthorities;
+
+    static class BranchAuthority {
+        int branch_id;
+        boolean show_qty;
+        boolean buy_items;
+    }
 
     @Nullable
     @Override
@@ -102,9 +103,9 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     SMember member = new SMember(cursor);
 
                     FragmentManager fm = getActivity().getSupportFragmentManager();
-                    AddEditMemberDialog dialog = new AddEditMemberDialog();
-                    dialog.setBranches(getBranches());
-                    dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_EDIT;
+                    AddEditEmployeeDialog dialog = new AddEditEmployeeDialog();
+                    dialog.setBranches(getBranches(), mBranchAuthorities);
+                    dialog.mDialogType = AddEditEmployeeDialog.MEMBER_DIALOG_EDIT;
                     dialog.mMember = member;
                     dialog.fragment = EmployeesFragment.this;
                     dialog.show(fm, "Edit Member");
@@ -122,9 +123,9 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                             @Override
                             public void operationSupported() {
                                 FragmentManager fm = getActivity().getSupportFragmentManager();
-                                AddEditMemberDialog dialog = new AddEditMemberDialog();
-                                dialog.setBranches(getBranches());
-                                dialog.mDialogType = AddEditMemberDialog.MEMBER_DIALOG_ADD;
+                                AddEditEmployeeDialog dialog = new AddEditEmployeeDialog();
+                                dialog.setBranches(getBranches(), mBranchAuthorities);
+                                dialog.mDialogType = AddEditEmployeeDialog.MEMBER_DIALOG_ADD;
                                 dialog.fragment = EmployeesFragment.this;
                                 dialog.mMember = null;
                                 dialog.show(fm, null);
@@ -147,6 +148,8 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             return mBranches;
 
         mBranches = new ArrayList<>();
+        mBranchAuthorities = new HashMap<>();
+
         int company_id = PrefUtil.getCurrentCompanyId(getActivity());
 
         String selection = String.format(Locale.US, "%s != %d",
@@ -288,7 +291,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 }).show();
     }
 
-    public static class AddEditMemberDialog extends DialogFragment {
+    public static class AddEditEmployeeDialog extends DialogFragment {
         public static final int MEMBER_DIALOG_ADD = 1;
         public static final int MEMBER_DIALOG_EDIT = 2;
 
@@ -296,14 +299,15 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         public int mDialogType;
         public SMember mMember;
 
-        private EditText mEditMemberId;
+        private EditText mEditEmployeeId;
 
-        private TextView mMemberName;
+        private TextView mEmployeeName;
 
         private Spinner mSpinnerPermissionType;
+        private ListView mListBranches;
         private MultiSpinner mSpinnerBranches;
 
-        private Button mBtnAddEditMember;
+        private Button mBtnAddEditEmployee;
 
         private LinearLayout mLayoutBranchSelector;
 
@@ -334,19 +338,27 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
         static {
             sPermTypesHashMap = new HashMap<>();
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_NONE,
-                    new PermType(SPermission.PERMISSION_TYPE_NONE, "--Select Access--"));
+                    new PermType(SPermission.PERMISSION_TYPE_NONE, "--- Choose Permission ---"));
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_ALL_ACCESS,
                     new PermType(SPermission.PERMISSION_TYPE_ALL_ACCESS, "Manager"));
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_LISTED_BRANCHES,
-                    new PermType(SPermission.PERMISSION_TYPE_LISTED_BRANCHES, "Branch Employee"));
+                    new PermType(SPermission.PERMISSION_TYPE_LISTED_BRANCHES, "Employee"));
         }
 
-        public void setBranches(List<SBranch> branches) {
+        private HashMap<Integer, BranchAuthority> mBranchAuthorities;
+
+        public void setBranches(List<SBranch> branches, HashMap<Integer, BranchAuthority> branchAuthorityHashMap) {
             mBranches = branches;
+            mBranchAuthorities = branchAuthorityHashMap;
+        }
+
+        void setBtnState(boolean enabled) {
+            mBtnAddEditEmployee.setEnabled(enabled);
+            mBtnAddEditEmployee.setVisibility(enabled ? View.VISIBLE : View.INVISIBLE);
         }
 
         void setOkButtonStatus() {
-            String delimited_id = mEditMemberId.getText().toString().trim().
+            String delimited_id = mEditEmployeeId.getText().toString().trim().
                     // remove any space
                             replaceAll("\\s+", "").
                     // also remove any non-alphanumeric characters
@@ -354,47 +366,39 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
 
             String delimiter_removed = IdEncoderUtil.removeDelimiterOnEncodedId(delimited_id);
             if (!IdEncoderUtil.isValidEncodedUserId(delimiter_removed)) {
-                mBtnAddEditMember.setEnabled(false);
+                setBtnState(false);
                 return;
             } else {
                 long decoded_user_id = IdEncoderUtil.decodeEncodedId(delimiter_removed, IdEncoderUtil.ID_TYPE_USER);
                 // we should prohibit a user adding themselves as an employee, who
                 // knows what that can do
                 if (PrefUtil.getUserId(getActivity()) == decoded_user_id) {
-                    mBtnAddEditMember.setEnabled(false);
+                    setBtnState(false);
                     return;
                 }
             }
 
             PermType perm_type = (PermType) mSpinnerPermissionType.getSelectedItem();
             if (perm_type.type == SPermission.PERMISSION_TYPE_NONE) {
-                mBtnAddEditMember.setEnabled(false);
+                setBtnState(false);
                 return;
             }
 
             if (mDialogType == MEMBER_DIALOG_ADD &&
-                    mEditMemberId.getText().toString().trim().isEmpty()) {
-                mBtnAddEditMember.setEnabled(false);
+                    mEditEmployeeId.getText().toString().trim().isEmpty()) {
+                setBtnState(false);
                 return;
             }
 
             if (perm_type.type != SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
-                mBtnAddEditMember.setEnabled(true);
+                setBtnState(true);
                 return;
             }
 
-            boolean none_selected = true;
-            for (boolean selected : mSpinnerBranches.getSelected()) {
-                if (selected) {
-                    none_selected = false;
-                    break;
-                }
-            }
-            if (none_selected) {
-                mBtnAddEditMember.setEnabled(false);
-                return;
-            }
-            mBtnAddEditMember.setEnabled(true);
+            if (mBranchAuthorities.isEmpty())
+                setBtnState(false);
+            else
+                setBtnState(true);
         }
 
         @NonNull
@@ -406,27 +410,27 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             successIcon.setBounds(new Rect(0, 0, successIcon.getIntrinsicWidth(), successIcon.getIntrinsicHeight()));
 
             final View layout_name = view.findViewById(R.id.dialog_layout_member_name);
-            mEditMemberId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
+            mEditEmployeeId = (EditText) view.findViewById(R.id.dialog_edit_text_member_id);
 
             final boolean is_edit = mDialogType == MEMBER_DIALOG_EDIT;
             String title;
             if (is_edit) {
                 title = getString(R.string.placeholder_employee_action_edit_member);
                 layout_name.setVisibility(View.VISIBLE);
-                mMemberName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
-                mMemberName.setText(mMember.member_name);
-                mEditMemberId.setText(IdEncoderUtil.delimitEncodedId(IdEncoderUtil.encodeId(mMember.member_id, IdEncoderUtil.ID_TYPE_USER), 4));
-                mEditMemberId.setEnabled(false);
+                mEmployeeName = (TextView) view.findViewById(R.id.dialog_text_view_member_name);
+                mEmployeeName.setText(mMember.member_name);
+                mEditEmployeeId.setText(IdEncoderUtil.delimitEncodedId(IdEncoderUtil.encodeId(mMember.member_id, IdEncoderUtil.ID_TYPE_USER), 4));
+                mEditEmployeeId.setEnabled(false);
             } else {
                 title = getString(R.string.placeholder_employee_action_add_member);
                 layout_name.setVisibility(View.GONE);
-                mEditMemberId.setEnabled(true);
-                mEditMemberId.addTextChangedListener(new TextWatcherAdapter() {
+                mEditEmployeeId.setEnabled(true);
+                mEditEmployeeId.addTextChangedListener(new TextWatcherAdapter() {
                     @Override
                     public void afterTextChanged(Editable s) {
                         setOkButtonStatus();
 
-                        String delimited_id = mEditMemberId.getText().toString().trim().
+                        String delimited_id = mEditEmployeeId.getText().toString().trim().
                                 // remove any space
                                         replaceAll("\\s+", "").
                                 // also remove any non-alphanumeric characters
@@ -442,25 +446,16 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                             if (current_user_id != decoded_user_id) {
                                 // I know it is weird to call {@code setError} for telling success
                                 // but we don't have an API for the success.
-                                mEditMemberId.setError("Correct ID", successIcon);
+                                mEditEmployeeId.setError("Correct ID", successIcon);
                             }
                         } else {
-                            mEditMemberId.setError(null);
+                            mEditEmployeeId.setError(null);
                         }
                     }
                 });
             }
 
             mLayoutBranchSelector = (LinearLayout) view.findViewById(R.id.dialog_member_layout_permission_branch);
-
-            Button btnCancel;
-            btnCancel = (Button) view.findViewById(R.id.dialog_btn_member_cancel);
-            btnCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    getDialog().dismiss();
-                }
-            });
 
             List<PermType> types = new ArrayList<>();
             types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_NONE));
@@ -488,6 +483,20 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 }
             });
 
+            mListBranches = (ListView) view.findViewById(R.id.dialog_member_list_branches);
+
+            BranchAuthoritiesAdapter branchesAdapter = new BranchAuthoritiesAdapter(getContext());
+            branchesAdapter.setBranchAuthorities(mBranchAuthorities);
+            branchesAdapter.setDialogReference(this);
+            SBranch headerRow = new SBranch();
+            headerRow.branch_id = -1;
+            branchesAdapter.add(headerRow);
+            for (SBranch branch : mBranches) {
+                branchesAdapter.add(branch);
+            }
+            mListBranches.setAdapter(branchesAdapter);
+
+            /*
             mSpinnerBranches = (MultiSpinner) view.findViewById(R.id.dialog_member_spinner_branch);
             List<String> branches = new ArrayList<>();
             for (SBranch branch : mBranches) {
@@ -500,9 +509,10 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                             setOkButtonStatus();
                         }
                     });
+                    */
 
-            mBtnAddEditMember = (Button) view.findViewById(R.id.dialog_btn_member_add_edit);
-            mBtnAddEditMember.setOnClickListener(new View.OnClickListener() {
+            mBtnAddEditEmployee = (Button) view.findViewById(R.id.dialog_btn_member_add_edit);
+            mBtnAddEditEmployee.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     final Activity activity = getActivity();
@@ -510,7 +520,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     final SMember member;
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
-                        String id = mEditMemberId.getText().toString().trim();
+                        String id = mEditEmployeeId.getText().toString().trim();
                         member.member_id = (int) IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
                         mProgressDialog = ProgressDialog.show(getActivity(),
                                 "Adding Member", "Please wait...", true);
@@ -554,12 +564,12 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                                     if (!is_editing) {
                                         if (mErrorOccurred) {
                                             new AlertDialog.Builder(getActivity()).
-                                                    setTitle("Member Error").
+                                                    setTitle("Employee Adding Error").
                                                     setMessage(mErrorMsg).show();
                                         } else {
                                             new AlertDialog.Builder(getActivity()).
-                                                    setTitle("Member Success").
-                                                    setMessage("Member Added").show();
+                                                    setTitle("Success").
+                                                    setMessage("Employee Added").show();
                                         }
                                     }
                                 }
@@ -569,6 +579,15 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     t.start();
                 }
             });
+            Button btnCancel;
+            btnCancel = (Button) view.findViewById(R.id.dialog_btn_member_cancel);
+            btnCancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getDialog().dismiss();
+                }
+            });
+
             setOkButtonStatus();
             return new AlertDialog.Builder(getContext()).
                     setTitle(title).
@@ -588,18 +607,10 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
 
         void addMember(Activity activity, SMember member) {
             try {
-                ManagedChannel managedChannel = ManagedChannelBuilder.
-                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                        usePlaintext(true).
-                        build();
-
-                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                        SheketServiceGrpc.newBlockingStub(managedChannel);
-
                 int company_id = PrefUtil.getCurrentCompanyId(getContext());
                 String cookie = PrefUtil.getLoginCookie(getContext());
 
-                AddEmployeeRequest request = AddEmployeeRequest.newBuilder().
+                final AddEmployeeRequest request = AddEmployeeRequest.newBuilder().
                         setCompanyAuth(CompanyAuth.newBuilder().
                                 setCompanyId(CompanyID.newBuilder().
                                         setCompanyId(company_id)).
@@ -608,7 +619,22 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                         setEmployeeId(member.member_id).
                         setPermission(member.member_permission.Encode()).
                         build();
-                AddEmployeeResponse response = blockingStub.addEmployee(request);
+
+                AddEmployeeResponse response = new SheketGRPCCall<AddEmployeeResponse>().runBlockingCall(
+                        new SheketGRPCCall.GRPCCallable<AddEmployeeResponse>() {
+                            @Override
+                            public AddEmployeeResponse runGRPCCall() throws Exception {
+                                ManagedChannel managedChannel = ManagedChannelBuilder.
+                                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                        usePlaintext(true).
+                                        build();
+
+                                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                        SheketServiceGrpc.newBlockingStub(managedChannel);
+                                return blockingStub.addEmployee(request);
+                            }
+                        }
+                );
 
                 ContentValues values = new ContentValues();
                 values.put(MemberEntry.COLUMN_COMPANY_ID,
@@ -626,28 +652,184 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 if (MemberEntry.getMemberId(uri) < 0) {
                     throw new MemberException("error adding member into company");
                 }
-            } catch (StatusRuntimeException | MemberException e) {
+            } catch (SheketGRPCCall.SheketException | MemberException e) {
                 mErrorOccurred = true;
                 mErrorMsg = e.getMessage();
             }
         }
     }
 
-    static class MemberException extends Exception {
-        public MemberException() {
-            super();
+    static class BranchAuthoritiesAdapter extends ArrayAdapter<SBranch> {
+        private HashMap<Integer, BranchAuthority> mBranchAuthorities;
+        private AddEditEmployeeDialog mDialog;
+
+        public BranchAuthoritiesAdapter(Context context) {
+            super(context, 0);
         }
 
+        public void setBranchAuthorities(HashMap<Integer, BranchAuthority> authorities) {
+            mBranchAuthorities = authorities;
+        }
+
+        public void setDialogReference(AddEditEmployeeDialog dialog) {
+            mDialog = dialog;
+        }
+
+        public static boolean isHeaderRow(int position) {
+            return position == 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final EmployeeViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                convertView = inflater.inflate(R.layout.list_item_add_employee, parent, false);
+                holder = new EmployeeViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (EmployeeViewHolder) convertView.getTag();
+            }
+
+            int hide_if_header = isHeaderRow(position) ? View.GONE : View.VISIBLE;
+            int show_if_header = isHeaderRow(position) ? View.VISIBLE : View.GONE;
+
+            /**
+             * Reset listeners!!! It will create un-expected behaviour otherwise.
+             */
+            holder.checkBranch.setOnCheckedChangeListener(null);
+            holder.checkSeeQty.setOnCheckedChangeListener(null);
+            holder.checkBuyItem.setOnCheckedChangeListener(null);
+
+            holder.layoutSeeQty.setOnClickListener(null);
+            holder.layoutBuyItem.setOnClickListener(null);
+
+            holder.checkBranch.setVisibility(hide_if_header);
+            holder.checkSeeQty.setVisibility(hide_if_header);
+            holder.checkBuyItem.setVisibility(hide_if_header);
+
+            holder.imgSeeQty.setVisibility(show_if_header);
+            holder.imgBuyItem.setVisibility(show_if_header);
+
+            if (isHeaderRow(position)) {
+                holder.branchName.setText("Choose Branches");
+                return convertView;
+            }
+
+            final SBranch branch = getItem(position);
+
+            holder.branchName.setText(branch.branch_name);
+
+            holder.checkBranch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (!isChecked) {
+                        mBranchAuthorities.remove(branch.branch_id);
+                        // Toggle-off branch related options
+                        holder.checkSeeQty.setChecked(false);
+                        holder.checkBuyItem.setChecked(false);
+                    } else {
+                        mBranchAuthorities.put(branch.branch_id, new BranchAuthority());
+                    }
+                    mDialog.setOkButtonStatus();
+                }
+            });
+            // When the row is selected, it should behave as-if the branch is selected
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    holder.checkBranch.setChecked(!holder.checkBranch.isChecked());
+                }
+            });
+
+            holder.checkSeeQty.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (mBranchAuthorities.containsKey(branch.branch_id)) {
+                        mBranchAuthorities.get(branch.branch_id).show_qty = isChecked;
+                    } else if (isChecked) {
+                        // only bother to add the branch authority if it is checked.
+
+                        if (!mBranchAuthorities.containsKey(branch.branch_id)) {
+                            // this will call checkBranch's listener.
+                            // Which will cause a branchAuthority to be added for the key
+                            holder.checkBranch.setChecked(true);
+                        }
+
+                        mBranchAuthorities.get(branch.branch_id).show_qty = isChecked;
+                    }
+                    mDialog.setOkButtonStatus();
+                }
+            });
+            holder.layoutSeeQty.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    holder.checkSeeQty.setChecked(!holder.checkSeeQty.isChecked());
+                }
+            });
+
+            holder.checkBuyItem.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (mBranchAuthorities.containsKey(branch.branch_id)) {
+                        mBranchAuthorities.get(branch.branch_id).buy_items = isChecked;
+                    } else if (isChecked) {
+                        // only bother to add the branch authority if it is checked.
+
+                        if (!mBranchAuthorities.containsKey(branch.branch_id)) {
+                            // this will call checkBranch's listener.
+                            // Which will cause a branchAuthority to be added for the key
+                            holder.checkBranch.setChecked(true);
+                        }
+
+                        mBranchAuthorities.get(branch.branch_id).buy_items = isChecked;
+                    }
+                    mDialog.setOkButtonStatus();
+                }
+            });
+            holder.layoutBuyItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    holder.checkBuyItem.setChecked(!holder.checkBuyItem.isChecked());
+                }
+            });
+
+            return convertView;
+        }
+
+        static class EmployeeViewHolder {
+            CheckBox checkBranch;
+
+            TextView branchName;
+
+            View layoutSeeQty;
+            View layoutBuyItem;
+
+            ImageView imgSeeQty;
+            ImageView imgBuyItem;
+
+            CheckBox checkSeeQty;
+            CheckBox checkBuyItem;
+
+            public EmployeeViewHolder(View view) {
+                checkBranch = (CheckBox) view.findViewById(R.id.list_item_add_employee_chk_choose_branch);
+                branchName = (TextView) view.findViewById(R.id.list_item_add_employee_text_branch_name);
+
+                layoutSeeQty = view.findViewById(R.id.list_item_add_employee_layout_see_qty);
+                layoutBuyItem = view.findViewById(R.id.list_item_add_employee_layout_buy_item);
+
+                imgSeeQty = (ImageView) view.findViewById(R.id.list_item_add_employee_img_see_qty);
+                imgBuyItem = (ImageView) view.findViewById(R.id.list_item_add_employee_img_buy_item);
+
+                checkSeeQty = (CheckBox) view.findViewById(R.id.list_item_add_employee_chk_see_qty);
+                checkBuyItem = (CheckBox) view.findViewById(R.id.list_item_add_employee_chk_buy_item);
+            }
+        }
+    }
+
+    static class MemberException extends Exception {
         public MemberException(String detailMessage) {
             super(detailMessage);
-        }
-
-        public MemberException(String detailMessage, Throwable throwable) {
-            super(detailMessage, throwable);
-        }
-
-        public MemberException(Throwable throwable) {
-            super(throwable);
         }
     }
 }
