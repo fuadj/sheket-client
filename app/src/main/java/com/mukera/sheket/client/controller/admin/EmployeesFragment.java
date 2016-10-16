@@ -143,21 +143,29 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     }
 
     List<SBranch> getBranches() {
-        if (mBranches == null) {
-            mBranches = new ArrayList<>();
-            int company_id = PrefUtil.getCurrentCompanyId(getActivity());
+        if (mBranches != null)
+            return mBranches;
 
-            String sortOrder = BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " ASC";
-            Cursor cursor = getActivity().getContentResolver().
-                    query(BranchEntry.buildBaseUri(company_id),
-                            SBranch.BRANCH_COLUMNS, null, null, sortOrder);
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    SBranch branch = new SBranch(cursor);
-                    mBranches.add(branch);
-                } while (cursor.moveToNext());
-            }
+        mBranches = new ArrayList<>();
+        int company_id = PrefUtil.getCurrentCompanyId(getActivity());
+
+        String selection = String.format(Locale.US, "%s != %d",
+                BranchEntry._full(BranchEntry.COLUMN_STATUS_FLAG),
+                BranchEntry.STATUS_INVISIBLE);
+
+        String sortOrder = BranchEntry._full(BranchEntry.COLUMN_NAME) + " ASC";
+        Cursor cursor = getActivity().getContentResolver().
+                query(BranchEntry.buildBaseUri(company_id),
+                        SBranch.BRANCH_COLUMNS,
+                        selection, null,
+                        sortOrder);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                SBranch branch = new SBranch(cursor);
+                mBranches.add(branch);
+            } while (cursor.moveToNext());
         }
+
         return mBranches;
     }
 
@@ -503,7 +511,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                     if (mDialogType == MEMBER_DIALOG_ADD) {
                         member = new SMember();
                         String id = mEditMemberId.getText().toString().trim();
-                        member.member_id = (int)IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
+                        member.member_id = (int) IdEncoderUtil.decodeEncodedId(IdEncoderUtil.removeDelimiterOnEncodedId(id), IdEncoderUtil.ID_TYPE_USER);
                         mProgressDialog = ProgressDialog.show(getActivity(),
                                 "Adding Member", "Please wait...", true);
                     } else {
