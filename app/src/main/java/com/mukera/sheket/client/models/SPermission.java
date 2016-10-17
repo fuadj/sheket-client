@@ -16,22 +16,54 @@ import java.util.List;
  */
 public class SPermission {
     public static final int PERMISSION_TYPE_NONE = 0;
-    public static final int PERMISSION_TYPE_ALL_ACCESS = 1;
-    public static final int PERMISSION_TYPE_ALL_BRANCHES = 2;
-    public static final int PERMISSION_TYPE_LISTED_BRANCHES = 3;
+    public static final int PERMISSION_TYPE_OWNER = 1;
+    public static final int PERMISSION_TYPE_GENERAL_MANAGER = 2;
+    public static final int PERMISSION_TYPE_BRANCH_MANAGER = 3;
+    public static final int PERMISSION_TYPE_EMPLOYEE = 4;
+
+    public static final int BRANCH_ACCESS_SEE_QTY = 1;
+    public static final int BRANCH_ACCESS_BUY_ITEM = 2;
+    public static final int BRANCH_ACCESS_SEE_QTY_AND_BUY_ITEM = 3;
+
+    public static class BranchAccess {
+        public int branch_id;
+        public int access;
+
+        public boolean show_qty;
+        public boolean buy_items;
+
+        public BranchAccess(int branch_id) {
+            this.branch_id = branch_id;
+        }
+
+        public BranchAccess(int branch_id, int access) {
+            this.branch_id = branch_id;
+            this.access = access;
+        }
+
+        public void encodeAccess() {
+            if (show_qty && buy_items) {
+                access = BRANCH_ACCESS_SEE_QTY_AND_BUY_ITEM;
+            } else if (show_qty) {
+                access = BRANCH_ACCESS_SEE_QTY;
+            } else if (buy_items) {
+                access = BRANCH_ACCESS_BUY_ITEM;
+            }
+        }
+    }
 
     private int mPermissionType;
-    private List<Integer> mAllowedBranches;
-    private List<Integer> mAllowedStoreBranches;
+    private List<BranchAccess> mAllowedBranches;
 
     static final String P_JSON_TYPE = "permission_type";
     static final String P_JSON_BRANCHES = "branches";
-    static final String P_JSON_STORE_BRANCHES = "store_branches";
+
+    static final String P_JSON_BRANCH_ID = "branch_id";
+    static final String P_JSON_ACCESS = "access";
 
     public SPermission() {
         mPermissionType = PERMISSION_TYPE_NONE;
         mAllowedBranches = new ArrayList<>();
-        mAllowedStoreBranches = new ArrayList<>();
     }
 
     /**
@@ -52,13 +84,13 @@ public class SPermission {
             if (json.has(P_JSON_BRANCHES)) {
                 JSONArray arr = json.getJSONArray(P_JSON_BRANCHES);
                 for (int i = 0; i < arr.length(); i++) {
-                    permission.mAllowedBranches.add(arr.getInt(i));
-                }
-            }
-            if (json.has(P_JSON_STORE_BRANCHES)) {
-                JSONArray arr = json.getJSONArray(P_JSON_STORE_BRANCHES);
-                for (int i = 0; i < arr.length(); i++) {
-                    permission.mAllowedStoreBranches.add(arr.getInt(i));
+                    JSONObject obj = arr.getJSONObject(i);
+                    int branch_id = obj.getInt(P_JSON_BRANCH_ID);
+                    int access = obj.getInt(P_JSON_ACCESS);
+
+                    permission.mAllowedBranches.add(
+                            new BranchAccess(branch_id, access)
+                    );
                 }
             }
         } catch (JSONException e) {
@@ -66,10 +98,6 @@ public class SPermission {
             return permission;
         }
         return permission;
-    }
-
-    public static String shortName(String permission_text) {
-        return shortName(Decode(permission_text));
     }
 
     public static String shortName(SPermission permission) {
@@ -80,30 +108,34 @@ public class SPermission {
             default:
             case PERMISSION_TYPE_NONE:
                 return "NONE";
-            case PERMISSION_TYPE_ALL_ACCESS:
+            case PERMISSION_TYPE_OWNER:
                 return "All Access";
-            case PERMISSION_TYPE_ALL_BRANCHES:
+            case PERMISSION_TYPE_GENERAL_MANAGER:
                 return "All Branches";
-            case PERMISSION_TYPE_LISTED_BRANCHES:
+            case PERMISSION_TYPE_EMPLOYEE:
                 return "Limited";
         }
     }
 
     public String Encode() {
-        String result = null;
-
+        String result;
         try {
             JSONObject json = new JSONObject();
             json.put(P_JSON_TYPE, mPermissionType);
             if (!mAllowedBranches.isEmpty()) {
-                json.put(P_JSON_BRANCHES,
-                        new JSONArray(mAllowedBranches));
-            }
-            if (!mAllowedStoreBranches.isEmpty()) {
-                json.put(P_JSON_STORE_BRANCHES,
-                        new JSONArray(mAllowedStoreBranches));
-            }
 
+                JSONArray branchAuthorities = new JSONArray();
+                for (BranchAccess access : mAllowedBranches) {
+                    access.encodeAccess();
+
+                    branchAuthorities.put(
+                            new JSONObject().
+                                    put(P_JSON_BRANCH_ID, access.branch_id).
+                                    put(P_JSON_ACCESS, access.access)
+                    );
+                }
+                json.put(P_JSON_BRANCHES, branchAuthorities);
+            }
             result = json.toString();
         } catch (JSONException e) {
             result = null;
@@ -112,11 +144,13 @@ public class SPermission {
     }
 
     public boolean hasManagerAccess() {
-        return getPermissionType() == PERMISSION_TYPE_ALL_ACCESS;
-    }
-
-    public boolean hasEmploeeAccess() {
-        return getPermissionType() != PERMISSION_TYPE_NONE;
+        switch (getPermissionType()) {
+            case PERMISSION_TYPE_OWNER:
+            case PERMISSION_TYPE_GENERAL_MANAGER:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public int getPermissionType() {
@@ -127,19 +161,11 @@ public class SPermission {
         mPermissionType = type;
     }
 
-    public void setAllowedBranches(List<Integer> branches) {
+    public void setAllowedBranches(List<BranchAccess> branches) {
         mAllowedBranches = new ArrayList<>(branches);
     }
 
-    public void setAllowedStoreBranches(List<Integer> stores) {
-        mAllowedStoreBranches = new ArrayList<>(stores);
-    }
-
-    public List<Integer> getAllowedBranches() {
+    public List<BranchAccess> getAllowedBranches() {
         return mAllowedBranches;
-    }
-
-    public List<Integer> getAllowedStoreBranches() {
-        return mAllowedStoreBranches;
     }
 }
