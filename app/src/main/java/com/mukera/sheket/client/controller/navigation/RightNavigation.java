@@ -13,7 +13,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mukera.sheket.client.R;
-import com.mukera.sheket.client.data.SheketContract;
 import com.mukera.sheket.client.data.SheketContract.*;
 import com.mukera.sheket.client.models.SBranch;
 import com.mukera.sheket.client.models.SPermission;
@@ -130,16 +129,16 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
         String selection = null;
         String[] selectionArgs = null;
 
-        if (getUserPermission().getPermissionType() == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
-            List<Integer> branches = getUserPermission().getAllowedBranches();
+        if (getUserPermission().getPermissionType() == SPermission.PERMISSION_TYPE_EMPLOYEE) {
+            List<SPermission.BranchAccess> allowedBranches = getUserPermission().getAllowedBranches();
             selection = "";
-            selectionArgs = new String[branches.size()];
-            for (int i = 0; i < branches.size(); i++) {
+            selectionArgs = new String[allowedBranches.size()];
+            for (int i = 0; i < allowedBranches.size(); i++) {
                 if (i != 0) {
                     selection += " OR ";
                 }
                 selection += BranchEntry._full(BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
-                selectionArgs[i] = String.valueOf(branches.get(i));
+                selectionArgs[i] = String.valueOf(allowedBranches.get(i).branch_id);
             }
         }
 

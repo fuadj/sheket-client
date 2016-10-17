@@ -39,7 +39,6 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.mukera.sheket.client.LanguageSelectionDialog;
 import com.mukera.sheket.client.MainActivity;
-import com.mukera.sheket.client.PaymentDialog;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.SheketTracker;
@@ -50,7 +49,6 @@ import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.models.SPermission;
 import com.mukera.sheket.client.network.Company;
 import com.mukera.sheket.client.network.EditUserNameRequest;
-import com.mukera.sheket.client.network.EmptyResponse;
 import com.mukera.sheket.client.network.NewCompanyRequest;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
@@ -58,18 +56,9 @@ import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.LoaderId;
 import com.mukera.sheket.client.utils.PrefUtil;
-import com.mukera.sheket.client.utils.SheketNetworkUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.Map;
 
 import io.grpc.ManagedChannel;
@@ -175,7 +164,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         // check if user has managerial role
         mMangerLayout = getRootView().findViewById(R.id.nav_left_layout_management);
 
-        if (getUserPermission().getPermissionType() != SPermission.PERMISSION_TYPE_ALL_ACCESS) {
+        if (getUserPermission().getPermissionType() != SPermission.PERMISSION_TYPE_OWNER) {
             mMangerLayout.setVisibility(View.GONE);
         } else {
             mMangerLayout.setVisibility(View.VISIBLE);

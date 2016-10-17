@@ -637,16 +637,16 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         SPermission permission = SPermission.getUserPermission(getContext());
 
-        if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_BRANCH_EMPLOYEE) {
-            List<Integer> branches = permission.getAllowedBranches();
+        if (permission.getPermissionType() == SPermission.PERMISSION_TYPE_EMPLOYEE) {
+            List<SPermission.BranchAccess> allowedBranches = permission.getAllowedBranches();
             selection = "(";
-            selectionArgs = new String[branches.size()];
-            for (int i = 0; i < branches.size(); i++) {
+            selectionArgs = new String[allowedBranches.size()];
+            for (int i = 0; i < allowedBranches.size(); i++) {
                 if (i != 0) {
                     selection += " OR ";
                 }
                 selection += SheketContract.BranchEntry._full(SheketContract.BranchEntry.COLUMN_BRANCH_ID) + " = ? ";
-                selectionArgs[i] = String.valueOf(branches.get(i));
+                selectionArgs[i] = String.valueOf(allowedBranches.get(i).branch_id);
             }
             selection += ")";
         }

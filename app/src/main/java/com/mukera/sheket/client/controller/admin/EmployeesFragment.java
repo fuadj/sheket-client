@@ -79,13 +79,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     private MemberAdapter mAdapter;
 
     private List<SBranch> mBranches;
-    private HashMap<Integer, BranchAuthority> mBranchAuthorities;
-
-    static class BranchAuthority {
-        int branch_id;
-        boolean show_qty;
-        boolean buy_items;
-    }
+    private HashMap<Integer, SPermission.BranchAccess> mBranchAuthorities;
 
     @Nullable
     @Override
@@ -339,15 +333,15 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             sPermTypesHashMap = new HashMap<>();
             sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_NONE,
                     new PermType(SPermission.PERMISSION_TYPE_NONE, "--- Choose Permission ---"));
-            sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_ALL_ACCESS,
-                    new PermType(SPermission.PERMISSION_TYPE_ALL_ACCESS, "Manager"));
-            sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_LISTED_BRANCHES,
-                    new PermType(SPermission.PERMISSION_TYPE_LISTED_BRANCHES, "Employee"));
+            sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_OWNER,
+                    new PermType(SPermission.PERMISSION_TYPE_OWNER, "Manager"));
+            sPermTypesHashMap.put(SPermission.PERMISSION_TYPE_EMPLOYEE,
+                    new PermType(SPermission.PERMISSION_TYPE_EMPLOYEE, "Employee"));
         }
 
-        private HashMap<Integer, BranchAuthority> mBranchAuthorities;
+        private HashMap<Integer, SPermission.BranchAccess> mBranchAuthorities;
 
-        public void setBranches(List<SBranch> branches, HashMap<Integer, BranchAuthority> branchAuthorityHashMap) {
+        public void setBranches(List<SBranch> branches, HashMap<Integer, SPermission.BranchAccess> branchAuthorityHashMap) {
             mBranches = branches;
             mBranchAuthorities = branchAuthorityHashMap;
         }
@@ -390,7 +384,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 return;
             }
 
-            if (perm_type.type != SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+            if (perm_type.type != SPermission.PERMISSION_TYPE_EMPLOYEE) {
                 setBtnState(true);
                 return;
             }
@@ -459,8 +453,8 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
 
             List<PermType> types = new ArrayList<>();
             types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_NONE));
-            types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_ALL_ACCESS));
-            types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_LISTED_BRANCHES));
+            types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_OWNER));
+            types.add(sPermTypesHashMap.get(SPermission.PERMISSION_TYPE_EMPLOYEE));
 
             ArrayAdapter adapter = new ArrayAdapter(getActivity(),
                     android.R.layout.simple_spinner_dropdown_item, types.toArray());
@@ -470,7 +464,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     PermType type = (PermType) parent.getAdapter().getItem(position);
-                    if (type.type == SPermission.PERMISSION_TYPE_LISTED_BRANCHES) {
+                    if (type.type == SPermission.PERMISSION_TYPE_EMPLOYEE) {
                         mLayoutBranchSelector.setVisibility(View.VISIBLE);
                     } else {
                         mLayoutBranchSelector.setVisibility(View.GONE);
@@ -496,21 +490,6 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             }
             mListBranches.setAdapter(branchesAdapter);
 
-            /*
-            mSpinnerBranches = (MultiSpinner) view.findViewById(R.id.dialog_member_spinner_branch);
-            List<String> branches = new ArrayList<>();
-            for (SBranch branch : mBranches) {
-                branches.add(branch.branch_name);
-            }
-            mSpinnerBranches.setItems(branches, "--Select Branch--",
-                    new MultiSpinner.MultiSpinnerListener() {
-                        @Override
-                        public void onItemsSelected(boolean[] selected) {
-                            setOkButtonStatus();
-                        }
-                    });
-                    */
-
             mBtnAddEditEmployee = (Button) view.findViewById(R.id.dialog_btn_member_add_edit);
             mBtnAddEditEmployee.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -528,18 +507,16 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                         member = new SMember(mMember);
                     }
 
-                    List<Integer> branch_ids = new ArrayList<>();
-                    boolean[] selected = mSpinnerBranches.getSelected();
-                    for (int i = 0; i < selected.length; i++) {
-                        if (selected[i] == true) {
-                            branch_ids.add(mBranches.get(i).branch_id);
-                        }
+                    List<SPermission.BranchAccess> allowedBranches = new ArrayList<>();
+                    for (SPermission.BranchAccess access : mBranchAuthorities.values()) {
+                        access.encodeAccess();
+                        allowedBranches.add(access);
                     }
 
                     SPermission permission = new SPermission();
                     PermType permType = (PermType) mSpinnerPermissionType.getSelectedItem();
                     permission.setPermissionType(permType.type);
-                    permission.setAllowedBranches(branch_ids);
+                    permission.setAllowedBranches(allowedBranches);
 
                     member.member_permission = permission;
 
@@ -660,14 +637,14 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
     }
 
     static class BranchAuthoritiesAdapter extends ArrayAdapter<SBranch> {
-        private HashMap<Integer, BranchAuthority> mBranchAuthorities;
+        private HashMap<Integer, SPermission.BranchAccess> mBranchAuthorities;
         private AddEditEmployeeDialog mDialog;
 
         public BranchAuthoritiesAdapter(Context context) {
             super(context, 0);
         }
 
-        public void setBranchAuthorities(HashMap<Integer, BranchAuthority> authorities) {
+        public void setBranchAuthorities(HashMap<Integer, SPermission.BranchAccess> authorities) {
             mBranchAuthorities = authorities;
         }
 
@@ -729,7 +706,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                         holder.checkSeeQty.setChecked(false);
                         holder.checkBuyItem.setChecked(false);
                     } else {
-                        mBranchAuthorities.put(branch.branch_id, new BranchAuthority());
+                        mBranchAuthorities.put(branch.branch_id, new SPermission.BranchAccess(branch.branch_id));
                     }
                     mDialog.setOkButtonStatus();
                 }
