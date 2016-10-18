@@ -41,6 +41,7 @@ import com.mukera.sheket.client.LanguageSelectionDialog;
 import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
+import com.mukera.sheket.client.SheketGRPCCall;
 import com.mukera.sheket.client.SheketTracker;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
@@ -302,38 +303,33 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
      * Tries to create a company by sending request to the server. If all goes well,
      * it returns <True, Null>. Otherwise it returns <False, "error message">
      */
-    Pair<Boolean, String> createNewCompany(Activity activity, String company_name) {
-        final String JSON_COMPANY_NAME = "company_name";
-        final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
-        final String JSON_USER_PERMISSION = "user_permission";
-        final String JSON_DEVICE_ID = "device_id";
-
+    Pair<Boolean, String> createNewCompany(Activity activity, final String company_name) {
         try {
-            ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                    usePlaintext(true).
-                    build();
+            Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
+                    new SheketGRPCCall.GRPCCallable<Company>() {
+                        @Override
+                        public Company runGRPCCall() throws Exception {
+                            ManagedChannel managedChannel = ManagedChannelBuilder.
+                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                    usePlaintext(true).
+                                    build();
 
-            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                    SheketServiceGrpc.newBlockingStub(managedChannel);
-
-            String cookie = PrefUtil.getLoginCookie(getNavActivity());
-
-            // TODO: check if we need a better check
-            // we don't really have a response, we just need to check if we can
-            // "pass" the call without throwing an exception. If that happened it means
-            // a "non-error" result.
-            Company created_company = blockingStub.
-                    createCompany(
-                            NewCompanyRequest.
-                                    newBuilder().
-                                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
-                                    setCompanyName(company_name).
-                                    setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
-                                    setLocalUserTime(
-                                            String.valueOf(System.currentTimeMillis())
-                                    ).build()
-                    );
+                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                    SheketServiceGrpc.newBlockingStub(managedChannel);
+                            return blockingStub.createCompany(
+                                    NewCompanyRequest.
+                                            newBuilder().
+                                            setAuth(SheketAuth.newBuilder().setLoginCookie(
+                                                    PrefUtil.getLoginCookie(getNavActivity()))).
+                                            setCompanyName(company_name).
+                                            setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
+                                            setLocalUserTime(
+                                                    String.valueOf(System.currentTimeMillis())
+                                            ).build()
+                            );
+                        }
+                    }
+            );
 
             int company_id = created_company.getCompanyId();
             String user_permission = created_company.getPermission();
@@ -359,7 +355,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             PrefUtil.setCurrentCompanyId(activity, company_id);
             PrefUtil.setUserPermission(activity, user_permission);
 
-        } catch (StatusRuntimeException e) {
+        } catch (SheketGRPCCall.SheketException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
         return new Pair<>(Boolean.TRUE, null);
@@ -561,40 +557,44 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        /**
-         * FIXME: Because {@code SCompany.COMPANY_COLUMNS} are fully qualified(they have the format table_name.column_name)
-         * that creates a problem when trying to find the "_id" column, which just tries to
-         * search for a column with "_id".
-         *
-         * FIXME: (Workaround) So use the "un-qualified" column name for company id. This isn't a
-         * hack because the {@code MatrixCursor} will probably won't change.
-         *
-         * This happens here and not other-places because {@code MatrixCursor} just stores the
-         * column names "raw" plainly. so when they ask the cursor to find the "_id" column it
-         * gets screw-up. Other cursors from actual ContentProvider queries don't have this problem.
-         *
-         * See {@code AbstractCursor.getColumnIndex} for more
-         * Also this Bug issue Tracker https://code.google.com/p/android/issues/detail?id=7201.
-         */
-        String[] company_columns = SCompany.COMPANY_COLUMNS;
-        company_columns[0] = CompanyEntry.COLUMN_COMPANY_ID;
-        MatrixCursor addCompanyRowCursor = new MatrixCursor(company_columns);
+        if (data.getCount() == 0) {     // show the "Add Company" if there are no companies
+            /**
+             * FIXME: Because {@code SCompany.COMPANY_COLUMNS} are fully qualified(they have the format table_name.column_name)
+             * that creates a problem when trying to find the "_id" column, which just tries to
+             * search for a column with "_id".
+             *
+             * FIXME: (Workaround) So use the "un-qualified" column name for company id. This isn't a
+             * hack because the {@code MatrixCursor} will probably won't change.
+             *
+             * This happens here and not other-places because {@code MatrixCursor} just stores the
+             * column names "raw" plainly. so when they ask the cursor to find the "_id" column it
+             * gets screw-up. Other cursors from actual ContentProvider queries don't have this problem.
+             *
+             * See {@code AbstractCursor.getColumnIndex} for more
+             * Also this Bug issue Tracker https://code.google.com/p/android/issues/detail?id=7201.
+             */
+            String[] company_columns = SCompany.COMPANY_COLUMNS;
+            company_columns[0] = CompanyEntry.COLUMN_COMPANY_ID;
+            MatrixCursor addCompanyRowCursor = new MatrixCursor(company_columns);
 
-        // adding the columns adds it in-order from left to right, so make sure company_id column in the first.
-        addCompanyRowCursor.newRow().add(CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID);
+            // adding the columns adds it in-order from left to right, so make sure company_id column in the first.
+            addCompanyRowCursor.newRow().add(CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID);
+            /**
+             * TODO: we are adding the "add company" cursor to the top and not at the bottom b/c
+             * doing that creates an exception when selecting the first company.
+             *
+             * android.database.CursorIndexOutOfBoundsException: Index -1 requested, with a size
+             */
+            mCompanyAdapter.swapCursor(new MergeCursor(
+                    new Cursor[]{
+                            addCompanyRowCursor,
+                            data,
+                    }
+            ));
+        } else {
+            mCompanyAdapter.swapCursor(data);
+        }
 
-        /**
-         * TODO: we are adding the "add company" cursor to the top and not at the bottom b/c
-         * doing that creates an exception when selecting the first company.
-         *
-         * android.database.CursorIndexOutOfBoundsException: Index -1 requested, with a size
-         */
-        mCompanyAdapter.swapCursor(new MergeCursor(
-                new Cursor[]{
-                        addCompanyRowCursor,
-                        data,
-                }
-        ));
         ListUtils.setDynamicHeight(mCompanyList);
     }
 
