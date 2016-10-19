@@ -165,7 +165,7 @@
 
     <string name="nav_title_right_branches">Branches</string>
 
-    <string name="nav_left_add_company">Add Company</string>
+    <string name="nav_left_add_company" translatable="false">Add Company</string>
 
     <string name="nav_items">Items</string>
     <string name="nav_import">Import</string>
@@ -177,7 +177,9 @@
     <string name="nav_employees">Employees</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_user_profile">User Profile</string>
-    <string name="nav_debug">Debug</string>
+    <string name="nav_debug" translatable="false">Debug</string>
+    <string name="nav_set_ip" translatable="false">Setup IP</string>
+    <string name="nav_logout" translatable="false">Logout</string>
 
     <string name="employee_dialog_title">Add Member</string>
     <string name="employee_dialog_member_id">Member Id</string>
@@ -265,12 +267,13 @@
     <string name="dialog_view_user_profile_id">ID: </string>
 
     <string name="dialog_edit_user_profile_title">Edit Name</string>
+    <string name="dialog_new_user_name">Please enter your name</string>
 
     <string name="dialog_edit_user_profile_progress_title">Updating Username</string>
     <string name="dialog_edit_user_profile_progress_body">Please Wait&#8230;</string>
 
     <string name="dialog_edit_user_profile_result_success">Name Updated</string>
-    <string name="dialog_edit_user_profile_result_error">Update Error!!!</string>
+    <string name="dialog_edit_user_profile_result_error" translatable="false">Update Error!!!</string>
 
     <string name="dialog_view_company_profile_name">Company Name: </string>
     <string name="dialog_view_company_profile_payment_number">Payment #: </string>
@@ -282,7 +285,7 @@
     <string name="dialog_edit_company_profile_progress_body">Please Wait&#8230;</string>
 
     <string name="dialog_edit_company_profile_result_success">Name Updated</string>
-    <string name="dialog_edit_company_profile_result_error">Update Error!!!</string>
+    <string name="dialog_edit_company_profile_result_error" translatable="false">Update Error!!!</string>
 
     <string name="dialog_item_delete_confirmation_title">Items to Delete, Please Confirm</string>
     <string name="dialog_item_delete_confirmation_ok">Delete</string>
@@ -316,4 +319,5 @@
 
     <string name="supported_language_en" translatable="false">English</string>
     <string name="supported_language_amh" translatable="false">አማርኛ</string>
+    <string name="dialog_new_company_name"></string>
 </resources>
