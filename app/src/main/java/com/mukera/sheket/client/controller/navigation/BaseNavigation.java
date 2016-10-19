@@ -83,6 +83,7 @@ public abstract class BaseNavigation {
         public static final int OPTION_DELETE = 11;
         public static final int OPTION_TRANSACTIONS = 12;
         public static final int OPTION_LANGUAGES = 13;
+        public static final int OPTION_IP = 14;
 
         public static final HashMap<Integer,
                         Pair<Integer, Integer>> sEntityAndIcon;
@@ -111,11 +112,13 @@ public abstract class BaseNavigation {
                     new Pair<>(R.string.nav_user_profile, R.drawable.ic_action_user_profile));
             sEntityAndIcon.put(OPTION_DEBUG,
                     new Pair<>(R.string.nav_debug, R.mipmap.ic_action_settings));
+            sEntityAndIcon.put(OPTION_IP,
+                    new Pair<>(R.string.nav_set_ip, R.mipmap.ic_action_settings));
+            sEntityAndIcon.put(OPTION_LOG_OUT,
+                    new Pair<>(R.string.nav_logout, R.mipmap.ic_action_logout));
             /*
             sEntityAndIcon.put(OPTION_DELETE,
                     new Pair<>("Delete", R.mipmap.ic_action_settings));
-            sEntityAndIcon.put(OPTION_LOG_OUT,
-                    new Pair<>("Logout", R.mipmap.ic_action_logout));
                     */
         }
 

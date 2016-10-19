@@ -198,7 +198,7 @@ public class LoginActivity extends AppCompatActivity {
         protected Boolean doInBackground(Void... params) {
             try {
                 ManagedChannel managedChannel = ManagedChannelBuilder.
-                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                        forAddress(ConfigData.getServerIP(LoginActivity.this), ConfigData.getServerPort()).
                         usePlaintext(true).
                         build();
 

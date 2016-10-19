@@ -15,6 +15,19 @@ import java.util.Vector;
  * Created by gamma on 3/28/16.
  */
 public class PrefUtil {
+
+    private static final String pref_server_ip = "pref_server_ip";
+    public static String getServerIP(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(pref_server_ip, "192.168.1.2");
+    }
+
+    public static void setServerIP(Context context, String ip) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putString(pref_server_ip, ip);
+        editor.commit();
+    }
+
     /**
      * Sync On Login: Check this if you are just loggin in and should sync
      */
@@ -309,6 +322,14 @@ public class PrefUtil {
     public static boolean isUserSet(Context context) {
         return getUserId(context) !=
                 context.getResources().getInteger(R.integer.invalid_user_id);
+    }
+
+    public static boolean isUserLocallyCreated(Context context) {
+        return getUserId(context) == context.getResources().getInteger(R.integer.local_user_id);
+    }
+
+    public static boolean isCompanyLocallyCreated(Context context, int company_id) {
+        return company_id <= context.getResources().getInteger(R.integer.local_company_id_start);
     }
 
     // Use this if you want to "un-set" the current company.

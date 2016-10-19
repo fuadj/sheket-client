@@ -24,9 +24,11 @@ public class ConfigData {
         */
     }
 
-    public static String getServerIP() {
+    public static String getServerIP(Context context) {
+        return PrefUtil.getServerIP(context);
         //return "192.168.43.119";
-        return "192.168.43.211";
+        //return "192.168.43.211";
+        //return "192.168.0.107";
         //return "192.168.42.193";
 
         //return "192.168.0.107";

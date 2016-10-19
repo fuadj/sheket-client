@@ -191,7 +191,7 @@ public class PaymentDialog extends DialogFragment {
                         @Override
                         public VerifyPaymentResponse runGRPCCall() throws Exception {
                             ManagedChannel managedChannel = ManagedChannelBuilder.
-                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                    forAddress(ConfigData.getServerIP(getContext()), ConfigData.getServerPort()).
                                     usePlaintext(true).
                                     build();
 

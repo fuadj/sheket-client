@@ -86,7 +86,7 @@ public class SheketSyncService extends IntentService {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
 
             ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    forAddress(ConfigData.getServerIP(SheketSyncService.this), ConfigData.getServerPort()).
                     usePlaintext(true).
                     build();
 

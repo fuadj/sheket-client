@@ -144,6 +144,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         mPrefAdapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
         mPrefAdapter.add(StaticNavigationOptions.OPTION_DEBUG);
+        mPrefAdapter.add(StaticNavigationOptions.OPTION_IP);
+        mPrefAdapter.add(StaticNavigationOptions.OPTION_LOG_OUT);
         ListUtils.setDynamicHeight(mPreferenceList);
 
         mPreferenceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -157,6 +159,12 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         break;
                     case StaticNavigationOptions.OPTION_DEBUG:
                         getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
+                        break;
+                    case StaticNavigationOptions.OPTION_IP:
+                        displayIPDialog();
+                        break;
+                    case StaticNavigationOptions.OPTION_LOG_OUT:
+                        getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_LOG_OUT);
                         break;
                 }
             }
@@ -187,6 +195,50 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             });
         }
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
+    }
+
+    void displayIPDialog() {
+        final EditText editText = new EditText(getNavActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity()).
+                setTitle("Set IP").
+                setView(editText).
+                setPositiveButton(R.string.dialog_new_company_btn_ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String ip = editText.getText().toString().trim();
+
+                        PrefUtil.setServerIP(getNavActivity(), ip);
+                    }
+                }).
+                setNeutralButton(R.string.dialog_new_company_btn_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        final AlertDialog dialog = builder.create();
+
+        editText.setText(ConfigData.getServerIP(getNavActivity()));
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(
+                        !s.toString().trim().isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // b/c there is no name initially, hide "ok" btn
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
     }
 
     void displayAddCompanyDialog() {
@@ -324,7 +376,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                             @Override
                             public Company runGRPCCall() throws Exception {
                                 ManagedChannel managedChannel = ManagedChannelBuilder.
-                                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                        forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
                                         usePlaintext(true).
                                         build();
 
@@ -525,7 +577,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     Pair<Boolean, String> updateCurrentUserName(String new_name) {
         try {
             ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
                     usePlaintext(true).
                     build();
 

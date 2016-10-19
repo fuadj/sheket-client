@@ -532,7 +532,7 @@ public class MainActivity extends AppCompatActivity implements
                         @Override
                         public EmptyResponse runGRPCCall() throws Exception {
                             ManagedChannel managedChannel = ManagedChannelBuilder.
-                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                    forAddress(ConfigData.getServerIP(MainActivity.this), ConfigData.getServerPort()).
                                     usePlaintext(true).
                                     build();
 
