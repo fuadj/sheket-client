@@ -55,6 +55,7 @@ public class PrefUtil {
         return prefs.getBoolean(pref_is_first_time, true);
     }
 
+    public static final int LANGUAGE_NONE = 0;
     public static final int LANGUAGE_ENGLISH = 1;
     public static final int LANGUAGE_AMHARIC = 2;
     private static final String pref_user_language = "pref_user_language";
@@ -64,9 +65,13 @@ public class PrefUtil {
         editor.commit();
     }
 
+    public static boolean isUserLanguageSet(Context context) {
+        return getUserLanguageId(context) != LANGUAGE_NONE;
+    }
+
     public static int getUserLanguageId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getInt(pref_user_language, LANGUAGE_ENGLISH);
+        return prefs.getInt(pref_user_language, LANGUAGE_NONE);
     }
 
     public static String getUserLanguageLocale(Context context) {

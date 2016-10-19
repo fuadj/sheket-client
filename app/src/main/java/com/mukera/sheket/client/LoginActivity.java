@@ -3,17 +3,23 @@ package com.mukera.sheket.client;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.facebook.CallbackManager;
@@ -29,6 +35,7 @@ import com.mukera.sheket.client.network.SingupRequest;
 import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
+import com.mukera.sheket.client.utils.TextWatcherAdapter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -40,6 +47,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Locale;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -61,13 +69,7 @@ public class LoginActivity extends AppCompatActivity {
     // used to measure how long it takes to login with facebook
     private long mStartTime = 0;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getApplicationContext());
-
-        AlarmReceiver.startPeriodicPaymentAlarm(this);
-
+    private boolean createLocalUser() {
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {
             SheketTracker.setScreenName(this, SheketTracker.SCREEN_NAME_LOGIN);
@@ -76,8 +78,43 @@ public class LoginActivity extends AppCompatActivity {
                             setCategory(SheketTracker.CATEGORY_LOGIN).
                             setAction("User already logged in").
                             build());
-            // because we've already been logged in, we don't need to sync
+
             startMainActivity(false);
+            return true;
+        } else {
+            if (PrefUtil.isUserLanguageSet(this))
+                displayNewUserDialog();
+            else {
+                LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false, new Runnable() {
+                    @Override
+                    public void run() {
+                        // restart the activity so the language applies
+                        finish();
+                        startActivity(getIntent());
+                    }
+                });
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
+        AlarmReceiver.startPeriodicPaymentAlarm(this);
+
+        if (PrefUtil.isUserLanguageSet(this)) {
+            Locale locale = new Locale(PrefUtil.getUserLanguageLocale(this));
+            Locale.setDefault(locale);
+            Configuration config = new Configuration();
+            config.locale = locale;
+            getResources().updateConfiguration(
+                    config, getResources().getDisplayMetrics());
+        }
+
+        if (createLocalUser()) {
             return;
         }
 
@@ -95,11 +132,11 @@ public class LoginActivity extends AppCompatActivity {
                 if (loginResult.getAccessToken() == null)
                     return;
 
-                mFacebookButton.setVisibility(View.GONE);
+                //mFacebookButton.setVisibility(View.GONE);
                 mProgress = ProgressDialog.show(LoginActivity.this,
                         "Logging in", "Please Wait", true);
                 mStartTime = System.nanoTime();
-                new SignInTask(loginResult.getAccessToken().getToken()).execute();
+                //new SignInTask(loginResult.getAccessToken().getToken()).execute();
             }
 
             @Override
@@ -126,18 +163,68 @@ public class LoginActivity extends AppCompatActivity {
         });
         mFacebookButton = (FancyButton) findViewById(R.id.facebook_login);
         mFacebookButton.setText("Login with Facebook");
-        mFacebookButton.setVisibility(View.VISIBLE);
+        //mFacebookButton.setVisibility(View.VISIBLE);
         mProgress = null;
         setTitle(R.string.app_name);
         mFacebookButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /*
                 LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this,
                         Arrays.asList("public_profile"));
+                        */
             }
         });
 
         checkReadPhoneStatePermissionGranted();
+    }
+
+    void displayNewUserDialog() {
+        final EditText editText = new EditText(this);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this).
+                setTitle(R.string.dialog_new_user_name).
+                setView(editText).
+                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String new_name = editText.getText().toString().trim();
+
+                        PrefUtil.setUserId(LoginActivity.this, getResources().getInteger(R.integer.local_user_id));
+                        PrefUtil.setUserName(LoginActivity.this, new_name);
+                        LocalBroadcastManager.getInstance(LoginActivity.this).
+                                sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+                        startMainActivity(false);
+                    }
+                }).
+                setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        LoginActivity.this.finish();
+                        dialog.dismiss();
+                    }
+                });
+
+        final AlertDialog dialog = builder.create();
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String new_name = s.toString().trim();
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).
+                        setVisibility(!new_name.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // initially don't show the "Ok" button b/c the name hasn't changed
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
     }
 
     /**

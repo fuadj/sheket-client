@@ -45,7 +45,7 @@
 
     // This can't be "company_id" b/c the '_' underscore isn't a proper
     // header byte, only used alphabets and hyphen(-). Otherwise, it is a BUG.
-    <string name="pref_header_key_company_id" translatable="false">company-id</string>
+    <string name="pref_header_key_company_id">company-id</string>
 
     <!-- These revision keys are not what are sent to the server, they are the keys
     used to store in user preference -->
@@ -165,7 +165,7 @@
 
     <string name="nav_title_right_branches">Branches</string>
 
-    <string name="nav_left_add_company" translatable="false">Add Company</string>
+    <string name="nav_left_add_company">Add Company</string>
 
     <string name="nav_items">Items</string>
     <string name="nav_import">Import</string>

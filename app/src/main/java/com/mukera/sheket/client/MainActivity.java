@@ -1015,7 +1015,12 @@ public class MainActivity extends AppCompatActivity implements
         if (!PrefUtil.getIsFirstTime(this)) return;
         PrefUtil.setIsFirstTime(this, false);
 
-        LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false);
+        LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false, new Runnable() {
+            @Override
+            public void run() {
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+            }
+        });
     }
 
 

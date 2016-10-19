@@ -155,7 +155,13 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 switch (i) {
                     case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
                         LanguageSelectionDialog.
-                                displayLanguageConfigurationDialog(getNavActivity(), true);
+                                displayLanguageConfigurationDialog(getNavActivity(), true, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        LocalBroadcastManager.getInstance(getNavActivity()).
+                                                sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+                                    }
+                                });
                         break;
                     case StaticNavigationOptions.OPTION_DEBUG:
                         getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
