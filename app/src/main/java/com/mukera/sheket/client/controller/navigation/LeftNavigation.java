@@ -305,35 +305,51 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
      */
     Pair<Boolean, String> createNewCompany(Activity activity, final String company_name) {
         try {
-            Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
-                    new SheketGRPCCall.GRPCCallable<Company>() {
-                        @Override
-                        public Company runGRPCCall() throws Exception {
-                            ManagedChannel managedChannel = ManagedChannelBuilder.
-                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                                    usePlaintext(true).
-                                    build();
+            int company_id;
+            String user_permission;
+            String license;
+            String payment_id;
 
-                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                                    SheketServiceGrpc.newBlockingStub(managedChannel);
-                            return blockingStub.createCompany(
-                                    NewCompanyRequest.
-                                            newBuilder().
-                                            setAuth(SheketAuth.newBuilder().setLoginCookie(
-                                                    PrefUtil.getLoginCookie(getNavActivity()))).
-                                            setCompanyName(company_name).
-                                            setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
-                                            setLocalUserTime(
-                                                    String.valueOf(System.currentTimeMillis())
-                                            ).build()
-                            );
+            if (PrefUtil.isUserLocallyCreated(getNavActivity())) {
+                // TODO: generate local company id and name
+                //user_permission = created_company.getPermission();
+                //license = created_company.getSignedLicense();
+                company_id = -2;
+                user_permission = "";
+                license = "";
+                payment_id = "";
+            } else {
+                Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
+                        new SheketGRPCCall.GRPCCallable<Company>() {
+                            @Override
+                            public Company runGRPCCall() throws Exception {
+                                ManagedChannel managedChannel = ManagedChannelBuilder.
+                                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                        usePlaintext(true).
+                                        build();
+
+                                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                        SheketServiceGrpc.newBlockingStub(managedChannel);
+                                return blockingStub.createCompany(
+                                        NewCompanyRequest.
+                                                newBuilder().
+                                                setAuth(SheketAuth.newBuilder().setLoginCookie(
+                                                        PrefUtil.getLoginCookie(getNavActivity()))).
+                                                setCompanyName(company_name).
+                                                setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
+                                                setLocalUserTime(
+                                                        String.valueOf(System.currentTimeMillis())
+                                                ).build()
+                                );
+                            }
                         }
-                    }
-            );
+                );
 
-            int company_id = created_company.getCompanyId();
-            String user_permission = created_company.getPermission();
-            String license = created_company.getSignedLicense();
+                company_id = created_company.getCompanyId();
+                user_permission = created_company.getPermission();
+                license = created_company.getSignedLicense();
+                payment_id = created_company.getPaymentId();
+            }
 
             ContentValues values = new ContentValues();
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
@@ -341,7 +357,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             values.put(CompanyEntry.COLUMN_NAME, company_name);
             values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
             values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
-            values.put(CompanyEntry.COLUMN_PAYMENT_ID, created_company.getPaymentId());
+            values.put(CompanyEntry.COLUMN_PAYMENT_ID, payment_id);
 
             Uri uri = activity.getContentResolver().insert(
                     CompanyEntry.CONTENT_URI, values
