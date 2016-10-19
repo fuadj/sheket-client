@@ -30,7 +30,7 @@ public class TestProvider extends AndroidTestCase {
     static final String TEST_COMPANY_PERMISSION;
     static {
         SPermission p = new SPermission();
-        p.setPermissionType(SPermission.PERMISSION_TYPE_ALL_ACCESS);
+        p.setPermissionType(SPermission.PERMISSION_TYPE_OWNER);
         TEST_COMPANY_PERMISSION = p.Encode();
     }
 

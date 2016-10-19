@@ -337,6 +337,19 @@ public class PrefUtil {
         return company_id <= context.getResources().getInteger(R.integer.local_company_id_start);
     }
 
+    private static final String local_last_company_id = "local_last_company_id";
+    public static int getLastLocalCompanyId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        return prefs.getInt(local_last_company_id, context.getResources().getInteger(R.integer.local_company_id_start));
+    }
+
+    public static void setLastLocalCompanyId(Context context, int company_id) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(local_last_company_id, company_id);
+        editor.commit();
+    }
+
     // Use this if you want to "un-set" the current company.
     public static void resetCompanySelection(Context context) {
         setCurrentCompanyId(context, context.getResources().getInteger(R.integer.invalid_company_id));

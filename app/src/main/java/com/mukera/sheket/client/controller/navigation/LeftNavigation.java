@@ -369,13 +369,14 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             String payment_id;
 
             if (PrefUtil.isUserLocallyCreated(getNavActivity())) {
-                // TODO: generate local company id and name
-                //user_permission = created_company.getPermission();
-                //license = created_company.getSignedLicense();
-                company_id = -2;
-                user_permission = "";
+                company_id = PrefUtil.getLastLocalCompanyId(getNavActivity());
+
+                // decrement as we're going down the number line
+                PrefUtil.setLastLocalCompanyId(getNavActivity(), company_id - 1);
+
+                user_permission = new SPermission().setPermissionType(SPermission.PERMISSION_TYPE_OWNER).Encode();
                 license = "";
-                payment_id = "";
+                payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
             } else {
                 Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
                         new SheketGRPCCall.GRPCCallable<Company>() {
@@ -406,7 +407,8 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 company_id = created_company.getCompanyId();
                 user_permission = created_company.getPermission();
                 license = created_company.getSignedLicense();
-                payment_id = created_company.getPaymentId();
+                //payment_id = created_company.getPaymentId();
+                payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
             }
 
             ContentValues values = new ContentValues();
@@ -420,7 +422,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             Uri uri = activity.getContentResolver().insert(
                     CompanyEntry.CONTENT_URI, values
             );
-            if (ContentUris.parseId(uri) < 0) {
+            if (ContentUris.parseId(uri) == -1) {
                 return new Pair<>(Boolean.FALSE, "error adding company into db");
             }
 
@@ -631,7 +633,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data.getCount() == 0) {     // show the "Add Company" if there are no companies
+        if (true) {     // show the "Add Company" if there are no companies
             /**
              * FIXME: Because {@code SCompany.COMPANY_COLUMNS} are fully qualified(they have the format table_name.column_name)
              * that creates a problem when trying to find the "_id" column, which just tries to
