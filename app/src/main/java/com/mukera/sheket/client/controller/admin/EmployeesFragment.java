@@ -240,7 +240,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
             holder.textMemberId.setText(
                     IdEncoderUtil.encodeAndDelimitId(member.member_id, IdEncoderUtil.ID_TYPE_USER)
             );
-            holder.textMemberPermission.setText(SPermission.shortName(member.member_permission));
+            holder.textMemberPermission.setText(member.member_permission.toString());
             holder.btnDeleteMember.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
