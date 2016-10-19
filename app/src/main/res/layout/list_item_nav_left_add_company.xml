@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/ic_action_add_light"
         android:layout_gravity="center_vertical"
-        android:layout_marginLeft="16dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp" />
 
     <TextView
