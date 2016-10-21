@@ -53,6 +53,7 @@ import com.mukera.sheket.client.network.EditUserNameRequest;
 import com.mukera.sheket.client.network.NewCompanyRequest;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
+import com.mukera.sheket.client.services.PaymentContract;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -367,6 +368,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             String user_permission;
             String license;
             String payment_id;
+            int payment_state = CompanyEntry.PAYMENT_INVALID;
 
             if (PrefUtil.isUserLocallyCreated(getNavActivity())) {
                 company_id = PrefUtil.getLastLocalCompanyId(getNavActivity());
@@ -375,8 +377,12 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 PrefUtil.setLastLocalCompanyId(getNavActivity(), company_id - 1);
 
                 user_permission = new SPermission().setPermissionType(SPermission.PERMISSION_TYPE_OWNER).Encode();
-                license = "";
+                // TODO: check if this is the first company, if NOT don't give t free license.
+                payment_state = CompanyEntry.PAYMENT_VALID;
+                license = PaymentContract.LIMITED_FREE_LICENSE;
                 payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
+
+                PrefUtil.setLocalCompanyPaymentDate(getNavActivity(), System.currentTimeMillis());
             } else {
                 Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
                         new SheketGRPCCall.GRPCCallable<Company>() {
@@ -409,6 +415,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 license = created_company.getSignedLicense();
                 //payment_id = created_company.getPaymentId();
                 payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
+                payment_state = CompanyEntry.PAYMENT_VALID;
             }
 
             ContentValues values = new ContentValues();
@@ -418,6 +425,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
             values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
             values.put(CompanyEntry.COLUMN_PAYMENT_ID, payment_id);
+            values.put(CompanyEntry.COLUMN_PAYMENT_STATE, payment_state);
 
             Uri uri = activity.getContentResolver().insert(
                     CompanyEntry.CONTENT_URI, values

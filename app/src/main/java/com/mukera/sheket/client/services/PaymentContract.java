@@ -22,6 +22,19 @@ import java.util.Locale;
  * Utility for encoding/decoding signed license contracts.
  */
 public class PaymentContract {
+    public static final int CONTRACT_NONE = 0;
+    public static final int CONTRACT_LIMITED_FREE = 1;
+    public static final int CONTRACT_UNLIMITED_ONE_TIME = 2;
+    public static final int CONTRACT_SUBSCRIPTION = 3;
+
+    public static final String LIMITED_FREE_LICENSE = "duration:30;contract_type:2_||_xF8/93DTQ1xgnbPZKu7" +
+            "5xmCRYNYNi+ypnb4fFmMDK5OiCe4jrrVc7kOfes34gDqL8YmO6tUNNNwG5e7jO77HinRSlumz2ByVSSoV+ppf+m" +
+            "GwUh0kh9C8TrP1PaaEKhlnmvamQ5uVp6/WRLynhcUjsqLBV2MCst+dwuLWp4T70xnSssd0YDND8lZcw23r2eZ2J" +
+            "JIO/+SMSMj2SkwhYO12YzjU8tD6Xr0Ixy8skZ4qNjwI4Aypvu52Zl7J/WvRREsRiMUv0un7oiftU9eiZT6+LU9P" +
+            "WC1BeMijjspbFSzdLtyBY/crFf8IQeZrx0DFviC+1qEJwNNgZDSlZMkqhAjRUA==";
+
+    public boolean is_free_license;
+
     public String device_id;
     public long user_id;
     public long company_id;
@@ -64,19 +77,23 @@ public class PaymentContract {
         LicenseComponents components = PaymentContract.extractLicenseComponents(license);
 
         String[] subs = components.contract.split(";");
-        if (subs.length != 10)
-            return;
-
-        device_id = _val(subs[0]);
-        user_id = Long.parseLong(_val(subs[1]));
-        company_id = Long.parseLong(_val(subs[2]));
-        server_date_issued = _val(subs[3]);
-        local_date_issued = _val(subs[4]);
-        duration = _val(subs[5]);
-        contract_type = Integer.parseInt(_val(subs[6]));
-        limit_employees = Integer.parseInt(_val(subs[7]));
-        limit_branches = Integer.parseInt(_val(subs[8]));
-        limit_items = Integer.parseInt(_val(subs[9]));
+        if (subs.length == 10) {
+            device_id = _val(subs[0]);
+            user_id = Long.parseLong(_val(subs[1]));
+            company_id = Long.parseLong(_val(subs[2]));
+            server_date_issued = _val(subs[3]);
+            local_date_issued = _val(subs[4]);
+            duration = _val(subs[5]);
+            contract_type = Integer.parseInt(_val(subs[6]));
+            limit_employees = Integer.parseInt(_val(subs[7]));
+            limit_branches = Integer.parseInt(_val(subs[8]));
+            limit_items = Integer.parseInt(_val(subs[9]));
+            is_free_license = false;
+        } else if (subs.length == 2) {
+            duration = _val(subs[0]);
+            contract_type = Integer.parseInt(_val(subs[1]));
+            is_free_license = true;
+        }
     }
 
     // retrieves the value part from a "key:value" type string
@@ -88,21 +105,28 @@ public class PaymentContract {
 
     @Override
     public String toString() {
-        return String.format(Locale.US, "" +
-                        "device_id:%s;" +
-                        "user_id:%d;" +
-                        "company_id:%d;" +
-                        "server_date_issued:%s;" +
-                        "local_date_issued:%s;" +
-                        "duration:%s;" +
-                        "contract_type:%d;" +
-                        "employees:%d;" +
-                        "branches:%d;" +
-                        "items:%d",
-                device_id, user_id, company_id,
-                server_date_issued, local_date_issued,
-                duration, contract_type,
-                limit_employees, limit_branches, limit_items);
+        if (is_free_license) {
+            return String.format(Locale.US, "" +
+                            "duration:%s;" +
+                            "contract_type:%d",
+                    duration, contract_type);
+        } else {
+            return String.format(Locale.US, "" +
+                            "device_id:%s;" +
+                            "user_id:%d;" +
+                            "company_id:%d;" +
+                            "server_date_issued:%s;" +
+                            "local_date_issued:%s;" +
+                            "duration:%s;" +
+                            "contract_type:%d;" +
+                            "employees:%d;" +
+                            "branches:%d;" +
+                            "items:%d",
+                    device_id, user_id, company_id,
+                    server_date_issued, local_date_issued,
+                    duration, contract_type,
+                    limit_employees, limit_branches, limit_items);
+        }
     }
 
     /**

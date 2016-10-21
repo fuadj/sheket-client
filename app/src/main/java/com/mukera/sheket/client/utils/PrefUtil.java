@@ -350,6 +350,18 @@ public class PrefUtil {
         editor.commit();
     }
 
+    private static final String local_company_payment_date = "local_company_payment_date";
+    public static long getLocalCompanyPaymentDate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getLong(local_company_payment_date, 0);
+    }
+
+    public static void setLocalCompanyPaymentDate(Context context, long payment_date) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putLong(local_company_payment_date, payment_date);
+        editor.commit();
+    }
+
     // Use this if you want to "un-set" the current company.
     public static void resetCompanySelection(Context context) {
         setCurrentCompanyId(context, context.getResources().getInteger(R.integer.invalid_company_id));

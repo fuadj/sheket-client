@@ -170,8 +170,6 @@ public class MainActivity extends AppCompatActivity implements
 
         initSlidingMenuDrawer();
 
-        AlarmReceiver.startPeriodicPaymentAlarm(this);
-
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
 
@@ -935,6 +933,9 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onPostResume() {
         super.onPostResume();
+        Log.d("MainActivity", "On PostResume");
+        AlarmReceiver.startPaymentCheckNow(this);
+
         mDidResume = true;
         if (mImporting) {
             showImportUpdates();
@@ -1034,6 +1035,7 @@ public class MainActivity extends AppCompatActivity implements
 
             if (action.equals(SheketBroadcast.ACTION_PAYMENT_REQUIRED)) {
                 dismissSyncDialog();
+                PrefUtil.resetCompanySelection(MainActivity.this);
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_SWITCH)) {
                 dismissSyncDialog();

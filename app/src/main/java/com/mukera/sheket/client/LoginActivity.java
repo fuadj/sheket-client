@@ -36,17 +36,8 @@ import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Locale;
 
 import io.grpc.ManagedChannel;
@@ -103,7 +94,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
 
-        AlarmReceiver.startPeriodicPaymentAlarm(this);
+        AlarmReceiver.startPaymentCheckNow(this);
 
         if (PrefUtil.isUserLanguageSet(this)) {
             Locale locale = new Locale(PrefUtil.getUserLanguageLocale(this));

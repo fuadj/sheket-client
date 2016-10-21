@@ -5,7 +5,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.content.WakefulBroadcastReceiver;
+import android.util.Log;
 
 import java.util.Calendar;
 
@@ -16,17 +18,29 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // schedule the "next time" alarm to fire
-        AlarmReceiver.startPeriodicPaymentAlarm(context);
+        AlarmReceiver.scheduleNextPaymentCheck(context);
 
         startWakefulService(context,
                 new Intent(context, PaymentService.class));
+    }
+
+    public static void startPaymentCheckNow(Context context) {
+        Intent paymentIntent = new Intent(context, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, paymentIntent, 0);
+
+        AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        // fire the alarm now
+        manager.set(AlarmManager.RTC,
+                System.currentTimeMillis(),
+                pendingIntent);
     }
 
     /**
      * Starts the alarm to fire the payment service at the START of the next hour.
      * @param context
      */
-    public static void startPeriodicPaymentAlarm(Context context) {
+    public static void scheduleNextPaymentCheck(Context context) {
         Intent paymentIntent = new Intent(context, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 0, paymentIntent, 0);
@@ -36,9 +50,6 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
 
         Calendar nextHour = Calendar.getInstance();
         nextHour.add(Calendar.HOUR, 1);
-        // fire the alarm at the exact hour
-        nextHour.set(Calendar.MINUTE, 0);
-        nextHour.set(Calendar.SECOND, 0);
 
         AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
