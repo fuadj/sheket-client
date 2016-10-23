@@ -526,21 +526,25 @@ public class MainActivity extends AppCompatActivity implements
                 setNewName(new_name).
                 build();
         try {
-            new SheketGRPCCall<EmptyResponse>().runBlockingCall(
-                    new SheketGRPCCall.GRPCCallable<EmptyResponse>() {
-                        @Override
-                        public EmptyResponse runGRPCCall() throws Exception {
-                            ManagedChannel managedChannel = ManagedChannelBuilder.
-                                    forAddress(ConfigData.getServerIP(MainActivity.this), ConfigData.getServerPort()).
-                                    usePlaintext(true).
-                                    build();
+            // only try to ask server to update name if company wasn't local
 
-                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                                    SheketServiceGrpc.newBlockingStub(managedChannel);
-                            return blockingStub.editCompany(request);
+            if (!PrefUtil.isCompanyLocallyCreated(MainActivity.this, company.company_id)) {
+                new SheketGRPCCall<EmptyResponse>().runBlockingCall(
+                        new SheketGRPCCall.GRPCCallable<EmptyResponse>() {
+                            @Override
+                            public EmptyResponse runGRPCCall() throws Exception {
+                                ManagedChannel managedChannel = ManagedChannelBuilder.
+                                        forAddress(ConfigData.getServerIP(MainActivity.this), ConfigData.getServerPort()).
+                                        usePlaintext(true).
+                                        build();
+
+                                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                        SheketServiceGrpc.newBlockingStub(managedChannel);
+                                return blockingStub.editCompany(request);
+                            }
                         }
-                    }
-            );
+                );
+            }
 
             // if we've reached this point without throwing an exception, then it means success
             ContentValues values = company.toContentValues();

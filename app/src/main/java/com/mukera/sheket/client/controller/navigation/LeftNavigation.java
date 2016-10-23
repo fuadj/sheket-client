@@ -617,24 +617,26 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     Pair<Boolean, String> updateCurrentUserName(String new_name) {
         try {
-            ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
-                    usePlaintext(true).
-                    build();
+            if (!PrefUtil.isUserLocallyCreated(getNavActivity())) {
+                ManagedChannel managedChannel = ManagedChannelBuilder.
+                        forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
+                        usePlaintext(true).
+                        build();
 
-            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                    SheketServiceGrpc.newBlockingStub(managedChannel);
+                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                        SheketServiceGrpc.newBlockingStub(managedChannel);
 
-            String cookie = PrefUtil.getLoginCookie(getNavActivity());
+                String cookie = PrefUtil.getLoginCookie(getNavActivity());
 
-            // TODO: check if we need a better check
-            // we don't really have a response, we just need to check if we can
-            // "pass" the call without throwing an exception. If that happened it means
-            // a "non-error" result.
-            blockingStub.editUserName(EditUserNameRequest.newBuilder().
-                    setNewName(new_name).
-                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
-                    build());
+                // TODO: check if we need a better check
+                // we don't really have a response, we just need to check if we can
+                // "pass" the call without throwing an exception. If that happened it means
+                // a "non-error" result.
+                blockingStub.editUserName(EditUserNameRequest.newBuilder().
+                        setNewName(new_name).
+                        setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
+                        build());
+            }
 
             PrefUtil.setUserName(getNavActivity(), new_name);
             return new Pair<>(Boolean.TRUE, null);
