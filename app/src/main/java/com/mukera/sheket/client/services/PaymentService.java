@@ -20,14 +20,17 @@ import java.util.Locale;
  * Created by fuad on 8/27/16.
  */
 public class PaymentService extends IntentService {
+
+    final long MINUTE = 60 * 1000;      // in milliseconds
+    final long HOUR = 60 * MINUTE;
+    final long DAY = 24 * HOUR;
+
     public PaymentService() {
         super("SheketPaymentService");
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (1 == 1)
-            return;
         long prev_time = PrefUtil.getLastSeenTime(this);
         long now = System.currentTimeMillis();
         PrefUtil.setLastSeenTime(this, now);
@@ -38,7 +41,7 @@ public class PaymentService extends IntentService {
         // time is "before" the last saved time, that means the clock
         // has been re-wound. So, we invalidate all payments and force
         // user to RE-CONFIRM PAYMENT.
-        if (now < prev_time) {
+        if ((now + 24.0 * HOUR) < prev_time) {
             invalidate_all_certificates = true;
         }
 
@@ -79,10 +82,6 @@ public class PaymentService extends IntentService {
         }
 
         PaymentContract contract = new PaymentContract(company.payment_license);
-
-        final long MINUTE = 60 * 1000;      // in milliseconds
-        final long HOUR = 60 * MINUTE;
-        final long DAY = 24 * HOUR;
 
         long days_since_payment = (current_time - Long.parseLong(contract.local_date_issued)) / DAY;
 
