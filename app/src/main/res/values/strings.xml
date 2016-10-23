@@ -224,7 +224,7 @@
     <string name="import_dialog_item_code">Code</string>
     <string name="import_dialog_item_category">Category</string>
     <string name="import_dialog_item_balance">Balance</string>
-    <string name="import_dialog_item_location">Location</string>
+    <string name="import_dialog_item_location">Branch</string>
 
     <string name="fragment_user_profile_username">Username: </string>
     <string name="fragment_user_profile_id">User Id: </string>
@@ -319,5 +319,5 @@
 
     <string name="supported_language_en" translatable="false">English</string>
     <string name="supported_language_amh" translatable="false">አማርኛ</string>
-    <string name="dialog_new_company_name"></string>
+    <string name="dialog_new_company_name">New Company Name</string>
 </resources>

@@ -838,6 +838,8 @@ public class MainActivity extends AppCompatActivity implements
         switch (mImportState) {
             case IMPORT_STATE_SUCCESS:
                 stopImporting(null);
+                new AlertDialog.Builder(MainActivity.this).
+                        setTitle("Import Success").show();
                 break;
             case IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG:
                 if (mReader.parsingSuccess()) {

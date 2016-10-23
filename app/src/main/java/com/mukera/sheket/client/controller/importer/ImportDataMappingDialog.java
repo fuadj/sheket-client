@@ -34,7 +34,7 @@ public class ImportDataMappingDialog extends DialogFragment {
     private Spinner mItemNameSpinner;
     private Spinner mItemCodeSpinner;
     private Spinner mCategorySpinner;
-    private Spinner mLocationSpinner;
+    private Spinner mBranchLocationSpinner;
     private Spinner mBalanceSpinner;
 
     public static ImportDataMappingDialog newInstance(SimpleCSVReader reader) {
@@ -69,7 +69,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         mapping.put(DATA_ITEM_CODE, getMapping(mItemCodeSpinner));
         mapping.put(DATA_CATEGORY, getMapping(mCategorySpinner));
         mapping.put(DATA_BALANCE, getMapping(mBalanceSpinner));
-        mapping.put(DATA_LOCATION, getMapping(mLocationSpinner));
+        mapping.put(DATA_LOCATION, getMapping(mBranchLocationSpinner));
 
         return mapping;
     }
@@ -84,7 +84,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemNameSpinner = (Spinner) view.findViewById(R.id.dialog_import_item_name_spinner);
         mItemCodeSpinner = (Spinner) view.findViewById(R.id.dialog_import_item_code_spinner);
         mCategorySpinner = (Spinner) view.findViewById(R.id.dialog_import_category_spinner);
-        mLocationSpinner = (Spinner) view.findViewById(R.id.dialog_import_location_spinner);
+        mBranchLocationSpinner = (Spinner) view.findViewById(R.id.dialog_import_location_spinner);
         mBalanceSpinner = (Spinner) view.findViewById(R.id.dialog_import_balance_spinner);
 
         Vector<String> options = new Vector<>(mReader.getHeaders());
@@ -97,7 +97,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemNameSpinner.setAdapter(adapter);
         mItemCodeSpinner.setAdapter(adapter);
         mCategorySpinner.setAdapter(adapter);
-        mLocationSpinner.setAdapter(adapter);
+        mBranchLocationSpinner.setAdapter(adapter);
         mBalanceSpinner.setAdapter(adapter);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext()).setCancelable(false);
@@ -143,7 +143,7 @@ public class ImportDataMappingDialog extends DialogFragment {
                 resetIfNotSelf(mItemNameSpinner, parent, position);
                 resetIfNotSelf(mItemCodeSpinner, parent, position);
                 resetIfNotSelf(mCategorySpinner, parent, position);
-                resetIfNotSelf(mLocationSpinner, parent, position);
+                resetIfNotSelf(mBranchLocationSpinner, parent, position);
                 resetIfNotSelf(mBalanceSpinner, parent, position);
             }
 
@@ -156,7 +156,7 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemCodeSpinner.setOnItemSelectedListener(clickListener);
         mItemNameSpinner.setOnItemSelectedListener(clickListener);
         mCategorySpinner.setOnItemSelectedListener(clickListener);
-        mLocationSpinner.setOnItemSelectedListener(clickListener);
+        mBranchLocationSpinner.setOnItemSelectedListener(clickListener);
         mBalanceSpinner.setOnItemSelectedListener(clickListener);
 
         return dialog;
