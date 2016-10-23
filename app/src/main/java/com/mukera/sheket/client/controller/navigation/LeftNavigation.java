@@ -144,9 +144,11 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         mPreferenceList.setAdapter(mPrefAdapter);
 
         mPrefAdapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
+        /*
         mPrefAdapter.add(StaticNavigationOptions.OPTION_DEBUG);
         mPrefAdapter.add(StaticNavigationOptions.OPTION_IP);
         mPrefAdapter.add(StaticNavigationOptions.OPTION_LOG_OUT);
+        */
         ListUtils.setDynamicHeight(mPreferenceList);
 
         mPreferenceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

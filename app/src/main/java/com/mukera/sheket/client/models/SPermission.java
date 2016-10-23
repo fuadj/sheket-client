@@ -66,6 +66,15 @@ public class SPermission {
         mAllowedBranches = new ArrayList<>();
     }
 
+    @Override
+    public String toString() {
+        switch (mPermissionType) {
+            case PERMISSION_TYPE_GENERAL_MANAGER: return "Manager";
+            case PERMISSION_TYPE_EMPLOYEE: return "Employee";
+            default: return "Unknown";
+        }
+    }
+
     /**
      * Decodes the user permission and converts this to an {@code SPermission} object.
      * It is safe to use even if permission hasn't been set(e.g: if there is no company at all).
@@ -98,23 +107,6 @@ public class SPermission {
             return permission;
         }
         return permission;
-    }
-
-    public static String shortName(SPermission permission) {
-        if (permission == null) {
-            return "Undefined";
-        }
-        switch (permission.mPermissionType) {
-            default:
-            case PERMISSION_TYPE_NONE:
-                return "NONE";
-            case PERMISSION_TYPE_OWNER:
-                return "All Access";
-            case PERMISSION_TYPE_GENERAL_MANAGER:
-                return "All Branches";
-            case PERMISSION_TYPE_EMPLOYEE:
-                return "Limited";
-        }
     }
 
     public String Encode() {

@@ -215,6 +215,10 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         switch (mActionType) {
             case SELL:
             case SEND_TO:
+                // if the item doesn't exist in the branch, we can't sell it.
+                if (mCurrentBranchItemPair.first == null) {
+                    return false;
+                }
                 if ((mCurrentBranchItemPair.first.quantity - qty) < 0) {
                     return false;
                 }

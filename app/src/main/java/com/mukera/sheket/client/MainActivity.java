@@ -36,6 +36,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.ipaulpro.afilechooser.utils.FileUtils;
@@ -715,6 +716,14 @@ public class MainActivity extends AppCompatActivity implements
 
                 if (path == null || !FileUtils.isLocal(path)) return;
 
+                String extension = FileUtils.getExtension(path);
+                if (extension == null || !extension.trim().toLowerCase().equals(".csv")) {
+                    Toast.makeText(MainActivity.this,
+                            R.string.toast_file_extension_must_be_csv,
+                            Toast.LENGTH_LONG).
+                            show();
+                    return;
+                }
                 mImportPath = path;
 
                 if (verifyStoragePermissions()) {

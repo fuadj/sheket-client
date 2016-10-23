@@ -15,14 +15,14 @@
         android:layout_centerVertical="true" />
 
     <TextView
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Test Entity Name"
         android:id="@+id/list_item_nav_left_name"
         android:textColor="@color/left_nav_title_text"
-        android:textSize="20dp"
+        android:textSize="16dp"
         android:layout_toRightOf="@+id/list_item_nav_left_icon"
         android:layout_centerVertical="true"
         tools:ignore="HardcodedText" />

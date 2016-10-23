@@ -278,7 +278,7 @@
     <string name="dialog_view_company_profile_name">Company Name: </string>
     <string name="dialog_view_company_profile_payment_number">Payment #: </string>
 
-    <string name="dialog_view_company_profile_import_btn">Import From .csv File</string>
+    <string name="dialog_view_company_profile_import_btn">Import From .CSV File</string>
     <string name="dialog_edit_company_profile_title">Edit Name</string>
 
     <string name="dialog_edit_company_profile_progress_title">Updating Company Name</string>
@@ -320,4 +320,5 @@
     <string name="supported_language_en" translatable="false">English</string>
     <string name="supported_language_amh" translatable="false">አማርኛ</string>
     <string name="dialog_new_company_name">New Company Name</string>
+    <string name="toast_file_extension_must_be_csv">The import file must be a .CSV file!!!</string>
 </resources>
