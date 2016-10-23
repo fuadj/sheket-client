@@ -158,6 +158,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         LanguageSelectionDialog.
                                 displayLanguageConfigurationDialog(getNavActivity(), true);
                         break;
+                    case StaticNavigationOptions.OPTION_HELP:
+                        displayHelpDialog();
+                        break;
                     case StaticNavigationOptions.OPTION_DEBUG:
                         getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
                         break;
@@ -190,6 +193,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             });
         }
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
+    }
+
+    void displayHelpDialog() {
     }
 
     void displayAddCompanyDialog() {
