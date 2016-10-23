@@ -378,9 +378,19 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
                 user_permission = new SPermission().setPermissionType(SPermission.PERMISSION_TYPE_OWNER).Encode();
                 // TODO: check if this is the first company, if NOT don't give t free license.
-                payment_state = CompanyEntry.PAYMENT_VALID;
-                license = PaymentContract.LIMITED_FREE_LICENSE;
                 payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
+
+                try {
+                    if (isFirstCompany()) {
+                        license = PaymentContract.LIMITED_FREE_LICENSE;
+                        payment_state = CompanyEntry.PAYMENT_VALID;
+                    } else {
+                        license = "";
+                        payment_state = CompanyEntry.PAYMENT_INVALID;
+                    }
+                } catch (Exception e) {
+                    return new Pair<>(Boolean.FALSE, e.getMessage());
+                }
 
                 PrefUtil.setLocalCompanyPaymentDate(getNavActivity(), System.currentTimeMillis());
             } else {
@@ -443,6 +453,19 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
         return new Pair<>(Boolean.TRUE, null);
+    }
+
+    boolean isFirstCompany() throws Exception {
+        Cursor cursor = getNavActivity().getContentResolver().
+                query(CompanyEntry.CONTENT_URI, SCompany.COMPANY_COLUMNS,
+                        null, null, null);
+        if (cursor == null) {
+            throw new Exception("Company Error");
+        }
+        if (cursor.getCount() == 0)
+            return true;
+        cursor.close();
+        return false;
     }
 
     void displayProfileDetails() {
