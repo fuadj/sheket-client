@@ -98,7 +98,7 @@ public abstract class BaseNavigation {
             sEntityAndIcon.put(OPTION_TRANSACTIONS,
                     new Pair<>(R.string.nav_transactions, R.drawable.ic_action_new_transactions));
             sEntityAndIcon.put(OPTION_LANGUAGES,
-                    new Pair<>(R.string.nav_languages, R.drawable.ic_action_new_settings));
+                    new Pair<>(R.string.nav_languages, R.drawable.ic_action_globe));
             sEntityAndIcon.put(OPTION_BRANCHES,
                     new Pair<>(R.string.nav_branches, R.drawable.ic_action_new_branches));
             sEntityAndIcon.put(OPTION_COMPANIES,
