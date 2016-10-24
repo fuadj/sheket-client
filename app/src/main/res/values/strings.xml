@@ -264,7 +264,6 @@
     <string name="dialog_view_user_profile_id">ID: </string>
 
     <string name="dialog_edit_user_profile_title">Edit Name</string>
-    <string name="dialog_new_user_name">Please enter your name</string>
 
     <string name="dialog_edit_user_profile_progress_title">Updating Username</string>
     <string name="dialog_edit_user_profile_progress_body">Please Wait&#8230;</string>
@@ -318,4 +317,9 @@
     <string name="supported_language_amh" translatable="false">አማርኛ</string>
     <string name="dialog_new_company_name">New Company Name</string>
     <string name="toast_file_extension_must_be_csv">The import file must be a .CSV file!!!</string>
+    <string name="dialog_new_user_name">Please enter your name</string>
+
+    <string name="dialog_help_body">Thank you for using Sheket.\n\nIf you have questions, comments or
+    any suggestions, please feel free to contact us.</string>>
+    <string name="dialog_help_contact">Mobile: 0912&#8211;646275. \nWebsite: www.mukerax.com</string>
 </resources>
