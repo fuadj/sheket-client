@@ -710,7 +710,6 @@ public class AllItemsFragment extends SearchableItemFragment {
                 setTitle(is_editing ?
                         R.string.dialog_category_edit :
                         R.string.dialog_category_new).
-                setMessage(is_editing ? category.name : "").
                 setView(editText).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override

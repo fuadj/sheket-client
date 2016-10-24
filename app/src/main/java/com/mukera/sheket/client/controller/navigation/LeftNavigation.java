@@ -37,6 +37,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.mukera.sheket.client.BuildConfig;
 import com.mukera.sheket.client.LanguageSelectionDialog;
 import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
@@ -255,8 +256,11 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     }
 
     void displayHelpDialog() {
+        View view = getNavActivity().getLayoutInflater().inflate(R.layout.dialog_help, null);
+        TextView txtVersion = (TextView) view.findViewById(R.id.dialog_help_app_version);
+        txtVersion.setText(BuildConfig.VERSION_NAME);
         new AlertDialog.Builder(getNavActivity()).
-                setView(getNavActivity().getLayoutInflater().inflate(R.layout.dialog_help, null)).
+                setView(view).
                 show();
     }
 
