@@ -43,10 +43,6 @@
     <string name="pref_company_name_default" translatable="false">No Company Selected</string>
     <string name="pref_login_cookie" translatable="false">login_cookie</string>
 
-    // This can't be "company_id" b/c the '_' underscore isn't a proper
-    // header byte, only used alphabets and hyphen(-). Otherwise, it is a BUG.
-    <string name="pref_header_key_company_id">company-id</string>
-
     <!-- These revision keys are not what are sent to the server, they are the keys
     used to store in user preference -->
     <string name="pref_user_rev" translatable="false">user_rev</string>
@@ -172,6 +168,7 @@
     <string name="nav_sync">Sync</string>
     <string name="nav_transactions">Transactions</string>
     <string name="nav_languages">Languages</string>
+    <string name="nav_help">Help</string>
     <string name="nav_branches">Branches</string>
     <string name="nav_companies">Companies</string>
     <string name="nav_employees">Employees</string>

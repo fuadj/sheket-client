@@ -166,6 +166,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                                     }
                                 });
                         break;
+                    case StaticNavigationOptions.OPTION_HELP:
+                        displayHelpDialog();
+                        break;
                     case StaticNavigationOptions.OPTION_DEBUG:
                         getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
                         break;
@@ -248,6 +251,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         });
 
         dialog.show();
+    }
+
+    void displayHelpDialog() {
     }
 
     void displayAddCompanyDialog() {
