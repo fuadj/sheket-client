@@ -141,6 +141,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         mPrefAdapter = new StaticNavAdapter(getNavActivity());
         mPreferenceList.setAdapter(mPrefAdapter);
 
+        mPrefAdapter.add(StaticNavigationOptions.OPTION_HELP);
         mPrefAdapter.add(BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES);
         /*
         mPrefAdapter.add(StaticNavigationOptions.OPTION_DEBUG);
@@ -196,6 +197,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
     }
 
     void displayHelpDialog() {
+        new AlertDialog.Builder(getNavActivity()).
+                setView(getNavActivity().getLayoutInflater().inflate(R.layout.dialog_help, null)).
+                show();
     }
 
     void displayAddCompanyDialog() {
@@ -313,11 +317,6 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
      * it returns <True, Null>. Otherwise it returns <False, "error message">
      */
     Pair<Boolean, String> createNewCompany(Activity activity, String company_name) {
-        final String JSON_COMPANY_NAME = "company_name";
-        final String JSON_COMPANY_ID = activity.getString(R.string.pref_header_key_company_id);
-        final String JSON_USER_PERMISSION = "user_permission";
-        final String JSON_DEVICE_ID = "device_id";
-
         try {
             ManagedChannel managedChannel = ManagedChannelBuilder.
                     forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
