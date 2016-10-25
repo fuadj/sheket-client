@@ -125,7 +125,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                  */
                 // there is a bug in android M, declaring the permission in the manifest isn't enough
                 // see: http://stackoverflow.com/a/38782876/5753416
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!PrefUtil.isUserLocallyCreated(getNavActivity()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     int permissionCheck = ContextCompat.checkSelfPermission(getNavActivity(), Manifest.permission.READ_PHONE_STATE);
 
                     if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
