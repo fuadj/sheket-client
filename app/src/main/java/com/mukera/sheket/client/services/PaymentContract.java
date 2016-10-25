@@ -60,7 +60,10 @@ public class PaymentContract {
     public int limit_branches;
     public int limit_items;
 
+    public boolean parse_success;
+
     public PaymentContract() {
+        parse_success = false;
     }
 
     // initialize this object from contents of the contract
@@ -77,6 +80,7 @@ public class PaymentContract {
         LicenseComponents components = PaymentContract.extractLicenseComponents(license);
 
         String[] subs = components.contract.split(";");
+        parse_success = true;
         if (subs.length == 10) {
             device_id = _val(subs[0]);
             user_id = Long.parseLong(_val(subs[1]));
@@ -93,6 +97,8 @@ public class PaymentContract {
             duration = _val(subs[0]);
             contract_type = Integer.parseInt(_val(subs[1]));
             is_free_license = true;
+        } else {
+            parse_success = false;
         }
     }
 

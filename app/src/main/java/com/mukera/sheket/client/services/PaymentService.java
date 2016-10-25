@@ -83,15 +83,20 @@ public class PaymentService extends IntentService {
      * It also checks if the payment duration is still valid(not expired).
      */
     int checkPaymentState(SCompany company, long current_time) {
+        PaymentContract contract = new PaymentContract(company.payment_license);
+
+        String device_id = "";
+        if (contract.parse_success && !contract.is_free_license) {
+            device_id = DeviceId.getUniqueDeviceId(this);
+        }
+
         if (!PaymentContract.isLicenseValidForDeviceAndUser(
                 company.payment_license,
-                DeviceId.getUniqueDeviceId(this),
+                device_id,
                 company.user_id,
                 company.company_id)) {
             return CompanyEntry.PAYMENT_INVALID;
         }
-
-        PaymentContract contract = new PaymentContract(company.payment_license);
 
         long contract_issued_date;
         if (contract.is_free_license)
