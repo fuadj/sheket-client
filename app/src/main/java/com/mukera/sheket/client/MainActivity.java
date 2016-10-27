@@ -47,7 +47,7 @@ import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
 import com.mukera.sheket.client.controller.importer.DuplicateReplacementDialog;
 import com.mukera.sheket.client.controller.importer.DuplicateFinderTask;
-import com.mukera.sheket.client.controller.importer.ImportDataMappingDialog;
+import com.mukera.sheket.client.controller.importer.ImportColumnMappingDialog;
 import com.mukera.sheket.client.controller.importer.ImportDataTask;
 import com.mukera.sheket.client.controller.importer.ImportListener;
 import com.mukera.sheket.client.controller.importer.ParseFileTask;
@@ -858,10 +858,10 @@ public class MainActivity extends AppCompatActivity implements
                     final Runnable importDialogPresenter = new Runnable() {
                         @Override
                         public void run() {
-                            final ImportDataMappingDialog dialog = ImportDataMappingDialog.newInstance(mReader);
-                            dialog.setListener(new ImportDataMappingDialog.OnClickListener() {
+                            final ImportColumnMappingDialog dialog = ImportColumnMappingDialog.newInstance(mReader);
+                            dialog.setListener(new ImportColumnMappingDialog.OnClickListener() {
                                 @Override
-                                public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
+                                public void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
                                     dialog.dismiss();
                                     new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
                                 }

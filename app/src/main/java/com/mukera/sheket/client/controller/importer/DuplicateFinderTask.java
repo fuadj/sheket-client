@@ -27,13 +27,13 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
     protected DuplicateEntities doInBackground(Void... params) {
         DuplicateEntities duplicateEntities = new DuplicateEntities();
 
-        if (mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY) !=
-                ImportDataMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY) !=
+                ImportColumnMappingDialog.NO_DATA_FOUND) {
             findDuplicateCategories(duplicateEntities);
         }
 
-        if (mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION) !=
-                ImportDataMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) !=
+                ImportColumnMappingDialog.NO_DATA_FOUND) {
             findDuplicateBranches(duplicateEntities);
         }
 
@@ -42,7 +42,7 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
 
     void findDuplicateCategories(DuplicateEntities duplicateEntities) {
         Set<String> categories = new HashSet<>();
-        int category_col = mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY);
+        int category_col = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             categories.add(mReader.getRowAt(i).get(category_col));
@@ -54,7 +54,7 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
 
     void findDuplicateBranches(DuplicateEntities duplicateEntities) {
         Set<String> branches = new HashSet<>();
-        int branch_col = mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION);
+        int branch_col = mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             branches.add(mReader.getRowAt(i).get(branch_col));

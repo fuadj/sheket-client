@@ -21,9 +21,9 @@ import java.util.Vector;
 /**
  * Created by fuad on 6/9/16.
  */
-public class ImportDataMappingDialog extends DialogFragment {
+public class ImportColumnMappingDialog extends DialogFragment {
     public interface OnClickListener {
-        void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping);
+        void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> dataMapping);
         void onCancelSelected();
     }
 
@@ -34,11 +34,11 @@ public class ImportDataMappingDialog extends DialogFragment {
     private Spinner mItemNameSpinner;
     private Spinner mItemCodeSpinner;
     private Spinner mCategorySpinner;
-    private Spinner mLocationSpinner;
-    private Spinner mBalanceSpinner;
+    private Spinner mBranchSpinner;
+    private Spinner mQuantitySpinner;
 
-    public static ImportDataMappingDialog newInstance(SimpleCSVReader reader) {
-        ImportDataMappingDialog dialog = new ImportDataMappingDialog();
+    public static ImportColumnMappingDialog newInstance(SimpleCSVReader reader) {
+        ImportColumnMappingDialog dialog = new ImportColumnMappingDialog();
         dialog.mReader = reader;
         return dialog;
     }
@@ -46,8 +46,8 @@ public class ImportDataMappingDialog extends DialogFragment {
     public static final int DATA_ITEM_NAME = 1;
     public static final int DATA_ITEM_CODE = 2;
     public static final int DATA_CATEGORY = 3;
-    public static final int DATA_LOCATION = 4;
-    public static final int DATA_BALANCE = 5;
+    public static final int DATA_BRANCH = 4;
+    public static final int DATA_QUANTITY = 5;
 
     public static final int NO_DATA_FOUND = -1;
 
@@ -68,8 +68,8 @@ public class ImportDataMappingDialog extends DialogFragment {
         mapping.put(DATA_ITEM_NAME, getMapping(mItemNameSpinner));
         mapping.put(DATA_ITEM_CODE, getMapping(mItemCodeSpinner));
         mapping.put(DATA_CATEGORY, getMapping(mCategorySpinner));
-        mapping.put(DATA_BALANCE, getMapping(mBalanceSpinner));
-        mapping.put(DATA_LOCATION, getMapping(mLocationSpinner));
+        mapping.put(DATA_QUANTITY, getMapping(mQuantitySpinner));
+        mapping.put(DATA_BRANCH, getMapping(mBranchSpinner));
 
         return mapping;
     }
@@ -84,12 +84,12 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemNameSpinner = (Spinner) view.findViewById(R.id.dialog_import_item_name_spinner);
         mItemCodeSpinner = (Spinner) view.findViewById(R.id.dialog_import_item_code_spinner);
         mCategorySpinner = (Spinner) view.findViewById(R.id.dialog_import_category_spinner);
-        mLocationSpinner = (Spinner) view.findViewById(R.id.dialog_import_location_spinner);
-        mBalanceSpinner = (Spinner) view.findViewById(R.id.dialog_import_balance_spinner);
+        mBranchSpinner = (Spinner) view.findViewById(R.id.dialog_import_branch_spinner);
+        mQuantitySpinner = (Spinner) view.findViewById(R.id.dialog_import_quantity_spinner);
 
         Vector<String> options = new Vector<>(mReader.getHeaders());
         // The tabs at both ends will increase the width
-        options.add(0, "\t--Not Set--\t");
+        options.add(0, "\t--Not Selected--\t");
 
         ArrayAdapter adapter = new ArrayAdapter(getActivity(),
                 android.R.layout.simple_spinner_dropdown_item, options.toArray());
@@ -97,8 +97,8 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemNameSpinner.setAdapter(adapter);
         mItemCodeSpinner.setAdapter(adapter);
         mCategorySpinner.setAdapter(adapter);
-        mLocationSpinner.setAdapter(adapter);
-        mBalanceSpinner.setAdapter(adapter);
+        mBranchSpinner.setAdapter(adapter);
+        mQuantitySpinner.setAdapter(adapter);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext()).setCancelable(false);
         builder.setTitle("Import Data").
@@ -107,7 +107,7 @@ public class ImportDataMappingDialog extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (mListener != null) {
-                                    mListener.onOkSelected(ImportDataMappingDialog.this.mReader,
+                                    mListener.onColumnMappingDone(mReader,
                                             getDataMapping());
                                 }
                             }
@@ -129,22 +129,23 @@ public class ImportDataMappingDialog extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 // It should initially be Disabled
-                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
             }
         });
 
         AdapterView.OnItemSelectedListener clickListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // tie the OK button's "enabled-state" with the item name being set
+                // only show the ok button if the item name has been set
                 if (parent == mItemNameSpinner) {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(position != 0);
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(position != 0 ? View.VISIBLE : View.GONE);
                 }
+
                 resetIfNotSelf(mItemNameSpinner, parent, position);
                 resetIfNotSelf(mItemCodeSpinner, parent, position);
                 resetIfNotSelf(mCategorySpinner, parent, position);
-                resetIfNotSelf(mLocationSpinner, parent, position);
-                resetIfNotSelf(mBalanceSpinner, parent, position);
+                resetIfNotSelf(mBranchSpinner, parent, position);
+                resetIfNotSelf(mQuantitySpinner, parent, position);
             }
 
             @Override
@@ -156,8 +157,8 @@ public class ImportDataMappingDialog extends DialogFragment {
         mItemCodeSpinner.setOnItemSelectedListener(clickListener);
         mItemNameSpinner.setOnItemSelectedListener(clickListener);
         mCategorySpinner.setOnItemSelectedListener(clickListener);
-        mLocationSpinner.setOnItemSelectedListener(clickListener);
-        mBalanceSpinner.setOnItemSelectedListener(clickListener);
+        mBranchSpinner.setOnItemSelectedListener(clickListener);
+        mQuantitySpinner.setOnItemSelectedListener(clickListener);
 
         return dialog;
     }

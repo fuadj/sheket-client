@@ -16,7 +16,7 @@ import java.io.File;
  *
  *                                          parseFile on worker         -----(1st-stage)
  *
- *          Display ImportDataMappingDialog  <----
+ *          Display ImportColumnMappingDialog  <----
  *              to user
  *                                  ---->   add data to ContentProvider -----(2nd-stage)
  *
