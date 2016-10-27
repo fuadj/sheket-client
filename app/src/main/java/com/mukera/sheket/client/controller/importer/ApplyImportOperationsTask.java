@@ -31,18 +31,24 @@ import java.util.UUID;
 /**
  * Created by fuad on 6/26/16.
  */
-public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>> {
+public class ApplyImportOperationsTask extends AsyncTask<Void, Void, Pair<Boolean, String>> {
     private SimpleCSVReader mReader;
     private Map<Integer, Integer> mDataMapping;
     private DuplicateEntities mDuplicateEntities;
     private ImportListener mListener;
     private Context mContext;
 
-    public ImportDataTask(SimpleCSVReader reader,
-                          Map<Integer, Integer> mapping,
-                          DuplicateEntities duplicateEntities,
-                          ImportListener listener,
-                          Context context) {
+    public interface ImportListener {
+        void importSuccessful();
+
+        void importError(String msg);
+    }
+
+    public ApplyImportOperationsTask(SimpleCSVReader reader,
+                                     Map<Integer, Integer> mapping,
+                                     DuplicateEntities duplicateEntities,
+                                     ImportListener listener,
+                                     Context context) {
         mReader = reader;
         mDataMapping = mapping;
         mDuplicateEntities = duplicateEntities;
@@ -60,31 +66,31 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
         importData.operationsList = new ArrayList<>();
         importData.company_id = PrefUtil.getCurrentCompanyId(mContext);
 
-        if (mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             importCategories(importData);
         }
 
-        if (mDataMapping.get(ImportColumnMappingDialog.DATA_ITEM_NAME) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_ITEM_NAME) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             importItems(importData);
         }
 
-        if (mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             importBranches(importData);
         }
 
-        if (mDataMapping.get(ImportColumnMappingDialog.DATA_QUANTITY) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_QUANTITY) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             addItemsToBranches(importData);
         }
 
         // If both branch and categories are defined, add the category to the branch
-        if ((mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND) &&
-                (mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY) !=
-                        ImportColumnMappingDialog.NO_DATA_FOUND)) {
+        if ((mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) !=
+                ColumnMappingDialog.NO_DATA_FOUND) &&
+                (mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY) !=
+                        ColumnMappingDialog.NO_DATA_FOUND)) {
             addCategoriesToBranches(importData);
         }
 
@@ -157,7 +163,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
     void importCategories(ImportData importData) {
         _queryCategories(importData);
 
-        int category_col = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY);
+        int category_col = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             String name = mReader.getRowAt(i).get(category_col);
@@ -218,18 +224,18 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
     void importItems(ImportData importData) {
         _queryItems(importData);
 
-        int item_name_col = mDataMapping.get(ImportColumnMappingDialog.DATA_ITEM_NAME);
+        int item_name_col = mDataMapping.get(ColumnMappingDialog.DATA_ITEM_NAME);
         boolean has_item_code =
-                mDataMapping.get(ImportColumnMappingDialog.DATA_ITEM_CODE) != ImportColumnMappingDialog.NO_DATA_FOUND;
+                mDataMapping.get(ColumnMappingDialog.DATA_ITEM_CODE) != ColumnMappingDialog.NO_DATA_FOUND;
         int item_code_col = -1;
         if (has_item_code)
-            item_code_col = mDataMapping.get(ImportColumnMappingDialog.DATA_ITEM_CODE);
+            item_code_col = mDataMapping.get(ColumnMappingDialog.DATA_ITEM_CODE);
 
-        boolean has_categories = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY) !=
-                ImportColumnMappingDialog.NO_DATA_FOUND;
+        boolean has_categories = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY) !=
+                ColumnMappingDialog.NO_DATA_FOUND;
         int col_categories = -1;
         if (has_categories)
-            col_categories = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY);
+            col_categories = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             String name = mReader.getRowAt(i).get(item_name_col);
@@ -313,7 +319,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
     void importBranches(ImportData importData) {
         _queryBranches(importData);
 
-        int branch_col = mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH);
+        int branch_col = mDataMapping.get(ColumnMappingDialog.DATA_BRANCH);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             String name = mReader.getRowAt(i).get(branch_col);
@@ -349,12 +355,12 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
     }
 
     void addItemsToBranches(ImportData importData) {
-        boolean has_branches = mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) != ImportColumnMappingDialog.NO_DATA_FOUND;
-        boolean has_quantity = mDataMapping.get(ImportColumnMappingDialog.DATA_QUANTITY) != ImportColumnMappingDialog.NO_DATA_FOUND;
+        boolean has_branches = mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) != ColumnMappingDialog.NO_DATA_FOUND;
+        boolean has_quantity = mDataMapping.get(ColumnMappingDialog.DATA_QUANTITY) != ColumnMappingDialog.NO_DATA_FOUND;
 
-        int col_name = has_branches ? mDataMapping.get(ImportColumnMappingDialog.DATA_ITEM_NAME) : -1;
-        int col_branch = has_branches ? mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) : -1;
-        int col_quantity = has_branches ? mDataMapping.get(ImportColumnMappingDialog.DATA_QUANTITY) : -1;
+        int col_name = has_branches ? mDataMapping.get(ColumnMappingDialog.DATA_ITEM_NAME) : -1;
+        int col_branch = has_branches ? mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) : -1;
+        int col_quantity = has_branches ? mDataMapping.get(ColumnMappingDialog.DATA_QUANTITY) : -1;
 
         // we need both branches and quantity declared to do stuff
         if (!has_branches || !has_quantity) return;
@@ -390,7 +396,7 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
             if (seenBranches.containsKey(branch_id)) {
                 transaction_id = seenBranches.get(branch_id);
             } else {
-                transaction_id = (int)PrefUtil.getNewTransId(mContext);
+                transaction_id = (int) PrefUtil.getNewTransId(mContext);
                 PrefUtil.setNewTransId(mContext, transaction_id);
 
                 seenBranches.put(branch_id, transaction_id);
@@ -441,13 +447,13 @@ public class ImportDataTask extends AsyncTask<Void, Void, Pair<Boolean, String>>
     }
 
     void addCategoriesToBranches(ImportData importData) {
-        boolean has_branches = mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH) != ImportColumnMappingDialog.NO_DATA_FOUND;
-        boolean has_categories = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY) != ImportColumnMappingDialog.NO_DATA_FOUND;
+        boolean has_branches = mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) != ColumnMappingDialog.NO_DATA_FOUND;
+        boolean has_categories = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY) != ColumnMappingDialog.NO_DATA_FOUND;
 
         if (!has_branches || !has_categories) return;
 
-        int col_branch = mDataMapping.get(ImportColumnMappingDialog.DATA_BRANCH);
-        int col_category = mDataMapping.get(ImportColumnMappingDialog.DATA_CATEGORY);
+        int col_branch = mDataMapping.get(ColumnMappingDialog.DATA_BRANCH);
+        int col_category = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY);
 
         int company_id = importData.company_id;
 

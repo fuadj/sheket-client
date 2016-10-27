@@ -21,9 +21,9 @@ import java.util.Vector;
 /**
  * Created by fuad on 6/9/16.
  */
-public class ImportColumnMappingDialog extends DialogFragment {
+public class ColumnMappingDialog extends DialogFragment {
     public interface OnClickListener {
-        void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> dataMapping);
+        void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> columnMapping);
         void onCancelSelected();
     }
 
@@ -37,8 +37,8 @@ public class ImportColumnMappingDialog extends DialogFragment {
     private Spinner mBranchSpinner;
     private Spinner mQuantitySpinner;
 
-    public static ImportColumnMappingDialog newInstance(SimpleCSVReader reader) {
-        ImportColumnMappingDialog dialog = new ImportColumnMappingDialog();
+    public static ColumnMappingDialog newInstance(SimpleCSVReader reader) {
+        ColumnMappingDialog dialog = new ColumnMappingDialog();
         dialog.mReader = reader;
         return dialog;
     }
@@ -62,7 +62,7 @@ public class ImportColumnMappingDialog extends DialogFragment {
                 (spinner.getSelectedItemPosition() - 1);
     }
 
-    private Map<Integer, Integer> getDataMapping() {
+    private Map<Integer, Integer> getColumnMapping() {
         Map<Integer, Integer> mapping = new HashMap<>();
 
         mapping.put(DATA_ITEM_NAME, getMapping(mItemNameSpinner));
@@ -108,7 +108,7 @@ public class ImportColumnMappingDialog extends DialogFragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 if (mListener != null) {
                                     mListener.onColumnMappingDone(mReader,
-                                            getDataMapping());
+                                            getColumnMapping());
                                 }
                             }
                         }).

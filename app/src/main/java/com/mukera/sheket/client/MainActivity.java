@@ -46,11 +46,9 @@ import com.mukera.sheket.client.controller.admin.EmployeesFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
 import com.mukera.sheket.client.controller.importer.DuplicateEntities;
 import com.mukera.sheket.client.controller.importer.DuplicateReplacementDialog;
-import com.mukera.sheket.client.controller.importer.DuplicateFinderTask;
-import com.mukera.sheket.client.controller.importer.ImportColumnMappingDialog;
-import com.mukera.sheket.client.controller.importer.ImportDataTask;
-import com.mukera.sheket.client.controller.importer.ImportListener;
-import com.mukera.sheket.client.controller.importer.ParseFileTask;
+import com.mukera.sheket.client.controller.importer.DuplicateSearcherTask;
+import com.mukera.sheket.client.controller.importer.ColumnMappingDialog;
+import com.mukera.sheket.client.controller.importer.ApplyImportOperationsTask;
 import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
 import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
@@ -76,7 +74,6 @@ import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.OkHttpClient;
 
 import java.io.File;
 import java.util.Locale;
@@ -90,7 +87,8 @@ import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
-        ImportListener,
+        ApplyImportOperationsTask.ImportListener,
+        DuplicateSearcherTask.SearchFinishedListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
     public static final int REQUEST_FILE_CHOOSER = 1;
@@ -107,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements
 
     static final int IMPORT_STATE_NONE = 0;
     static final int IMPORT_STATE_SUCCESS = 1;
-    static final int IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG = 2;
+    static final int IMPORT_STATE_DISPLAY_COLUMN_MAPPING_DIALOG = 2;
     static final int IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG = 3;
     static final int IMPORT_STATE_ERROR = 4;
 
@@ -147,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements
      * we were doing after we get the permission. In our context, it is for showing {@code PaymentDialog}
      * for a company. So we need to hold a reference to the company that triggered the
      * permission request so we can show the {@code PaymentDialog} afterwards.
-     * <p/>
+     * <p>
      * NOTE: we could launch the {@code PaymentDialog} in {@code onRequestPermissionsResult()}, but
      * that causes an exception saying the activity isn't Resumed yet. So, we set {@code mDidSelectCompanyBeforeRequest}
      * to true if we need to get the READ_PHONE_STATE and show the {@code PaymentDialog} afterwards.
@@ -508,8 +506,6 @@ public class MainActivity extends AppCompatActivity implements
         dialog.show();
     }
 
-    static final OkHttpClient client = new OkHttpClient();
-
     Pair<Boolean, String> updateCompanyName(SCompany company, String new_name) {
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
@@ -729,7 +725,7 @@ public class MainActivity extends AppCompatActivity implements
                 mImportPath = path;
 
                 if (verifyStoragePermissions()) {
-                    startImporterTask();
+                    startCSVImporter();
                 } else {
                     SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
                     SheketTracker.sendTrackingData(this,
@@ -745,13 +741,32 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    void startImporterTask() {
+    void startCSVImporter() {
         mImporting = true;
         mImportProgress = ProgressDialog.show(this,
                 "Importing Data", "Please Wait...", true);
-        ParseFileTask parseFileTask = new ParseFileTask(new File(mImportPath));
-        parseFileTask.setListener(this);
-        parseFileTask.execute();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final SimpleCSVReader reader = new SimpleCSVReader(new File(mImportPath));
+                reader.parseCSV();
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (reader.parsingSuccess()) {
+                            mReader = reader;
+                            mImportState = IMPORT_STATE_DISPLAY_COLUMN_MAPPING_DIALOG;
+                            if (mDidResume) {
+                                showImportUpdates();
+                            }
+                        } else {
+                            importError("Import Error: " + reader.getErrorMessage());
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -759,7 +774,7 @@ public class MainActivity extends AppCompatActivity implements
         switch (requestCode) {
             case REQUEST_EXTERNAL_STORAGE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startImporterTask();
+                    startCSVImporter();
                 }
                 break;
             case REQUEST_READ_PHONE_STATE: {
@@ -850,63 +865,64 @@ public class MainActivity extends AppCompatActivity implements
             case IMPORT_STATE_SUCCESS:
                 stopImporting(null);
                 break;
-            case IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG:
-                if (mReader.parsingSuccess()) {
-
-                    // a nice handy way of implementing "closure" to wrap this code in,
-                    // so we don't have to define it as an external function
-                    final Runnable importDialogPresenter = new Runnable() {
-                        @Override
-                        public void run() {
-                            final ImportColumnMappingDialog dialog = ImportColumnMappingDialog.newInstance(mReader);
-                            dialog.setListener(new ImportColumnMappingDialog.OnClickListener() {
-                                @Override
-                                public void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
-                                    dialog.dismiss();
-                                    new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
-                                }
-
-                                @Override
-                                public void onCancelSelected() {
-                                    dialog.dismiss();
-                                    stopImporting("Import Dialog Canceled");
-                                }
-                            });
-                            dialog.show(getSupportFragmentManager(), "Import");
-                        }
-                    };
-
-                    if (mReader.getNumSkippedLines() > 0) {
-                        String msg = String.format(Locale.US,
-                                "%d lines skipped\n" +
-                                        "%d lines had fewer columns than header\n" +
-                                        "%d lines had more columns than header.",
-                                mReader.getNumSkippedLines(),
-                                mReader.getNumLinesWithFewerColumnsThanHeader(),
-                                mReader.getNumLinesWithMoreColumnsThanHeader());
-
-                        new AlertDialog.Builder(MainActivity.this).
-                                setTitle("Some lines were skipped").
-                                setMessage(msg).
-                                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                        importDialogPresenter.run();
-                                    }
-                                }).
-                                setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                    @Override
-                                    public void onDismiss(DialogInterface dialog) {
-                                        importDialogPresenter.run();
-                                    }
-                                }).show();
-                    } else {
-                        importDialogPresenter.run();
-                    }
-                } else {
+            case IMPORT_STATE_DISPLAY_COLUMN_MAPPING_DIALOG:
+                if (!mReader.parsingSuccess()) {
                     stopImporting("Parsing Error " + mErrorMsg);
+                    break;
                 }
+
+                // a nice handy way of implementing "closure" to wrap this code in,
+                // so we don't have to define it as an external function
+                final Runnable importDialogPresenter = new Runnable() {
+                    @Override
+                    public void run() {
+                        final ColumnMappingDialog dialog = ColumnMappingDialog.newInstance(mReader);
+                        dialog.setListener(new ColumnMappingDialog.OnClickListener() {
+                            @Override
+                            public void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> columnMapping) {
+                                dialog.dismiss();
+                                new DuplicateSearcherTask(reader, columnMapping, MainActivity.this).execute();
+                            }
+
+                            @Override
+                            public void onCancelSelected() {
+                                dialog.dismiss();
+                                stopImporting("Import Dialog Canceled");
+                            }
+                        });
+                        dialog.show(getSupportFragmentManager(), "Import");
+                    }
+                };
+
+                if (mReader.getNumSkippedLines() > 0) {
+                    String msg = String.format(Locale.US,
+                            "%d lines skipped\n" +
+                                    "%d lines had fewer columns than header\n" +
+                                    "%d lines had more columns than header.",
+                            mReader.getNumSkippedLines(),
+                            mReader.getNumLinesWithFewerColumnsThanHeader(),
+                            mReader.getNumLinesWithMoreColumnsThanHeader());
+
+                    new AlertDialog.Builder(MainActivity.this).
+                            setTitle("Some lines were skipped").
+                            setMessage(msg).
+                            setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    importDialogPresenter.run();
+                                }
+                            }).
+                            setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialog) {
+                                    importDialogPresenter.run();
+                                }
+                            }).show();
+                } else {
+                    importDialogPresenter.run();
+                }
+
                 break;
             case IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG:
                 chooseReplacementForDuplicates();
@@ -974,7 +990,7 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             // This means we've gone through all the categories and branches,
             // time to do the actual importing
-            new ImportDataTask(mReader, mImportDataMapping, mDuplicateEntities, this, this).execute();
+            new ApplyImportOperationsTask(mReader, mImportDataMapping, mDuplicateEntities, this, this).execute();
         }
     }
 
@@ -1012,16 +1028,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void displayDataMappingDialog(SimpleCSVReader reader) {
-        mReader = reader;
-        mImportState = IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG;
-        if (mDidResume) {
-            showImportUpdates();
-        }
-    }
-
-    @Override
-    public void displayReplacementDialog(SimpleCSVReader reader, Map<Integer, Integer> mapping, DuplicateEntities duplicateEntities) {
+    public void duplicateSearchFinished(SimpleCSVReader reader, Map<Integer, Integer> mapping, DuplicateEntities duplicateEntities) {
         mImportState = IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG;
 
         mImportDataMapping = mapping;
