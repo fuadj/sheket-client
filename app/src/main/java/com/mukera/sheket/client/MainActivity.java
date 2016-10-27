@@ -852,21 +852,58 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             case IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG:
                 if (mReader.parsingSuccess()) {
-                    final ImportDataMappingDialog dialog = ImportDataMappingDialog.newInstance(mReader);
-                    dialog.setListener(new ImportDataMappingDialog.OnClickListener() {
-                        @Override
-                        public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
-                            dialog.dismiss();
-                            new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
-                        }
 
+                    // a nice handy way of implementing "closure" to wrap this code in,
+                    // so we don't have to define it as an external function
+                    final Runnable importDialogPresenter = new Runnable() {
                         @Override
-                        public void onCancelSelected() {
-                            dialog.dismiss();
-                            stopImporting("Import Dialog Canceled");
+                        public void run() {
+                            final ImportDataMappingDialog dialog = ImportDataMappingDialog.newInstance(mReader);
+                            dialog.setListener(new ImportDataMappingDialog.OnClickListener() {
+                                @Override
+                                public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
+                                    dialog.dismiss();
+                                    new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
+                                }
+
+                                @Override
+                                public void onCancelSelected() {
+                                    dialog.dismiss();
+                                    stopImporting("Import Dialog Canceled");
+                                }
+                            });
+                            dialog.show(getSupportFragmentManager(), "Import");
                         }
-                    });
-                    dialog.show(getSupportFragmentManager(), "Import");
+                    };
+
+                    if (mReader.getNumSkippedLines() > 0) {
+                        String msg = String.format(Locale.US,
+                                "%d lines skipped\n" +
+                                        "%d lines had fewer columns than header\n" +
+                                        "%d lines had more columns than header.",
+                                mReader.getNumSkippedLines(),
+                                mReader.getNumLinesWithFewerColumnsThanHeader(),
+                                mReader.getNumLinesWithMoreColumnsThanHeader());
+
+                        new AlertDialog.Builder(MainActivity.this).
+                                setTitle("Some lines were skipped").
+                                setMessage(msg).
+                                setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        importDialogPresenter.run();
+                                    }
+                                }).
+                                setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        importDialogPresenter.run();
+                                    }
+                                }).show();
+                    } else {
+                        importDialogPresenter.run();
+                    }
                 } else {
                     stopImporting("Parsing Error " + mErrorMsg);
                 }

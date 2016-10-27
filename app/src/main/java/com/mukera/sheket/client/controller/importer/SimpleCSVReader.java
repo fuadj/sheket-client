@@ -27,10 +27,17 @@ public class SimpleCSVReader {
     private Vector<Vector<String>> mData;
     private String mErrorMsg = null;
 
+    private int mNumLinesSkipped;
+    private int mNumLinesFewerColumns;
+    private int mNumLinesMoreColumns;
+
     public SimpleCSVReader(File file) {
         mFile = file;
         mHeaders = new Vector<>();
         mData = new Vector<>();
+        mNumLinesSkipped = 0;
+        mNumLinesFewerColumns = 0;
+        mNumLinesMoreColumns = 0;
     }
 
     private Vector<String> splitAndTrim(String data) {
@@ -84,8 +91,20 @@ public class SimpleCSVReader {
             // read in the data
             while ((line = reader.readLine()) != null) {
                 Vector<String> cols = splitAndTrim(line);
-                // this line isn't full
-                if (cols.size() != headers.size()) continue;
+
+                if (cols.isEmpty())
+                    continue;
+
+                // the row and headers don't have equal columns
+                if (cols.size() != headers.size()) {
+                    mNumLinesSkipped++;
+                    if (cols.size() < headers.size()) {
+                        mNumLinesFewerColumns++;
+                    } else {
+                        mNumLinesMoreColumns++;
+                    }
+                    continue;
+                }
 
                 Vector<String> row = new Vector<>();
                 for (int i = 0; i < cols.size(); i++) {
@@ -143,6 +162,10 @@ public class SimpleCSVReader {
     public Vector<String> getHeaders() {
         return mHeaders;
     }
+
+    public int getNumSkippedLines() { return mNumLinesSkipped; }
+    public int getNumLinesWithFewerColumnsThanHeader() { return mNumLinesFewerColumns; }
+    public int getNumLinesWithMoreColumnsThanHeader() { return mNumLinesMoreColumns; }
 
     public int getNumRows() {
         return mData.size();
