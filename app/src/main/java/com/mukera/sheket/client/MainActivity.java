@@ -712,7 +712,19 @@ public class MainActivity extends AppCompatActivity implements
                 // Get the File path from the Uri
                 String path = FileUtils.getPath(this, uri);
 
-                if (path == null || !FileUtils.isLocal(path)) return;
+                if (path == null || !FileUtils.isLocal(path)) {
+                    String err_msg = "";
+                    if (path == null) {
+                        err_msg = "Invalid path";
+                    } else if (!FileUtils.isLocal(path)){
+                        err_msg = "Please Select a file on your local phone";
+                    }
+                    Toast.makeText(MainActivity.this,
+                            err_msg,
+                            Toast.LENGTH_LONG).
+                            show();
+                    return;
+                }
 
                 String extension = FileUtils.getExtension(path);
                 if (extension == null || !extension.trim().toLowerCase().equals(".csv")) {
