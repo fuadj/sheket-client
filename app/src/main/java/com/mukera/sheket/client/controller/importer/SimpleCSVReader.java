@@ -1,7 +1,5 @@
 package com.mukera.sheket.client.controller.importer;
 
-import android.text.TextUtils;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -30,6 +28,9 @@ public class SimpleCSVReader {
     private int mNumLinesFewerColumns;
     private int mNumLinesMoreColumns;
 
+    private static final String QUOTE = Character.toString('"');
+    private static final char COMMA = ',';
+
     public SimpleCSVReader(File file) {
         mFile = file;
         mHeaders = new Vector<>();
@@ -39,13 +40,59 @@ public class SimpleCSVReader {
         mNumLinesMoreColumns = 0;
     }
 
-    private Vector<String> splitAndTrim(String data) {
-        String[] columns = data.split(",");
-        Vector<String> result = new Vector<>();
-        for (String s : columns) {
-            result.add(s.trim());
+    protected Vector<String> parseLine(String line) {
+        Vector<String> tokensOnThisLine = new Vector<>();
+
+        StringBuilder sb = new StringBuilder(line.length());
+
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (c == '"') {
+                inQuotes = !inQuotes;
+
+                // the tricky case of an embedded quote in the middle: a,bc"d"ef,g
+                if (i > 2 //not on the beginning of the line
+                        && line.charAt(i - 1) != COMMA //not at the beginning of an escape sequence
+                        && line.length() > (i + 1) &&
+                        line.charAt(i + 1) != COMMA //not at the	end of an escape sequence
+                        ) {
+                    sb.append(c);
+                }
+            } else if (c == COMMA && !inQuotes) {
+                tokensOnThisLine.add(sb.toString().trim());
+
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
         }
-        return result;
+
+        if (inQuotes) {
+            //throw new IOException("Un-terminated quoted field at end of CSV line");
+        }
+
+        if (sb.length() != 0) {
+            tokensOnThisLine.add(sb.toString().trim());
+        }
+
+        return tokensOnThisLine;
+    }
+
+    private Vector<String> splitAndTrim(String line) {
+        Vector<String> split = new Vector<>();
+
+        if (!line.contains(QUOTE)) {
+            String[] columns = line.split(Character.toString(COMMA));
+            for (String s : columns) {
+                split.add(s.trim());
+            }
+        } else {
+            split = parseLine(line);
+        }
+
+        return split;
     }
 
     public String getErrorMessage() {
@@ -70,7 +117,7 @@ public class SimpleCSVReader {
 
             for (int i = 0; i < headers.size(); i++) {
                 String col = headers.get(i);
-                if (TextUtils.isEmpty(col)) {
+                if (col == null || col.isEmpty()) {
                     emptyColumns.put(i, Boolean.TRUE);
                 } else {
                     mHeaders.add(col);
