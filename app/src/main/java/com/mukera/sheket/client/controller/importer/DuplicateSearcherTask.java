@@ -12,12 +12,16 @@ import com.mukera.sheket.client.utils.DuplicateFinder;
 /**
  * Created by fuad on 6/26/16.
  */
-public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntities> {
+public class DuplicateSearcherTask extends AsyncTask<Void, Void, DuplicateEntities> {
     private SimpleCSVReader mReader;
     private Map<Integer, Integer> mDataMapping;
-    private ImportListener mListener;
+    private SearchFinishedListener mListener;
 
-    public DuplicateFinderTask(SimpleCSVReader reader, Map<Integer, Integer> mapping, ImportListener listener) {
+    public interface SearchFinishedListener {
+        void duplicateSearchFinished(DuplicateEntities duplicateEntities);
+    }
+
+    public DuplicateSearcherTask(SimpleCSVReader reader, Map<Integer, Integer> mapping, SearchFinishedListener listener) {
         mReader = reader;
         mDataMapping = mapping;
         mListener = listener;
@@ -27,13 +31,13 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
     protected DuplicateEntities doInBackground(Void... params) {
         DuplicateEntities duplicateEntities = new DuplicateEntities();
 
-        if (mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY) !=
-                ImportDataMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             findDuplicateCategories(duplicateEntities);
         }
 
-        if (mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION) !=
-                ImportDataMappingDialog.NO_DATA_FOUND) {
+        if (mDataMapping.get(ColumnMappingDialog.DATA_BRANCH) !=
+                ColumnMappingDialog.NO_DATA_FOUND) {
             findDuplicateBranches(duplicateEntities);
         }
 
@@ -42,7 +46,7 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
 
     void findDuplicateCategories(DuplicateEntities duplicateEntities) {
         Set<String> categories = new HashSet<>();
-        int category_col = mDataMapping.get(ImportDataMappingDialog.DATA_CATEGORY);
+        int category_col = mDataMapping.get(ColumnMappingDialog.DATA_CATEGORY);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             categories.add(mReader.getRowAt(i).get(category_col));
@@ -54,7 +58,7 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
 
     void findDuplicateBranches(DuplicateEntities duplicateEntities) {
         Set<String> branches = new HashSet<>();
-        int branch_col = mDataMapping.get(ImportDataMappingDialog.DATA_LOCATION);
+        int branch_col = mDataMapping.get(ColumnMappingDialog.DATA_BRANCH);
 
         for (int i = 0; i < mReader.getNumRows(); i++) {
             branches.add(mReader.getRowAt(i).get(branch_col));
@@ -82,6 +86,6 @@ public class DuplicateFinderTask  extends AsyncTask<Void, Void, DuplicateEntitie
 
     @Override
     protected void onPostExecute(DuplicateEntities duplicateEntities) {
-        mListener.displayReplacementDialog(mReader, mDataMapping, duplicateEntities);
+        mListener.duplicateSearchFinished(duplicateEntities);
     }
 }

@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,7 +27,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,27 +34,18 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.ipaulpro.afilechooser.utils.FileUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.mukera.sheket.client.controller.CompanyUtil;
+import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.admin.EmployeesFragment;
 import com.mukera.sheket.client.controller.admin.TransactionHistoryFragment;
-import com.mukera.sheket.client.controller.importer.DuplicateEntities;
-import com.mukera.sheket.client.controller.importer.DuplicateReplacementDialog;
-import com.mukera.sheket.client.controller.importer.DuplicateFinderTask;
-import com.mukera.sheket.client.controller.importer.ImportDataMappingDialog;
-import com.mukera.sheket.client.controller.importer.ImportDataTask;
-import com.mukera.sheket.client.controller.importer.ImportListener;
-import com.mukera.sheket.client.controller.importer.ParseFileTask;
-import com.mukera.sheket.client.controller.importer.SimpleCSVReader;
-import com.mukera.sheket.client.controller.items.BranchItemFragment;
+import com.mukera.sheket.client.controller.importer.ImporterActivity;
 import com.mukera.sheket.client.controller.items.AllItemsFragment;
+import com.mukera.sheket.client.controller.items.BranchItemFragment;
 import com.mukera.sheket.client.controller.navigation.BaseNavigation;
 import com.mukera.sheket.client.controller.navigation.LeftNavigation;
-import com.mukera.sheket.client.controller.admin.BranchFragment;
 import com.mukera.sheket.client.controller.navigation.RightNavigation;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.controller.user.ProfileFragment;
@@ -71,18 +60,13 @@ import com.mukera.sheket.client.network.EditCompanyRequest;
 import com.mukera.sheket.client.network.EmptyResponse;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
-import com.mukera.sheket.client.services.AlarmReceiver;
 import com.mukera.sheket.client.services.SheketSyncService;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.PrefUtil;
 import com.mukera.sheket.client.utils.TextWatcherAdapter;
-import com.squareup.okhttp.OkHttpClient;
 
-import java.io.File;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -90,50 +74,9 @@ import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements
         BaseNavigation.NavigationCallback,
-        ImportListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final int REQUEST_FILE_CHOOSER = 1;
-    public static final int REQUEST_READ_PHONE_STATE = 2;
-
-    // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-
-    private String mImportPath;
-
-    static final int IMPORT_STATE_NONE = 0;
-    static final int IMPORT_STATE_SUCCESS = 1;
-    static final int IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG = 2;
-    static final int IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG = 3;
-    static final int IMPORT_STATE_ERROR = 4;
-
-    private int mImportState = IMPORT_STATE_NONE;
-
-    private SimpleCSVReader mReader = null;
-
-    private Map<Integer, Integer> mImportDataMapping = null;
-    private DuplicateEntities mDuplicateEntities = null;
-
-    private ProgressDialog mImportProgress = null;
-    private String mErrorMsg = null;
-
-    /**
-     * When importing, parsing is done on a AsyncTask and we can't
-     * issue UI update from a worker thread. We could have posted
-     * a {@code Runnable} on UI thread's LoopHandler to display results.
-     * But because of AsyncTasks's behaviour, this will cause the app to crash
-     * due to the activity not being on a resumed state. To prevent that, we only post to the
-     * UI thread if the activity has resumed. So we have {@code mDidResume} for that.
-     * If the activity wasn't resumed when we finished parsing, we need
-     * to tell it to update the UI after it resumes, so we set {@code mImporting}
-     * to true and it will check that to know if it needs to update UI when it wakes up.
-     */
-    private boolean mImporting = false;
-    private boolean mDidResume = false;
+    public static final int REQUEST_READ_PHONE_STATE = 1;
 
     private ProgressDialog mSyncingProgress = null;
 
@@ -147,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements
      * we were doing after we get the permission. In our context, it is for showing {@code PaymentDialog}
      * for a company. So we need to hold a reference to the company that triggered the
      * permission request so we can show the {@code PaymentDialog} afterwards.
-     * <p/>
+     * <p>
      * NOTE: we could launch the {@code PaymentDialog} in {@code onRequestPermissionsResult()}, but
      * that causes an exception saying the activity isn't Resumed yet. So, we set {@code mDidSelectCompanyBeforeRequest}
      * to true if we need to get the READ_PHONE_STATE and show the {@code PaymentDialog} afterwards.
@@ -506,8 +449,6 @@ public class MainActivity extends AppCompatActivity implements
         dialog.show();
     }
 
-    static final OkHttpClient client = new OkHttpClient();
-
     Pair<Boolean, String> updateCompanyName(SCompany company, String new_name) {
         CompanyAuth companyAuth = CompanyAuth.
                 newBuilder().
@@ -592,18 +533,7 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
-                // Create the ACTION_GET_CONTENT Intent
-                Intent getContentIntent = FileUtils.createGetContentIntent();
-
-                Intent intent = Intent.createChooser(getContentIntent, "Select a file");
-                startActivityForResult(intent, REQUEST_FILE_CHOOSER);
-                change_title = false;
-                SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-                SheketTracker.sendTrackingData(this,
-                        new HitBuilders.EventBuilder().
-                                setCategory(SheketTracker.CATEGORY_MAIN_NAVIGATION).
-                                setAction("importing file").
-                                build());
+                startActivity(new Intent(MainActivity.this, ImporterActivity.class));
                 break;
             }
             case BaseNavigation.StaticNavigationOptions.OPTION_BRANCHES:
@@ -707,63 +637,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case REQUEST_FILE_CHOOSER: {
-                if (resultCode != RESULT_OK) return;
-                final Uri uri = data.getData();
-
-                // Get the File path from the Uri
-                String path = FileUtils.getPath(this, uri);
-
-                if (path == null || !FileUtils.isLocal(path)) return;
-
-                String extension = FileUtils.getExtension(path);
-                if (extension == null || !extension.trim().toLowerCase().equals(".csv")) {
-                    Toast.makeText(MainActivity.this,
-                            R.string.toast_file_extension_must_be_csv,
-                            Toast.LENGTH_LONG).
-                            show();
-                    return;
-                }
-                mImportPath = path;
-
-                if (verifyStoragePermissions()) {
-                    startImporterTask();
-                } else {
-                    SheketTracker.setScreenName(MainActivity.this, SheketTracker.SCREEN_NAME_MAIN);
-                    SheketTracker.sendTrackingData(this,
-                            new HitBuilders.EventBuilder().
-                                    setCategory(SheketTracker.CATEGORY_MAIN_CONFIGURATION).
-                                    setAction("importing").
-                                    setLabel("don't have permission to read file").
-                                    build());
-                }
-
-                break;
-            }
-        }
-    }
-
-    void startImporterTask() {
-        mImporting = true;
-        mImportProgress = ProgressDialog.show(this,
-                "Importing Data", "Please Wait...", true);
-        ParseFileTask parseFileTask = new ParseFileTask(new File(mImportPath));
-        parseFileTask.setListener(this);
-        parseFileTask.execute();
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_EXTERNAL_STORAGE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startImporterTask();
-                }
-                break;
             case REQUEST_READ_PHONE_STATE: {
                 if ((grantResults.length > 0) &&
                         (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
@@ -781,22 +656,6 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
         }
-    }
-
-    private boolean verifyStoragePermissions() {
-        // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-            return false;
-        }
-        return true;
     }
 
     @Override
@@ -825,136 +684,15 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        mDidResume = false;
         LocalBroadcastManager.getInstance(this).
                 unregisterReceiver(mReceiver);
     }
 
-    void stopImporting(String err_msg) {
-        mImporting = false;
-        mImportState = IMPORT_STATE_NONE;
-
-        if (mImportProgress != null) {
-            mImportProgress.dismiss();
-            mImportProgress = null;
-        }
-
-        if (err_msg != null) {
-            new AlertDialog.Builder(MainActivity.this).
-                    setTitle("Import Error").
-                    setMessage(err_msg).show();
-            Log.e("Sheket MainActivity", err_msg);
-        }
-    }
-
-    void showImportUpdates() {
-        switch (mImportState) {
-            case IMPORT_STATE_SUCCESS:
-                stopImporting(null);
-                new AlertDialog.Builder(MainActivity.this).
-                        setTitle("Import Success").show();
-                break;
-            case IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG:
-                if (mReader.parsingSuccess()) {
-                    final ImportDataMappingDialog dialog = ImportDataMappingDialog.newInstance(mReader);
-                    dialog.setListener(new ImportDataMappingDialog.OnClickListener() {
-                        @Override
-                        public void onOkSelected(SimpleCSVReader reader, Map<Integer, Integer> dataMapping) {
-                            dialog.dismiss();
-                            new DuplicateFinderTask(reader, dataMapping, MainActivity.this).execute();
-                        }
-
-                        @Override
-                        public void onCancelSelected() {
-                            dialog.dismiss();
-                            stopImporting("Import Dialog Canceled");
-                        }
-                    });
-                    dialog.show(getSupportFragmentManager(), "Import");
-                } else {
-                    stopImporting("Parsing Error " + mErrorMsg);
-                }
-                break;
-            case IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG:
-                chooseReplacementForDuplicates();
-                break;
-            case IMPORT_STATE_ERROR:
-                stopImporting(mErrorMsg);
-                break;
-        }
-    }
-
-    void chooseReplacementForDuplicates() {
-        boolean found_duplicates = false;
-        Vector<String> duplicates = null;
-
-        // this can't be a single variable b/c it is final
-        final boolean[] is_categories = new boolean[]{false};
-
-        if (!mDuplicateEntities.categoryDuplicates.isEmpty()) {
-            found_duplicates = true;
-            is_categories[0] = true;
-            duplicates = mDuplicateEntities.categoryDuplicates.remove(0);
-        } else if (!mDuplicateEntities.branchDuplicates.isEmpty()) {
-            found_duplicates = true;
-            is_categories[0] = false;
-            duplicates = mDuplicateEntities.branchDuplicates.remove(0);
-        }
-
-        if (found_duplicates) {
-            final DuplicateReplacementDialog dialog = DuplicateReplacementDialog.newInstance(duplicates,
-                    is_categories[0] ? "Categories" : "Branches");
-            dialog.setListener(new DuplicateReplacementDialog.ReplacementListener() {
-                @Override
-                public void noDuplicatesFound() {
-                    dialog.dismiss();
-
-                    // recursive for the next
-                    chooseReplacementForDuplicates();
-                }
-
-                @Override
-                public void duplicatesFound(Set<String> nonDuplicates, DuplicateReplacementDialog.Replacement replacement) {
-                    dialog.dismiss();
-                    /**
-                     * for each replacement word, make a mapping for it to the "correct word".
-                     * we use this mapping when we actually do the importing to replace out the
-                     * duplicates with the correct ones.
-                     */
-
-                    // doing the checking outside is more efficient
-                    if (is_categories[0]) {
-                        for (String duplicateCategory : replacement.duplicates) {
-                            mDuplicateEntities.categoryReplacement.put(duplicateCategory, replacement.correctWord);
-                        }
-                    } else {
-                        for (String duplicateBranch : replacement.duplicates) {
-                            mDuplicateEntities.branchReplacement.put(duplicateBranch, replacement.correctWord);
-                        }
-                    }
-
-                    // recursive for the next
-                    chooseReplacementForDuplicates();
-                }
-            });
-            dialog.show(getSupportFragmentManager(), "Duplicate " + (is_categories[0] ? "Categories" : "Branches"));
-        } else {
-            // This means we've gone through all the categories and branches,
-            // time to do the actual importing
-            new ImportDataTask(mReader, mImportDataMapping, mDuplicateEntities, this, this).execute();
-        }
-    }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        Log.d("MainActivity", "On PostResume");
-        AlarmReceiver.startPaymentCheckNow(this);
-
-        mDidResume = true;
-        if (mImporting) {
-            showImportUpdates();
-        } else if (mDidGrantReadPhoneStatePermission) {
+        if (mDidGrantReadPhoneStatePermission) {
             /**
              * <p>RESET it. For subsequent actions that require the permission, we won't come here
              * because checking if the permission is GRANTED will return TRUE and we can do the action
@@ -978,44 +716,6 @@ public class MainActivity extends AppCompatActivity implements
                 Intent intent = new Intent(this, SheketSyncService.class);
                 startService(intent);
             }
-        }
-    }
-
-    @Override
-    public void displayDataMappingDialog(SimpleCSVReader reader) {
-        mReader = reader;
-        mImportState = IMPORT_STATE_DISPLAY_DATA_MAPPING_DIALOG;
-        if (mDidResume) {
-            showImportUpdates();
-        }
-    }
-
-    @Override
-    public void displayReplacementDialog(SimpleCSVReader reader, Map<Integer, Integer> mapping, DuplicateEntities duplicateEntities) {
-        mImportState = IMPORT_STATE_DISPLAY_REPLACEMENT_DIALOG;
-
-        mImportDataMapping = mapping;
-        mDuplicateEntities = duplicateEntities;
-
-        if (mDidResume) {
-            showImportUpdates();
-        }
-    }
-
-    @Override
-    public void importSuccessful() {
-        mImportState = IMPORT_STATE_SUCCESS;
-        if (mDidResume) {
-            showImportUpdates();
-        }
-    }
-
-    @Override
-    public void importError(String msg) {
-        mErrorMsg = msg;
-        mImportState = IMPORT_STATE_ERROR;
-        if (mDidResume) {
-            showImportUpdates();
         }
     }
 

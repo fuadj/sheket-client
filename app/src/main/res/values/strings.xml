@@ -303,6 +303,19 @@
         %1$s is not supported in your license level, please upgrade your license.
     </string>
 
+    <string name="dialog_import_select_branch_title">Branch Not Specified</string>
+    <string name="dialog_import_select_branch_desc">
+        \t You have provided with item quantity, but no branch has been specified. So,
+        either select from the branch list or create a new branch to assign the quantity
+        to.
+        \n\n
+
+        \tNOTE: you can click ignore, which will ignore the quantity altogether.
+    </string>
+    <string name="dialog_import_select_branch_create_new_branch">Create New Branch</string>
+    <string name="dialog_import_select_branch_ignore">Ignore</string>
+    <string name="dialog_import_select_branch_ok">Ok</string>
+
     <!-- Placeholder texts that will be formatted -->
     <string name="placeholder_all_items_total_quantity">Total Qty: %1$s</string>
     <string name="placeholder_employee_action_add_member">Add Member</string>

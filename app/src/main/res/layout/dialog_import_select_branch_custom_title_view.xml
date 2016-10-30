@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:paddingLeft="32dp"
+    android:paddingRight="32dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:id="@+id/dialog_import_select_branch_title"
+        android:text="@string/dialog_import_select_branch_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#212121"
+        android:textSize="16dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dialog_import_select_branch_desc"
+        android:text="@string/dialog_import_select_branch_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp"
+        android:textColor="#424242" />
+
+    <!--
+    <ListView
+        android:id="@+id/dialog_import_select_branch_list_branches"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+    </ListView>
+
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/dialog_import_select_branch_btn_create_branch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        app:fb_radius="5dp"
+        app:fb_textSize="16sp"
+        app:fb_text="@string/dialog_import_select_branch_create_new_branch"
+        app:fb_textColor="#fff"
+        app:fb_defaultColor="#673ab7"
+        app:fb_focusColor="#5e35b1"
+        app:layout_row="2"
+        app:layout_column="1"
+        android:layout_marginTop="8dp"
+        app:layout_gravity="fill_horizontal" />
+        -->
+
+</LinearLayout>

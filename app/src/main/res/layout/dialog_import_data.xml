@@ -71,7 +71,7 @@
     <Spinner
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/dialog_import_balance_spinner"
+        android:id="@+id/dialog_import_quantity_spinner"
         app:layout_row="3"
         app:layout_column="1" />
 
@@ -88,7 +88,7 @@
     <Spinner
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/dialog_import_location_spinner"
+        android:id="@+id/dialog_import_branch_spinner"
         app:layout_row="4"
         app:layout_column="1" />
 </android.support.v7.widget.GridLayout>
