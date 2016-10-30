@@ -18,9 +18,7 @@ public class DuplicateSearcherTask extends AsyncTask<Void, Void, DuplicateEntiti
     private SearchFinishedListener mListener;
 
     public interface SearchFinishedListener {
-        void duplicateSearchFinished(SimpleCSVReader reader,
-                                     Map<Integer, Integer> columnMapping,
-                                     DuplicateEntities duplicateEntities);
+        void duplicateSearchFinished(DuplicateEntities duplicateEntities);
     }
 
     public DuplicateSearcherTask(SimpleCSVReader reader, Map<Integer, Integer> mapping, SearchFinishedListener listener) {
@@ -88,6 +86,6 @@ public class DuplicateSearcherTask extends AsyncTask<Void, Void, DuplicateEntiti
 
     @Override
     protected void onPostExecute(DuplicateEntities duplicateEntities) {
-        mListener.duplicateSearchFinished(mReader, mDataMapping, duplicateEntities);
+        mListener.duplicateSearchFinished(duplicateEntities);
     }
 }

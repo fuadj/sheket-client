@@ -19,9 +19,7 @@ public class LoaderId {
         public static final int SYNCED_TRANSACTION_HISTORY_LOADER = 12;
     }
 
-    public static class TransactionActivity {
-        public static final int ITEM_SEARCH_LOADER = 1;
-        public static final int ITEM_SEARCH_CATEGORY_LOADER = 2;
-        public static final int CATEGORY_SELECTION_LOADER = 3;
+    public static class ImporterActivity {
+        public static final int BRANCH_LIST_LOADER = 1;
     }
 }

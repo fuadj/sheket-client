@@ -23,7 +23,7 @@ import java.util.Vector;
  */
 public class ColumnMappingDialog extends DialogFragment {
     public interface OnClickListener {
-        void onColumnMappingDone(SimpleCSVReader reader, Map<Integer, Integer> columnMapping);
+        void onColumnMappingDone(Map<Integer, Integer> columnMapping);
         void onCancelSelected();
     }
 
@@ -107,8 +107,7 @@ public class ColumnMappingDialog extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (mListener != null) {
-                                    mListener.onColumnMappingDone(mReader,
-                                            getColumnMapping());
+                                    mListener.onColumnMappingDone(getColumnMapping());
                                 }
                             }
                         }).
