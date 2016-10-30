@@ -66,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
 
-        AlarmReceiver.startPeriodicPaymentAlarm(this);
+        //AlarmReceiver.startPeriodicPaymentAlarm(this);
 
         // the user has logged in, start MainActivity
         if (PrefUtil.isUserSet(this)) {
