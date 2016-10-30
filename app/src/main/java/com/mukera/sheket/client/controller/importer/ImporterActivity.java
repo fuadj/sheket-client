@@ -453,6 +453,7 @@ public class ImporterActivity extends AppCompatActivity implements
                                 getButton(DialogInterface.BUTTON_POSITIVE).getVisibility() == View.INVISIBLE) {
                             return;
                         }
+                        dialog.dismiss();
                         mDidChooseBranchForImporting = true;
                         mChosenBranchId = branches.get(selectedBranchIndex[0]).branch_id;
                         startDuplicateFinderTask();
