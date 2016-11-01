@@ -357,32 +357,26 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateViewContents() {
-        /*
-        int img_resource = -1;
+        int receive_icon = R.drawable.ic_action_receive_un_selected;
+        int send_icon = R.drawable.ic_action_send_un_selected;
+        int buy_icon = R.drawable.ic_action_buy_un_selected;
+        int sell_icon = R.drawable.ic_action_sell_un_selected;
+
         switch (mActionType) {
-            case NOT_SET:
-                img_resource = -1;
-                break;
-            case BUY:
-                img_resource = R.drawable.ic_action_choice_buy;
-                break;
-            case SELL:
-                img_resource = R.drawable.ic_action_choice_sell;
-                break;
-            case SEND_TO:
-                img_resource = R.drawable.ic_action_choice_send;
-                break;
-            case RECEIVE_FROM:
-                img_resource = R.drawable.ic_action_choice_receive;
-                break;
+            case RECEIVE_FROM: receive_icon = R.drawable.ic_action_receive_selected; break;
+            case SEND_TO: send_icon = R.drawable.ic_action_send_selected; break;
+            case BUY: buy_icon = R.drawable.ic_action_buy_selected; break;
+            case SELL: sell_icon = R.drawable.ic_action_sell_selected; break;
         }
-        if (img_resource != -1) {
-            mImgBtnSelectedTransaction.setImageResource(img_resource);
-            mImgBtnSelectedTransaction.setVisibility(View.VISIBLE);
-        } else {
-            mImgBtnSelectedTransaction.setVisibility(View.INVISIBLE);
-        }
-        */
+
+        if (mImgBtnReceive != null)
+            mImgBtnReceive.setImageResource(receive_icon);
+        if (mImgBtnSend != null)
+            mImgBtnSend.setImageResource(send_icon);
+        if (mImgBtnBuy != null)
+            mImgBtnBuy.setImageResource(buy_icon);
+        if (mImgBtnSell != null)
+            mImgBtnSell.setImageResource(sell_icon);
 
         boolean is_transfer = false;
         switch (mActionType) {

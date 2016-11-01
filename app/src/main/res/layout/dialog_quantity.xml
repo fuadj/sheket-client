@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,7 +44,9 @@
             android:id="@+id/dialog_qty_layout_transaction_type_four"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingBottom="4dp"
+            android:paddingTop="4dp">
 
             <View
                 android:layout_width="0dp"
@@ -57,7 +57,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_receive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_receive" />
+                android:background="@drawable/ic_action_receive_un_selected" />
 
             <View
                 android:layout_width="0dp"
@@ -68,7 +68,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_send"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_send" />
+                android:background="@drawable/ic_action_send_un_selected" />
 
             <View
                 android:layout_width="0dp"
@@ -79,7 +79,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_buy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_buy" />
+                android:background="@drawable/ic_action_buy_un_selected" />
 
             <View
                 android:layout_width="0dp"
@@ -90,7 +90,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_sell"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_sell" />
+                android:background="@drawable/ic_action_sell_un_selected" />
 
             <View
                 android:layout_width="0dp"
@@ -98,50 +98,40 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/dialog_qty_layout_transaction_type_two"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:id="@+id/dialog_qty_select_img_btn_two_buy"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/ic_action_buy" />
-
-                <ImageButton
-                    android:id="@+id/dialog_qty_select_img_btn_two_sell"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="4dp"
-                    android:background="@drawable/ic_action_sell" />
-
-            </LinearLayout>
-        </RelativeLayout>
-
-        <!--
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            <View
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
 
             <ImageButton
-                android:id="@+id/dialog_qty_img_btn_action"
+                android:id="@+id/dialog_qty_select_img_btn_two_buy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="4dp"
-                android:background="#ffffff"
-                android:src="@drawable/ic_action_no_action_transfer" />
+                android:background="@drawable/ic_action_buy_un_selected" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+
+            <ImageButton
+                android:id="@+id/dialog_qty_select_img_btn_two_sell"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_action_sell_un_selected" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+
         </LinearLayout>
-        -->
 
         <RelativeLayout
             android:id="@+id/dialog_qty_layout_select_other_branch"
