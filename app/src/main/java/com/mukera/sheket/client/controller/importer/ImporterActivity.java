@@ -445,7 +445,7 @@ public class ImporterActivity extends AppCompatActivity implements
                     });
         }
 
-        final AlertDialog dialog = builder.
+        AlertDialog dialog = builder.
                 setPositiveButton(R.string.dialog_import_select_branch_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

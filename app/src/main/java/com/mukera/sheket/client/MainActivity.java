@@ -533,6 +533,7 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
+                change_title = false;
                 startActivity(new Intent(MainActivity.this, ImporterActivity.class));
                 break;
             }
