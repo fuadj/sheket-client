@@ -61,7 +61,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/import_dialog_item_balance"
+        android:text="@string/import_dialog_item_quantity"
         android:id="@+id/textView18"
         app:layout_row="3"
         app:layout_column="0"
