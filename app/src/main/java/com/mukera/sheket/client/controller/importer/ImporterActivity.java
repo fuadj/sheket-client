@@ -523,10 +523,9 @@ public class ImporterActivity extends AppCompatActivity implements
                                     @Override
                                     public void run() {
                                         dialog.dismiss();
-                                        // recall the loader so the updated branch list can be shown
-                                        getSupportLoaderManager().
-                                                initLoader(LoaderId.ImporterActivity.BRANCH_LIST_LOADER, null,
-                                                        ImporterActivity.this);
+                                        // We don't need to call initLoader as we did on cancel
+                                        // b/c that will get called automatically when the branch gets
+                                        // created
                                     }
                                 });
                             }
@@ -570,96 +569,6 @@ public class ImporterActivity extends AppCompatActivity implements
 
         dialog.show();
     }
-    /*
-
-    final AlertDialog dialog = new AlertDialog.Builder(this).
-            setView(view).
-            setPositiveButton(R.string.dialog_import_select_branch_ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            }).
-            setNeutralButton(R.string.dialog_import_select_branch_ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            }).
-            setCancelable(false).
-            create();
-
-    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-        @Override
-        public void onShow(DialogInterface dialog) {
-            ((AlertDialog) dialog).getButton(DialogInterface.BUTTON_POSITIVE).setVisibility(View.GONE);
-        }
-    });
-
-    FancyButton createBranchButton = (FancyButton) view.findViewById(R.id.dialog_import_select_branch_btn_create_branch);
-
-    ListView branchList = (ListView) view.findViewById(R.id.dialog_import_select_branch_list_branches);
-    //final BranchAdapter adapter = new BranchAdapter(this);
-    //branchList.setAdapter(adapter);
-
-    branchList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setVisibility(View.VISIBLE);
-        }
-    });
-
-    dialog.setCanceledOnTouchOutside(false);
-
-    dialog.show();
-    static class BranchAdapter extends CursorAdapter {
-        static class ViewHolder {
-            RadioButton btnSelectBranch;
-            TextView textBranchName;
-
-            public ViewHolder(View view) {
-                btnSelectBranch = (RadioButton) view.findViewById(R.id.list_item_select_import_branch_check_btn);
-                textBranchName = (TextView) view.findViewById(R.id.list_item_select_import_branch_name);
-            }
-        }
-
-        public BranchAdapter(Context context) {
-            super(context, null);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(
-                    R.layout.list_item_select_import_branch_title_view, parent, false);
-            ViewHolder holder = new ViewHolder(view);
-            view.setTag(holder);
-
-            return view;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            final ViewHolder holder = (ViewHolder) view.getTag();
-
-            final SBranch branch = new SBranch(cursor);
-
-            holder.textBranchName.setText(branch.branch_name);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    holder.btnSelectBranch.setChecked(
-                            !holder.btnSelectBranch.isChecked());
-                }
-            });
-            holder.btnSelectBranch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                }
-            });
-        }
-    }
-    */
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
