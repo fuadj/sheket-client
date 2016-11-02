@@ -189,7 +189,10 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             factor = mItem.derived_factor;
         }
 
-        return factor * Double.valueOf(mQtyEdit.getText().toString().trim());
+        String qty = mQtyEdit.getText().toString().trim();
+        if (qty.startsWith("."))        // handle numbers like .17 as 0.17, it CRASHES otherwise!!!
+            qty = "0" + qty;
+        return factor * Double.valueOf(qty);
     }
 
     @Override
