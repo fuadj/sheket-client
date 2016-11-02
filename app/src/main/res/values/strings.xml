@@ -220,7 +220,7 @@
     <string name="import_dialog_item_name">Name</string>
     <string name="import_dialog_item_code">Code</string>
     <string name="import_dialog_item_category">Category</string>
-    <string name="import_dialog_item_balance">Balance</string>
+    <string name="import_dialog_item_quantity">Quantity</string>
     <string name="import_dialog_item_location">Branch</string>
 
     <string name="fragment_user_profile_username">Username: </string>
