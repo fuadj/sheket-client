@@ -114,8 +114,6 @@ public class MainActivity extends AppCompatActivity implements
 
         initSlidingMenuDrawer();
 
-        //AlarmReceiver.startPeriodicPaymentAlarm(this);
-
         syncIfIsLoginFirstTime();
         setTitle(R.string.app_name);
 
@@ -469,21 +467,25 @@ public class MainActivity extends AppCompatActivity implements
                 setNewName(new_name).
                 build();
         try {
-            new SheketGRPCCall<EmptyResponse>().runBlockingCall(
-                    new SheketGRPCCall.GRPCCallable<EmptyResponse>() {
-                        @Override
-                        public EmptyResponse runGRPCCall() throws Exception {
-                            ManagedChannel managedChannel = ManagedChannelBuilder.
-                                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                                    usePlaintext(true).
-                                    build();
+            // only try to ask server to update name if company wasn't local
 
-                            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                                    SheketServiceGrpc.newBlockingStub(managedChannel);
-                            return blockingStub.editCompany(request);
+            if (!PrefUtil.isCompanyLocallyCreated(MainActivity.this, company.company_id)) {
+                new SheketGRPCCall<EmptyResponse>().runBlockingCall(
+                        new SheketGRPCCall.GRPCCallable<EmptyResponse>() {
+                            @Override
+                            public EmptyResponse runGRPCCall() throws Exception {
+                                ManagedChannel managedChannel = ManagedChannelBuilder.
+                                        forAddress(ConfigData.getServerIP(MainActivity.this), ConfigData.getServerPort()).
+                                        usePlaintext(true).
+                                        build();
+
+                                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                        SheketServiceGrpc.newBlockingStub(managedChannel);
+                                return blockingStub.editCompany(request);
+                            }
                         }
-                    }
-            );
+                );
+            }
 
             // if we've reached this point without throwing an exception, then it means success
             ContentValues values = company.toContentValues();
@@ -531,6 +533,7 @@ public class MainActivity extends AppCompatActivity implements
                 replaceMainFragment(new AllItemsFragment(), false);
                 break;
             case BaseNavigation.StaticNavigationOptions.OPTION_IMPORT: {
+                change_title = false;
                 startActivity(new Intent(MainActivity.this, ImporterActivity.class));
                 break;
             }
@@ -729,7 +732,12 @@ public class MainActivity extends AppCompatActivity implements
         if (!PrefUtil.getIsFirstTime(this)) return;
         PrefUtil.setIsFirstTime(this, false);
 
-        LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false);
+        LanguageSelectionDialog.displayLanguageConfigurationDialog(this, false, new Runnable() {
+            @Override
+            public void run() {
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+            }
+        });
     }
 
 
@@ -743,6 +751,7 @@ public class MainActivity extends AppCompatActivity implements
 
             if (action.equals(SheketBroadcast.ACTION_PAYMENT_REQUIRED)) {
                 dismissSyncDialog();
+                PrefUtil.resetCompanySelection(MainActivity.this);
                 restartMainActivity();
             } else if (action.equals(SheketBroadcast.ACTION_COMPANY_SWITCH)) {
                 dismissSyncDialog();

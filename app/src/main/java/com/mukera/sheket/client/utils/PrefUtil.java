@@ -15,6 +15,19 @@ import java.util.Vector;
  * Created by gamma on 3/28/16.
  */
 public class PrefUtil {
+
+    private static final String pref_server_ip = "pref_server_ip";
+    public static String getServerIP(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(pref_server_ip, "192.168.1.2");
+    }
+
+    public static void setServerIP(Context context, String ip) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putString(pref_server_ip, ip);
+        editor.commit();
+    }
+
     /**
      * Sync On Login: Check this if you are just loggin in and should sync
      */
@@ -42,6 +55,7 @@ public class PrefUtil {
         return prefs.getBoolean(pref_is_first_time, true);
     }
 
+    public static final int LANGUAGE_NONE = 0;
     public static final int LANGUAGE_ENGLISH = 1;
     public static final int LANGUAGE_AMHARIC = 2;
     private static final String pref_user_language = "pref_user_language";
@@ -51,9 +65,13 @@ public class PrefUtil {
         editor.commit();
     }
 
+    public static boolean isUserLanguageSet(Context context) {
+        return getUserLanguageId(context) != LANGUAGE_NONE;
+    }
+
     public static int getUserLanguageId(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getInt(pref_user_language, LANGUAGE_ENGLISH);
+        return prefs.getInt(pref_user_language, LANGUAGE_NONE);
     }
 
     public static String getUserLanguageLocale(Context context) {
@@ -309,6 +327,39 @@ public class PrefUtil {
     public static boolean isUserSet(Context context) {
         return getUserId(context) !=
                 context.getResources().getInteger(R.integer.invalid_user_id);
+    }
+
+    public static boolean isUserLocallyCreated(Context context) {
+        return getUserId(context) == context.getResources().getInteger(R.integer.local_user_id);
+    }
+
+    public static boolean isCompanyLocallyCreated(Context context, int company_id) {
+        return company_id <= context.getResources().getInteger(R.integer.local_company_id_start);
+    }
+
+    private static final String local_last_company_id = "local_last_company_id";
+    public static int getLastLocalCompanyId(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        return prefs.getInt(local_last_company_id, context.getResources().getInteger(R.integer.local_company_id_start));
+    }
+
+    public static void setLastLocalCompanyId(Context context, int company_id) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(local_last_company_id, company_id);
+        editor.commit();
+    }
+
+    private static final String local_company_payment_date = "local_company_payment_date";
+    public static long getLocalCompanyPaymentDate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getLong(local_company_payment_date, 0);
+    }
+
+    public static void setLocalCompanyPaymentDate(Context context, long payment_date) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putLong(local_company_payment_date, payment_date);
+        editor.commit();
     }
 
     // Use this if you want to "un-set" the current company.

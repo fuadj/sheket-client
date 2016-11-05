@@ -37,13 +37,15 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     private View mViewSync, mViewTransaction, mViewItems;
 
     void configureStaticOptions() {
+        /*
         ViewHolder holder = new ViewHolder(mViewSync);
         holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(
                 StaticNavigationOptions.OPTION_SYNC).first);
         holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(
                 StaticNavigationOptions.OPTION_SYNC).second);
+                */
 
-        holder = new ViewHolder(mViewTransaction);
+        ViewHolder holder = new ViewHolder(mViewTransaction);
         holder.name.setText(StaticNavigationOptions.sEntityAndIcon.get(
                 StaticNavigationOptions.OPTION_TRANSACTIONS).first);
         holder.icon.setImageResource(StaticNavigationOptions.sEntityAndIcon.get(
@@ -61,10 +63,12 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 boolean option_matched = false;
                 int selected_option = -1;
                 switch (v.getId()) {
+                    /*
                     case R.id.nav_right_sync:
                         selected_option = StaticNavigationOptions.OPTION_SYNC;
                         option_matched = true;
                         break;
+                        */
                     case R.id.nav_right_transactions:
                         selected_option = StaticNavigationOptions.OPTION_TRANSACTIONS;
                         option_matched = true;
@@ -79,7 +83,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
                 }
             }
         };
-        mViewSync.setOnClickListener(listener);
+        //mViewSync.setOnClickListener(listener);
         mViewTransaction.setOnClickListener(listener);
         if (getUserPermission().hasManagerAccess()) {
             mViewItems.setOnClickListener(listener);
@@ -89,7 +93,7 @@ public class RightNavigation extends BaseNavigation implements LoaderCallbacks<C
     }
 
     void loadUI() {
-        mViewSync = getRootView().findViewById(R.id.nav_right_sync);
+        //mViewSync = getRootView().findViewById(R.id.nav_right_sync);
         mViewTransaction = getRootView().findViewById(R.id.nav_right_transactions);
         mViewItems = getRootView().findViewById(R.id.nav_right_items);
 

@@ -602,7 +602,7 @@ public class EmployeesFragment extends Fragment implements LoaderCallbacks<Curso
                             @Override
                             public AddEmployeeResponse runGRPCCall() throws Exception {
                                 ManagedChannel managedChannel = ManagedChannelBuilder.
-                                        forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                                        forAddress(ConfigData.getServerIP(getActivity()), ConfigData.getServerPort()).
                                         usePlaintext(true).
                                         build();
 

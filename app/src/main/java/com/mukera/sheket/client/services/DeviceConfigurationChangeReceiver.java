@@ -15,7 +15,7 @@ public class DeviceConfigurationChangeReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
-            AlarmReceiver.startPeriodicPaymentAlarm(context);
+            AlarmReceiver.scheduleNextPaymentCheck(context);
         }
 
         /**
@@ -63,7 +63,7 @@ public class DeviceConfigurationChangeReceiver extends BroadcastReceiver {
                     commit();
 
             if (time_changed) {
-                AlarmReceiver.startPeriodicPaymentAlarm(context);
+                AlarmReceiver.scheduleNextPaymentCheck(context);
             }
         }
     }

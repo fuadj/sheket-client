@@ -35,4 +35,19 @@ public class PaymentContractTest extends AndroidTestCase {
 
         assertEquals("Contract encoding error", TEST_CONTRACT, contract.toString());
     }
+
+    public void testFreeContract() {
+        PaymentContract contract = new PaymentContract(PaymentContract.LIMITED_FREE_LICENSE);
+
+        String dummy_device = "dummy_device";
+        int dummy_user = 0;
+        int dummy_company = 0;
+
+        assertEquals("Free Contract type doesn't match", contract.contract_type, PaymentContract.CONTRACT_LIMITED_FREE);
+
+        assertTrue("Free Contract Problem",
+                PaymentContract.isLicenseValidForDeviceAndUser(
+                        contract.toString(),
+                        dummy_device, dummy_user, dummy_company));
+    }
 }

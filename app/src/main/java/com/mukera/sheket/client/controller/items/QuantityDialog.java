@@ -2,6 +2,7 @@ package com.mukera.sheket.client.controller.items;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -85,6 +86,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         public void writeToParcel(Parcel dest, int flags) {
         }
     }
+
+    private TextView mItemCode, mItemName;
 
     /**
      * These ImageButtons will only be bind to the views after {@code onLoaderFinished} has been
@@ -247,8 +250,8 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         if ((mActionType == ActionType.NOT_SET) ||
                 !isQuantitySet() ||
                 !isQuantityAllowed()) {
-            mBtnContinue.setEnabled(false);
-            mBtnFinish.setEnabled(false);
+            mBtnContinue.setVisibility(View.INVISIBLE);
+            mBtnFinish.setVisibility(View.INVISIBLE);
             return;
         }
 
@@ -259,14 +262,14 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
                  * If this transaction is a transfer, we should've selected another branch
                  */
                 if (mOtherBranchItem == null) {
-                    mBtnContinue.setEnabled(false);
-                    mBtnFinish.setEnabled(false);
+                    mBtnContinue.setVisibility(View.INVISIBLE);
+                    mBtnFinish.setVisibility(View.INVISIBLE);
                     return;
                 }
         }
 
-        mBtnContinue.setEnabled(true);
-        mBtnFinish.setEnabled(true);
+        mBtnContinue.setVisibility(View.VISIBLE);
+        mBtnFinish.setVisibility(View.VISIBLE);
     }
 
     void updateConversionRateDisplay() {
@@ -294,8 +297,11 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void linkViews(View view) {
+        mItemCode = (TextView) view.findViewById(R.id.dialog_qty_text_item_code);
+        mItemName = (TextView) view.findViewById(R.id.dialog_qty_text_item_name);
+
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
-        mImgBtnSelectedTransaction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
+        //mImgBtnSelectedTransaction = (ImageButton) view.findViewById(R.id.dialog_qty_img_btn_action);
 
         mLayoutOtherBranchSelector = view.findViewById(R.id.dialog_qty_layout_select_other_branch);
         mTextTransferType = (TextView) view.findViewById(R.id.dialog_qty_text_transfer_type);
@@ -323,10 +329,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
         mTextConversionFormula = (TextView) view.findViewById(R.id.dialog_qty_text_conversion);
 
         mEditItemNote = (EditText) view.findViewById(R.id.dialog_qty_edit_text_item_note);
-
-        mBtnCancel = (Button) view.findViewById(R.id.dialog_qty_btn_cancel);
-        mBtnContinue = (Button) view.findViewById(R.id.dialog_qty_btn_continue);
-        mBtnFinish = (Button) view.findViewById(R.id.dialog_qty_btn_finish);
     }
 
     void updateVisibility() {
@@ -358,30 +360,26 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateViewContents() {
-        int img_resource = -1;
+        int receive_icon = R.drawable.ic_action_receive_un_clicked;
+        int send_icon = R.drawable.ic_action_send_un_clicked;
+        int buy_icon = R.drawable.ic_action_buy_un_clicked;
+        int sell_icon = R.drawable.ic_action_sell_un_clicked;
+
         switch (mActionType) {
-            case NOT_SET:
-                img_resource = -1;
-                break;
-            case BUY:
-                img_resource = R.drawable.ic_action_choice_buy;
-                break;
-            case SELL:
-                img_resource = R.drawable.ic_action_choice_sell;
-                break;
-            case SEND_TO:
-                img_resource = R.drawable.ic_action_choice_send;
-                break;
-            case RECEIVE_FROM:
-                img_resource = R.drawable.ic_action_choice_receive;
-                break;
+            case RECEIVE_FROM: receive_icon = R.drawable.ic_action_receive_clicked; break;
+            case SEND_TO: send_icon = R.drawable.ic_action_send_clicked; break;
+            case BUY: buy_icon = R.drawable.ic_action_buy_clicked; break;
+            case SELL: sell_icon = R.drawable.ic_action_sell_clicked; break;
         }
-        if (img_resource != -1) {
-            mImgBtnSelectedTransaction.setImageResource(img_resource);
-            mImgBtnSelectedTransaction.setVisibility(View.VISIBLE);
-        } else {
-            mImgBtnSelectedTransaction.setVisibility(View.INVISIBLE);
-        }
+
+        if (mImgBtnReceive != null)
+            mImgBtnReceive.setImageResource(receive_icon);
+        if (mImgBtnSend != null)
+            mImgBtnSend.setImageResource(send_icon);
+        if (mImgBtnBuy != null)
+            mImgBtnBuy.setImageResource(buy_icon);
+        if (mImgBtnSell != null)
+            mImgBtnSell.setImageResource(sell_icon);
 
         boolean is_transfer = false;
         switch (mActionType) {
@@ -456,6 +454,9 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
 
         linkViews(mDialogLayout);
 
+        mItemName.setText(mItem.name);
+        mItemCode.setText(mItem.item_code);
+
         mRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -467,13 +468,6 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             @Override
             public void afterTextChanged(Editable s) {
                 updateViews();
-            }
-        });
-
-        mBtnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListener.dialogCancel(QuantityDialog.this);
             }
         });
 
@@ -520,32 +514,52 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
             }
         });
 
-        View.OnClickListener acceptTransactionListener = new View.OnClickListener() {
+        AlertDialog dialog = new AlertDialog.Builder(getContext()).
+                setView(mDialogLayout).
+                setPositiveButton(R.string.dialog_qty_finish, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mBtnFinish.getVisibility() == View.INVISIBLE) return;
+
+                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
+
+                        mListener.dialogOkFinish(QuantityDialog.this, getTransactionItem());
+                    }
+                }).
+                setNegativeButton(R.string.dialog_qty_continue, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mBtnContinue.getVisibility() == View.INVISIBLE) return;
+
+                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
+
+                        mListener.dialogOkContinue(QuantityDialog.this, getTransactionItem());
+                    }
+                }).
+                setNeutralButton(R.string.dialog_qty_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mListener.dialogCancel(QuantityDialog.this);
+                    }
+                }).
+                create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
-            public void onClick(View v) {
-                // dismiss keyboard
-                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(mQtyEdit.getApplicationWindowToken(), 0);
+            public void onShow(DialogInterface dialog) {
+                AlertDialog alertDialog = (AlertDialog) dialog;
 
-                if (v.getId() == mBtnContinue.getId()) {
-                    mListener.dialogOkContinue(QuantityDialog.this,
-                            getTransactionItem());
-                } else if (v.getId() == mBtnFinish.getId()) {
-                    mListener.dialogOkFinish(QuantityDialog.this,
-                            getTransactionItem());
-                }
+                mBtnFinish = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                mBtnContinue = alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE);
+                mBtnCancel = alertDialog.getButton(DialogInterface.BUTTON_NEUTRAL);
 
+                // start things off
+                updateViews();
             }
-        };
-        mBtnContinue.setOnClickListener(acceptTransactionListener);
-        mBtnFinish.setOnClickListener(acceptTransactionListener);
+        });
 
-        // start things off
-        updateViews();
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle(mItem.name);
-        Dialog dialog = builder.setView(mDialogLayout).create();
         return dialog;
     }
 

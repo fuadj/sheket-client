@@ -37,10 +37,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.mukera.sheket.client.BuildConfig;
 import com.mukera.sheket.client.LanguageSelectionDialog;
 import com.mukera.sheket.client.MainActivity;
 import com.mukera.sheket.client.R;
 import com.mukera.sheket.client.SheketBroadcast;
+import com.mukera.sheket.client.SheketGRPCCall;
 import com.mukera.sheket.client.SheketTracker;
 import com.mukera.sheket.client.controller.ListUtils;
 import com.mukera.sheket.client.controller.user.IdEncoderUtil;
@@ -52,6 +54,7 @@ import com.mukera.sheket.client.network.EditUserNameRequest;
 import com.mukera.sheket.client.network.NewCompanyRequest;
 import com.mukera.sheket.client.network.SheketAuth;
 import com.mukera.sheket.client.network.SheketServiceGrpc;
+import com.mukera.sheket.client.services.PaymentContract;
 import com.mukera.sheket.client.utils.ConfigData;
 import com.mukera.sheket.client.utils.DeviceId;
 import com.mukera.sheket.client.utils.LoaderId;
@@ -122,7 +125,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                  */
                 // there is a bug in android M, declaring the permission in the manifest isn't enough
                 // see: http://stackoverflow.com/a/38782876/5753416
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!PrefUtil.isUserLocallyCreated(getNavActivity()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     int permissionCheck = ContextCompat.checkSelfPermission(getNavActivity(), Manifest.permission.READ_PHONE_STATE);
 
                     if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
@@ -157,13 +160,25 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 switch (i) {
                     case BaseNavigation.StaticNavigationOptions.OPTION_LANGUAGES:
                         LanguageSelectionDialog.
-                                displayLanguageConfigurationDialog(getNavActivity(), true);
+                                displayLanguageConfigurationDialog(getNavActivity(), true, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        LocalBroadcastManager.getInstance(getNavActivity()).
+                                                sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+                                    }
+                                });
                         break;
                     case StaticNavigationOptions.OPTION_HELP:
                         displayHelpDialog();
                         break;
                     case StaticNavigationOptions.OPTION_DEBUG:
                         getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_DEBUG);
+                        break;
+                    case StaticNavigationOptions.OPTION_IP:
+                        displayIPDialog();
+                        break;
+                    case StaticNavigationOptions.OPTION_LOG_OUT:
+                        getCallBack().onNavigationOptionSelected(StaticNavigationOptions.OPTION_LOG_OUT);
                         break;
                 }
             }
@@ -196,9 +211,56 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
         getNavActivity().getSupportLoaderManager().initLoader(LoaderId.MainActivity.COMPANY_LIST_LOADER, null, this);
     }
 
+    void displayIPDialog() {
+        final EditText editText = new EditText(getNavActivity());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getNavActivity()).
+                setTitle("Set IP").
+                setView(editText).
+                setPositiveButton(R.string.dialog_new_company_btn_ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, int which) {
+                        final String ip = editText.getText().toString().trim();
+
+                        PrefUtil.setServerIP(getNavActivity(), ip);
+                    }
+                }).
+                setNeutralButton(R.string.dialog_new_company_btn_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        final AlertDialog dialog = builder.create();
+
+        editText.setText(ConfigData.getServerIP(getNavActivity()));
+
+        editText.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(
+                        !s.toString().trim().isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                // b/c there is no name initially, hide "ok" btn
+                ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+            }
+        });
+
+        dialog.show();
+    }
+
     void displayHelpDialog() {
+        View view = getNavActivity().getLayoutInflater().inflate(R.layout.dialog_help, null);
+        TextView txtVersion = (TextView) view.findViewById(R.id.dialog_help_app_version);
+        txtVersion.setText(BuildConfig.VERSION_NAME);
         new AlertDialog.Builder(getNavActivity()).
-                setView(getNavActivity().getLayoutInflater().inflate(R.layout.dialog_help, null)).
+                setView(view).
                 show();
     }
 
@@ -316,37 +378,71 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
      * Tries to create a company by sending request to the server. If all goes well,
      * it returns <True, Null>. Otherwise it returns <False, "error message">
      */
-    Pair<Boolean, String> createNewCompany(Activity activity, String company_name) {
+    Pair<Boolean, String> createNewCompany(Activity activity, final String company_name) {
         try {
-            ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                    usePlaintext(true).
-                    build();
+            int company_id;
+            String user_permission;
+            String license;
+            String payment_id;
+            int payment_state = CompanyEntry.PAYMENT_INVALID;
 
-            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                    SheketServiceGrpc.newBlockingStub(managedChannel);
+            if (PrefUtil.isUserLocallyCreated(getNavActivity())) {
+                company_id = PrefUtil.getLastLocalCompanyId(getNavActivity());
 
-            String cookie = PrefUtil.getLoginCookie(getNavActivity());
+                // decrement as we're going down the number line
+                PrefUtil.setLastLocalCompanyId(getNavActivity(), company_id - 1);
 
-            // TODO: check if we need a better check
-            // we don't really have a response, we just need to check if we can
-            // "pass" the call without throwing an exception. If that happened it means
-            // a "non-error" result.
-            Company created_company = blockingStub.
-                    createCompany(
-                            NewCompanyRequest.
-                                    newBuilder().
-                                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
-                                    setCompanyName(company_name).
-                                    setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
-                                    setLocalUserTime(
-                                            String.valueOf(System.currentTimeMillis())
-                                    ).build()
-                    );
+                user_permission = new SPermission().setPermissionType(SPermission.PERMISSION_TYPE_OWNER).Encode();
+                // TODO: check if this is the first company, if NOT don't give t free license.
+                payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
 
-            int company_id = created_company.getCompanyId();
-            String user_permission = created_company.getPermission();
-            String license = created_company.getSignedLicense();
+                try {
+                    if (isFirstCompany()) {
+                        license = PaymentContract.LIMITED_FREE_LICENSE;
+                        payment_state = CompanyEntry.PAYMENT_VALID;
+                    } else {
+                        license = "";
+                        payment_state = CompanyEntry.PAYMENT_INVALID;
+                    }
+                } catch (Exception e) {
+                    return new Pair<>(Boolean.FALSE, e.getMessage());
+                }
+
+                PrefUtil.setLocalCompanyPaymentDate(getNavActivity(), System.currentTimeMillis());
+            } else {
+                Company created_company = new SheketGRPCCall<Company>().runBlockingCall(
+                        new SheketGRPCCall.GRPCCallable<Company>() {
+                            @Override
+                            public Company runGRPCCall() throws Exception {
+                                ManagedChannel managedChannel = ManagedChannelBuilder.
+                                        forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
+                                        usePlaintext(true).
+                                        build();
+
+                                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                                        SheketServiceGrpc.newBlockingStub(managedChannel);
+                                return blockingStub.createCompany(
+                                        NewCompanyRequest.
+                                                newBuilder().
+                                                setAuth(SheketAuth.newBuilder().setLoginCookie(
+                                                        PrefUtil.getLoginCookie(getNavActivity()))).
+                                                setCompanyName(company_name).
+                                                setDeviceId(DeviceId.getUniqueDeviceId(getNavActivity())).
+                                                setLocalUserTime(
+                                                        String.valueOf(System.currentTimeMillis())
+                                                ).build()
+                                );
+                            }
+                        }
+                );
+
+                company_id = created_company.getCompanyId();
+                user_permission = created_company.getPermission();
+                license = created_company.getSignedLicense();
+                //payment_id = created_company.getPaymentId();
+                payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
+                payment_state = CompanyEntry.PAYMENT_VALID;
+            }
 
             ContentValues values = new ContentValues();
             values.put(CompanyEntry.COLUMN_COMPANY_ID, company_id);
@@ -354,12 +450,13 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             values.put(CompanyEntry.COLUMN_NAME, company_name);
             values.put(CompanyEntry.COLUMN_PERMISSION, user_permission);
             values.put(CompanyEntry.COLUMN_PAYMENT_LICENSE, license);
-            values.put(CompanyEntry.COLUMN_PAYMENT_ID, created_company.getPaymentId());
+            values.put(CompanyEntry.COLUMN_PAYMENT_ID, payment_id);
+            values.put(CompanyEntry.COLUMN_PAYMENT_STATE, payment_state);
 
             Uri uri = activity.getContentResolver().insert(
                     CompanyEntry.CONTENT_URI, values
             );
-            if (ContentUris.parseId(uri) < 0) {
+            if (ContentUris.parseId(uri) == -1) {
                 return new Pair<>(Boolean.FALSE, "error adding company into db");
             }
 
@@ -368,10 +465,23 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
             PrefUtil.setCurrentCompanyId(activity, company_id);
             PrefUtil.setUserPermission(activity, user_permission);
 
-        } catch (StatusRuntimeException e) {
+        } catch (SheketGRPCCall.SheketException e) {
             return new Pair<>(Boolean.FALSE, e.getMessage());
         }
         return new Pair<>(Boolean.TRUE, null);
+    }
+
+    boolean isFirstCompany() throws Exception {
+        Cursor cursor = getNavActivity().getContentResolver().
+                query(CompanyEntry.CONTENT_URI, SCompany.COMPANY_COLUMNS,
+                        null, null, null);
+        if (cursor == null) {
+            throw new Exception("Company Error");
+        }
+        if (cursor.getCount() == 0)
+            return true;
+        cursor.close();
+        return false;
     }
 
     void displayProfileDetails() {
@@ -521,24 +631,26 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     Pair<Boolean, String> updateCurrentUserName(String new_name) {
         try {
-            ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
-                    usePlaintext(true).
-                    build();
+            if (!PrefUtil.isUserLocallyCreated(getNavActivity())) {
+                ManagedChannel managedChannel = ManagedChannelBuilder.
+                        forAddress(ConfigData.getServerIP(getNavActivity()), ConfigData.getServerPort()).
+                        usePlaintext(true).
+                        build();
 
-            SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
-                    SheketServiceGrpc.newBlockingStub(managedChannel);
+                SheketServiceGrpc.SheketServiceBlockingStub blockingStub =
+                        SheketServiceGrpc.newBlockingStub(managedChannel);
 
-            String cookie = PrefUtil.getLoginCookie(getNavActivity());
+                String cookie = PrefUtil.getLoginCookie(getNavActivity());
 
-            // TODO: check if we need a better check
-            // we don't really have a response, we just need to check if we can
-            // "pass" the call without throwing an exception. If that happened it means
-            // a "non-error" result.
-            blockingStub.editUserName(EditUserNameRequest.newBuilder().
-                    setNewName(new_name).
-                    setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
-                    build());
+                // TODO: check if we need a better check
+                // we don't really have a response, we just need to check if we can
+                // "pass" the call without throwing an exception. If that happened it means
+                // a "non-error" result.
+                blockingStub.editUserName(EditUserNameRequest.newBuilder().
+                        setNewName(new_name).
+                        setAuth(SheketAuth.newBuilder().setLoginCookie(cookie)).
+                        build());
+            }
 
             PrefUtil.setUserName(getNavActivity(), new_name);
             return new Pair<>(Boolean.TRUE, null);
@@ -591,7 +703,6 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
         // adding the columns adds it in-order from left to right, so make sure company_id column in the first.
         addCompanyRowCursor.newRow().add(CompanyAdapter.ADD_COMPANY_ROW_COMPANY_ID);
-
         /**
          * TODO: we are adding the "add company" cursor to the top and not at the bottom b/c
          * doing that creates an exception when selecting the first company.
@@ -604,6 +715,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         data,
                 }
         ));
+
         ListUtils.setDynamicHeight(mCompanyList);
     }
 

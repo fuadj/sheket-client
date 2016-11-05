@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.mukera.sheket.client.SheketBroadcast;
 import com.mukera.sheket.client.SheketGRPCCall;
+import com.mukera.sheket.client.controller.user.IdEncoderUtil;
 import com.mukera.sheket.client.models.SBranchCategory;
 import com.mukera.sheket.client.models.SCompany;
 import com.mukera.sheket.client.network.Company;
@@ -86,7 +87,7 @@ public class SheketSyncService extends IntentService {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_STARTED);
 
             ManagedChannel managedChannel = ManagedChannelBuilder.
-                    forAddress(ConfigData.getServerIP(), ConfigData.getServerPort()).
+                    forAddress(ConfigData.getServerIP(SheketSyncService.this), ConfigData.getServerPort()).
                     usePlaintext(true).
                     build();
 
@@ -236,7 +237,8 @@ public class SheketSyncService extends IntentService {
             String name = company.getCompanyName();
             String new_permission = company.getPermission();
             String license = company.getSignedLicense();
-            String payment_id = company.getPaymentId();
+            //String payment_id = company.getPaymentId();
+            String payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
 
             /**
              * The server will only return a non-empty license if payment is made.

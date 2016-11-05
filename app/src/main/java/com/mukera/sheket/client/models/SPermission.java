@@ -52,8 +52,8 @@ public class SPermission {
         }
     }
 
-    private int mPermissionType;
-    private List<BranchAccess> mAllowedBranches;
+    public int mPermissionType;
+    public List<BranchAccess> mAllowedBranches;
 
     static final String P_JSON_TYPE = "permission_type";
     static final String P_JSON_BRANCHES = "branches";
@@ -149,12 +149,14 @@ public class SPermission {
         return mPermissionType;
     }
 
-    public void setPermissionType(int type) {
+    public SPermission setPermissionType(int type) {
         mPermissionType = type;
+        return this;
     }
 
-    public void setAllowedBranches(List<BranchAccess> branches) {
+    public SPermission setAllowedBranches(List<BranchAccess> branches) {
         mAllowedBranches = new ArrayList<>(branches);
+        return this;
     }
 
     public List<BranchAccess> getAllowedBranches() {

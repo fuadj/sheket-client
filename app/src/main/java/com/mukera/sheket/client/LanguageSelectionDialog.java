@@ -14,7 +14,7 @@ import com.mukera.sheket.client.utils.PrefUtil;
  * Created by fuad on 9/15/16.
  */
 public class LanguageSelectionDialog {
-    public static void displayLanguageConfigurationDialog(final Context context, boolean is_cancellable) {
+    public static void displayLanguageConfigurationDialog(final Context context, boolean is_cancellable, final Runnable languageSelectedListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_first_time_configuration, null);
         builder.setView(view);
@@ -43,7 +43,9 @@ public class LanguageSelectionDialog {
                 }
 
                 PrefUtil.setUserLanguage(context, selected_lang);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(SheketBroadcast.ACTION_COMPANY_SWITCH));
+
+                if (languageSelectedListener != null)
+                    languageSelectedListener.run();
             }
         };
 
