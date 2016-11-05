@@ -57,7 +57,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_receive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_receive_un_selected" />
+                android:background="@drawable/ic_action_receive_clicked" />
 
             <View
                 android:layout_width="0dp"
@@ -68,7 +68,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_send"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_send_un_selected" />
+                android:background="@drawable/ic_action_send_clicked" />
 
             <View
                 android:layout_width="0dp"
@@ -79,7 +79,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_buy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_buy_un_selected" />
+                android:background="@drawable/ic_action_buy_clicked" />
 
             <View
                 android:layout_width="0dp"
@@ -90,7 +90,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_four_sell"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_sell_un_selected" />
+                android:background="@drawable/ic_action_sell_clicked" />
 
             <View
                 android:layout_width="0dp"
@@ -113,7 +113,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_two_buy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_buy_un_selected" />
+                android:background="@drawable/ic_action_buy_clicked" />
 
             <View
                 android:layout_width="0dp"
@@ -124,7 +124,7 @@
                 android:id="@+id/dialog_qty_select_img_btn_two_sell"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_action_sell_un_selected" />
+                android:background="@drawable/ic_action_sell_clicked" />
 
             <View
                 android:layout_width="0dp"
