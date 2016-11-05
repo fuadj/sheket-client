@@ -357,16 +357,16 @@ public class QuantityDialog extends DialogFragment implements LoaderManager.Load
     }
 
     void updateViewContents() {
-        int receive_icon = R.drawable.ic_action_receive_un_selected;
-        int send_icon = R.drawable.ic_action_send_un_selected;
-        int buy_icon = R.drawable.ic_action_buy_un_selected;
-        int sell_icon = R.drawable.ic_action_sell_un_selected;
+        int receive_icon = R.drawable.ic_action_receive_un_clicked;
+        int send_icon = R.drawable.ic_action_send_un_clicked;
+        int buy_icon = R.drawable.ic_action_buy_un_clicked;
+        int sell_icon = R.drawable.ic_action_sell_un_clicked;
 
         switch (mActionType) {
-            case RECEIVE_FROM: receive_icon = R.drawable.ic_action_receive_selected; break;
-            case SEND_TO: send_icon = R.drawable.ic_action_send_selected; break;
-            case BUY: buy_icon = R.drawable.ic_action_buy_selected; break;
-            case SELL: sell_icon = R.drawable.ic_action_sell_selected; break;
+            case RECEIVE_FROM: receive_icon = R.drawable.ic_action_receive_clicked; break;
+            case SEND_TO: send_icon = R.drawable.ic_action_send_clicked; break;
+            case BUY: buy_icon = R.drawable.ic_action_buy_clicked; break;
+            case SELL: sell_icon = R.drawable.ic_action_sell_clicked; break;
         }
 
         if (mImgBtnReceive != null)
