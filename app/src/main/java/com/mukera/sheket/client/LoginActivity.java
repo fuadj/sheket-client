@@ -171,6 +171,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     void displayNewUserDialog() {
+        PrefUtil.setUserId(LoginActivity.this, getResources().getInteger(R.integer.local_user_id));
+        PrefUtil.setUserName(LoginActivity.this, "");
+        LocalBroadcastManager.getInstance(LoginActivity.this).
+                sendBroadcast(new Intent(SheketBroadcast.ACTION_USER_CONFIG_CHANGE));
+        startMainActivity(false);
+        /*
         final EditText editText = new EditText(this);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this).
@@ -216,6 +222,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         dialog.show();
+        */
     }
 
     /**

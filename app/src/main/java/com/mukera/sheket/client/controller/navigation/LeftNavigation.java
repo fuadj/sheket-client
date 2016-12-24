@@ -87,15 +87,17 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
     @Override
     protected void onSetup() {
-        mLayoutProfile = getRootView().findViewById(R.id.left_nav_layout_user_profile);
+        //mLayoutProfile = getRootView().findViewById(R.id.left_nav_layout_user_profile);
+        /*
         mLayoutProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 displayProfileDetails();
             }
         });
-        mProfileUserName = (TextView) getRootView().findViewById(R.id.left_nav_text_user_name);
-        mProfileUserName.setText(PrefUtil.getUsername(getNavActivity()));
+        */
+        //mProfileUserName = (TextView) getRootView().findViewById(R.id.left_nav_text_user_name);
+        //mProfileUserName.setText(PrefUtil.getUsername(getNavActivity()));
 
         mCompanyList = (ListView) getRootView().findViewById(R.id.nav_left_list_view_companies);
         mCompanyAdapter = new CompanyAdapter(getNavActivity());
@@ -197,7 +199,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
 
             mManagerList.setAdapter(mManagementAdapter);
             mManagementAdapter.add(StaticNavigationOptions.OPTION_BRANCHES);
-            mManagementAdapter.add(StaticNavigationOptions.OPTION_EMPLOYEES);
+            //mManagementAdapter.add(StaticNavigationOptions.OPTION_EMPLOYEES);
             ListUtils.setDynamicHeight(mManagerList);
 
             mManagerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

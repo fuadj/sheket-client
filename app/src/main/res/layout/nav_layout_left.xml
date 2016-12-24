@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:paddingLeft="16dp">
 
+    <!--
     <LinearLayout
         android:id="@+id/left_nav_layout_user_profile"
         android:layout_alignParentTop="true"
@@ -30,11 +31,13 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp" />
     </LinearLayout>
+    -->
 
     <ScrollView
+        android:layout_marginTop="24dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/left_nav_layout_user_profile">
+        >
 
         <LinearLayout
             android:layout_width="match_parent"
