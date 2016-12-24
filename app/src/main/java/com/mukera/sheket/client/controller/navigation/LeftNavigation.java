@@ -399,6 +399,9 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                 payment_id = IdEncoderUtil.encodeAndDelimitId(company_id, IdEncoderUtil.ID_TYPE_COMPANY);
 
                 try {
+                    license = PaymentContract.LIMITED_FREE_LICENSE;
+                    payment_state = CompanyEntry.PAYMENT_VALID;
+                    /*
                     if (isFirstCompany()) {
                         license = PaymentContract.LIMITED_FREE_LICENSE;
                         payment_state = CompanyEntry.PAYMENT_VALID;
@@ -406,6 +409,7 @@ public class LeftNavigation extends BaseNavigation implements LoaderManager.Load
                         license = "";
                         payment_state = CompanyEntry.PAYMENT_INVALID;
                     }
+                    */
                 } catch (Exception e) {
                     return new Pair<>(Boolean.FALSE, e.getMessage());
                 }

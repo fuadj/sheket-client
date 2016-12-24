@@ -17,11 +17,14 @@ import java.util.Calendar;
 public class AlarmReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+        // DON'T invoke payment service, this is the FREE offline mode!!!
+
+        /*
         // schedule the "next time" alarm to fire
         AlarmReceiver.scheduleNextPaymentCheck(context);
-
         startWakefulService(context,
                 new Intent(context, PaymentService.class));
+        */
     }
 
     public static void startPaymentCheckNow(Context context) {

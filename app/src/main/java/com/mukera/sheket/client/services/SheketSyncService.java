@@ -137,7 +137,7 @@ public class SheketSyncService extends IntentService {
             // so the payment service doesn't assume we are still syncing
             PrefUtil.setIsSyncRunning(this, false);
 
-            startService(new Intent(this, PaymentService.class));
+            //startService(new Intent(this, PaymentService.class));
 
         } catch (SheketGRPCCall.SheketInvalidLoginException e) {
             sendSheketBroadcast(SheketBroadcast.ACTION_SYNC_INVALID_LOGIN_CREDENTIALS);
