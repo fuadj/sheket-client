@@ -360,7 +360,7 @@ public class SheketSyncService extends IntentService {
                     build());
         }
 
-        for (EntityResponse.UpdatedId updatedId : response.getUpdatedItemIdsList()) {
+        for (EntityResponse.UpdatedId updatedId : response.getUpdatedBranchIdsList()) {
             ContentValues values = new ContentValues();
             values.put(BranchEntry.COLUMN_BRANCH_ID, updatedId.getNewId());
             setStatusSynced(values);
